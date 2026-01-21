@@ -922,7 +922,7 @@ async function loadRecentFailures() {
         empty.classList.add('hidden');
         runs.forEach((run) => {
             const row = document.createElement('div');
-            row.className = 'p-4 flex items-start justify-between gap-4';
+            row.className = 'sw-row sw-card sw-card--danger border-l-red-400 p-4 flex items-start justify-between gap-4';
             const info = document.createElement('div');
             info.className = 'text-xs text-slate-600';
             const title = run.paper?.title || `Paper ${run.paper_id || ''}`;
@@ -935,12 +935,12 @@ async function loadRecentFailures() {
             const actions = document.createElement('div');
             actions.className = 'flex flex-col gap-2 text-xs';
             const open = document.createElement('a');
-            open.className = 'text-indigo-600 hover:underline';
+            open.className = 'sw-chip text-indigo-600 hover:bg-indigo-50';
             open.href = `/runs/${run.id}`;
             open.target = '_blank';
             open.textContent = 'Open run';
             const retry = document.createElement('button');
-            retry.className = 'text-indigo-600 hover:underline';
+            retry.className = 'sw-chip border-red-200 bg-red-50 text-red-700 hover:bg-red-50';
             retry.textContent = 'Retry';
             retry.addEventListener('click', async () => {
                 await api.retryRun(run.id);
@@ -963,13 +963,13 @@ function renderFailureGroup(title, items, options = {}) {
     const section = document.createElement('div');
     section.className = `space-y-3 ${options.fullWidth ? 'md:col-span-3' : ''}`;
     const heading = document.createElement('div');
-    heading.className = 'text-[11px] uppercase tracking-wide text-slate-400';
+    heading.className = 'sw-kicker text-[11px] text-slate-400';
     heading.textContent = title;
     section.appendChild(heading);
 
     if (!items || items.length === 0) {
         const empty = document.createElement('div');
-        empty.className = 'text-xs text-slate-400';
+        empty.className = 'sw-empty text-xs text-slate-400 p-3';
         empty.textContent = 'No data';
         section.appendChild(empty);
         return section;
@@ -978,7 +978,7 @@ function renderFailureGroup(title, items, options = {}) {
     const maxCount = Math.max(...items.map(item => item.count || 0), 1);
     items.forEach((item) => {
         const row = document.createElement('div');
-        row.className = 'flex items-center justify-between gap-3';
+        row.className = 'sw-row px-3 py-2 flex items-center justify-between gap-3';
 
         const label = document.createElement('div');
         label.className = 'flex-1 min-w-0';
@@ -988,9 +988,9 @@ function renderFailureGroup(title, items, options = {}) {
         labelText.textContent = item.label || item.key;
 
         const bar = document.createElement('div');
-        bar.className = 'h-1 mt-1 bg-slate-200 rounded-full overflow-hidden';
+        bar.className = 'sw-meter h-1 mt-1 rounded-full overflow-hidden';
         const fill = document.createElement('div');
-        fill.className = 'h-full bg-indigo-400';
+        fill.className = 'sw-meter__fill h-full';
         const ratio = Math.round((item.count / maxCount) * 100);
         fill.style.width = `${Math.max(ratio, 8)}%`;
         bar.appendChild(fill);
@@ -1007,7 +1007,7 @@ function renderFailureGroup(title, items, options = {}) {
 
         if (item.example_run_id) {
             const link = document.createElement('a');
-            link.className = 'text-indigo-600 hover:underline';
+            link.className = 'sw-chip text-indigo-600 hover:bg-indigo-50';
             link.href = `/runs/${item.example_run_id}`;
             link.target = '_blank';
             link.textContent = 'Open';
@@ -1015,7 +1015,7 @@ function renderFailureGroup(title, items, options = {}) {
         }
         if (options.onSelect) {
             const view = document.createElement('button');
-            view.className = 'text-indigo-600 hover:underline';
+            view.className = 'sw-chip text-indigo-600 hover:bg-indigo-50';
             view.textContent = 'View';
             view.addEventListener('click', () => options.onSelect(item));
             meta.appendChild(view);
@@ -1110,7 +1110,7 @@ function renderFailureModalList(items, days) {
     failureModalItems = items.slice();
     items.forEach((run) => {
         const row = document.createElement('div');
-        row.className = 'p-4 flex items-start justify-between gap-4';
+        row.className = 'sw-row sw-card sw-card--danger border-l-red-400 p-4 flex items-start justify-between gap-4';
 
         const info = document.createElement('div');
         info.className = 'text-xs text-slate-600';
@@ -1120,19 +1120,19 @@ function renderFailureModalList(items, days) {
         info.innerHTML = `
             <div class="text-sm font-medium text-slate-800">${title}</div>
             <div class="text-xs text-slate-500 mt-1">${metaLine}</div>
-            <div class="text-[11px] text-slate-500 mt-1 uppercase tracking-wide">${run.bucket || 'unknown'}</div>
+            <div class="sw-kicker text-[11px] text-slate-500 mt-1">${run.bucket || 'unknown'}</div>
             <div class="text-xs text-red-600 mt-2">${reason}</div>
         `;
 
         const actions = document.createElement('div');
         actions.className = 'flex flex-col gap-2 text-xs';
         const open = document.createElement('a');
-        open.className = 'text-indigo-600 hover:underline';
+        open.className = 'sw-chip text-indigo-600 hover:bg-indigo-50';
         open.href = `/runs/${run.id}`;
         open.target = '_blank';
         open.textContent = 'Open';
         const retry = document.createElement('button');
-        retry.className = 'text-indigo-600 hover:underline';
+        retry.className = 'sw-chip border-red-200 bg-red-50 text-red-700 hover:bg-red-50';
         retry.textContent = 'Retry';
         retry.addEventListener('click', async () => {
             await api.retryRun(run.id);
@@ -1253,7 +1253,7 @@ async function loadFailureModalRuns() {
     const select = document.querySelector('#failureWindow');
     if (!list || !empty) return;
     const days = Number.parseInt(select?.value || '30', 10);
-    list.innerHTML = '<div class="p-4 text-xs text-slate-500">Loading failures...</div>';
+    list.innerHTML = '<div class="sw-empty p-4 text-xs text-slate-500">Loading failures...</div>';
     try {
         const data = await api.getFailedRuns({
             ...failureModalState.filters,
@@ -1275,7 +1275,7 @@ async function loadFailureSummary() {
     const select = document.querySelector('#failureWindow');
     if (!container || !empty) return;
     const days = Number.parseInt(select?.value || '30', 10);
-    container.innerHTML = '<div class="md:col-span-3 text-xs text-slate-500">Loading failure summary...</div>';
+    container.innerHTML = '<div class="sw-empty md:col-span-3 text-xs text-slate-500 p-4">Loading failure summary...</div>';
     try {
         const summary = await api.getFailureSummary(days, 1000);
         renderFailureSummary(summary);

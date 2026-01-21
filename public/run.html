@@ -30,12 +30,12 @@
 		</header>
 
 		<main class="max-w-5xl mx-auto px-6 py-6 space-y-6">
-			<section class="bg-white border border-slate-200 rounded-xl shadow-sm p-6">
+			<section class="sw-card bg-white border border-slate-200 rounded-xl shadow-sm p-6">
 				<h2 class="text-base font-semibold mb-4">Paper</h2>
 				<div id="paperMeta" class="text-sm text-slate-700 space-y-1"></div>
 			</section>
 
-			<section class="bg-white border border-slate-200 rounded-xl shadow-sm p-6">
+			<section class="sw-card bg-white border border-slate-200 rounded-xl shadow-sm p-6">
 				<h2 class="text-base font-semibold mb-4">Run</h2>
 				<div id="runMeta" class="text-sm text-slate-700 space-y-1"></div>
 				<div class="mt-3">
@@ -43,22 +43,22 @@
 				</div>
 			</section>
 
-			<section class="bg-white border border-slate-200 rounded-xl shadow-sm p-6">
+			<section class="sw-card bg-white border border-slate-200 rounded-xl shadow-sm p-6">
 				<h2 class="text-base font-semibold mb-4">Entities</h2>
 				<div id="entitiesContainer" class="space-y-3 text-sm text-slate-700"></div>
 			</section>
 
-			<section class="bg-white border border-slate-200 rounded-xl shadow-sm p-6">
+			<section class="sw-card bg-white border border-slate-200 rounded-xl shadow-sm p-6">
 				<h2 class="text-base font-semibold mb-4">Prompts</h2>
 				<div id="promptsContainer" class="space-y-3 text-xs text-slate-700"></div>
 			</section>
 
-			<section class="bg-white border border-slate-200 rounded-xl shadow-sm p-6">
+			<section class="sw-card bg-white border border-slate-200 rounded-xl shadow-sm p-6">
 				<h2 class="text-base font-semibold mb-4">Raw JSON</h2>
 				<pre id="rawJson" class="p-3 bg-slate-900 text-slate-100 rounded text-[11px] leading-relaxed max-h-80 overflow-auto"></pre>
 			</section>
 
-			<section class="bg-white border border-slate-200 rounded-xl shadow-sm p-6">
+			<section class="sw-card bg-white border border-slate-200 rounded-xl shadow-sm p-6">
 				<h2 class="text-base font-semibold mb-4">Continue Chat</h2>
 				<textarea id="followupInstruction" rows="4" class="w-full rounded-lg border border-slate-300 p-3 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" placeholder="Add an instruction to refine or correct the extraction..."></textarea>
 				<div class="mt-3 flex items-center gap-3">
@@ -67,17 +67,17 @@
 						<span class="inline-block h-4 w-4 rounded-full border-2 border-slate-300 border-t-indigo-500 animate-spin"></span>
 						<span>Streaming response...</span>
 					</div>
-					<span id="followupStatus" class="text-xs text-slate-500"></span>
+					<span id="followupStatus" class="sw-chip text-[10px] text-slate-500"></span>
 				</div>
 				<pre id="followupTokens" class="mt-3 hidden p-3 bg-slate-900 text-slate-100 rounded text-[11px] leading-relaxed max-h-56 overflow-auto"></pre>
 			</section>
 
-			<section class="bg-white border border-slate-200 rounded-xl shadow-sm p-6">
+			<section class="sw-card bg-white border border-slate-200 rounded-xl shadow-sm p-6">
 				<h2 class="text-base font-semibold mb-4">Changes & Evidence</h2>
 				<div id="diffContainer" class="space-y-3 text-sm text-slate-700"></div>
 			</section>
 
-			<section class="bg-white border border-slate-200 rounded-xl shadow-sm p-6">
+			<section class="sw-card bg-white border border-slate-200 rounded-xl shadow-sm p-6">
 				<h2 class="text-base font-semibold mb-4">Version History</h2>
 				<div id="historyList" class="space-y-2 text-xs text-slate-600"></div>
 				<div class="mt-4 grid grid-cols-1 md:grid-cols-3 gap-3 items-end">
@@ -91,7 +91,7 @@
 					</div>
 					<button id="compareBtn" class="h-9 px-4 rounded-md bg-indigo-600 text-white text-xs font-medium hover:bg-indigo-700">Compare Versions</button>
 				</div>
-				<div id="compareOrderLabel" class="mt-2 text-[11px] text-slate-500"></div>
+				<div id="compareOrderLabel" class="sw-chip mt-2 text-[10px] text-slate-500"></div>
 			</section>
 		</main>
 

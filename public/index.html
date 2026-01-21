@@ -38,7 +38,7 @@
 			</div>
 			<!-- Search Section -->
 			<section class="mb-6">
-				<div class="bg-white border border-slate-200 rounded-xl shadow-sm p-6">
+				<div class="sw-card bg-white border border-slate-200 rounded-xl shadow-sm p-6">
 					<h2 class="text-lg font-semibold mb-4">Search Scientific Literature</h2>
 					<div class="flex gap-4 items-end">
 						<div class="flex-1">
@@ -61,19 +61,19 @@
 					</p>
 					<div class="mt-2 flex items-center gap-2 text-xs text-slate-500">
 						<span id="searchSpinner" class="hidden h-3 w-3 rounded-full border-2 border-slate-300 border-t-indigo-500 animate-spin"></span>
-						<span id="searchStatus"></span>
+						<span id="searchStatus" class="sw-chip text-[10px] text-slate-500"></span>
 					</div>
 				</div>
 			</section>
 
 			<!-- Search Results + Batch Selection -->
 			<section id="searchResultsSection" class="mb-6 hidden">
-				<div class="bg-white border border-slate-200 rounded-xl shadow-sm p-6">
+				<div class="sw-card bg-white border border-slate-200 rounded-xl shadow-sm p-6">
 					<div class="flex flex-wrap items-center justify-between gap-3 mb-4">
 						<h3 class="text-base font-semibold">Search Results</h3>
 						<div class="flex flex-wrap items-center gap-3 text-xs text-slate-500">
-							<span id="searchCount"></span>
-							<span id="batchCount" class="text-slate-600 font-medium"></span>
+							<span id="searchCount" class="sw-chip sw-kicker text-[10px] text-slate-500"></span>
+							<span id="batchCount" class="sw-chip sw-kicker text-[10px] text-slate-600"></span>
 							<button id="selectAllResults" class="text-indigo-600 hover:underline disabled:opacity-40 disabled:cursor-not-allowed">Select all (PDF)</button>
 							<button id="clearResultsSelection" class="text-indigo-600 hover:underline disabled:opacity-40 disabled:cursor-not-allowed">Clear selection</button>
 							<button id="startBatchBtn" class="h-9 px-4 rounded-lg bg-cyan-600 text-white text-sm font-medium hover:bg-cyan-700 disabled:opacity-50 disabled:cursor-not-allowed" disabled>
@@ -88,7 +88,7 @@
 			</section>
 
 			<section class="mb-6">
-				<details class="bg-white border border-slate-200 rounded-xl shadow-sm p-6">
+				<details class="sw-card bg-white border border-slate-200 rounded-xl shadow-sm p-6">
 					<summary class="text-sm font-semibold cursor-pointer">Quick tips</summary>
 					<ul class="mt-3 list-disc list-inside text-xs text-slate-600 space-y-1">
 						<li>Search broad keywords first (e.g., “self‑assembling peptide hydrogel”).</li>
@@ -102,11 +102,11 @@
 			</section>
 
 			<section class="mb-6">
-				<div class="bg-white border border-slate-200 rounded-xl shadow-sm p-6 space-y-3">
+				<div class="sw-card bg-white border border-slate-200 rounded-xl shadow-sm p-6 space-y-3">
 					<div class="flex items-center justify-between">
 						<h3 class="text-sm font-semibold">Onboarding checklist</h3>
 						<div class="flex items-center gap-3 text-xs text-slate-500">
-							<span id="onboardingProgress"></span>
+							<span id="onboardingProgress" class="sw-chip sw-kicker text-[10px] text-slate-500"></span>
 							<button id="resetOnboarding" class="text-indigo-600 hover:underline">Reset</button>
 						</div>
 					</div>
@@ -115,7 +115,7 @@
 			</section>
 
 			<section class="mb-6">
-				<div class="bg-white border border-slate-200 rounded-xl shadow-sm">
+				<div class="sw-card bg-white border border-slate-200 rounded-xl shadow-sm">
 					<div class="p-6 border-b border-slate-200 flex items-start justify-between gap-4">
 						<div>
 							<h3 class="text-sm font-semibold">Failure breakdown</h3>
@@ -134,29 +134,29 @@
 						</div>
 					</div>
 					<div id="failureSummaryBody" class="p-6 grid grid-cols-1 md:grid-cols-3 gap-4 text-xs"></div>
-					<div id="failureSummaryEmpty" class="p-6 text-xs text-slate-500 text-center hidden">No failed runs in this window.</div>
+					<div id="failureSummaryEmpty" class="sw-empty p-6 text-xs text-slate-500 text-center hidden">No failed runs in this window.</div>
 				</div>
 			</section>
 
 			<section class="mb-6">
-				<div class="bg-white border border-slate-200 rounded-xl shadow-sm">
+				<div class="sw-card bg-white border border-slate-200 rounded-xl shadow-sm">
 					<div class="p-6 border-b border-slate-200 flex items-center justify-between">
 						<h3 class="text-sm font-semibold">Recent failures</h3>
 						<button id="refreshFailures" class="text-xs text-indigo-600 hover:underline">Refresh</button>
 					</div>
 					<div id="recentFailuresList" class="divide-y divide-slate-100"></div>
-					<div id="recentFailuresEmpty" class="p-6 text-xs text-slate-500 text-center hidden">No recent failures.</div>
+					<div id="recentFailuresEmpty" class="sw-empty p-6 text-xs text-slate-500 text-center hidden">No recent failures.</div>
 				</div>
 			</section>
 
 			<!-- Unified Papers Table -->
 			<section class="mb-6">
-				<div class="bg-white border border-slate-200 rounded-xl shadow-sm">
+				<div class="sw-card bg-white border border-slate-200 rounded-xl shadow-sm">
 					<div class="p-6 border-b border-slate-200">
 						<div class="flex items-center justify-between">
 							<h3 class="text-base font-semibold">Papers & Extraction Status</h3>
 							<div class="flex items-center gap-4">
-								<div id="queueStats" class="text-xs text-slate-500"></div>
+								<div id="queueStats" class="sw-chip sw-kicker text-[10px] text-slate-500"></div>
 								<div id="progressBar" class="hidden w-48 h-2 bg-slate-200 rounded-full overflow-hidden">
 									<div id="progressFill" class="h-full bg-indigo-500 transition-all duration-300" style="width: 0%"></div>
 								</div>
@@ -164,7 +164,7 @@
 						</div>
 						<div class="mt-4 flex flex-wrap items-center justify-between gap-3">
 							<div class="flex items-center gap-2 text-xs text-slate-500">
-								<span id="papersFilterCount"></span>
+								<span id="papersFilterCount" class="sw-chip sw-kicker text-[10px] text-slate-500"></span>
 								<button id="papersFilterClear" class="text-indigo-600 hover:underline hidden">Clear filters</button>
 							</div>
 							<div class="flex flex-wrap items-center gap-2 text-xs">
@@ -199,7 +199,7 @@
 								<button id="papersFilterExport" class="h-8 px-3 rounded-md border border-slate-200 text-indigo-600 hover:bg-indigo-50">Export CSV</button>
 							</div>
 						</div>
-						<div id="papersFilterNotice" class="mt-3 hidden text-xs text-amber-700 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2 flex items-center justify-between gap-3">
+						<div id="papersFilterNotice" class="mt-3 hidden sw-card sw-card--warning text-xs text-amber-700 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2 flex items-center justify-between gap-3">
 							<span>Filters are hiding all papers.</span>
 							<button id="papersFilterNoticeClear" class="text-amber-700 hover:underline">Clear filters</button>
 						</div>
@@ -207,14 +207,14 @@
 					<div id="papersTable" class="divide-y divide-slate-100">
 						<!-- Papers table rows go here -->
 					</div>
-					<div id="papersEmpty" class="p-6 text-sm text-slate-500 text-center">
+					<div id="papersEmpty" class="sw-empty p-6 text-sm text-slate-500 text-center">
 						No papers yet. Search and extract papers to see them here.
 					</div>
 				</div>
 			</section>
 
 			<!-- Paper Detail Drawer (hidden by default) -->
-			<div id="paperDrawer" class="fixed inset-y-0 right-0 w-full max-w-lg bg-white shadow-xl transform translate-x-full transition-transform duration-300 z-50">
+			<div id="paperDrawer" class="sw-card fixed inset-y-0 right-0 w-full max-w-lg bg-white shadow-xl transform translate-x-full transition-transform duration-300 z-50">
 				<div class="h-full flex flex-col">
 					<div class="p-6 border-b border-slate-200 flex items-center justify-between">
 						<h3 class="text-lg font-semibold">Paper Details</h3>
@@ -234,7 +234,7 @@
 			<!-- Failure Drilldown Modal -->
 			<div id="failureModal" class="fixed inset-0 hidden z-50">
 				<div id="failureModalOverlay" class="absolute inset-0 bg-black/30"></div>
-				<div class="relative max-w-3xl w-[92%] md:w-full mx-auto my-10 bg-white rounded-xl shadow-xl border border-slate-200 overflow-hidden">
+				<div class="sw-card relative max-w-3xl w-[92%] md:w-full mx-auto my-10 bg-white rounded-xl shadow-xl border border-slate-200 overflow-hidden">
 					<div class="p-5 border-b border-slate-200 flex items-center justify-between">
 						<div>
 							<h3 id="failureModalTitle" class="text-sm font-semibold">Failure drilldown</h3>
@@ -247,7 +247,7 @@
 						</button>
 					</div>
 					<div id="failureModalList" class="divide-y divide-slate-100 max-h-[60vh] overflow-y-auto"></div>
-					<div id="failureModalEmpty" class="p-6 text-xs text-slate-500 text-center hidden">No failures found for this filter.</div>
+					<div id="failureModalEmpty" class="sw-empty p-6 text-xs text-slate-500 text-center hidden">No failures found for this filter.</div>
 					<div class="p-4 border-t border-slate-200 flex flex-wrap items-center justify-between text-xs text-slate-500 gap-4">
 						<span>Use the Open link to inspect the full run and prompts.</span>
 						<div class="flex items-center gap-2">

@@ -95,14 +95,14 @@ export function renderSearchResults(items, selectedMap, onToggle, isSearching = 
     if (isSearching) {
         if (selectAllBtn) selectAllBtn.disabled = true;
         if (clearBtn) clearBtn.disabled = true;
-        list.appendChild(el('div', 'py-6 text-sm text-slate-500 text-center', 'Searching...'));
+        list.appendChild(el('div', 'sw-empty py-6 text-sm text-slate-500 text-center', 'Searching...'));
         return;
     }
 
     if (!items || items.length === 0) {
         if (selectAllBtn) selectAllBtn.disabled = true;
         if (clearBtn) clearBtn.disabled = true;
-        list.appendChild(el('div', 'py-6 text-sm text-slate-500 text-center', 'No results found. Try a different query.'));
+        list.appendChild(el('div', 'sw-empty py-6 text-sm text-slate-500 text-center', 'No results found. Try a different query.'));
         return;
     }
 
@@ -160,19 +160,19 @@ export function renderSearchResults(items, selectedMap, onToggle, isSearching = 
         // Links
         const links = el('div', 'mt-2 flex gap-3');
         if (it.url) {
-            const a = el('a', 'text-xs text-indigo-600 hover:underline', 'View');
+            const a = el('a', 'sw-chip text-[10px] text-indigo-600 hover:bg-indigo-50', 'View');
             a.href = it.url;
             a.target = '_blank';
             links.appendChild(a);
         }
         if (it.pdf_url) {
-            const a = el('a', 'text-xs text-emerald-600 hover:underline', 'PDF');
+            const a = el('a', 'sw-chip text-[10px] text-emerald-600 hover:bg-emerald-50', 'PDF');
             a.href = it.pdf_url;
             a.target = '_blank';
             links.appendChild(a);
         }
         if (!it.pdf_url) {
-            links.appendChild(el('span', 'text-xs text-slate-400', 'No PDF available'));
+            links.appendChild(el('span', 'sw-badge sw-badge--warn', 'No PDF'));
         }
         content.appendChild(links);
         
@@ -218,7 +218,7 @@ export function renderPapersTable(papers, onRowClick, options = {}) {
     empty.classList.add('hidden');
     
     for (const p of papers) {
-        const row = el('div', 'px-6 py-4 hover:bg-slate-50 cursor-pointer transition-colors flex items-center gap-4');
+        const row = el('div', 'sw-row px-6 py-4 hover:bg-slate-50 cursor-pointer transition-colors flex items-center gap-4');
         row.setAttribute('role', 'button');
         row.setAttribute('tabindex', '0');
         row.setAttribute('aria-label', `Open details for ${p.title}`);
@@ -311,7 +311,7 @@ export function renderDrawer(paper, runs) {
     const metaLine = [paper.source?.toUpperCase(), paper.year, paper.doi].filter(Boolean).join(' · ');
     if (metaLine) meta.appendChild(el('div', '', metaLine));
     if (paper.url) {
-        const link = el('a', 'text-indigo-600 hover:underline', 'View Article');
+        const link = el('a', 'sw-chip text-indigo-600 hover:bg-indigo-50', 'View Article');
         link.href = paper.url;
         link.target = '_blank';
         meta.appendChild(link);
@@ -330,10 +330,10 @@ export function renderDrawer(paper, runs) {
     content.appendChild(header);
     
     // Runs section
-    content.appendChild(el('div', 'text-xs uppercase tracking-wide text-slate-500 mb-3', `Extraction Runs (${runs.length})`));
+    content.appendChild(el('div', 'sw-kicker text-xs text-slate-500 mb-3', `Extraction Runs (${runs.length})`));
     
     if (runs.length === 0) {
-        content.appendChild(el('div', 'text-sm text-slate-500', 'No extraction runs yet.'));
+        content.appendChild(el('div', 'sw-empty text-sm text-slate-500 p-3', 'No extraction runs yet.'));
         return;
     }
     
@@ -446,7 +446,7 @@ function getRunEntities(run) {
 
 function renderEntitiesSummary(entities) {
     const section = el('div', 'mt-3');
-    section.appendChild(el('div', 'text-xs uppercase tracking-wide text-slate-500 mb-2', `Entities (${entities.length})`));
+    section.appendChild(el('div', 'sw-kicker text-xs text-slate-500 mb-2', `Entities (${entities.length})`));
 
     const list = el('div', 'space-y-2');
     entities.forEach((entity, idx) => {

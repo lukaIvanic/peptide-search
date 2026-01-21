@@ -65,7 +65,7 @@ function renderEntitiesEditor() {
 }
 
 function renderEntityCard(entity, index) {
-	const card = el('div', 'border border-slate-200 rounded-xl p-4 bg-slate-50 space-y-4');
+	const card = el('div', 'sw-card border border-slate-200 rounded-xl p-4 bg-slate-50 space-y-4');
 	const header = el('div', 'flex items-center justify-between');
 	header.appendChild(el('div', 'text-sm font-semibold text-slate-700', `Entity ${index + 1}`));
 	const removeBtn = el('button', 'text-xs text-red-600 hover:underline', 'Remove');
@@ -130,7 +130,7 @@ function renderEntityCard(entity, index) {
 
 function renderEvidenceEditor(entity) {
 	const wrapper = el('div', 'space-y-3');
-	wrapper.appendChild(el('div', 'text-xs font-semibold text-slate-600 uppercase tracking-wide', 'Evidence'));
+	wrapper.appendChild(el('div', 'sw-kicker text-xs text-slate-600', 'Evidence'));
 
 	const rows = entity._evidenceRows || [];
 	const table = el('div', 'space-y-2');
@@ -149,7 +149,7 @@ function renderEvidenceEditor(entity) {
 }
 
 function renderEvidenceRow(entity, row, idx) {
-	const container = el('div', 'grid grid-cols-1 md:grid-cols-4 gap-2 items-start');
+	const container = el('div', 'sw-card border border-slate-200 bg-slate-50 p-3 grid grid-cols-1 md:grid-cols-4 gap-2 items-start');
 	container.appendChild(renderInput('Field path', row.field || '', (value) => { row.field = value; }));
 	container.appendChild(renderInput('Quote', row.quote || '', (value) => { row.quote = value; }));
 	container.appendChild(renderInput('Section', row.section || '', (value) => { row.section = value; }));
@@ -229,7 +229,7 @@ function renderCheckbox(label, checked, onChange) {
 
 function sectionBlock(title, content) {
 	const block = el('div', 'space-y-2');
-	block.appendChild(el('div', 'text-xs font-semibold text-slate-600 uppercase tracking-wide', title));
+	block.appendChild(el('div', 'sw-kicker text-xs text-slate-600', title));
 	block.appendChild(content);
 	return block;
 }

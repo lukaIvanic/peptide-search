@@ -179,7 +179,7 @@ function renderAggregates() {
 	}
 	emptyState.classList.add('hidden');
 
-	const header = el('div', 'grid grid-cols-5 gap-3 px-6 py-3 text-xs text-slate-500 uppercase tracking-wide');
+	const header = el('div', 'sw-row sw-row--header sw-kicker grid grid-cols-5 gap-3 px-6 py-3 text-xs text-slate-500');
 	header.appendChild(el('div', '', 'Group value'));
 	header.appendChild(el('div', '', 'Entities'));
 	header.appendChild(el('div', '', 'Runs'));
@@ -188,7 +188,7 @@ function renderAggregates() {
 	aggregatesTable.appendChild(header);
 
 	state.aggregates.forEach((item) => {
-		const row = el('div', 'grid grid-cols-5 gap-3 px-6 py-3 text-sm text-slate-700 hover:bg-slate-50');
+		const row = el('div', 'sw-row grid grid-cols-5 gap-3 px-6 py-3 text-sm text-slate-700 hover:bg-slate-50');
 		row.appendChild(el('div', 'font-medium', item.group_value));
 		row.appendChild(el('div', '', String(item.entity_count)));
 		row.appendChild(el('div', '', String(item.run_count)));
@@ -229,14 +229,14 @@ function renderEvidenceGaps(items) {
 	}
 	emptyState.classList.add('hidden');
 
-	const header = el('div', 'grid grid-cols-3 gap-3 px-6 py-3 text-xs text-slate-500 uppercase tracking-wide');
+	const header = el('div', 'sw-row sw-row--header sw-kicker grid grid-cols-3 gap-3 px-6 py-3 text-xs text-slate-500');
 	header.appendChild(el('div', '', 'Field'));
 	header.appendChild(el('div', '', 'Missing entities'));
 	header.appendChild(el('div', '', 'Actions'));
 	missingFieldsTable.appendChild(header);
 
 	entries.forEach(([field, bucket]) => {
-		const row = el('div', 'grid grid-cols-3 gap-3 px-6 py-3 text-sm text-slate-700 hover:bg-slate-50');
+		const row = el('div', 'sw-row grid grid-cols-3 gap-3 px-6 py-3 text-sm text-slate-700 hover:bg-slate-50');
 		row.appendChild(el('div', 'font-medium', field));
 		row.appendChild(el('div', '', String(bucket.count)));
 		const actions = el('div', 'flex gap-3');
@@ -308,7 +308,7 @@ function filterItems(items) {
 }
 
 function renderEntityHeader() {
-	const header = el('div', 'grid grid-cols-8 gap-3 px-6 py-3 text-xs text-slate-500 uppercase tracking-wide');
+	const header = el('div', 'sw-row sw-row--header sw-kicker grid grid-cols-8 gap-3 px-6 py-3 text-xs text-slate-500');
 	header.appendChild(el('div', '', 'Identifier'));
 	header.appendChild(el('div', '', 'Type'));
 	header.appendChild(el('div', '', 'Morphology'));
@@ -322,7 +322,7 @@ function renderEntityHeader() {
 
 function renderEntityRow(item) {
 	const rowClass = [
-		'grid grid-cols-8 gap-3 px-6 py-3 text-sm text-slate-700 cursor-pointer',
+		'sw-row grid grid-cols-8 gap-3 px-6 py-3 text-sm text-slate-700 cursor-pointer',
 		'hover:bg-slate-50 border-l-4 border-transparent',
 		item.flags?.includes('missing_evidence') ? 'border-l-amber-400' : '',
 		item.flags?.some((flag) => INVALID_FLAGS.has(flag)) ? 'border-l-red-400' : '',
@@ -349,6 +349,14 @@ function renderEntityRow(item) {
 	row.appendChild(el('div', 'text-xs text-slate-500', item.paper_title || '-'));
 	row.appendChild(el('div', 'text-xs text-slate-500', formatModel(item)));
 	row.addEventListener('click', () => openEntityDrawer(item.id));
+	row.setAttribute('role', 'button');
+	row.setAttribute('tabindex', '0');
+	row.addEventListener('keydown', (event) => {
+		if (event.key === 'Enter' || event.key === ' ') {
+			event.preventDefault();
+			openEntityDrawer(item.id);
+		}
+	});
 	return row;
 }
 
@@ -508,10 +516,10 @@ function renderEntityLinks(data) {
 	const run = data.run || {};
 	if (run.id) {
 		const row = el('div', 'flex items-center gap-3 text-xs');
-		const link = el('a', 'text-indigo-600 hover:underline', 'Open run detail');
+		const link = el('a', 'sw-chip text-indigo-600 hover:bg-indigo-50', 'Open run detail');
 		link.href = `/runs/${run.id}`;
 		link.target = '_blank';
-		const edit = el('a', 'text-indigo-600 hover:underline', 'Open editor');
+		const edit = el('a', 'sw-chip text-indigo-600 hover:bg-indigo-50', 'Open editor');
 		edit.href = `/runs/${run.id}/edit`;
 		edit.target = '_blank';
 		row.appendChild(link);
@@ -528,7 +536,7 @@ function renderMetaBlocks(data) {
 
 	if (paper.id) {
 		const block = el('div', 'text-xs text-slate-600 space-y-1');
-		block.appendChild(el('div', 'text-[10px] uppercase tracking-wide text-slate-400', 'Paper'));
+		block.appendChild(el('div', 'sw-kicker text-[10px] text-slate-400', 'Paper'));
 		block.appendChild(el('div', '', paper.title || 'Untitled'));
 		const line = [paper.source, paper.year, paper.doi].filter(Boolean).join(' · ');
 		if (line) block.appendChild(el('div', 'text-slate-500', line));
@@ -543,7 +551,7 @@ function renderMetaBlocks(data) {
 
 	if (run.id) {
 		const block = el('div', 'text-xs text-slate-600 space-y-1');
-		block.appendChild(el('div', 'text-[10px] uppercase tracking-wide text-slate-400', 'Run'));
+		block.appendChild(el('div', 'sw-kicker text-[10px] text-slate-400', 'Run'));
 		block.appendChild(el('div', '', `Run ${run.id}`));
 		const line = [
 			run.status ? `status: ${run.status}` : null,
@@ -565,9 +573,9 @@ function renderMetaBlocks(data) {
 
 function renderMissingEvidenceSummary(data) {
 	const missing = data.missing_evidence_fields || [];
-	if (!missing.length) return el('div', 'text-xs text-slate-400', 'All extracted fields have evidence.');
+	if (!missing.length) return el('div', 'sw-empty text-xs text-slate-400 p-2', 'All extracted fields have evidence.');
 	const wrapper = el('div', 'text-xs text-amber-600 space-y-1');
-	wrapper.appendChild(el('div', 'text-[10px] uppercase tracking-wide text-amber-500', 'Missing evidence'));
+	wrapper.appendChild(el('div', 'sw-kicker text-[10px] text-amber-500', 'Missing evidence'));
 	missing.slice(0, 8).forEach((field) => {
 		wrapper.appendChild(el('div', '', field));
 	});
@@ -586,7 +594,7 @@ function renderEntityFields(data) {
 	const fields = buildFieldList(entity);
 	fields.forEach((field) => {
 		const details = document.createElement('details');
-		details.className = 'border border-slate-200 rounded-md p-3 bg-slate-50';
+		details.className = 'sw-card border border-slate-200 rounded-md p-3 bg-slate-50';
 		const summary = document.createElement('summary');
 		summary.className = 'cursor-pointer text-sm font-medium text-slate-700';
 		summary.textContent = `${field.label}: ${formatFieldValue(field.value)}`;
@@ -884,8 +892,8 @@ function topBuckets(map) {
 }
 
 function renderCompareCard(title, stats) {
-	const card = el('div', 'border border-slate-200 rounded-md p-3 space-y-2');
-	card.appendChild(el('div', 'text-xs font-semibold text-slate-700', title));
+	const card = el('div', 'sw-card border border-slate-200 rounded-md p-3 space-y-2');
+	card.appendChild(el('div', 'sw-kicker text-xs text-slate-700', title));
 	card.appendChild(el('div', '', `Entities: ${stats.total}`));
 	card.appendChild(el('div', '', `Missing evidence: ${stats.missingPct.toFixed(1)}%`));
 	card.appendChild(el('div', '', `Invalid entries: ${stats.invalidPct.toFixed(1)}%`));
@@ -897,9 +905,9 @@ function renderCompareCard(title, stats) {
 
 function renderBucketList(label, items) {
 	const block = el('div', 'space-y-1');
-	block.appendChild(el('div', 'text-[10px] uppercase tracking-wide text-slate-400', label));
+	block.appendChild(el('div', 'sw-kicker text-[10px] text-slate-400', label));
 	if (!items.length) {
-		block.appendChild(el('div', 'text-slate-400', 'No data'));
+		block.appendChild(el('div', 'sw-empty text-slate-400 p-2', 'No data'));
 		return block;
 	}
 	items.forEach((item) => {
