@@ -1,0 +1,13 @@
+fastapi
+uvicorn[standard]
+httpx
+python-dotenv
+sqlmodel
+pydantic
+sqlalchemy
+pypdf
+beautifulsoup4
+lxml
+alembic
+typer
+

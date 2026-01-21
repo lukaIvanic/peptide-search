@@ -1,0 +1,216 @@
+<!doctype html>
+<html lang="en">
+	<head>
+		<meta charset="UTF-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+		<title>Entity Explorer - Peptide Literature Extractor</title>
+		<link rel="preconnect" href="https://fonts.googleapis.com">
+		<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+		<link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Varela+Round&display=swap" rel="stylesheet">
+		<script src="https://cdn.tailwindcss.com"></script>
+		<link rel="stylesheet" href="/static/styles.css?v=dev45" />
+		<script src="/static/app_config.js?v=dev45"></script>
+	</head>
+	<body class="theme-synthwave">
+		<header class="bg-white border-b border-slate-200">
+			<div class="max-w-7xl mx-auto px-6 py-5 flex items-center justify-between">
+				<div class="flex items-center gap-3">
+					<div class="w-9 h-9 rounded-lg bg-gradient-to-br from-indigo-500 to-cyan-500 shadow-md"></div>
+					<div>
+						<h1 class="text-xl font-semibold">Entity Explorer</h1>
+						<p class="text-xs text-slate-500">Inspect structured entities and evidence</p>
+					</div>
+				</div>
+				<div class="flex items-center gap-4 text-xs">
+					<button id="startTourBtn" class="text-xs text-slate-600 hover:underline">Start tour</button>
+					<a href="/" class="text-indigo-600 hover:underline">Back to dashboard</a>
+					<a href="/help" class="text-indigo-600 hover:underline">Help</a>
+					<button id="openRulesBtn" class="px-3 py-1.5 rounded-md border border-slate-300 text-slate-600 hover:bg-slate-100">Quality rules</button>
+				</div>
+			</div>
+		</header>
+
+		<main class="max-w-7xl mx-auto px-6 py-6 space-y-6">
+			<div id="contextHint" class="hidden hint-banner">
+				<span id="contextHintText"></span>
+				<button id="contextHintDismiss" type="button">Got it</button>
+			</div>
+			<div id="rulesToast" class="hidden text-xs text-emerald-700 bg-emerald-50 border border-emerald-200 rounded-lg px-3 py-2">
+				Quality rules saved.
+			</div>
+			<section class="grid grid-cols-1 md:grid-cols-6 gap-4">
+				<div class="bg-white border border-slate-200 rounded-xl p-4 shadow-sm">
+					<div class="text-xs text-slate-500">Total entities</div>
+					<div id="kpiTotal" class="text-2xl font-semibold mt-2">0</div>
+				</div>
+				<div class="bg-white border border-slate-200 rounded-xl p-4 shadow-sm">
+					<div class="text-xs text-slate-500">Missing evidence</div>
+					<div id="kpiMissing" class="text-2xl font-semibold mt-2">0%</div>
+				</div>
+				<div class="bg-white border border-slate-200 rounded-xl p-4 shadow-sm">
+					<div class="text-xs text-slate-500">Invalid entries</div>
+					<div id="kpiInvalid" class="text-2xl font-semibold mt-2">0%</div>
+				</div>
+				<div class="bg-white border border-slate-200 rounded-xl p-4 shadow-sm">
+					<div class="text-xs text-slate-500">Top morphology</div>
+					<div id="kpiMorphology" class="text-xs text-slate-600 mt-2 space-y-1"></div>
+				</div>
+				<div class="bg-white border border-slate-200 rounded-xl p-4 shadow-sm">
+					<div class="text-xs text-slate-500">Top validation methods</div>
+					<div id="kpiValidation" class="text-xs text-slate-600 mt-2 space-y-1"></div>
+				</div>
+				<div class="bg-white border border-slate-200 rounded-xl p-4 shadow-sm">
+					<div class="text-xs text-slate-500">Top missing fields</div>
+					<div id="kpiMissingFields" class="text-xs text-slate-600 mt-2 space-y-1"></div>
+				</div>
+			</section>
+			<section class="bg-white border border-slate-200 rounded-xl shadow-sm p-4">
+				<div class="text-xs text-slate-500">
+					Tips: Use Evidence Gaps view to see missing evidence by field. Review mode supports shortcuts:
+					<span class="text-slate-700 font-medium">N</span> for next, <span class="text-slate-700 font-medium">R</span> for random,
+					<span class="text-slate-700 font-medium">E</span> to toggle Evidence Gaps.
+				</div>
+			</section>
+			<section class="bg-white border border-slate-200 rounded-xl shadow-sm p-4 space-y-3">
+				<div class="flex items-center justify-between">
+					<div class="text-xs font-semibold text-slate-700">QA checklist</div>
+					<div class="text-xs text-slate-500">
+						<span id="qaProgress"></span>
+						<button id="resetQaChecklist" class="ml-2 text-indigo-600 hover:underline">Reset</button>
+					</div>
+				</div>
+				<div id="qaChecklist" class="space-y-2"></div>
+			</section>
+
+			<section class="bg-white border border-slate-200 rounded-xl shadow-sm p-4 space-y-3">
+				<div class="flex flex-wrap items-center gap-3">
+					<input id="entitySearch" type="text" placeholder="Search sequences, paper title, DOI..."
+						class="h-9 px-3 rounded-md border border-slate-300 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 flex-1 min-w-[200px]" />
+					<select id="providerFilter" class="h-9 px-3 rounded-md border border-slate-300 text-sm">
+						<option value="all">All providers</option>
+					</select>
+					<select id="promptFilter" class="h-9 px-3 rounded-md border border-slate-300 text-sm">
+						<option value="all">All prompts</option>
+					</select>
+					<select id="sourceFilter" class="h-9 px-3 rounded-md border border-slate-300 text-sm">
+						<option value="all">All sources</option>
+					</select>
+					<select id="entityType" class="h-9 px-3 rounded-md border border-slate-300 text-sm">
+						<option value="all">All types</option>
+						<option value="peptide">Peptide</option>
+						<option value="molecule">Molecule</option>
+					</select>
+					<label class="text-xs text-slate-600 flex items-center gap-2">
+						<input id="flagMissing" type="checkbox" class="rounded border-slate-300" />
+						Missing evidence
+					</label>
+					<label class="text-xs text-slate-600 flex items-center gap-2">
+						<input id="flagInvalid" type="checkbox" class="rounded border-slate-300" />
+						Invalid values
+					</label>
+					<label class="text-xs text-slate-600 flex items-center gap-2">
+						<input id="evidenceMode" type="checkbox" class="rounded border-slate-300" />
+						Evidence gaps view
+					</label>
+					<label class="text-xs text-slate-600 flex items-center gap-2">
+						<input id="latestOnly" type="checkbox" class="rounded border-slate-300" />
+						Latest run only
+					</label>
+					<div class="flex items-center gap-2 text-xs text-slate-600">
+						<label class="flex items-center gap-2">
+							<input id="recentOnly" type="checkbox" class="rounded border-slate-300" />
+							Recent
+						</label>
+						<input id="recentMinutes" type="number" min="1" value="15" class="h-8 w-16 px-2 rounded-md border border-slate-300 text-xs" />
+						<span>min</span>
+					</div>
+					<select id="groupBySelect" class="h-9 px-3 rounded-md border border-slate-300 text-sm">
+						<option value="">Entity view</option>
+						<option value="peptide_sequence_one_letter">Group: peptide sequence (1-letter)</option>
+						<option value="peptide_sequence_three_letter">Group: peptide sequence (3-letter)</option>
+						<option value="smiles">Group: SMILES</option>
+						<option value="inchi">Group: InChI</option>
+						<option value="chemical_formula">Group: chemical formula</option>
+					</select>
+					<label class="text-xs text-slate-600 flex items-center gap-2">
+						<input id="showMissingKey" type="checkbox" class="rounded border-slate-300" />
+						Show missing key
+					</label>
+				</div>
+				<div id="missingFieldFilterRow" class="hidden text-xs text-slate-500">
+					Filtering missing field: <span id="missingFieldFilterValue" class="text-slate-700"></span>
+					<button id="clearMissingFieldFilter" class="ml-2 text-indigo-600 hover:underline">Clear</button>
+				</div>
+				<div class="flex flex-wrap items-center gap-3 text-xs text-slate-600">
+					<button id="exportEvidenceCsv" class="px-3 py-1.5 rounded-md border border-slate-300 hover:bg-slate-100">Export evidence gaps CSV</button>
+				</div>
+				<div class="flex flex-wrap items-center gap-3 text-xs text-slate-600">
+					<label class="flex items-center gap-2">
+						<input id="reviewMode" type="checkbox" class="rounded border-slate-300" />
+						Review mode (flagged only)
+					</label>
+					<button id="reviewNextBtn" class="px-3 py-1.5 rounded-md border border-slate-300 hover:bg-slate-100">Open next</button>
+					<button id="reviewRandomBtn" class="px-3 py-1.5 rounded-md border border-slate-300 hover:bg-slate-100">Open random</button>
+					<span id="reviewStatus" class="text-slate-500"></span>
+				</div>
+			</section>
+
+			<section class="bg-white border border-slate-200 rounded-xl shadow-sm p-4 space-y-3">
+				<div class="flex flex-wrap items-center gap-3 text-sm">
+					<div class="text-xs text-slate-500 uppercase tracking-wide">Prompt comparison</div>
+					<select id="comparePromptA" class="h-9 px-3 rounded-md border border-slate-300 text-sm">
+						<option value="">Select prompt A</option>
+					</select>
+					<select id="comparePromptB" class="h-9 px-3 rounded-md border border-slate-300 text-sm">
+						<option value="">Select prompt B</option>
+					</select>
+					<button id="comparePromptsBtn" class="px-3 py-1.5 rounded-md border border-slate-300 hover:bg-slate-100">Compare</button>
+				</div>
+				<div id="promptCompareDelta" class="text-xs text-slate-500"></div>
+				<div id="promptCompareResults" class="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs text-slate-600"></div>
+			</section>
+
+			<section class="bg-white border border-slate-200 rounded-xl shadow-sm">
+				<div id="aggregatesTable" class="hidden divide-y divide-slate-100"></div>
+				<div id="missingFieldsTable" class="hidden divide-y divide-slate-100"></div>
+				<div id="entitiesTable" class="divide-y divide-slate-100"></div>
+				<div id="entitiesEmpty" class="p-6 text-sm text-slate-500 text-center hidden">
+					No entities to display.
+				</div>
+			</section>
+		</main>
+
+		<!-- Entity detail drawer -->
+		<div id="entityDrawer" class="fixed inset-y-0 right-0 w-full max-w-xl bg-white shadow-xl transform translate-x-full transition-transform duration-300 z-50">
+			<div class="h-full flex flex-col">
+				<div class="p-6 border-b border-slate-200 flex items-center justify-between">
+					<h3 class="text-lg font-semibold">Entity Details</h3>
+					<button id="closeEntityDrawer" class="p-2 rounded-lg hover:bg-slate-100">
+						<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+							<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+						</svg>
+					</button>
+				</div>
+				<div id="entityDrawerContent" class="flex-1 overflow-y-auto p-6 space-y-4"></div>
+			</div>
+		</div>
+		<div id="entityDrawerOverlay" class="fixed inset-0 bg-black/20 hidden z-40"></div>
+
+		<!-- Quality rules modal -->
+		<div id="rulesModal" class="fixed inset-0 hidden items-center justify-center bg-black/30 z-50">
+			<div class="bg-white w-full max-w-2xl rounded-xl shadow-lg p-6 space-y-4">
+				<div class="flex items-center justify-between">
+					<h3 class="text-base font-semibold">Quality Rules</h3>
+					<button id="closeRulesBtn" class="text-xs text-slate-500 hover:text-slate-700">Close</button>
+				</div>
+				<textarea id="rulesEditor" rows="10" class="w-full rounded-md border border-slate-300 p-3 text-xs font-mono"></textarea>
+				<div class="flex items-center justify-between">
+					<span id="rulesStatus" class="text-xs text-slate-500"></span>
+					<button id="saveRulesBtn" class="h-9 px-4 rounded-md bg-indigo-600 text-white text-xs font-medium hover:bg-indigo-700">Save rules</button>
+				</div>
+			</div>
+		</div>
+
+		<script type="module" src="/static/entities.js?v=dev45"></script>
+	</body>
+</html>

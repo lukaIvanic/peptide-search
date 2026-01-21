@@ -1,0 +1,212 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Peptide Search - Theme Gallery</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&display=swap" rel="stylesheet">
+    <style>
+      body {
+        margin: 0;
+        font-family: "Inter", sans-serif;
+        background: #111;
+        color: #eee;
+        padding: 40px;
+      }
+      h1 {
+        font-weight: 800;
+        letter-spacing: -1px;
+        margin-bottom: 10px;
+        text-align: center;
+      }
+      p {
+        text-align: center;
+        color: #888;
+        margin-bottom: 40px;
+        max-width: 600px;
+        margin-left: auto;
+        margin-right: auto;
+      }
+      .grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+        gap: 24px;
+        max-width: 1200px;
+        margin: 0 auto;
+      }
+      .card {
+        display: block;
+        text-decoration: none;
+        background: #222;
+        border-radius: 16px;
+        overflow: hidden;
+        transition: transform 0.2s, box-shadow 0.2s;
+        border: 1px solid #333;
+        position: relative;
+      }
+      .card:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 12px 30px rgba(0,0,0,0.3);
+        z-index: 10;
+      }
+      .preview {
+        height: 160px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 800;
+        font-size: 24px;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        position: relative;
+      }
+      .info {
+        padding: 20px;
+        background: #222;
+      }
+      .name {
+        font-weight: 600;
+        color: #fff;
+        font-size: 18px;
+        margin-bottom: 6px;
+      }
+      .desc {
+        font-size: 13px;
+        color: #888;
+        line-height: 1.4;
+      }
+
+      /* Theme specific styles for previews */
+      .calm .preview { background: #f7f6f3; color: #1f2933; font-family: "Source Serif 4", serif; }
+      .crisp .preview { background: #ffffff; color: #000000; font-family: "Playfair Display", serif; border-bottom: 1px solid #eee; }
+      .playful .preview { background: #fff0f5; color: #d63384; font-family: "Quicksand", sans-serif; }
+      .minimal .preview { background: #f8f9fa; color: #212529; font-family: "Cinzel", serif; }
+      
+      .tech-noir .preview { background: #0a0a0a; color: #ffb74d; font-family: "Cinzel", serif; border-bottom: 2px solid #ffb74d; }
+      .neon .preview { background: #050505; color: #00ffff; font-family: "Orbitron", sans-serif; text-shadow: 0 0 10px #00ffff; border-bottom: 1px solid #ff00ff; }
+      .post-cyber .preview { background: #f0f2f5; color: #2c3e50; font-family: "Jura", sans-serif; }
+      .biopunk .preview { background: #05100a; color: #00ff41; font-family: "Comfortaa", cursive; box-shadow: inset 0 0 20px rgba(0,255,65,0.2); }
+      .synthwave .preview { background: #1a0b2e; color: #ff00ff; font-family: "Press Start 2P", cursive; font-size: 16px; text-shadow: 2px 2px #00ffff; }
+      .industrial .preview { background: #202020; color: #f1c40f; font-family: "Chakra Petch", sans-serif; border: 4px solid #f1c40f; margin: 10px; height: 140px; }
+      .dark-tech .preview { background: #0b1015; color: #3b82f6; font-family: "Share Tech Mono", monospace; border-bottom: 2px solid #3b82f6; }
+      .vaporwave .preview { background: linear-gradient(180deg, #ffcce6 0%, #d6c6ff 100%); color: #5d4a75; font-family: "VT323", monospace; font-size: 32px; }
+      .glitch .preview { background: #000; color: #fff; font-family: "Rubik Glitch", cursive; text-shadow: 2px 0 #f00, -2px 0 #0ff; }
+      
+    </style>
+  </head>
+  <body>
+    <h1>Peptide Search UI Themes</h1>
+    <p>Select a theme to preview the application interface.</p>
+    
+    <div class="grid">
+      <!-- Light Themes -->
+      <a href="./calm_research.html" class="card calm">
+        <div class="preview">Calm</div>
+        <div class="info">
+          <div class="name">Calm Research</div>
+          <div class="desc">Soft neutrals, gentle gradients, airy spacing. Focused on readability.</div>
+        </div>
+      </a>
+      
+      <a href="./crisp_editorial.html" class="card crisp">
+        <div class="preview">Crisp</div>
+        <div class="info">
+          <div class="name">Crisp Editorial</div>
+          <div class="desc">High contrast, editorial typography, precise lines. Professional and sharp.</div>
+        </div>
+      </a>
+
+      <a href="./playful_modern.html" class="card playful">
+        <div class="preview">Playful</div>
+        <div class="info">
+          <div class="name">Playful Modern</div>
+          <div class="desc">Rounded shapes, pastel accents, friendly energy. Approachable and fun.</div>
+        </div>
+      </a>
+
+      <a href="./minimal_luxe.html" class="card minimal">
+        <div class="preview">Luxe</div>
+        <div class="info">
+          <div class="name">Minimal Luxe</div>
+          <div class="desc">Monochrome base, warm metals, refined typography. Elegant and high-end.</div>
+        </div>
+      </a>
+
+      <!-- Creative / Dark Themes -->
+      <a href="./tech_noir.html" class="card tech-noir">
+        <div class="preview">Tech Noir</div>
+        <div class="info">
+          <div class="name">Tech Noir</div>
+          <div class="desc">Gritty, high-contrast, detective-thriller aesthetic. Amber accents on black.</div>
+        </div>
+      </a>
+
+      <a href="./neon_futurism.html" class="card neon">
+        <div class="preview">Neon</div>
+        <div class="info">
+          <div class="name">Neon Futurism</div>
+          <div class="desc">Sleek, vibrant neon gradients, glowing borders. Cyberpunk energy.</div>
+        </div>
+      </a>
+
+      <a href="./post_cyberpunk.html" class="card post-cyber">
+        <div class="preview">Post Cyber</div>
+        <div class="info">
+          <div class="name">Post-Cyberpunk</div>
+          <div class="desc">Clean, sophisticated, glassmorphism, high-tech white/silver. Utopian future.</div>
+        </div>
+      </a>
+
+      <a href="./biopunk.html" class="card biopunk">
+        <div class="preview">Biopunk</div>
+        <div class="info">
+          <div class="name">Biopunk</div>
+          <div class="desc">Organic shapes, biological textures, greens/teals. Genetic research vibes.</div>
+        </div>
+      </a>
+
+      <a href="./synthwave.html" class="card synthwave">
+        <div class="preview">Synthwave</div>
+        <div class="info">
+          <div class="name">Synthwave</div>
+          <div class="desc">Retro 80s, sunset gradients, grid lines, retro fonts. Nostalgic arcade.</div>
+        </div>
+      </a>
+
+      <a href="./industrial.html" class="card industrial">
+        <div class="preview">Industrial</div>
+        <div class="info">
+          <div class="name">Industrial Sci-Fi</div>
+          <div class="desc">Brutalist, hazard yellow/black, heavy machinery look. Functional and raw.</div>
+        </div>
+      </a>
+
+      <a href="./dark_tech.html" class="card dark-tech">
+        <div class="preview">Dark Tech</div>
+        <div class="info">
+          <div class="name">Dark Tech</div>
+          <div class="desc">Tactical HUD, cool blue monochrome, data-dense. Military/Space interface.</div>
+        </div>
+      </a>
+
+      <a href="./vaporwave.html" class="card vaporwave">
+        <div class="preview">Vaporwave</div>
+        <div class="info">
+          <div class="name">Vaporwave</div>
+          <div class="desc">Pastel aesthetics, retro Windows vibes, nostalgic glitch. Dreamy and surreal.</div>
+        </div>
+      </a>
+
+      <a href="./glitch.html" class="card glitch">
+        <div class="preview">Glitch</div>
+        <div class="info">
+          <div class="name">Glitch / AI Core</div>
+          <div class="desc">Raw data, RGB shifts, chaotic but usable. Unstable AI personality.</div>
+        </div>
+      </a>
+
+    </div>
+  </body>
+</html>

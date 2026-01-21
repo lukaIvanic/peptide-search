@@ -1,0 +1,17 @@
+Peptide sequence (one letter code),N-terminus,C-terminus,Substrate,Kcat/KM (M-1 s-1),Secondary Structure/Self-Assembly,Mechanism,Non-proteinogenic residues,DOI
+HSGVKVKVKVKVpPTKVKVKVKV,Free,Amidated,p-NPA,19.18,beta-sheet/fibrils,Histidine,D-proline,10.1002/anie.201708036
+YGOHOOSOGVKVKVKVKVpPTKVKVKVKV,Acetylated,Amidated,p-NPA,99.4,Polyproline II-beta-sheet/fibrils,Catalytic triad residues,"O is the abbreviation for (2S,4R)-hydroxyproline, D-proline",10.1021/acs.biomac.9b01620
+YGOHOOSOGVKVKVKVKVpPTKVKVKVKV,Acetylated,Amidated,p-NPP,145,Polyproline II-beta-sheet/fibrils,Catalytic triad residues,"O is the abbreviation for (2S,4R)-hydroxyproline, D-proline",10.1021/acs.biomac.9b01620
+YGOHOOSOGVKVKVKVKVpPTKVKVKVKV,Acetylated,Amidated,p-NPMA,203,Polyproline II-beta-sheet/fibrils,Catalytic triad residues,"O is the abbreviation for (2S,4R)-hydroxyproline, D-proline",10.1021/acs.biomac.9b01620
+YGOHOOHOGVKVKVKVKVpPTKVKVKVKV,Acetylated,Amidated,p-NPA,24.3,Polyproline II-beta-sheet/fibrils,Histidine,"O is the abbreviation for (2S,4R)-hydroxyproline, D-proline",10.1021/acs.biomac.9b01620
+YGOHOOHOGVKVKVKVKVpPTKVKVKVKV,Acetylated,Amidated,p-NPP,58.1,Polyproline II-beta-sheet/fibrils,Histidine,"O is the abbreviation for (2S,4R)-hydroxyproline, D-proline",10.1021/acs.biomac.9b01620
+YGOHOOHOGVKVKVKVKVpPTKVKVKVKV,Acetylated,Amidated,p-NPMA,452,Polyproline II-beta-sheet/fibrils,Histidine,"O is the abbreviation for (2S,4R)-hydroxyproline, D-proline",10.1021/acs.biomac.9b01620
+OOHOOHOOOOOGY,Acetylated,Amidated,p-NPA,1.23,left-handed helix,Histidine,"O is the abbreviation for (2S,4R)-hydroxyproline",10.1021/acsomega.7b00928
+OOCOOHOODOOGY,Acetylated,Amidated,p-NPA,0.99,left-handed helix,Catalytic triad residues,"O is the abbreviation for (2S,4R)-hydroxyproline",10.1021/acsomega.7b00928
+O'O'HO'O'HO'O'O'O'O'GY,Acetylated,Amidated,p-NPA,0.62,left-handed helix,Histidine,"O' is the abbreviation for (2S,4R)-methoxyproline",10.1021/acsomega.7b00928
+HLlIHLl,Free,Free,p-NPA,2.9,beta-sheet/nanofibers,Histidine,D-leucine,10.3390/molecules25132995
+Hff,Free,Free,p-NPA,n/a,beta-sheet/amiloid-like structures,Histidine,D-phenylalanine,10.1039/c7cc03371k
+S-Aib-FH-Aib-F-Aib,Free,Free,p-NPA,1.07,beta-helix/fibrils,Catalytic triad residues,alfa-aminoisobutyric cid (Aib),https://doi.org/10.1021/acscatal.1c00129
+S-Aib-FH-Aib-F-Aib,Free,Free,p-NPP,0.7,beta-helix/fibrils,Catalytic triad residues,alfa-aminoisobutyric cid (Aib),https://doi.org/10.1021/acscatal.1c00129
+H-Aib-FS-Aib-F-Aib,Free,Free,p-NPA,0.9,beta-helix/fibrils,Catalytic triad residues,alfa-aminoisobutyric cid (Aib),https://doi.org/10.1021/acscatal.1c00129
+H-Aib-FS-Aib-F-Aib,Free,Free,p-NPP,0.28,beta-helix/fibrils,Catalytic triad residues,alfa-aminoisobutyric cid (Aib),https://doi.org/10.1021/acscatal.1c00129

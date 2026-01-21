@@ -1,0 +1,272 @@
+<!doctype html>
+<html lang="en">
+	<head>
+		<meta charset="UTF-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+		<title>Peptide Literature Extractor</title>
+		<link rel="preconnect" href="https://fonts.googleapis.com">
+		<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+		<link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Varela+Round&display=swap" rel="stylesheet">
+		<script src="https://cdn.tailwindcss.com"></script>
+		<link rel="stylesheet" href="/static/styles.css?v=dev45" />
+		<script src="/static/app_config.js?v=dev45"></script>
+	</head>
+	<body class="theme-synthwave">
+		<header class="bg-white border-b border-slate-200">
+			<div class="max-w-7xl mx-auto px-6 py-5 flex items-center justify-between">
+				<div class="flex items-center gap-3">
+					<div class="w-9 h-9 rounded-lg bg-gradient-to-br from-indigo-500 to-cyan-500 shadow-md"></div>
+					<div>
+						<h1 class="text-xl font-semibold">Peptide Literature Extractor</h1>
+						<p class="text-xs text-slate-500">Search papers, extract structured data, and track progress</p>
+					</div>
+				</div>
+				<div class="flex items-center gap-4">
+					<button id="startTourBtn" class="text-xs text-slate-600 hover:underline">Start tour</button>
+					<a href="/entities" class="text-xs text-indigo-600 hover:underline">Entity Explorer</a>
+					<a href="/help" class="text-xs text-indigo-600 hover:underline">Help</a>
+					<div id="connectionBadge" class="text-xs text-slate-500"></div>
+					<div id="providerBadge" class="text-xs text-slate-500"></div>
+				</div>
+			</div>
+		</header>
+
+		<main class="max-w-7xl mx-auto px-6 py-6">
+			<div id="contextHint" class="hidden hint-banner mb-6">
+				<span id="contextHintText"></span>
+				<button id="contextHintDismiss" type="button">Got it</button>
+			</div>
+			<!-- Search Section -->
+			<section class="mb-6">
+				<div class="bg-white border border-slate-200 rounded-xl shadow-sm p-6">
+					<h2 class="text-lg font-semibold mb-4">Search Scientific Literature</h2>
+					<div class="flex gap-4 items-end">
+						<div class="flex-1">
+							<input id="queryInput" type="text" placeholder="Search by peptide, sequence, keywords, DOI..."
+								class="w-full h-11 px-4 rounded-lg border border-slate-300 focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+						</div>
+						<div class="flex items-center gap-2">
+							<label class="text-xs text-slate-500">Provider:</label>
+							<select id="providerSelect" class="h-11 px-3 rounded-lg border border-slate-300 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
+								<option value="openai">OpenAI</option>
+								<option value="mock">Mock (Demo)</option>
+							</select>
+						</div>
+						<button id="searchBtn" class="h-11 px-5 rounded-lg bg-indigo-600 text-white font-medium hover:bg-indigo-700">
+							Search
+						</button>
+					</div>
+					<p class="text-xs text-slate-500 mt-3">
+						Sources: PubMed Central, arXiv, Europe PMC, Semantic Scholar
+					</p>
+					<div class="mt-2 flex items-center gap-2 text-xs text-slate-500">
+						<span id="searchSpinner" class="hidden h-3 w-3 rounded-full border-2 border-slate-300 border-t-indigo-500 animate-spin"></span>
+						<span id="searchStatus"></span>
+					</div>
+				</div>
+			</section>
+
+			<!-- Search Results + Batch Selection -->
+			<section id="searchResultsSection" class="mb-6 hidden">
+				<div class="bg-white border border-slate-200 rounded-xl shadow-sm p-6">
+					<div class="flex flex-wrap items-center justify-between gap-3 mb-4">
+						<h3 class="text-base font-semibold">Search Results</h3>
+						<div class="flex flex-wrap items-center gap-3 text-xs text-slate-500">
+							<span id="searchCount"></span>
+							<span id="batchCount" class="text-slate-600 font-medium"></span>
+							<button id="selectAllResults" class="text-indigo-600 hover:underline disabled:opacity-40 disabled:cursor-not-allowed">Select all (PDF)</button>
+							<button id="clearResultsSelection" class="text-indigo-600 hover:underline disabled:opacity-40 disabled:cursor-not-allowed">Clear selection</button>
+							<button id="startBatchBtn" class="h-9 px-4 rounded-lg bg-cyan-600 text-white text-sm font-medium hover:bg-cyan-700 disabled:opacity-50 disabled:cursor-not-allowed" disabled>
+								Start Extraction
+							</button>
+						</div>
+					</div>
+					<div id="resultsList" class="divide-y divide-slate-100 max-h-96 overflow-y-auto">
+						<!-- Results go here -->
+					</div>
+				</div>
+			</section>
+
+			<section class="mb-6">
+				<details class="bg-white border border-slate-200 rounded-xl shadow-sm p-6">
+					<summary class="text-sm font-semibold cursor-pointer">Quick tips</summary>
+					<ul class="mt-3 list-disc list-inside text-xs text-slate-600 space-y-1">
+						<li>Search broad keywords first (e.g., “self‑assembling peptide hydrogel”).</li>
+						<li>Use Start Extraction to enqueue multiple papers at once.</li>
+						<li>Open a paper drawer to see human‑readable entity summaries.</li>
+						<li>Switch to the Entity Explorer for cross‑run QA.</li>
+						<li>Use Failure breakdown to spot recurring provider or parsing issues.</li>
+						<li>Filter the papers table by status or source to focus QA.</li>
+					</ul>
+				</details>
+			</section>
+
+			<section class="mb-6">
+				<div class="bg-white border border-slate-200 rounded-xl shadow-sm p-6 space-y-3">
+					<div class="flex items-center justify-between">
+						<h3 class="text-sm font-semibold">Onboarding checklist</h3>
+						<div class="flex items-center gap-3 text-xs text-slate-500">
+							<span id="onboardingProgress"></span>
+							<button id="resetOnboarding" class="text-indigo-600 hover:underline">Reset</button>
+						</div>
+					</div>
+					<div id="onboardingList" class="space-y-2"></div>
+				</div>
+			</section>
+
+			<section class="mb-6">
+				<div class="bg-white border border-slate-200 rounded-xl shadow-sm">
+					<div class="p-6 border-b border-slate-200 flex items-start justify-between gap-4">
+						<div>
+							<h3 class="text-sm font-semibold">Failure breakdown</h3>
+							<p class="text-xs text-slate-500 mt-1">Categorized view of recent failed runs.</p>
+						</div>
+						<div class="flex items-center gap-3 text-xs text-slate-500">
+							<label class="flex items-center gap-2">
+								<span>Window</span>
+								<select id="failureWindow" class="h-8 border border-slate-200 rounded-md px-2 text-xs">
+									<option value="7">Last 7 days</option>
+									<option value="30" selected>Last 30 days</option>
+									<option value="90">Last 90 days</option>
+								</select>
+							</label>
+							<button id="refreshFailureSummary" class="text-indigo-600 hover:underline">Refresh</button>
+						</div>
+					</div>
+					<div id="failureSummaryBody" class="p-6 grid grid-cols-1 md:grid-cols-3 gap-4 text-xs"></div>
+					<div id="failureSummaryEmpty" class="p-6 text-xs text-slate-500 text-center hidden">No failed runs in this window.</div>
+				</div>
+			</section>
+
+			<section class="mb-6">
+				<div class="bg-white border border-slate-200 rounded-xl shadow-sm">
+					<div class="p-6 border-b border-slate-200 flex items-center justify-between">
+						<h3 class="text-sm font-semibold">Recent failures</h3>
+						<button id="refreshFailures" class="text-xs text-indigo-600 hover:underline">Refresh</button>
+					</div>
+					<div id="recentFailuresList" class="divide-y divide-slate-100"></div>
+					<div id="recentFailuresEmpty" class="p-6 text-xs text-slate-500 text-center hidden">No recent failures.</div>
+				</div>
+			</section>
+
+			<!-- Unified Papers Table -->
+			<section class="mb-6">
+				<div class="bg-white border border-slate-200 rounded-xl shadow-sm">
+					<div class="p-6 border-b border-slate-200">
+						<div class="flex items-center justify-between">
+							<h3 class="text-base font-semibold">Papers & Extraction Status</h3>
+							<div class="flex items-center gap-4">
+								<div id="queueStats" class="text-xs text-slate-500"></div>
+								<div id="progressBar" class="hidden w-48 h-2 bg-slate-200 rounded-full overflow-hidden">
+									<div id="progressFill" class="h-full bg-indigo-500 transition-all duration-300" style="width: 0%"></div>
+								</div>
+							</div>
+						</div>
+						<div class="mt-4 flex flex-wrap items-center justify-between gap-3">
+							<div class="flex items-center gap-2 text-xs text-slate-500">
+								<span id="papersFilterCount"></span>
+								<button id="papersFilterClear" class="text-indigo-600 hover:underline hidden">Clear filters</button>
+							</div>
+							<div class="flex flex-wrap items-center gap-2 text-xs">
+								<div class="flex items-center gap-2">
+									<button id="papersPresetFailed" class="h-8 px-2 rounded-md border border-red-200 text-red-700 hover:bg-red-50">Failed</button>
+									<button id="papersPresetProcessing" class="h-8 px-2 rounded-md border border-amber-200 text-amber-700 hover:bg-amber-50">Processing</button>
+									<button id="papersPresetNoRuns" class="h-8 px-2 rounded-md border border-slate-200 text-slate-600 hover:bg-slate-50">No runs</button>
+								</div>
+								<input id="papersFilterInput" type="text" placeholder="Filter by title or DOI" class="h-8 px-2 rounded-md border border-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-200" />
+								<select id="papersFilterStatus" class="h-8 px-2 rounded-md border border-slate-200 bg-white">
+									<option value="">All statuses</option>
+									<option value="processing">Processing</option>
+									<option value="queued">Queued</option>
+									<option value="failed">Failed</option>
+									<option value="stored">Done</option>
+									<option value="cancelled">Cancelled</option>
+									<option value="none">No runs yet</option>
+								</select>
+								<select id="papersFilterSource" class="h-8 px-2 rounded-md border border-slate-200 bg-white">
+									<option value="">All sources</option>
+									<option value="pmc">PMC</option>
+									<option value="europepmc">Europe PMC</option>
+									<option value="arxiv">arXiv</option>
+									<option value="semanticscholar">Semantic Scholar</option>
+									<option value="upload">Upload</option>
+								</select>
+								<select id="papersFilterSort" class="h-8 px-2 rounded-md border border-slate-200 bg-white">
+									<option value="recent">Newest</option>
+									<option value="oldest">Oldest</option>
+									<option value="runs">Most runs</option>
+								</select>
+								<button id="papersFilterExport" class="h-8 px-3 rounded-md border border-slate-200 text-indigo-600 hover:bg-indigo-50">Export CSV</button>
+							</div>
+						</div>
+						<div id="papersFilterNotice" class="mt-3 hidden text-xs text-amber-700 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2 flex items-center justify-between gap-3">
+							<span>Filters are hiding all papers.</span>
+							<button id="papersFilterNoticeClear" class="text-amber-700 hover:underline">Clear filters</button>
+						</div>
+					</div>
+					<div id="papersTable" class="divide-y divide-slate-100">
+						<!-- Papers table rows go here -->
+					</div>
+					<div id="papersEmpty" class="p-6 text-sm text-slate-500 text-center">
+						No papers yet. Search and extract papers to see them here.
+					</div>
+				</div>
+			</section>
+
+			<!-- Paper Detail Drawer (hidden by default) -->
+			<div id="paperDrawer" class="fixed inset-y-0 right-0 w-full max-w-lg bg-white shadow-xl transform translate-x-full transition-transform duration-300 z-50">
+				<div class="h-full flex flex-col">
+					<div class="p-6 border-b border-slate-200 flex items-center justify-between">
+						<h3 class="text-lg font-semibold">Paper Details</h3>
+						<button id="closeDrawerBtn" class="p-2 rounded-lg hover:bg-slate-100">
+							<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+								<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+							</svg>
+						</button>
+					</div>
+					<div id="drawerContent" class="flex-1 overflow-y-auto p-6">
+						<!-- Paper details go here -->
+					</div>
+				</div>
+			</div>
+			<div id="drawerOverlay" class="fixed inset-0 bg-black/20 hidden z-40"></div>
+
+			<!-- Failure Drilldown Modal -->
+			<div id="failureModal" class="fixed inset-0 hidden z-50">
+				<div id="failureModalOverlay" class="absolute inset-0 bg-black/30"></div>
+				<div class="relative max-w-3xl w-[92%] md:w-full mx-auto my-10 bg-white rounded-xl shadow-xl border border-slate-200 overflow-hidden">
+					<div class="p-5 border-b border-slate-200 flex items-center justify-between">
+						<div>
+							<h3 id="failureModalTitle" class="text-sm font-semibold">Failure drilldown</h3>
+							<p id="failureModalMeta" class="text-xs text-slate-500 mt-1"></p>
+						</div>
+						<button id="failureModalClose" class="p-2 rounded-lg hover:bg-slate-100">
+							<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+								<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+							</svg>
+						</button>
+					</div>
+					<div id="failureModalList" class="divide-y divide-slate-100 max-h-[60vh] overflow-y-auto"></div>
+					<div id="failureModalEmpty" class="p-6 text-xs text-slate-500 text-center hidden">No failures found for this filter.</div>
+					<div class="p-4 border-t border-slate-200 flex flex-wrap items-center justify-between text-xs text-slate-500 gap-4">
+						<span>Use the Open link to inspect the full run and prompts.</span>
+						<div class="flex items-center gap-2">
+							<button id="failureExportCsv" class="h-8 px-3 rounded-lg border border-slate-200 text-xs text-indigo-600 hover:bg-indigo-50 disabled:opacity-40 disabled:cursor-not-allowed">
+								Export CSV
+							</button>
+							<button id="retryFailureBatch" class="h-8 px-3 rounded-lg border border-slate-200 text-xs text-indigo-600 hover:bg-indigo-50 disabled:opacity-40 disabled:cursor-not-allowed">
+								Retry list <span id="retryFailureBatchCount"></span>
+							</button>
+						</div>
+					</div>
+				</div>
+			</div>
+		</main>
+
+		<footer class="max-w-7xl mx-auto px-6 py-8 text-xs text-slate-500">
+			Built for rapid prototyping. Provider is switchable (Mock/OpenAI).
+		</footer>
+
+		<script type="module" src="/static/app.js?v=dev45"></script>
+	</body>
+</html>

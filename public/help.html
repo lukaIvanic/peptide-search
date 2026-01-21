@@ -1,0 +1,110 @@
+<!doctype html>
+<html lang="en">
+	<head>
+		<meta charset="UTF-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+		<title>Help - Peptide Literature Extractor</title>
+		<link rel="preconnect" href="https://fonts.googleapis.com">
+		<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+		<link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Varela+Round&display=swap" rel="stylesheet">
+		<script src="https://cdn.tailwindcss.com"></script>
+		<link rel="stylesheet" href="/static/styles.css?v=dev45" />
+		<script src="/static/app_config.js?v=dev45"></script>
+	</head>
+	<body class="theme-synthwave">
+		<header class="bg-white border-b border-slate-200">
+			<div class="max-w-5xl mx-auto px-6 py-5 flex items-center justify-between">
+				<div class="flex items-center gap-3">
+					<div class="w-9 h-9 rounded-lg bg-gradient-to-br from-indigo-500 to-cyan-500 shadow-md"></div>
+					<div>
+						<h1 class="text-xl font-semibold">Help & Quickstart</h1>
+						<p class="text-xs text-slate-500">How to use the app efficiently</p>
+					</div>
+				</div>
+				<div class="flex items-center gap-4 text-xs">
+					<a href="/" class="text-indigo-600 hover:underline">Dashboard</a>
+					<a href="/entities" class="text-indigo-600 hover:underline">Entity Explorer</a>
+				</div>
+			</div>
+		</header>
+
+		<main class="max-w-5xl mx-auto px-6 py-6 space-y-6 text-sm text-slate-700">
+			<section class="bg-white border border-slate-200 rounded-xl shadow-sm p-6 space-y-3">
+				<h2 class="text-base font-semibold">Quickstart</h2>
+				<ul class="list-disc list-inside space-y-1">
+					<li>Search on the dashboard and start extraction to create runs.</li>
+					<li>Open a run to see entities, prompts, and raw JSON.</li>
+					<li>Filter the papers table by status or source to focus QA.</li>
+					<li>Use Export CSV to snapshot the current filtered list.</li>
+					<li>Use Entity Explorer for QA across all runs.</li>
+					<li>Edit a run to create a new version (append-only).</li>
+					<li>Use “Start tour” in the header for guided walkthroughs.</li>
+				</ul>
+			</section>
+
+			<section class="bg-white border border-slate-200 rounded-xl shadow-sm p-6 space-y-3">
+				<h2 class="text-base font-semibold">Entity Explorer</h2>
+				<ul class="list-disc list-inside space-y-1">
+					<li>Filter by provider, prompt version, source, and flags.</li>
+					<li>Use Latest run only and Recent (minutes) to focus new data.</li>
+					<li>Use Evidence Gaps view to see which fields lack evidence most often.</li>
+					<li>When grouping by SMILES/InChI, enable Show missing key to see (missing).</li>
+					<li>Review mode surfaces flagged entities and provides next/random stepping.</li>
+					<li>Keyboard shortcuts: N (next), R (random), E (toggle evidence gaps).</li>
+					<li>Prompt comparison shows KPI deltas between two prompt versions.</li>
+				</ul>
+			</section>
+
+			<section class="bg-white border border-slate-200 rounded-xl shadow-sm p-6 space-y-3">
+				<h2 class="text-base font-semibold">Run Details & Editor</h2>
+				<ul class="list-disc list-inside space-y-1">
+					<li>Run page shows entities, prompts, and raw JSON.</li>
+					<li>Compare versions defaults to older → newer and labels show order.</li>
+					<li>Changes & Evidence uses field-level evidence for WHY.</li>
+					<li>Follow-up chat creates a new run version from prior context.</li>
+					<li>If streaming tokens are unavailable, a status message is shown.</li>
+					<li>Editor creates append-only versions with reasons and evidence updates.</li>
+				</ul>
+			</section>
+
+			<section class="bg-white border border-slate-200 rounded-xl shadow-sm p-6 space-y-3">
+				<h2 class="text-base font-semibold">Failure triage</h2>
+				<ul class="list-disc list-inside space-y-1">
+					<li>Use the Failure breakdown panel on the dashboard to spot clusters.</li>
+					<li>Click View on any bucket to open a drilldown list of runs.</li>
+					<li>Open a sample failed run directly from each category or reason.</li>
+					<li>Use “Retry list” to re-queue all failures in the drilldown.</li>
+					<li>Adjust the window to 7/30/90 days to focus your diagnosis.</li>
+				</ul>
+			</section>
+
+			<section class="bg-white border border-slate-200 rounded-xl shadow-sm p-6 space-y-3">
+				<h2 class="text-base font-semibold">Keyboard shortcuts</h2>
+				<ul class="list-disc list-inside space-y-1">
+					<li><strong>/</strong> focus search input.</li>
+					<li><strong>F</strong> focus papers filter input.</li>
+					<li><strong>Shift + F</strong> filter to Failed.</li>
+					<li><strong>Shift + P</strong> filter to Processing.</li>
+					<li><strong>Shift + N</strong> filter to No runs.</li>
+					<li><strong>Shift + C</strong> clear filters.</li>
+					<li><strong>Shift + E</strong> export CSV (failure modal takes precedence).</li>
+					<li><strong>Esc</strong> close the failure drilldown.</li>
+				</ul>
+			</section>
+
+			<section class="bg-white border border-slate-200 rounded-xl shadow-sm p-6 space-y-3">
+				<h2 class="text-base font-semibold">Quality Rules</h2>
+				<p>Use the Quality Rules panel to tune validation thresholds (pH, temperature, invalid sequences, missing evidence) and observe how flags/KPIs change.</p>
+			</section>
+
+			<section class="bg-white border border-slate-200 rounded-xl shadow-sm p-6 space-y-3">
+				<h2 class="text-base font-semibold">Troubleshooting</h2>
+				<ul class="list-disc list-inside space-y-1">
+					<li>If changes are not visible, refresh and check cache-busting parameters.</li>
+					<li>If the server appears stuck, restart `uvicorn app.main:app` (no reload for stability).</li>
+					<li>Evidence display requires `entity_index` to be populated (newer runs).</li>
+				</ul>
+			</section>
+		</main>
+	</body>
+</html>

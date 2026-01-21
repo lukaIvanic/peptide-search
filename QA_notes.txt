@@ -1,0 +1,2 @@
+The "recent failures" section is slightly annoying because it's bulky and as far as I can see doesn't offer any extra information or features that the Paper & Extraction Status table doesn't have.
+

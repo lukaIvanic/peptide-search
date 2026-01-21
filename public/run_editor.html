@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang="en">
+	<head>
+		<meta charset="UTF-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+		<title>Run Editor - Peptide Literature Extractor</title>
+		<link rel="preconnect" href="https://fonts.googleapis.com">
+		<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+		<link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Varela+Round&display=swap" rel="stylesheet">
+		<script src="https://cdn.tailwindcss.com"></script>
+		<link rel="stylesheet" href="/static/styles.css?v=dev45" />
+		<script src="/static/app_config.js?v=dev45"></script>
+	</head>
+	<body class="theme-synthwave">
+		<header class="bg-white border-b border-slate-200">
+			<div class="max-w-5xl mx-auto px-6 py-5 flex items-center justify-between">
+				<div class="flex items-center gap-3">
+					<div class="w-9 h-9 rounded-lg bg-gradient-to-br from-indigo-500 to-cyan-500 shadow-md"></div>
+					<div>
+						<h1 class="text-xl font-semibold">Run Editor</h1>
+						<p class="text-xs text-slate-500">Edit fields, evidence, and save a new version</p>
+					</div>
+				</div>
+				<div class="flex items-center gap-3 text-xs">
+					<a id="backToRun" href="#" class="text-indigo-600 hover:underline">Back to run</a>
+					<a href="/help" class="text-indigo-600 hover:underline">Help</a>
+				</div>
+			</div>
+		</header>
+
+		<main class="max-w-5xl mx-auto px-6 py-6 space-y-6">
+			<section class="bg-white border border-slate-200 rounded-xl shadow-sm p-6">
+				<h2 class="text-base font-semibold mb-4">Paper</h2>
+				<div id="paperFields" class="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm"></div>
+			</section>
+
+			<section class="bg-white border border-slate-200 rounded-xl shadow-sm p-6">
+				<div class="flex items-center justify-between mb-4">
+					<h2 class="text-base font-semibold">Entities</h2>
+					<button id="addEntityBtn" class="h-9 px-3 rounded-md bg-indigo-600 text-white text-xs font-medium hover:bg-indigo-700">Add Entity</button>
+				</div>
+				<div id="entitiesEditor" class="space-y-6"></div>
+			</section>
+
+			<section class="bg-white border border-slate-200 rounded-xl shadow-sm p-6">
+				<h2 class="text-base font-semibold mb-4">Comment</h2>
+				<textarea id="commentField" rows="3" class="w-full rounded-lg border border-slate-300 p-3 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"></textarea>
+			</section>
+
+			<section class="bg-white border border-slate-200 rounded-xl shadow-sm p-6">
+				<h2 class="text-base font-semibold mb-4">Save</h2>
+				<textarea id="editReason" rows="2" class="w-full rounded-lg border border-slate-300 p-3 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" placeholder="Why are you editing this run?"></textarea>
+				<div class="mt-3 flex items-center gap-3">
+					<button id="saveBtn" class="h-9 px-4 rounded-lg bg-emerald-600 text-white text-sm font-medium hover:bg-emerald-700">Save New Version</button>
+					<span id="saveStatus" class="text-xs text-slate-500"></span>
+				</div>
+			</section>
+		</main>
+
+		<script type="module" src="/static/run_editor.js?v=dev45"></script>
+	</body>
+</html>

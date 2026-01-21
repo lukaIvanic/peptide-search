@@ -1,0 +1,172 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Minimal Luxe Preview</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600;700&family=DM+Sans:wght@400;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="./minimal_luxe.css" />
+  </head>
+  <body>
+    <div class="page">
+      <header class="topbar">
+        <div class="brand">
+          <div class="logo"></div>
+          <div>
+            <div class="title">Peptide Literature Extractor</div>
+            <div class="subtitle">Quiet luxury for structured science</div>
+          </div>
+        </div>
+        <div class="nav">
+          <a href="#">Dashboard</a>
+          <a href="#">Entity Explorer</a>
+          <a href="#">Help</a>
+          <button class="btn ghost">Start tour</button>
+        </div>
+      </header>
+
+      <section class="card hero">
+        <div class="section-title">Search scientific literature</div>
+        <div class="row">
+          <input class="input" placeholder="Search by peptide, sequence, DOI..." />
+          <select class="select">
+            <option>OpenAI</option>
+            <option>Mock</option>
+          </select>
+          <button class="btn primary">Search</button>
+        </div>
+        <div class="meta">Sources: PMC, arXiv, Europe PMC, Semantic Scholar</div>
+      </section>
+
+      <section class="grid two-col">
+        <div class="card">
+          <div class="section-title">Search Results</div>
+          <div class="list">
+            <div class="list-row">
+              <div class="list-main">
+                <div class="list-title">Self-assembling peptide hydrogel for bone regeneration</div>
+                <div class="list-meta">EUROPEPMC - 2023 - 10.1234/pept.2023.11</div>
+              </div>
+              <div class="badges">
+                <span class="badge queued">Queued</span>
+                <span class="chip">PDF</span>
+              </div>
+            </div>
+            <div class="list-row">
+              <div class="list-main">
+                <div class="list-title">Supramolecular peptide nanofibers in wound healing</div>
+                <div class="list-meta">PMC - 2022 - 10.5555/pmc.7788</div>
+              </div>
+              <div class="badges">
+                <span class="badge processing">Processing</span>
+                <span class="chip">PDF</span>
+              </div>
+            </div>
+          </div>
+          <div class="actions">
+            <button class="btn">Select all</button>
+            <button class="btn primary">Start extraction</button>
+          </div>
+        </div>
+        <div class="stack">
+          <div class="card">
+            <div class="section-title">Queue status</div>
+            <div class="kpis">
+              <div class="kpi">
+                <div class="kpi-label">Processing</div>
+                <div class="kpi-value">3</div>
+              </div>
+              <div class="kpi">
+                <div class="kpi-label">Queued</div>
+                <div class="kpi-value">7</div>
+              </div>
+              <div class="kpi">
+                <div class="kpi-label">Failed</div>
+                <div class="kpi-value">2</div>
+              </div>
+            </div>
+            <div class="progress">
+              <span style="width: 62%"></span>
+            </div>
+          </div>
+          <div class="card">
+            <div class="section-title">Recent failures</div>
+            <div class="list compact">
+              <div class="list-row">
+                <div class="list-main">
+                  <div class="list-title">PDF download error</div>
+                  <div class="list-meta">OpenAI - 5m ago</div>
+                </div>
+                <span class="badge failed">Failed</span>
+              </div>
+              <div class="list-row">
+                <div class="list-main">
+                  <div class="list-title">Parse/validation error</div>
+                  <div class="list-meta">DeepSeek - 17m ago</div>
+                </div>
+                <span class="badge failed">Failed</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="card">
+        <div class="section-title">Papers & Extraction Status</div>
+        <div class="table">
+          <div class="table-row header">
+            <div>Status</div>
+            <div>Paper</div>
+            <div>Runs</div>
+            <div>Updated</div>
+          </div>
+          <div class="table-row">
+            <div><span class="badge done">Done</span></div>
+            <div>
+              <div class="list-title">Comparative analysis of self-assembling hydrogels</div>
+              <div class="list-meta">EUROPEPMC - 2024 - 10.4444/pept.9001</div>
+            </div>
+            <div>3</div>
+            <div>2m ago</div>
+          </div>
+        </div>
+      </section>
+
+      <section class="grid two-col">
+        <div class="card">
+          <div class="section-title">Run details</div>
+          <div class="field"><span>Provider</span> OpenAI - GPT-4o</div>
+          <div class="field"><span>Status</span> Stored</div>
+          <div class="field"><span>Created</span> 12 minutes ago</div>
+          <div class="code">Follow-up stream: "Update morphology and evidence..."</div>
+        </div>
+        <div class="card">
+          <div class="section-title">Changes & Evidence</div>
+          <div class="diff-row added">+ morphology: nanofiber -> nanoribbon</div>
+          <div class="diff-row removed">- pH: 7.4</div>
+          <div class="diff-note">Why: "Gel formation observed in TEM images, page 4."</div>
+        </div>
+      </section>
+
+      <section class="card">
+        <div class="section-title">Entity explorer</div>
+        <div class="filters">
+          <span class="chip">Latest run only</span>
+          <span class="chip">Missing evidence</span>
+          <span class="chip">Group: SMILES</span>
+        </div>
+        <div class="list">
+          <div class="list-row">
+            <div class="list-main">
+              <div class="list-title">Fmoc-FF (peptide)</div>
+              <div class="list-meta">Morphology: nanofiber - pH: 7.2 - Hydrogel: Yes</div>
+            </div>
+            <span class="badge warn">Evidence gaps</span>
+          </div>
+        </div>
+      </section>
+    </div>
+  </body>
+</html>
