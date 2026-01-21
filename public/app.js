@@ -922,7 +922,7 @@ async function loadRecentFailures() {
         empty.classList.add('hidden');
         runs.forEach((run) => {
             const row = document.createElement('div');
-            row.className = 'sw-row border-l-red-400 p-4 flex items-start justify-between gap-4';
+            row.className = 'sw-row sw-card sw-card--danger border-l-red-400 p-4 flex items-start justify-between gap-4';
             const info = document.createElement('div');
             info.className = 'text-xs text-slate-600';
             const title = run.paper?.title || `Paper ${run.paper_id || ''}`;
@@ -988,9 +988,9 @@ function renderFailureGroup(title, items, options = {}) {
         labelText.textContent = item.label || item.key;
 
         const bar = document.createElement('div');
-        bar.className = 'h-1 mt-1 bg-slate-200 rounded-full overflow-hidden';
+        bar.className = 'sw-meter h-1 mt-1 rounded-full overflow-hidden';
         const fill = document.createElement('div');
-        fill.className = 'h-full bg-indigo-400';
+        fill.className = 'sw-meter__fill h-full';
         const ratio = Math.round((item.count / maxCount) * 100);
         fill.style.width = `${Math.max(ratio, 8)}%`;
         bar.appendChild(fill);
@@ -1110,7 +1110,7 @@ function renderFailureModalList(items, days) {
     failureModalItems = items.slice();
     items.forEach((run) => {
         const row = document.createElement('div');
-        row.className = 'sw-row border-l-red-400 p-4 flex items-start justify-between gap-4';
+        row.className = 'sw-row sw-card sw-card--danger border-l-red-400 p-4 flex items-start justify-between gap-4';
 
         const info = document.createElement('div');
         info.className = 'text-xs text-slate-600';

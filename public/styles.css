@@ -678,6 +678,7 @@ body.theme-synthwave {
 	color: #ffaa00;
 	border-color: #ffaa00;
 	box-shadow: 0 0 5px #ffaa00;
+	animation: swPulse 1.6s ease-in-out infinite;
 }
 
 .theme-synthwave .sw-badge--done {
@@ -722,6 +723,7 @@ body.theme-synthwave {
 .theme-synthwave .sw-dot--processing {
 	background: #ffaa00;
 	color: #ffaa00;
+	animation: swPulse 1.4s ease-in-out infinite;
 }
 
 .theme-synthwave .sw-dot--done {
@@ -737,6 +739,29 @@ body.theme-synthwave {
 .theme-synthwave .sw-dot--muted {
 	background: #ff71ce;
 	color: #ff71ce;
+}
+
+.theme-synthwave .sw-meter {
+	background: rgba(0, 255, 255, 0.12);
+	border: 1px solid rgba(0, 255, 255, 0.35);
+	box-shadow: inset 0 0 8px rgba(0, 255, 255, 0.25);
+}
+
+.theme-synthwave .sw-meter__fill {
+	background: linear-gradient(90deg, #ff00ff, #00ffff);
+	box-shadow: 0 0 10px rgba(255, 0, 255, 0.6);
+}
+
+@keyframes swPulse {
+	0% {
+		box-shadow: 0 0 4px currentColor;
+	}
+	50% {
+		box-shadow: 0 0 10px currentColor;
+	}
+	100% {
+		box-shadow: 0 0 4px currentColor;
+	}
 }
 
 .theme-synthwave #progressBar {

@@ -172,7 +172,7 @@ export function renderSearchResults(items, selectedMap, onToggle, isSearching = 
             links.appendChild(a);
         }
         if (!it.pdf_url) {
-            links.appendChild(el('span', 'text-xs text-slate-400', 'No PDF available'));
+            links.appendChild(el('span', 'sw-badge sw-badge--warn', 'No PDF'));
         }
         content.appendChild(links);
         
