@@ -963,7 +963,7 @@ function renderFailureGroup(title, items, options = {}) {
     const section = document.createElement('div');
     section.className = `space-y-3 ${options.fullWidth ? 'md:col-span-3' : ''}`;
     const heading = document.createElement('div');
-    heading.className = 'text-[11px] uppercase tracking-wide text-slate-400';
+    heading.className = 'sw-kicker text-[11px] text-slate-400';
     heading.textContent = title;
     section.appendChild(heading);
 
@@ -1120,7 +1120,7 @@ function renderFailureModalList(items, days) {
         info.innerHTML = `
             <div class="text-sm font-medium text-slate-800">${title}</div>
             <div class="text-xs text-slate-500 mt-1">${metaLine}</div>
-            <div class="text-[11px] text-slate-500 mt-1 uppercase tracking-wide">${run.bucket || 'unknown'}</div>
+            <div class="sw-kicker text-[11px] text-slate-500 mt-1">${run.bucket || 'unknown'}</div>
             <div class="text-xs text-red-600 mt-2">${reason}</div>
         `;
 

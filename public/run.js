@@ -68,8 +68,8 @@ function renderEntities(rawJson) {
 	}
 
 	rawJson.entities.forEach((entity, index) => {
-		const card = el('div', 'rounded-lg border border-slate-200 bg-slate-50 p-4');
-		card.appendChild(el('div', 'text-xs uppercase tracking-wide text-slate-500', `Entity ${index + 1}`));
+		const card = el('div', 'sw-card rounded-lg border border-slate-200 bg-slate-50 p-4');
+		card.appendChild(el('div', 'sw-kicker text-xs text-slate-500', `Entity ${index + 1}`));
 		card.appendChild(el('div', 'text-sm font-medium text-slate-900 mt-1', entity.type || 'entity'));
 
 		if (entity.type === 'peptide' && entity.peptide) {
@@ -171,7 +171,7 @@ function renderEntityDetails(entity) {
 	const wrapper = el('div', 'mt-3 grid grid-cols-1 md:grid-cols-2 gap-2 text-xs');
 	rows.forEach(({ label, value }) => {
 		const row = el('div', 'flex flex-col gap-1');
-		row.appendChild(el('div', 'text-[10px] uppercase tracking-wide text-slate-400', label));
+		row.appendChild(el('div', 'sw-kicker text-[10px] text-slate-400', label));
 		const text = Array.isArray(value) ? value.join(', ') : String(value);
 		row.appendChild(el('div', 'text-slate-700 break-words', text));
 		wrapper.appendChild(row);
@@ -200,7 +200,7 @@ function renderPrompts(prompts) {
 
 function renderPromptBlock(label, text) {
 	const block = el('div', 'space-y-1');
-	block.appendChild(el('div', 'text-xs uppercase tracking-wide text-slate-500', label));
+	block.appendChild(el('div', 'sw-kicker text-xs text-slate-500', label));
 	const pre = el('pre', 'p-3 bg-slate-900 text-slate-100 rounded text-[11px] leading-relaxed max-h-64 overflow-auto');
 	pre.textContent = text;
 	block.appendChild(pre);
@@ -232,7 +232,7 @@ function renderDiff(beforeJson, afterJson) {
 	}
 
 	if (afterJson.comment) {
-		const commentBox = el('div', 'p-3 rounded-md border border-amber-200 bg-amber-50 text-xs text-amber-800');
+		const commentBox = el('div', 'sw-card sw-card--warning p-3 rounded-md border border-amber-200 bg-amber-50 text-xs text-amber-800');
 		commentBox.textContent = afterJson.comment;
 		container.appendChild(commentBox);
 	}
@@ -243,15 +243,15 @@ function renderDiff(beforeJson, afterJson) {
 	}
 
 	changes.forEach((change) => {
-		const card = el('div', 'rounded-md border border-slate-200 bg-slate-50 p-3 space-y-3');
+		const card = el('div', 'sw-card rounded-md border border-slate-200 bg-slate-50 p-3 space-y-3');
 		card.appendChild(el('div', 'text-xs font-semibold text-slate-700', humanizePath(change.path)));
 
 		const grid = el('div', 'grid grid-cols-1 md:grid-cols-2 gap-3 text-xs');
-		const beforeBox = el('div', 'rounded-md border border-red-200 bg-red-50 p-2 text-red-700');
-		beforeBox.appendChild(el('div', 'text-[10px] uppercase tracking-wide text-red-500', 'Before'));
+		const beforeBox = el('div', 'sw-card sw-card--danger rounded-md border border-red-200 bg-red-50 p-2 text-red-700');
+		beforeBox.appendChild(el('div', 'sw-kicker text-[10px] text-red-500', 'Before'));
 		beforeBox.appendChild(el('div', 'mt-1 break-words', formatValue(change.before)));
-		const afterBox = el('div', 'rounded-md border border-emerald-200 bg-emerald-50 p-2 text-emerald-700');
-		afterBox.appendChild(el('div', 'text-[10px] uppercase tracking-wide text-emerald-600', 'After'));
+		const afterBox = el('div', 'sw-card sw-card--success rounded-md border border-emerald-200 bg-emerald-50 p-2 text-emerald-700');
+		afterBox.appendChild(el('div', 'sw-kicker text-[10px] text-emerald-600', 'After'));
 		afterBox.appendChild(el('div', 'mt-1 break-words', formatValue(change.after)));
 		grid.appendChild(beforeBox);
 		grid.appendChild(afterBox);
@@ -259,7 +259,7 @@ function renderDiff(beforeJson, afterJson) {
 
 		const evidence = extractEvidence(afterJson, change.path);
 		const reasonBox = el('div', 'text-xs text-slate-600');
-		reasonBox.appendChild(el('div', 'text-[10px] uppercase tracking-wide text-slate-500', 'Why'));
+		reasonBox.appendChild(el('div', 'sw-kicker text-[10px] text-slate-500', 'Why'));
 		if (evidence.length) {
 			evidence.forEach((item) => {
 				const label = [

@@ -80,6 +80,11 @@ body.theme-synthwave {
 	color: #ffffff;
 }
 
+.theme-synthwave {
+	scrollbar-color: #ff00ff rgba(10, 4, 24, 0.8);
+	scrollbar-width: thin;
+}
+
 .theme-synthwave h1,
 .theme-synthwave h2,
 .theme-synthwave h3,
@@ -146,6 +151,18 @@ body.theme-synthwave {
 .theme-synthwave input::placeholder,
 .theme-synthwave textarea::placeholder {
 	color: rgba(255, 113, 206, 0.7);
+}
+
+.theme-synthwave select {
+	appearance: none;
+	background-image:
+		linear-gradient(45deg, transparent 50%, #00ffff 50%),
+		linear-gradient(135deg, #00ffff 50%, transparent 50%);
+	background-position:
+		calc(100% - 18px) calc(50% - 3px),
+		calc(100% - 12px) calc(50% - 3px);
+	background-size: 6px 6px, 6px 6px;
+	background-repeat: no-repeat;
 }
 
 .theme-synthwave input[type="checkbox"] {
@@ -376,6 +393,11 @@ body.theme-synthwave {
 	box-shadow: 0 0 10px rgba(0, 255, 255, 0.2) !important;
 }
 
+.theme-synthwave .shadow-sm {
+	position: relative;
+	background-image: linear-gradient(180deg, rgba(255, 0, 255, 0.12), rgba(26, 11, 46, 0) 35%);
+}
+
 .theme-synthwave .shadow-xl,
 .theme-synthwave .shadow-2xl {
 	box-shadow: 0 0 20px rgba(255, 0, 255, 0.35) !important;
@@ -470,6 +492,13 @@ body.theme-synthwave {
 	color: #00ffff;
 }
 
+.theme-synthwave .sw-kicker {
+	font-family: "Press Start 2P", cursive;
+	letter-spacing: 1px;
+	text-transform: uppercase;
+	text-shadow: 0 0 6px currentColor;
+}
+
 .theme-synthwave .sw-card {
 	position: relative;
 }
@@ -511,10 +540,52 @@ body.theme-synthwave {
 	color: #ffffff;
 }
 
+.theme-synthwave .sw-card--warning {
+	border-color: #ffaa00;
+	background: rgba(255, 170, 0, 0.12);
+	box-shadow: 0 0 12px rgba(255, 170, 0, 0.2);
+}
+
+.theme-synthwave .sw-card--danger {
+	border-color: #ff0000;
+	background: rgba(255, 0, 0, 0.12);
+	box-shadow: 0 0 12px rgba(255, 0, 0, 0.2);
+}
+
+.theme-synthwave .sw-card--success {
+	border-color: #00ff00;
+	background: rgba(0, 255, 0, 0.12);
+	box-shadow: 0 0 12px rgba(0, 255, 0, 0.2);
+}
+
+.theme-synthwave .sw-card--warning::after {
+	border-color: rgba(255, 170, 0, 0.7);
+}
+
+.theme-synthwave .sw-card--danger::after {
+	border-color: rgba(255, 0, 0, 0.7);
+}
+
+.theme-synthwave .sw-card--success::after {
+	border-color: rgba(0, 255, 0, 0.7);
+}
+
 .theme-synthwave .sw-row {
 	background: linear-gradient(90deg, rgba(255, 0, 255, 0.05), transparent);
 	border-left: 4px solid #00ffff;
 	transition: all 0.2s;
+}
+
+.theme-synthwave .sw-row--header {
+	background: linear-gradient(90deg, rgba(0, 255, 255, 0.16), rgba(255, 0, 255, 0.14));
+	border-left-color: rgba(0, 255, 255, 0.4);
+	text-shadow: 0 0 6px rgba(255, 0, 255, 0.4);
+	cursor: default;
+}
+
+.theme-synthwave .sw-row--header:hover {
+	background: linear-gradient(90deg, rgba(0, 255, 255, 0.16), rgba(255, 0, 255, 0.14));
+	box-shadow: none;
 }
 
 .theme-synthwave .sw-row:hover {
@@ -526,6 +597,13 @@ body.theme-synthwave {
 	background: linear-gradient(90deg, rgba(255, 0, 255, 0.2), transparent);
 	border-left-color: #ff00ff;
 	box-shadow: 0 0 12px rgba(255, 0, 255, 0.25);
+}
+
+.theme-synthwave .sw-row:focus-visible,
+.theme-synthwave .sw-row:focus-within {
+	outline: 2px solid rgba(0, 255, 255, 0.7);
+	outline-offset: -2px;
+	box-shadow: 0 0 14px rgba(0, 255, 255, 0.35);
 }
 
 .theme-synthwave .sw-badge {

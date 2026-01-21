@@ -218,7 +218,7 @@ export function renderPapersTable(papers, onRowClick, options = {}) {
     empty.classList.add('hidden');
     
     for (const p of papers) {
-        const row = el('div', 'px-6 py-4 hover:bg-slate-50 cursor-pointer transition-colors flex items-center gap-4');
+        const row = el('div', 'sw-row px-6 py-4 hover:bg-slate-50 cursor-pointer transition-colors flex items-center gap-4');
         row.setAttribute('role', 'button');
         row.setAttribute('tabindex', '0');
         row.setAttribute('aria-label', `Open details for ${p.title}`);
@@ -330,7 +330,7 @@ export function renderDrawer(paper, runs) {
     content.appendChild(header);
     
     // Runs section
-    content.appendChild(el('div', 'text-xs uppercase tracking-wide text-slate-500 mb-3', `Extraction Runs (${runs.length})`));
+    content.appendChild(el('div', 'sw-kicker text-xs text-slate-500 mb-3', `Extraction Runs (${runs.length})`));
     
     if (runs.length === 0) {
         content.appendChild(el('div', 'text-sm text-slate-500', 'No extraction runs yet.'));
@@ -446,7 +446,7 @@ function getRunEntities(run) {
 
 function renderEntitiesSummary(entities) {
     const section = el('div', 'mt-3');
-    section.appendChild(el('div', 'text-xs uppercase tracking-wide text-slate-500 mb-2', `Entities (${entities.length})`));
+    section.appendChild(el('div', 'sw-kicker text-xs text-slate-500 mb-2', `Entities (${entities.length})`));
 
     const list = el('div', 'space-y-2');
     entities.forEach((entity, idx) => {
