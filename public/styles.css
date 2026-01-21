@@ -132,6 +132,12 @@ body.theme-synthwave {
 	box-shadow: none;
 }
 
+.theme-synthwave footer {
+	border-top: 2px solid #ff00ff;
+	background: rgba(20, 10, 40, 0.85);
+	box-shadow: 0 -10px 20px rgba(255, 0, 255, 0.25);
+}
+
 .theme-synthwave button,
 .theme-synthwave .btn {
 	font-family: "Press Start 2P", cursive;
@@ -163,6 +169,7 @@ body.theme-synthwave {
 		calc(100% - 12px) calc(50% - 3px);
 	background-size: 6px 6px, 6px 6px;
 	background-repeat: no-repeat;
+	padding-right: 32px;
 }
 
 .theme-synthwave input[type="checkbox"] {
@@ -237,6 +244,8 @@ body.theme-synthwave {
 
 .theme-synthwave .bg-slate-100 {
 	background: rgba(255, 0, 255, 0.06) !important;
+	border: 1px solid rgba(0, 255, 255, 0.25);
+	box-shadow: 0 0 6px rgba(255, 0, 255, 0.2);
 }
 
 .theme-synthwave .bg-slate-200 {
@@ -257,6 +266,8 @@ body.theme-synthwave {
 
 .theme-synthwave .bg-emerald-100 {
 	background: rgba(0, 255, 0, 0.1) !important;
+	border: 1px solid rgba(0, 255, 0, 0.5);
+	box-shadow: 0 0 8px rgba(0, 255, 0, 0.25);
 }
 
 .theme-synthwave .bg-indigo-50 {
@@ -281,6 +292,8 @@ body.theme-synthwave {
 
 .theme-synthwave .bg-red-100 {
 	background: rgba(255, 0, 0, 0.2) !important;
+	border: 1px solid rgba(255, 0, 0, 0.55);
+	box-shadow: 0 0 8px rgba(255, 0, 0, 0.25);
 }
 
 .theme-synthwave .bg-emerald-500 {
@@ -293,6 +306,8 @@ body.theme-synthwave {
 
 .theme-synthwave .bg-amber-100 {
 	background: rgba(255, 170, 0, 0.2) !important;
+	border: 1px solid rgba(255, 170, 0, 0.55);
+	box-shadow: 0 0 8px rgba(255, 170, 0, 0.25);
 }
 
 .theme-synthwave .bg-red-500 {
@@ -364,6 +379,15 @@ body.theme-synthwave {
 
 .theme-synthwave .border-emerald-200 {
 	border-color: #00ff00 !important;
+}
+
+.theme-synthwave .border-t-indigo-500 {
+	border-top-color: #ff00ff !important;
+	box-shadow: 0 0 8px rgba(255, 0, 255, 0.6);
+}
+
+.theme-synthwave .animate-spin {
+	filter: drop-shadow(0 0 6px rgba(255, 0, 255, 0.6));
 }
 
 .theme-synthwave .border-l-amber-400 {
@@ -501,6 +525,7 @@ body.theme-synthwave {
 
 .theme-synthwave .sw-card {
 	position: relative;
+	transition: box-shadow 0.2s ease, border-color 0.2s ease;
 }
 
 .theme-synthwave .sw-card::after {
@@ -538,6 +563,10 @@ body.theme-synthwave {
 	border-color: #ffff00;
 	background: rgba(255, 255, 0, 0.1);
 	color: #ffffff;
+}
+
+.theme-synthwave .sw-card:hover {
+	box-shadow: 0 0 18px rgba(0, 255, 255, 0.35);
 }
 
 .theme-synthwave .sw-card--warning {

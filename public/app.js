@@ -922,7 +922,7 @@ async function loadRecentFailures() {
         empty.classList.add('hidden');
         runs.forEach((run) => {
             const row = document.createElement('div');
-            row.className = 'p-4 flex items-start justify-between gap-4';
+            row.className = 'sw-row border-l-red-400 p-4 flex items-start justify-between gap-4';
             const info = document.createElement('div');
             info.className = 'text-xs text-slate-600';
             const title = run.paper?.title || `Paper ${run.paper_id || ''}`;
@@ -1110,7 +1110,7 @@ function renderFailureModalList(items, days) {
     failureModalItems = items.slice();
     items.forEach((run) => {
         const row = document.createElement('div');
-        row.className = 'p-4 flex items-start justify-between gap-4';
+        row.className = 'sw-row border-l-red-400 p-4 flex items-start justify-between gap-4';
 
         const info = document.createElement('div');
         info.className = 'text-xs text-slate-600';
