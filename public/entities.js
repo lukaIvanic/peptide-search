@@ -573,7 +573,7 @@ function renderMetaBlocks(data) {
 
 function renderMissingEvidenceSummary(data) {
 	const missing = data.missing_evidence_fields || [];
-	if (!missing.length) return el('div', 'text-xs text-slate-400', 'All extracted fields have evidence.');
+	if (!missing.length) return el('div', 'sw-empty text-xs text-slate-400 p-2', 'All extracted fields have evidence.');
 	const wrapper = el('div', 'text-xs text-amber-600 space-y-1');
 	wrapper.appendChild(el('div', 'sw-kicker text-[10px] text-amber-500', 'Missing evidence'));
 	missing.slice(0, 8).forEach((field) => {
@@ -907,7 +907,7 @@ function renderBucketList(label, items) {
 	const block = el('div', 'space-y-1');
 	block.appendChild(el('div', 'sw-kicker text-[10px] text-slate-400', label));
 	if (!items.length) {
-		block.appendChild(el('div', 'text-slate-400', 'No data'));
+		block.appendChild(el('div', 'sw-empty text-slate-400 p-2', 'No data'));
 		return block;
 	}
 	items.forEach((item) => {

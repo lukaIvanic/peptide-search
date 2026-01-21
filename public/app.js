@@ -969,7 +969,7 @@ function renderFailureGroup(title, items, options = {}) {
 
     if (!items || items.length === 0) {
         const empty = document.createElement('div');
-        empty.className = 'text-xs text-slate-400';
+        empty.className = 'sw-empty text-xs text-slate-400 p-3';
         empty.textContent = 'No data';
         section.appendChild(empty);
         return section;
@@ -1253,7 +1253,7 @@ async function loadFailureModalRuns() {
     const select = document.querySelector('#failureWindow');
     if (!list || !empty) return;
     const days = Number.parseInt(select?.value || '30', 10);
-    list.innerHTML = '<div class="p-4 text-xs text-slate-500">Loading failures...</div>';
+    list.innerHTML = '<div class="sw-empty p-4 text-xs text-slate-500">Loading failures...</div>';
     try {
         const data = await api.getFailedRuns({
             ...failureModalState.filters,
@@ -1275,7 +1275,7 @@ async function loadFailureSummary() {
     const select = document.querySelector('#failureWindow');
     if (!container || !empty) return;
     const days = Number.parseInt(select?.value || '30', 10);
-    container.innerHTML = '<div class="md:col-span-3 text-xs text-slate-500">Loading failure summary...</div>';
+    container.innerHTML = '<div class="sw-empty md:col-span-3 text-xs text-slate-500 p-4">Loading failure summary...</div>';
     try {
         const summary = await api.getFailureSummary(days, 1000);
         renderFailureSummary(summary);

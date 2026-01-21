@@ -63,7 +63,7 @@ function renderEntities(rawJson) {
 	const container = $('#entitiesContainer');
 	container.innerHTML = '';
 	if (!rawJson?.entities?.length) {
-		container.appendChild(el('div', 'text-xs text-slate-500', 'No entities found.'));
+		container.appendChild(el('div', 'sw-empty text-xs text-slate-500 p-3', 'No entities found.'));
 		return;
 	}
 
@@ -183,7 +183,7 @@ function renderPrompts(prompts) {
 	const container = $('#promptsContainer');
 	container.innerHTML = '';
 	if (!prompts) {
-		container.appendChild(el('div', 'text-xs text-slate-500', 'No prompts recorded.'));
+		container.appendChild(el('div', 'sw-empty text-xs text-slate-500 p-3', 'No prompts recorded.'));
 		return;
 	}
 
@@ -220,7 +220,7 @@ function renderDiff(beforeJson, afterJson) {
 	const container = $('#diffContainer');
 	container.innerHTML = '';
 	if (!beforeJson || !afterJson) {
-		container.appendChild(el('div', 'text-xs text-slate-500', 'No diff available.'));
+		container.appendChild(el('div', 'sw-empty text-xs text-slate-500 p-3', 'No diff available.'));
 		return;
 	}
 
@@ -238,7 +238,7 @@ function renderDiff(beforeJson, afterJson) {
 	}
 
 	if (!changes.length) {
-		container.appendChild(el('div', 'text-xs text-slate-500', 'No changes detected.'));
+		container.appendChild(el('div', 'sw-empty text-xs text-slate-500 p-3', 'No changes detected.'));
 		return;
 	}
 
@@ -283,7 +283,7 @@ function renderDiff(beforeJson, afterJson) {
 function resetDiff() {
 	const container = $('#diffContainer');
 	container.innerHTML = '';
-	container.appendChild(el('div', 'text-xs text-slate-500', 'No follow-up diff yet.'));
+	container.appendChild(el('div', 'sw-empty text-xs text-slate-500 p-3', 'No follow-up diff yet.'));
 }
 
 function diffObjects(path, beforeVal, afterVal, changes) {

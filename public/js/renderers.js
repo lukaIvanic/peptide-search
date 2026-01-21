@@ -95,14 +95,14 @@ export function renderSearchResults(items, selectedMap, onToggle, isSearching = 
     if (isSearching) {
         if (selectAllBtn) selectAllBtn.disabled = true;
         if (clearBtn) clearBtn.disabled = true;
-        list.appendChild(el('div', 'py-6 text-sm text-slate-500 text-center', 'Searching...'));
+        list.appendChild(el('div', 'sw-empty py-6 text-sm text-slate-500 text-center', 'Searching...'));
         return;
     }
 
     if (!items || items.length === 0) {
         if (selectAllBtn) selectAllBtn.disabled = true;
         if (clearBtn) clearBtn.disabled = true;
-        list.appendChild(el('div', 'py-6 text-sm text-slate-500 text-center', 'No results found. Try a different query.'));
+        list.appendChild(el('div', 'sw-empty py-6 text-sm text-slate-500 text-center', 'No results found. Try a different query.'));
         return;
     }
 
@@ -160,13 +160,13 @@ export function renderSearchResults(items, selectedMap, onToggle, isSearching = 
         // Links
         const links = el('div', 'mt-2 flex gap-3');
         if (it.url) {
-            const a = el('a', 'text-xs text-indigo-600 hover:underline', 'View');
+            const a = el('a', 'sw-chip text-[10px] text-indigo-600 hover:bg-indigo-50', 'View');
             a.href = it.url;
             a.target = '_blank';
             links.appendChild(a);
         }
         if (it.pdf_url) {
-            const a = el('a', 'text-xs text-emerald-600 hover:underline', 'PDF');
+            const a = el('a', 'sw-chip text-[10px] text-emerald-600 hover:bg-emerald-50', 'PDF');
             a.href = it.pdf_url;
             a.target = '_blank';
             links.appendChild(a);
@@ -333,7 +333,7 @@ export function renderDrawer(paper, runs) {
     content.appendChild(el('div', 'sw-kicker text-xs text-slate-500 mb-3', `Extraction Runs (${runs.length})`));
     
     if (runs.length === 0) {
-        content.appendChild(el('div', 'text-sm text-slate-500', 'No extraction runs yet.'));
+        content.appendChild(el('div', 'sw-empty text-sm text-slate-500 p-3', 'No extraction runs yet.'));
         return;
     }
     
