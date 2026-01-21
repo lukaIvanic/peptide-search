@@ -935,12 +935,12 @@ async function loadRecentFailures() {
             const actions = document.createElement('div');
             actions.className = 'flex flex-col gap-2 text-xs';
             const open = document.createElement('a');
-            open.className = 'text-indigo-600 hover:underline';
+            open.className = 'inline-flex items-center justify-center px-3 py-1.5 rounded-md border border-slate-200 text-xs text-indigo-600 hover:bg-indigo-50';
             open.href = `/runs/${run.id}`;
             open.target = '_blank';
             open.textContent = 'Open run';
             const retry = document.createElement('button');
-            retry.className = 'text-indigo-600 hover:underline';
+            retry.className = 'inline-flex items-center justify-center px-3 py-1.5 rounded-md border border-red-200 text-xs text-red-700 hover:bg-red-50';
             retry.textContent = 'Retry';
             retry.addEventListener('click', async () => {
                 await api.retryRun(run.id);
@@ -978,7 +978,7 @@ function renderFailureGroup(title, items, options = {}) {
     const maxCount = Math.max(...items.map(item => item.count || 0), 1);
     items.forEach((item) => {
         const row = document.createElement('div');
-        row.className = 'flex items-center justify-between gap-3';
+        row.className = 'sw-row px-3 py-2 flex items-center justify-between gap-3';
 
         const label = document.createElement('div');
         label.className = 'flex-1 min-w-0';
@@ -1127,12 +1127,12 @@ function renderFailureModalList(items, days) {
         const actions = document.createElement('div');
         actions.className = 'flex flex-col gap-2 text-xs';
         const open = document.createElement('a');
-        open.className = 'text-indigo-600 hover:underline';
+        open.className = 'inline-flex items-center justify-center px-3 py-1.5 rounded-md border border-slate-200 text-xs text-indigo-600 hover:bg-indigo-50';
         open.href = `/runs/${run.id}`;
         open.target = '_blank';
         open.textContent = 'Open';
         const retry = document.createElement('button');
-        retry.className = 'text-indigo-600 hover:underline';
+        retry.className = 'inline-flex items-center justify-center px-3 py-1.5 rounded-md border border-red-200 text-xs text-red-700 hover:bg-red-50';
         retry.textContent = 'Retry';
         retry.addEventListener('click', async () => {
             await api.retryRun(run.id);

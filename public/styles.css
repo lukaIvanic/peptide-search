@@ -250,10 +250,14 @@ body.theme-synthwave {
 
 .theme-synthwave .bg-slate-200 {
 	background: rgba(255, 0, 255, 0.12) !important;
+	border: 1px solid rgba(0, 255, 255, 0.35);
+	box-shadow: 0 0 8px rgba(255, 0, 255, 0.25);
 }
 
 .theme-synthwave .bg-indigo-100 {
 	background: rgba(255, 0, 255, 0.15) !important;
+	border: 1px solid rgba(255, 0, 255, 0.5);
+	box-shadow: 0 0 8px rgba(255, 0, 255, 0.25);
 }
 
 .theme-synthwave .bg-red-50 {
@@ -337,26 +341,32 @@ body.theme-synthwave {
 
 .theme-synthwave .text-emerald-700 {
 	color: #00ff00 !important;
+	text-shadow: 0 0 6px rgba(0, 255, 0, 0.4);
 }
 
 .theme-synthwave .text-emerald-600 {
 	color: #00ff00 !important;
+	text-shadow: 0 0 6px rgba(0, 255, 0, 0.4);
 }
 
 .theme-synthwave .text-amber-700 {
 	color: #ffaa00 !important;
+	text-shadow: 0 0 6px rgba(255, 170, 0, 0.45);
 }
 
 .theme-synthwave .text-amber-800 {
 	color: #ffaa00 !important;
+	text-shadow: 0 0 6px rgba(255, 170, 0, 0.45);
 }
 
 .theme-synthwave .text-red-700 {
 	color: #ff0000 !important;
+	text-shadow: 0 0 6px rgba(255, 0, 0, 0.45);
 }
 
 .theme-synthwave .text-red-600 {
 	color: #ff0000 !important;
+	text-shadow: 0 0 6px rgba(255, 0, 0, 0.45);
 }
 
 .theme-synthwave .text-slate-100 {
@@ -569,6 +579,11 @@ body.theme-synthwave {
 	box-shadow: 0 0 18px rgba(0, 255, 255, 0.35);
 }
 
+.theme-synthwave .sw-card:focus-within {
+	border-color: #00ffff;
+	box-shadow: 0 0 20px rgba(0, 255, 255, 0.45);
+}
+
 .theme-synthwave .sw-card--warning {
 	border-color: #ffaa00;
 	background: rgba(255, 170, 0, 0.12);
@@ -735,6 +750,19 @@ body.theme-synthwave {
 	box-shadow: 0 0 12px rgba(255, 0, 255, 0.5);
 }
 
+.theme-synthwave #connectionBadge,
+.theme-synthwave #providerBadge {
+	display: inline-flex;
+	align-items: center;
+	gap: 6px;
+	padding: 4px 8px;
+	border: 1px solid rgba(0, 255, 255, 0.35);
+	background: rgba(0, 255, 255, 0.08);
+	box-shadow: inset 0 0 10px rgba(0, 255, 255, 0.15);
+	font-size: 10px;
+	text-shadow: 0 0 6px rgba(0, 255, 255, 0.35);
+}
+
 .theme-synthwave #paperDrawer,
 .theme-synthwave #entityDrawer {
 	border-left: 2px solid #ff00ff;
@@ -786,6 +814,10 @@ body.theme-synthwave {
 
 .theme-synthwave .hover\:bg-amber-50:hover {
 	background: rgba(255, 170, 0, 0.2) !important;
+}
+
+.theme-synthwave .hover\:bg-red-50:hover {
+	background: rgba(255, 0, 0, 0.2) !important;
 }
 
 .theme-synthwave .bg-black\/20,

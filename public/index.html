@@ -72,8 +72,8 @@
 					<div class="flex flex-wrap items-center justify-between gap-3 mb-4">
 						<h3 class="text-base font-semibold">Search Results</h3>
 						<div class="flex flex-wrap items-center gap-3 text-xs text-slate-500">
-							<span id="searchCount"></span>
-							<span id="batchCount" class="text-slate-600 font-medium"></span>
+							<span id="searchCount" class="sw-kicker text-[10px] text-slate-500"></span>
+							<span id="batchCount" class="sw-kicker text-[10px] text-slate-600"></span>
 							<button id="selectAllResults" class="text-indigo-600 hover:underline disabled:opacity-40 disabled:cursor-not-allowed">Select all (PDF)</button>
 							<button id="clearResultsSelection" class="text-indigo-600 hover:underline disabled:opacity-40 disabled:cursor-not-allowed">Clear selection</button>
 							<button id="startBatchBtn" class="h-9 px-4 rounded-lg bg-cyan-600 text-white text-sm font-medium hover:bg-cyan-700 disabled:opacity-50 disabled:cursor-not-allowed" disabled>
@@ -106,7 +106,7 @@
 					<div class="flex items-center justify-between">
 						<h3 class="text-sm font-semibold">Onboarding checklist</h3>
 						<div class="flex items-center gap-3 text-xs text-slate-500">
-							<span id="onboardingProgress"></span>
+							<span id="onboardingProgress" class="sw-kicker text-[10px] text-slate-500"></span>
 							<button id="resetOnboarding" class="text-indigo-600 hover:underline">Reset</button>
 						</div>
 					</div>
@@ -156,7 +156,7 @@
 						<div class="flex items-center justify-between">
 							<h3 class="text-base font-semibold">Papers & Extraction Status</h3>
 							<div class="flex items-center gap-4">
-								<div id="queueStats" class="text-xs text-slate-500"></div>
+								<div id="queueStats" class="sw-kicker text-[10px] text-slate-500"></div>
 								<div id="progressBar" class="hidden w-48 h-2 bg-slate-200 rounded-full overflow-hidden">
 									<div id="progressFill" class="h-full bg-indigo-500 transition-all duration-300" style="width: 0%"></div>
 								</div>
@@ -164,7 +164,7 @@
 						</div>
 						<div class="mt-4 flex flex-wrap items-center justify-between gap-3">
 							<div class="flex items-center gap-2 text-xs text-slate-500">
-								<span id="papersFilterCount"></span>
+								<span id="papersFilterCount" class="sw-kicker text-[10px] text-slate-500"></span>
 								<button id="papersFilterClear" class="text-indigo-600 hover:underline hidden">Clear filters</button>
 							</div>
 							<div class="flex flex-wrap items-center gap-2 text-xs">
