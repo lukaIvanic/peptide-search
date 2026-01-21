@@ -166,6 +166,23 @@ body.theme-synthwave {
 	outline: none;
 }
 
+.theme-synthwave input:disabled,
+.theme-synthwave select:disabled,
+.theme-synthwave textarea:disabled {
+	background: rgba(10, 4, 24, 0.85);
+	border-color: rgba(0, 255, 255, 0.3);
+	color: rgba(0, 255, 255, 0.45);
+	cursor: not-allowed;
+	box-shadow: none;
+}
+
+.theme-synthwave button:disabled,
+.theme-synthwave .btn:disabled {
+	opacity: 0.5;
+	cursor: not-allowed;
+	box-shadow: none;
+}
+
 .theme-synthwave .bg-white {
 	background: rgba(20, 10, 40, 0.8) !important;
 }
@@ -407,6 +424,11 @@ body.theme-synthwave {
 	text-shadow: 0 0 6px rgba(0, 255, 255, 0.4);
 }
 
+.theme-synthwave details summary:focus-visible {
+	outline: 2px solid #00ffff;
+	outline-offset: 4px;
+}
+
 .theme-synthwave details summary::-webkit-details-marker {
 	display: none;
 }
@@ -502,6 +524,8 @@ body.theme-synthwave {
 
 .theme-synthwave .sw-row--selected {
 	background: linear-gradient(90deg, rgba(255, 0, 255, 0.2), transparent);
+	border-left-color: #ff00ff;
+	box-shadow: 0 0 12px rgba(255, 0, 255, 0.25);
 }
 
 .theme-synthwave .sw-badge {
@@ -517,6 +541,7 @@ body.theme-synthwave {
 	font-size: 10px;
 	text-transform: uppercase;
 	color: #00ffff;
+	text-shadow: 0 0 6px rgba(0, 255, 255, 0.4);
 }
 
 .theme-synthwave .sw-badge--queued {
@@ -551,36 +576,77 @@ body.theme-synthwave {
 	background: #808000;
 	color: #ffff00;
 	border-color: #ffff00;
+	box-shadow: 0 0 5px #ffff00;
 }
 
 .theme-synthwave .sw-badge--source {
 	background: #333;
 	color: #ffffff;
 	border-color: #555;
+	box-shadow: 0 0 4px rgba(255, 255, 255, 0.25);
 }
 
 .theme-synthwave .sw-dot {
 	background: #00ffff;
+	color: #00ffff;
+	box-shadow: 0 0 8px currentColor;
 }
 
 .theme-synthwave .sw-dot--queued {
 	background: #00ffff;
+	color: #00ffff;
 }
 
 .theme-synthwave .sw-dot--processing {
 	background: #ffaa00;
+	color: #ffaa00;
 }
 
 .theme-synthwave .sw-dot--done {
 	background: #00ff00;
+	color: #00ff00;
 }
 
 .theme-synthwave .sw-dot--failed {
 	background: #ff0000;
+	color: #ff0000;
 }
 
 .theme-synthwave .sw-dot--muted {
 	background: #ff71ce;
+	color: #ff71ce;
+}
+
+.theme-synthwave #progressBar {
+	border: 1px solid rgba(0, 255, 255, 0.6);
+	background: rgba(0, 255, 255, 0.08);
+	box-shadow: 0 0 8px rgba(0, 255, 255, 0.3);
+}
+
+.theme-synthwave #progressFill {
+	background: linear-gradient(90deg, #ff00ff, #00ffff);
+	box-shadow: 0 0 12px rgba(255, 0, 255, 0.5);
+}
+
+.theme-synthwave #paperDrawer,
+.theme-synthwave #entityDrawer {
+	border-left: 2px solid #ff00ff;
+	box-shadow: -8px 0 20px rgba(255, 0, 255, 0.35);
+}
+
+.theme-synthwave #failureModal .bg-white,
+.theme-synthwave #rulesModal .bg-white {
+	box-shadow: 0 0 25px rgba(255, 0, 255, 0.35);
+}
+
+.theme-synthwave #drawerOverlay,
+.theme-synthwave #entityDrawerOverlay,
+.theme-synthwave #failureModalOverlay {
+	backdrop-filter: blur(2px);
+}
+
+.theme-synthwave #rulesToast {
+	box-shadow: 0 0 12px rgba(0, 255, 0, 0.35);
 }
 
 .theme-synthwave .hover\:bg-slate-50:hover {
