@@ -75,6 +75,11 @@ body.theme-synthwave {
 	background-attachment: fixed;
 }
 
+.theme-synthwave ::selection {
+	background: rgba(255, 0, 255, 0.35);
+	color: #ffffff;
+}
+
 .theme-synthwave h1,
 .theme-synthwave h2,
 .theme-synthwave h3,
@@ -166,11 +171,22 @@ body.theme-synthwave {
 }
 
 .theme-synthwave .bg-slate-50 {
-	background: transparent !important;
+	background: rgba(255, 0, 255, 0.04) !important;
 }
 
 .theme-synthwave .bg-slate-900 {
 	background: #000 !important;
+}
+
+.theme-synthwave a.bg-slate-900,
+.theme-synthwave button.bg-slate-900 {
+	border: 1px solid #00ffff;
+	box-shadow: 0 0 12px rgba(0, 255, 255, 0.35);
+}
+
+.theme-synthwave a.bg-slate-900:hover,
+.theme-synthwave button.bg-slate-900:hover {
+	box-shadow: 0 0 20px rgba(0, 255, 255, 0.5);
 }
 
 .theme-synthwave .bg-indigo-600,
@@ -185,9 +201,12 @@ body.theme-synthwave {
 	background: #d500f9 !important;
 }
 
-.theme-synthwave .bg-slate-200,
 .theme-synthwave .bg-slate-100 {
-	background: rgba(255, 0, 255, 0.05) !important;
+	background: rgba(255, 0, 255, 0.06) !important;
+}
+
+.theme-synthwave .bg-slate-200 {
+	background: rgba(255, 0, 255, 0.12) !important;
 }
 
 .theme-synthwave .bg-indigo-100 {
@@ -313,6 +332,21 @@ body.theme-synthwave {
 	border-color: #00ff00 !important;
 }
 
+.theme-synthwave .border-l-amber-400 {
+	border-left-color: #ffaa00 !important;
+	box-shadow: inset 6px 0 10px rgba(255, 170, 0, 0.25);
+}
+
+.theme-synthwave .border-l-red-400 {
+	border-left-color: #ff0000 !important;
+	box-shadow: inset 6px 0 10px rgba(255, 0, 0, 0.25);
+}
+
+.theme-synthwave .border-l-emerald-400 {
+	border-left-color: #00ff00 !important;
+	box-shadow: inset 6px 0 10px rgba(0, 255, 0, 0.2);
+}
+
 .theme-synthwave .rounded-xl,
 .theme-synthwave .rounded-lg,
 .theme-synthwave .rounded-md {
@@ -323,6 +357,11 @@ body.theme-synthwave {
 .theme-synthwave .shadow-md,
 .theme-synthwave .shadow-lg {
 	box-shadow: 0 0 10px rgba(0, 255, 255, 0.2) !important;
+}
+
+.theme-synthwave .shadow-xl,
+.theme-synthwave .shadow-2xl {
+	box-shadow: 0 0 20px rgba(255, 0, 255, 0.35) !important;
 }
 
 .theme-synthwave .divide-slate-100 > :not([hidden]) ~ :not([hidden]) {
@@ -364,6 +403,8 @@ body.theme-synthwave {
 	display: flex;
 	align-items: center;
 	gap: 8px;
+	color: #00ffff;
+	text-shadow: 0 0 6px rgba(0, 255, 255, 0.4);
 }
 
 .theme-synthwave details summary::-webkit-details-marker {
