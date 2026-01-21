@@ -311,7 +311,7 @@ export function renderDrawer(paper, runs) {
     const metaLine = [paper.source?.toUpperCase(), paper.year, paper.doi].filter(Boolean).join(' · ');
     if (metaLine) meta.appendChild(el('div', '', metaLine));
     if (paper.url) {
-        const link = el('a', 'text-indigo-600 hover:underline', 'View Article');
+        const link = el('a', 'sw-chip text-indigo-600 hover:bg-indigo-50', 'View Article');
         link.href = paper.url;
         link.target = '_blank';
         meta.appendChild(link);

@@ -38,7 +38,7 @@ export function initTour({ steps, storageKey, autoStart = true }) {
 		tooltip.className = 'tour-tooltip';
 
 		titleEl = document.createElement('div');
-		titleEl.className = 'text-xs font-semibold text-slate-900';
+		titleEl.className = 'sw-kicker text-xs text-slate-900';
 		bodyEl = document.createElement('div');
 		bodyEl.className = 'text-xs text-slate-600 mt-2';
 
@@ -46,17 +46,17 @@ export function initTour({ steps, storageKey, autoStart = true }) {
 		controls.className = 'mt-3 flex items-center gap-2';
 
 		prevBtn = document.createElement('button');
-		prevBtn.className = 'px-2 py-1 rounded-md border border-slate-200 text-xs hover:bg-slate-100';
+		prevBtn.className = 'sw-chip text-slate-500 hover:bg-slate-100';
 		prevBtn.textContent = 'Back';
 		prevBtn.addEventListener('click', () => showStep(index - 1));
 
 		nextBtn = document.createElement('button');
-		nextBtn.className = 'px-2 py-1 rounded-md bg-indigo-600 text-white text-xs hover:bg-indigo-700';
+		nextBtn.className = 'sw-chip bg-indigo-600 text-white hover:bg-indigo-700';
 		nextBtn.textContent = 'Next';
 		nextBtn.addEventListener('click', () => showStep(index + 1));
 
 		skipBtn = document.createElement('button');
-		skipBtn.className = 'px-2 py-1 rounded-md text-xs text-slate-500 hover:text-slate-700';
+		skipBtn.className = 'sw-chip text-slate-500 hover:bg-slate-100';
 		skipBtn.textContent = 'Done';
 		skipBtn.addEventListener('click', endTour);
 

@@ -935,12 +935,12 @@ async function loadRecentFailures() {
             const actions = document.createElement('div');
             actions.className = 'flex flex-col gap-2 text-xs';
             const open = document.createElement('a');
-            open.className = 'inline-flex items-center justify-center px-3 py-1.5 rounded-md border border-slate-200 text-xs text-indigo-600 hover:bg-indigo-50';
+            open.className = 'sw-chip text-indigo-600 hover:bg-indigo-50';
             open.href = `/runs/${run.id}`;
             open.target = '_blank';
             open.textContent = 'Open run';
             const retry = document.createElement('button');
-            retry.className = 'inline-flex items-center justify-center px-3 py-1.5 rounded-md border border-red-200 text-xs text-red-700 hover:bg-red-50';
+            retry.className = 'sw-chip border-red-200 bg-red-50 text-red-700 hover:bg-red-50';
             retry.textContent = 'Retry';
             retry.addEventListener('click', async () => {
                 await api.retryRun(run.id);
@@ -1007,7 +1007,7 @@ function renderFailureGroup(title, items, options = {}) {
 
         if (item.example_run_id) {
             const link = document.createElement('a');
-            link.className = 'text-indigo-600 hover:underline';
+            link.className = 'sw-chip text-indigo-600 hover:bg-indigo-50';
             link.href = `/runs/${item.example_run_id}`;
             link.target = '_blank';
             link.textContent = 'Open';
@@ -1015,7 +1015,7 @@ function renderFailureGroup(title, items, options = {}) {
         }
         if (options.onSelect) {
             const view = document.createElement('button');
-            view.className = 'text-indigo-600 hover:underline';
+            view.className = 'sw-chip text-indigo-600 hover:bg-indigo-50';
             view.textContent = 'View';
             view.addEventListener('click', () => options.onSelect(item));
             meta.appendChild(view);
@@ -1127,12 +1127,12 @@ function renderFailureModalList(items, days) {
         const actions = document.createElement('div');
         actions.className = 'flex flex-col gap-2 text-xs';
         const open = document.createElement('a');
-        open.className = 'inline-flex items-center justify-center px-3 py-1.5 rounded-md border border-slate-200 text-xs text-indigo-600 hover:bg-indigo-50';
+        open.className = 'sw-chip text-indigo-600 hover:bg-indigo-50';
         open.href = `/runs/${run.id}`;
         open.target = '_blank';
         open.textContent = 'Open';
         const retry = document.createElement('button');
-        retry.className = 'inline-flex items-center justify-center px-3 py-1.5 rounded-md border border-red-200 text-xs text-red-700 hover:bg-red-50';
+        retry.className = 'sw-chip border-red-200 bg-red-50 text-red-700 hover:bg-red-50';
         retry.textContent = 'Retry';
         retry.addEventListener('click', async () => {
             await api.retryRun(run.id);

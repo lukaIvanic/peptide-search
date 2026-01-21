@@ -516,10 +516,10 @@ function renderEntityLinks(data) {
 	const run = data.run || {};
 	if (run.id) {
 		const row = el('div', 'flex items-center gap-3 text-xs');
-		const link = el('a', 'text-indigo-600 hover:underline', 'Open run detail');
+		const link = el('a', 'sw-chip text-indigo-600 hover:bg-indigo-50', 'Open run detail');
 		link.href = `/runs/${run.id}`;
 		link.target = '_blank';
-		const edit = el('a', 'text-indigo-600 hover:underline', 'Open editor');
+		const edit = el('a', 'sw-chip text-indigo-600 hover:bg-indigo-50', 'Open editor');
 		edit.href = `/runs/${run.id}/edit`;
 		edit.target = '_blank';
 		row.appendChild(link);
