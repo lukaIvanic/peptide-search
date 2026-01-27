@@ -4,9 +4,9 @@ import {
 	getEntityKpis,
 	getQualityRules,
 	updateQualityRules,
-} from './js/api.js?v=dev45';
-import { initTour } from './js/tour.js?v=dev45';
-import { markMilestone, renderChecklist, resetMilestones } from './js/onboarding.js?v=dev45';
+} from './js/api.js?v=dev48';
+import { initTour } from './js/tour.js?v=dev46';
+import { markMilestone, renderChecklist, resetMilestones } from './js/onboarding.js?v=dev46';
 
 const $ = (sel) => document.querySelector(sel);
 

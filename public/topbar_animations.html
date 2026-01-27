@@ -1,0 +1,1288 @@
+<!doctype html>
+<html lang="en">
+	<head>
+		<meta charset="UTF-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+		<title>Peptide-Themed Animations</title>
+		<link rel="preconnect" href="https://fonts.googleapis.com">
+		<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+		<link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Rajdhani:wght@400;500;600;700&family=Oxanium:wght@400;500;600;700&family=Orbitron:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600;700&family=Exo+2:wght@400;500;600;700&family=Aldrich&family=Michroma&family=Audiowide&family=Electrolize&display=swap" rel="stylesheet">
+		<script src="https://cdn.tailwindcss.com"></script>
+		<script>
+			tailwind.config = {
+				theme: {
+					extend: {
+						fontFamily: {
+							'space': ['Space Mono', 'monospace'],
+							'rajdhani': ['Rajdhani', 'sans-serif'],
+							'oxanium': ['Oxanium', 'sans-serif'],
+							'orbitron': ['Orbitron', 'sans-serif'],
+							'jetbrains': ['JetBrains Mono', 'monospace'],
+							'exo': ['Exo 2', 'sans-serif'],
+							'aldrich': ['Aldrich', 'sans-serif'],
+							'michroma': ['Michroma', 'sans-serif'],
+							'audiowide': ['Audiowide', 'sans-serif'],
+							'electrolize': ['Electrolize', 'sans-serif'],
+						}
+					}
+				}
+			}
+		</script>
+		<link rel="stylesheet" href="/static/styles.css?v=dev58" />
+		<link rel="stylesheet" href="/static/topbar_animations.css?v=dev5" />
+	</head>
+	<body class="theme-synthwave">
+		<main class="topbar-demo-page max-w-5xl mx-auto px-6 py-10">
+			<section class="topbar-demo-intro">
+				<div class="topbar-demo-intro__text">
+					<h1 class="text-2xl font-semibold">Peptide-Themed Animations</h1>
+					<p class="text-xs text-slate-400 mt-2">
+						Scientific visualization concepts for the Peptide Literature Extractor. 30 variations across 10 themes.
+					</p>
+				</div>
+				<a class="topbar-demo-back text-xs text-cyan-300 hover:underline" href="/">Back to app</a>
+			</section>
+			<section class="topbar-demo-grid">
+				
+				<!-- =============================================
+				     1. PEPTIDE BOND SERIES (3 variations)
+				     ============================================= -->
+
+				<!-- 01A - Peptide Bond (Original) -->
+				<article class="topbar-demo-card">
+					<div class="topbar-demo-meta">
+						<div>
+							<div class="topbar-demo-title text-emerald-400">01A // Peptide Bond</div>
+							<div class="topbar-demo-subtitle">Amino acids linking together, peptide bonds forming between residues</div>
+						</div>
+						<button class="topbar-demo-replay text-emerald-400 border-emerald-400/50 hover:bg-emerald-400/10" type="button" data-topbar-replay>Replay</button>
+					</div>
+					<header class="topbar-demo-bar theme-peptide" data-topbar-anim="peptideBond">
+						<canvas class="topbar-bg-canvas" data-bg="aminoAcids"></canvas>
+						<div class="w-full px-6 py-5 flex items-center justify-between topbar-demo__content">
+							<div class="flex items-center gap-4">
+								<div class="topbar-demo-logo peptide-logo" data-topbar-role="logo">
+									<svg viewBox="0 0 60 40" class="w-14 h-10">
+										<circle cx="10" cy="20" r="6" fill="#10b981" class="amino amino-1" opacity="0"/>
+										<circle cx="30" cy="20" r="6" fill="#34d399" class="amino amino-2" opacity="0"/>
+										<circle cx="50" cy="20" r="6" fill="#6ee7b7" class="amino amino-3" opacity="0"/>
+										<line x1="16" y1="20" x2="24" y2="20" stroke="#10b981" stroke-width="3" class="bond bond-1" stroke-dasharray="8" stroke-dashoffset="8"/>
+										<line x1="36" y1="20" x2="44" y2="20" stroke="#34d399" stroke-width="3" class="bond bond-2" stroke-dasharray="8" stroke-dashoffset="8"/>
+										<text x="20" y="12" font-size="5" fill="#6ee7b7" class="bond-label label-1" opacity="0">C-N</text>
+										<text x="40" y="12" font-size="5" fill="#6ee7b7" class="bond-label label-2" opacity="0">C-N</text>
+									</svg>
+								</div>
+								<div>
+									<h1 class="text-xl font-exo font-bold text-emerald-300" data-topbar-role="title">PEPTIDE<span class="text-white">CHAIN</span></h1>
+									<p class="text-xs text-emerald-500 font-space" data-topbar-role="subtitle">Sequence Assembly Active</p>
+								</div>
+							</div>
+							<div class="flex items-center gap-4" data-topbar-role="actions">
+								<span class="text-xs text-emerald-400 font-space">Ala-Gly-Ser</span>
+								<div class="topbar-badge bg-emerald-900/50 border-emerald-500/50 text-emerald-300" data-topbar-role="badge">3 RESIDUES</div>
+							</div>
+						</div>
+					</header>
+				</article>
+
+				<!-- 01B - Peptide Bond Neon Synthesis -->
+				<article class="topbar-demo-card">
+					<div class="topbar-demo-meta">
+						<div>
+							<div class="topbar-demo-title text-pink-400">01B // Neon Synthesis</div>
+							<div class="topbar-demo-subtitle">High-energy bond formation with glowing plasma connections</div>
+						</div>
+						<button class="topbar-demo-replay text-pink-400 border-pink-400/50 hover:bg-pink-400/10" type="button" data-topbar-replay>Replay</button>
+					</div>
+					<header class="topbar-demo-bar theme-peptide-neon" data-topbar-anim="peptideBondNeon">
+						<canvas class="topbar-bg-canvas" data-bg="aminoAcidsNeon"></canvas>
+						<div class="w-full px-6 py-5 flex items-center justify-between topbar-demo__content">
+							<div class="flex items-center gap-4">
+								<div class="topbar-demo-logo peptide-neon-logo" data-topbar-role="logo">
+									<svg viewBox="0 0 60 40" class="w-14 h-10">
+										<circle cx="10" cy="20" r="6" fill="#ec4899" class="amino amino-1" opacity="0"/>
+										<circle cx="30" cy="20" r="6" fill="#f472b6" class="amino amino-2" opacity="0"/>
+										<circle cx="50" cy="20" r="6" fill="#fb7185" class="amino amino-3" opacity="0"/>
+										<line x1="16" y1="20" x2="24" y2="20" stroke="#ec4899" stroke-width="3" class="bond bond-1" stroke-dasharray="8" stroke-dashoffset="8"/>
+										<line x1="36" y1="20" x2="44" y2="20" stroke="#f472b6" stroke-width="3" class="bond bond-2" stroke-dasharray="8" stroke-dashoffset="8"/>
+										<text x="20" y="12" font-size="5" fill="#fda4af" class="bond-label label-1" opacity="0">C-N</text>
+										<text x="40" y="12" font-size="5" fill="#fda4af" class="bond-label label-2" opacity="0">C-N</text>
+									</svg>
+								</div>
+								<div>
+									<h1 class="text-xl font-orbitron font-bold text-pink-300" data-topbar-role="title">NEON<span class="text-white">SYNTH</span></h1>
+									<p class="text-xs text-pink-500 font-space" data-topbar-role="subtitle">Plasma Bond Formation</p>
+								</div>
+							</div>
+							<div class="flex items-center gap-4" data-topbar-role="actions">
+								<span class="text-xs text-pink-400 font-space">Phe-Trp-Tyr</span>
+								<div class="topbar-badge bg-pink-900/50 border-pink-500/50 text-pink-300" data-topbar-role="badge">ENERGIZED</div>
+							</div>
+						</div>
+					</header>
+				</article>
+
+				<!-- 01C - Peptide Bond Deep Ocean -->
+				<article class="topbar-demo-card">
+					<div class="topbar-demo-meta">
+						<div>
+							<div class="topbar-demo-title text-sky-400">01C // Deep Ocean</div>
+							<div class="topbar-demo-subtitle">Serene underwater peptide assembly with flowing currents</div>
+						</div>
+						<button class="topbar-demo-replay text-sky-400 border-sky-400/50 hover:bg-sky-400/10" type="button" data-topbar-replay>Replay</button>
+					</div>
+					<header class="topbar-demo-bar theme-peptide-ocean" data-topbar-anim="peptideBondOcean">
+						<canvas class="topbar-bg-canvas" data-bg="aminoAcidsOcean"></canvas>
+						<div class="w-full px-6 py-5 flex items-center justify-between topbar-demo__content">
+							<div class="flex items-center gap-4">
+								<div class="topbar-demo-logo peptide-ocean-logo" data-topbar-role="logo">
+									<svg viewBox="0 0 60 40" class="w-14 h-10">
+										<circle cx="10" cy="20" r="6" fill="#0ea5e9" class="amino amino-1" opacity="0"/>
+										<circle cx="30" cy="20" r="6" fill="#38bdf8" class="amino amino-2" opacity="0"/>
+										<circle cx="50" cy="20" r="6" fill="#7dd3fc" class="amino amino-3" opacity="0"/>
+										<line x1="16" y1="20" x2="24" y2="20" stroke="#0ea5e9" stroke-width="3" class="bond bond-1" stroke-dasharray="8" stroke-dashoffset="8"/>
+										<line x1="36" y1="20" x2="44" y2="20" stroke="#38bdf8" stroke-width="3" class="bond bond-2" stroke-dasharray="8" stroke-dashoffset="8"/>
+										<text x="20" y="12" font-size="5" fill="#bae6fd" class="bond-label label-1" opacity="0">C-N</text>
+										<text x="40" y="12" font-size="5" fill="#bae6fd" class="bond-label label-2" opacity="0">C-N</text>
+									</svg>
+								</div>
+								<div>
+									<h1 class="text-xl font-rajdhani font-bold text-sky-300" data-topbar-role="title">DEEP<span class="text-white">SEA</span></h1>
+									<p class="text-xs text-sky-500 font-space" data-topbar-role="subtitle">Hydrothermal Synthesis</p>
+								</div>
+							</div>
+							<div class="flex items-center gap-4" data-topbar-role="actions">
+								<span class="text-xs text-sky-400 font-space">Gly-Pro-Hyp</span>
+								<div class="topbar-badge bg-sky-900/50 border-sky-500/50 text-sky-300" data-topbar-role="badge">FLOWING</div>
+							</div>
+						</div>
+					</header>
+				</article>
+
+				<!-- =============================================
+				     2. HELIX UNWIND SERIES (3 variations)
+				     ============================================= -->
+
+				<!-- 02A - Helix Unwind (Original) -->
+				<article class="topbar-demo-card">
+					<div class="topbar-demo-meta">
+						<div>
+							<div class="topbar-demo-title text-cyan-400">02A // Helix Unwind</div>
+							<div class="topbar-demo-subtitle">DNA double helix unwinding to reveal genetic information</div>
+						</div>
+						<button class="topbar-demo-replay text-cyan-400 border-cyan-400/50 hover:bg-cyan-400/10" type="button" data-topbar-replay>Replay</button>
+					</div>
+					<header class="topbar-demo-bar theme-helix" data-topbar-anim="helixUnwind">
+						<canvas class="topbar-bg-canvas" data-bg="basePairs"></canvas>
+						<div class="w-full px-6 py-5 flex items-center justify-between topbar-demo__content">
+							<div class="flex items-center gap-4">
+								<div class="topbar-demo-logo helix-logo" data-topbar-role="logo">
+									<svg viewBox="0 0 50 50" class="w-12 h-12">
+										<defs>
+											<linearGradient id="helix-grad" x1="0%" y1="0%" x2="100%" y2="0%">
+												<stop offset="0%" style="stop-color:#22d3ee"/>
+												<stop offset="100%" style="stop-color:#06b6d4"/>
+											</linearGradient>
+										</defs>
+										<path d="M15,5 Q5,15 15,25 Q25,35 15,45" fill="none" stroke="#22d3ee" stroke-width="2" class="strand strand-left"/>
+										<path d="M35,5 Q45,15 35,25 Q25,35 35,45" fill="none" stroke="#67e8f9" stroke-width="2" class="strand strand-right"/>
+										<line x1="15" y1="10" x2="35" y2="10" stroke="#0e7490" stroke-width="1.5" class="base-pair bp-1"/>
+										<line x1="12" y1="18" x2="38" y2="18" stroke="#0e7490" stroke-width="1.5" class="base-pair bp-2"/>
+										<line x1="15" y1="25" x2="35" y2="25" stroke="#0e7490" stroke-width="1.5" class="base-pair bp-3"/>
+										<line x1="18" y1="32" x2="32" y2="32" stroke="#0e7490" stroke-width="1.5" class="base-pair bp-4"/>
+										<line x1="15" y1="40" x2="35" y2="40" stroke="#0e7490" stroke-width="1.5" class="base-pair bp-5"/>
+									</svg>
+								</div>
+								<div>
+									<h1 class="text-xl font-orbitron text-cyan-300" data-topbar-role="title">HELIX<span class="text-cyan-100">SEQ</span></h1>
+									<p class="text-xs text-cyan-500 font-jetbrains" data-topbar-role="subtitle">Unwinding sequence data...</p>
+								</div>
+							</div>
+							<div class="flex items-center gap-4" data-topbar-role="actions">
+								<div class="flex gap-1 text-xs font-jetbrains">
+									<span class="text-red-400">A</span>
+									<span class="text-green-400">T</span>
+									<span class="text-yellow-400">G</span>
+									<span class="text-blue-400">C</span>
+								</div>
+								<div class="topbar-badge bg-cyan-900/50 border-cyan-500/50 text-cyan-300" data-topbar-role="badge">READING</div>
+							</div>
+						</div>
+					</header>
+				</article>
+
+				<!-- 02B - Helix Crimson Code -->
+				<article class="topbar-demo-card">
+					<div class="topbar-demo-meta">
+						<div>
+							<div class="topbar-demo-title text-red-400">02B // Crimson Code</div>
+							<div class="topbar-demo-subtitle">Fire-like unwinding with sparking base pairs and intensity</div>
+						</div>
+						<button class="topbar-demo-replay text-red-400 border-red-400/50 hover:bg-red-400/10" type="button" data-topbar-replay>Replay</button>
+					</div>
+					<header class="topbar-demo-bar theme-helix-crimson" data-topbar-anim="helixCrimson">
+						<canvas class="topbar-bg-canvas" data-bg="basePairsFire"></canvas>
+						<div class="w-full px-6 py-5 flex items-center justify-between topbar-demo__content">
+							<div class="flex items-center gap-4">
+								<div class="topbar-demo-logo helix-crimson-logo" data-topbar-role="logo">
+									<svg viewBox="0 0 50 50" class="w-12 h-12">
+										<path d="M15,5 Q5,15 15,25 Q25,35 15,45" fill="none" stroke="#ef4444" stroke-width="2" class="strand strand-left"/>
+										<path d="M35,5 Q45,15 35,25 Q25,35 35,45" fill="none" stroke="#f97316" stroke-width="2" class="strand strand-right"/>
+										<line x1="15" y1="10" x2="35" y2="10" stroke="#dc2626" stroke-width="1.5" class="base-pair bp-1"/>
+										<line x1="12" y1="18" x2="38" y2="18" stroke="#dc2626" stroke-width="1.5" class="base-pair bp-2"/>
+										<line x1="15" y1="25" x2="35" y2="25" stroke="#dc2626" stroke-width="1.5" class="base-pair bp-3"/>
+										<line x1="18" y1="32" x2="32" y2="32" stroke="#dc2626" stroke-width="1.5" class="base-pair bp-4"/>
+										<line x1="15" y1="40" x2="35" y2="40" stroke="#dc2626" stroke-width="1.5" class="base-pair bp-5"/>
+									</svg>
+								</div>
+								<div>
+									<h1 class="text-xl font-audiowide text-red-300" data-topbar-role="title">CRIMSON<span class="text-orange-200">CODE</span></h1>
+									<p class="text-xs text-red-500 font-jetbrains" data-topbar-role="subtitle">Thermal denaturation...</p>
+								</div>
+							</div>
+							<div class="flex items-center gap-4" data-topbar-role="actions">
+								<div class="flex gap-1 text-xs font-jetbrains">
+									<span class="text-red-300">A</span>
+									<span class="text-orange-300">T</span>
+									<span class="text-yellow-300">G</span>
+									<span class="text-red-400">C</span>
+								</div>
+								<div class="topbar-badge bg-red-900/50 border-red-500/50 text-red-300 animate-pulse" data-topbar-role="badge">MELTING</div>
+							</div>
+						</div>
+					</header>
+				</article>
+
+				<!-- 02C - Helix Aurora -->
+				<article class="topbar-demo-card">
+					<div class="topbar-demo-meta">
+						<div>
+							<div class="topbar-demo-title text-purple-400">02C // Aurora</div>
+							<div class="topbar-demo-subtitle">Ethereal aurora-style glow with mystical unwinding</div>
+						</div>
+						<button class="topbar-demo-replay text-purple-400 border-purple-400/50 hover:bg-purple-400/10" type="button" data-topbar-replay>Replay</button>
+					</div>
+					<header class="topbar-demo-bar theme-helix-aurora" data-topbar-anim="helixAurora">
+						<canvas class="topbar-bg-canvas" data-bg="basePairsAurora"></canvas>
+						<div class="w-full px-6 py-5 flex items-center justify-between topbar-demo__content">
+							<div class="flex items-center gap-4">
+								<div class="topbar-demo-logo helix-aurora-logo" data-topbar-role="logo">
+									<svg viewBox="0 0 50 50" class="w-12 h-12">
+										<path d="M15,5 Q5,15 15,25 Q25,35 15,45" fill="none" stroke="#a855f7" stroke-width="2" class="strand strand-left"/>
+										<path d="M35,5 Q45,15 35,25 Q25,35 35,45" fill="none" stroke="#22c55e" stroke-width="2" class="strand strand-right"/>
+										<line x1="15" y1="10" x2="35" y2="10" stroke="#7c3aed" stroke-width="1.5" class="base-pair bp-1"/>
+										<line x1="12" y1="18" x2="38" y2="18" stroke="#16a34a" stroke-width="1.5" class="base-pair bp-2"/>
+										<line x1="15" y1="25" x2="35" y2="25" stroke="#7c3aed" stroke-width="1.5" class="base-pair bp-3"/>
+										<line x1="18" y1="32" x2="32" y2="32" stroke="#16a34a" stroke-width="1.5" class="base-pair bp-4"/>
+										<line x1="15" y1="40" x2="35" y2="40" stroke="#7c3aed" stroke-width="1.5" class="base-pair bp-5"/>
+									</svg>
+								</div>
+								<div>
+									<h1 class="text-xl font-michroma text-purple-300" data-topbar-role="title">AURORA<span class="text-green-200">SEQ</span></h1>
+									<p class="text-xs text-purple-500 font-jetbrains" data-topbar-role="subtitle">Borealis transcription...</p>
+								</div>
+							</div>
+							<div class="flex items-center gap-4" data-topbar-role="actions">
+								<div class="flex gap-1 text-xs font-jetbrains">
+									<span class="text-purple-400">A</span>
+									<span class="text-green-400">T</span>
+									<span class="text-purple-400">G</span>
+									<span class="text-green-400">C</span>
+								</div>
+								<div class="topbar-badge bg-purple-900/50 border-purple-500/50 text-purple-300" data-topbar-role="badge">ETHEREAL</div>
+							</div>
+						</div>
+					</header>
+				</article>
+
+				<!-- =============================================
+				     3. MOLECULAR ORBIT SERIES (3 variations)
+				     ============================================= -->
+
+				<!-- 03A - Molecular Orbit (Original) -->
+				<article class="topbar-demo-card">
+					<div class="topbar-demo-meta">
+						<div>
+							<div class="topbar-demo-title text-violet-400">03A // Molecular Orbit</div>
+							<div class="topbar-demo-subtitle">Electrons orbiting atomic nuclei with quantum probability clouds</div>
+						</div>
+						<button class="topbar-demo-replay text-violet-400 border-violet-400/50 hover:bg-violet-400/10" type="button" data-topbar-replay>Replay</button>
+					</div>
+					<header class="topbar-demo-bar theme-orbital" data-topbar-anim="molecularOrbit">
+						<canvas class="topbar-bg-canvas" data-bg="particles"></canvas>
+						<div class="w-full px-6 py-5 flex items-center justify-between topbar-demo__content">
+							<div class="flex items-center gap-4">
+								<div class="topbar-demo-logo orbital-logo" data-topbar-role="logo">
+									<svg viewBox="0 0 50 50" class="w-12 h-12">
+										<circle cx="25" cy="25" r="5" fill="#8b5cf6" class="nucleus"/>
+										<ellipse cx="25" cy="25" rx="18" ry="8" fill="none" stroke="#a78bfa" stroke-width="1" opacity="0.5" class="orbit orbit-1" transform="rotate(0 25 25)"/>
+										<ellipse cx="25" cy="25" rx="18" ry="8" fill="none" stroke="#c4b5fd" stroke-width="1" opacity="0.5" class="orbit orbit-2" transform="rotate(60 25 25)"/>
+										<ellipse cx="25" cy="25" rx="18" ry="8" fill="none" stroke="#ddd6fe" stroke-width="1" opacity="0.5" class="orbit orbit-3" transform="rotate(120 25 25)"/>
+										<circle cx="43" cy="25" r="2.5" fill="#f0abfc" class="electron e-1"/>
+										<circle cx="16" cy="35" r="2.5" fill="#e879f9" class="electron e-2"/>
+										<circle cx="16" cy="15" r="2.5" fill="#d946ef" class="electron e-3"/>
+									</svg>
+								</div>
+								<div>
+									<h1 class="text-xl font-michroma text-violet-300" data-topbar-role="title">ORBITAL</h1>
+									<p class="text-xs text-violet-500 font-space" data-topbar-role="subtitle">Quantum state: Superposition</p>
+								</div>
+							</div>
+							<div class="flex items-center gap-4" data-topbar-role="actions">
+								<span class="text-xs text-violet-400 font-space">ψ(r,t)</span>
+								<div class="topbar-badge bg-violet-900/50 border-violet-500/50 text-violet-300" data-topbar-role="badge">3 e⁻</div>
+							</div>
+						</div>
+					</header>
+				</article>
+
+				<!-- 03B - Solar Flare -->
+				<article class="topbar-demo-card">
+					<div class="topbar-demo-meta">
+						<div>
+							<div class="topbar-demo-title text-amber-400">03B // Solar Flare</div>
+							<div class="topbar-demo-subtitle">Intense solar energy with bursting electrons and plasma</div>
+						</div>
+						<button class="topbar-demo-replay text-amber-400 border-amber-400/50 hover:bg-amber-400/10" type="button" data-topbar-replay>Replay</button>
+					</div>
+					<header class="topbar-demo-bar theme-orbital-solar" data-topbar-anim="orbitalSolar">
+						<canvas class="topbar-bg-canvas" data-bg="particlesSolar"></canvas>
+						<div class="w-full px-6 py-5 flex items-center justify-between topbar-demo__content">
+							<div class="flex items-center gap-4">
+								<div class="topbar-demo-logo orbital-solar-logo" data-topbar-role="logo">
+									<svg viewBox="0 0 50 50" class="w-12 h-12">
+										<circle cx="25" cy="25" r="6" fill="#f59e0b" class="nucleus"/>
+										<ellipse cx="25" cy="25" rx="18" ry="8" fill="none" stroke="#fbbf24" stroke-width="1.5" opacity="0.6" class="orbit orbit-1" transform="rotate(0 25 25)"/>
+										<ellipse cx="25" cy="25" rx="18" ry="8" fill="none" stroke="#fcd34d" stroke-width="1.5" opacity="0.6" class="orbit orbit-2" transform="rotate(60 25 25)"/>
+										<ellipse cx="25" cy="25" rx="18" ry="8" fill="none" stroke="#fde68a" stroke-width="1.5" opacity="0.6" class="orbit orbit-3" transform="rotate(120 25 25)"/>
+										<circle cx="43" cy="25" r="3" fill="#fef3c7" class="electron e-1"/>
+										<circle cx="16" cy="35" r="3" fill="#fef3c7" class="electron e-2"/>
+										<circle cx="16" cy="15" r="3" fill="#fef3c7" class="electron e-3"/>
+									</svg>
+								</div>
+								<div>
+									<h1 class="text-xl font-audiowide text-amber-300" data-topbar-role="title">SOLAR<span class="text-yellow-100">FLARE</span></h1>
+									<p class="text-xs text-amber-500 font-space" data-topbar-role="subtitle">Corona mass ejection</p>
+								</div>
+							</div>
+							<div class="flex items-center gap-4" data-topbar-role="actions">
+								<span class="text-xs text-amber-400 font-space">10⁶ K</span>
+								<div class="topbar-badge bg-amber-900/50 border-amber-500/50 text-amber-300 animate-pulse" data-topbar-role="badge">PLASMA</div>
+							</div>
+						</div>
+					</header>
+				</article>
+
+				<!-- 03C - Ice Crystal -->
+				<article class="topbar-demo-card">
+					<div class="topbar-demo-meta">
+						<div>
+							<div class="topbar-demo-title text-cyan-300">03C // Ice Crystal</div>
+							<div class="topbar-demo-subtitle">Crystalline frozen elegance with slow, graceful orbits</div>
+						</div>
+						<button class="topbar-demo-replay text-cyan-300 border-cyan-300/50 hover:bg-cyan-300/10" type="button" data-topbar-replay>Replay</button>
+					</div>
+					<header class="topbar-demo-bar theme-orbital-ice" data-topbar-anim="orbitalIce">
+						<canvas class="topbar-bg-canvas" data-bg="particlesIce"></canvas>
+						<div class="w-full px-6 py-5 flex items-center justify-between topbar-demo__content">
+							<div class="flex items-center gap-4">
+								<div class="topbar-demo-logo orbital-ice-logo" data-topbar-role="logo">
+									<svg viewBox="0 0 50 50" class="w-12 h-12">
+										<circle cx="25" cy="25" r="5" fill="#e0f2fe" class="nucleus"/>
+										<ellipse cx="25" cy="25" rx="18" ry="8" fill="none" stroke="#bae6fd" stroke-width="1" opacity="0.7" class="orbit orbit-1" transform="rotate(0 25 25)"/>
+										<ellipse cx="25" cy="25" rx="18" ry="8" fill="none" stroke="#7dd3fc" stroke-width="1" opacity="0.7" class="orbit orbit-2" transform="rotate(60 25 25)"/>
+										<ellipse cx="25" cy="25" rx="18" ry="8" fill="none" stroke="#38bdf8" stroke-width="1" opacity="0.7" class="orbit orbit-3" transform="rotate(120 25 25)"/>
+										<circle cx="43" cy="25" r="2" fill="#f0f9ff" class="electron e-1"/>
+										<circle cx="16" cy="35" r="2" fill="#f0f9ff" class="electron e-2"/>
+										<circle cx="16" cy="15" r="2" fill="#f0f9ff" class="electron e-3"/>
+									</svg>
+								</div>
+								<div>
+									<h1 class="text-xl font-exo text-cyan-200" data-topbar-role="title">ICE<span class="text-white">CRYSTAL</span></h1>
+									<p class="text-xs text-cyan-400 font-space" data-topbar-role="subtitle">Absolute zero approach</p>
+								</div>
+							</div>
+							<div class="flex items-center gap-4" data-topbar-role="actions">
+								<span class="text-xs text-cyan-300 font-space">0.001 K</span>
+								<div class="topbar-badge bg-cyan-900/50 border-cyan-400/50 text-cyan-200" data-topbar-role="badge">FROZEN</div>
+							</div>
+						</div>
+					</header>
+				</article>
+
+				<!-- =============================================
+				     4. LAB REACTION SERIES (3 variations)
+				     ============================================= -->
+
+				<!-- 04A - Lab Reaction (Original) -->
+				<article class="topbar-demo-card">
+					<div class="topbar-demo-meta">
+						<div>
+							<div class="topbar-demo-title text-amber-400">04A // Lab Reaction</div>
+							<div class="topbar-demo-subtitle">Chemical reaction in progress with bubbling solution</div>
+						</div>
+						<button class="topbar-demo-replay text-amber-400 border-amber-400/50 hover:bg-amber-400/10" type="button" data-topbar-replay>Replay</button>
+					</div>
+					<header class="topbar-demo-bar theme-lab" data-topbar-anim="labReaction">
+						<canvas class="topbar-bg-canvas" data-bg="formulas"></canvas>
+						<div class="w-full px-6 py-5 flex items-center justify-between topbar-demo__content">
+							<div class="flex items-center gap-4">
+								<div class="topbar-demo-logo lab-logo" data-topbar-role="logo">
+									<svg viewBox="0 0 44 50" class="w-11 h-12">
+										<path d="M17,8 L17,22 L6,44 L38,44 L27,22 L27,8" fill="none" stroke="#f59e0b" stroke-width="2" class="flask-body"/>
+										<rect x="17" y="4" width="10" height="4" fill="none" stroke="#f59e0b" stroke-width="2" class="flask-neck"/>
+										<path d="M10,36 Q22,32 34,36 L38,44 L6,44 Z" fill="#fbbf24" opacity="0.6" class="liquid"/>
+										<circle cx="15" cy="40" r="2" fill="#fef3c7" class="bubble b-1" opacity="0"/>
+										<circle cx="22" cy="38" r="1.5" fill="#fef3c7" class="bubble b-2" opacity="0"/>
+										<circle cx="28" cy="41" r="2.5" fill="#fef3c7" class="bubble b-3" opacity="0"/>
+										<circle cx="18" cy="35" r="1" fill="#fef3c7" class="bubble b-4" opacity="0"/>
+									</svg>
+								</div>
+								<div>
+									<h1 class="text-xl font-aldrich text-amber-300" data-topbar-role="title">LAB<span class="text-amber-100">SYNTH</span></h1>
+									<p class="text-xs text-amber-500 font-space" data-topbar-role="subtitle">Synthesis in progress...</p>
+								</div>
+							</div>
+							<div class="flex items-center gap-4" data-topbar-role="actions">
+								<span class="text-xs text-amber-400 font-space">pH 7.4</span>
+								<div class="topbar-badge bg-amber-900/50 border-amber-500/50 text-amber-300 animate-pulse" data-topbar-role="badge">ACTIVE</div>
+							</div>
+						</div>
+					</header>
+				</article>
+
+				<!-- 04B - Toxic Green -->
+				<article class="topbar-demo-card">
+					<div class="topbar-demo-meta">
+						<div>
+							<div class="topbar-demo-title text-green-400">04B // Toxic Green</div>
+							<div class="topbar-demo-subtitle">Aggressive bubbling with hazardous neon glow</div>
+						</div>
+						<button class="topbar-demo-replay text-green-400 border-green-400/50 hover:bg-green-400/10" type="button" data-topbar-replay>Replay</button>
+					</div>
+					<header class="topbar-demo-bar theme-lab-toxic" data-topbar-anim="labToxic">
+						<canvas class="topbar-bg-canvas" data-bg="formulasToxic"></canvas>
+						<div class="w-full px-6 py-5 flex items-center justify-between topbar-demo__content">
+							<div class="flex items-center gap-4">
+								<div class="topbar-demo-logo lab-toxic-logo" data-topbar-role="logo">
+									<svg viewBox="0 0 44 50" class="w-11 h-12">
+										<path d="M17,8 L17,22 L6,44 L38,44 L27,22 L27,8" fill="none" stroke="#22c55e" stroke-width="2" class="flask-body"/>
+										<rect x="17" y="4" width="10" height="4" fill="none" stroke="#22c55e" stroke-width="2" class="flask-neck"/>
+										<path d="M10,36 Q22,32 34,36 L38,44 L6,44 Z" fill="#4ade80" opacity="0.7" class="liquid"/>
+										<circle cx="15" cy="40" r="2" fill="#bbf7d0" class="bubble b-1" opacity="0"/>
+										<circle cx="22" cy="38" r="1.5" fill="#bbf7d0" class="bubble b-2" opacity="0"/>
+										<circle cx="28" cy="41" r="2.5" fill="#bbf7d0" class="bubble b-3" opacity="0"/>
+										<circle cx="18" cy="35" r="1" fill="#bbf7d0" class="bubble b-4" opacity="0"/>
+									</svg>
+								</div>
+								<div>
+									<h1 class="text-xl font-orbitron text-green-300" data-topbar-role="title">TOXIC<span class="text-green-100">LAB</span></h1>
+									<p class="text-xs text-green-500 font-space" data-topbar-role="subtitle">Hazardous reaction!</p>
+								</div>
+							</div>
+							<div class="flex items-center gap-4" data-topbar-role="actions">
+								<span class="text-xs text-green-400 font-space">pH 2.1</span>
+								<div class="topbar-badge bg-green-900/50 border-green-500/50 text-green-300 animate-pulse" data-topbar-role="badge">DANGER</div>
+							</div>
+						</div>
+					</header>
+				</article>
+
+				<!-- 04C - Sunset Brew -->
+				<article class="topbar-demo-card">
+					<div class="topbar-demo-meta">
+						<div>
+							<div class="topbar-demo-title text-orange-400">04C // Sunset Brew</div>
+							<div class="topbar-demo-subtitle">Gentle warmth with soft, peaceful bubbling</div>
+						</div>
+						<button class="topbar-demo-replay text-orange-400 border-orange-400/50 hover:bg-orange-400/10" type="button" data-topbar-replay>Replay</button>
+					</div>
+					<header class="topbar-demo-bar theme-lab-sunset" data-topbar-anim="labSunset">
+						<canvas class="topbar-bg-canvas" data-bg="formulasSunset"></canvas>
+						<div class="w-full px-6 py-5 flex items-center justify-between topbar-demo__content">
+							<div class="flex items-center gap-4">
+								<div class="topbar-demo-logo lab-sunset-logo" data-topbar-role="logo">
+									<svg viewBox="0 0 44 50" class="w-11 h-12">
+										<path d="M17,8 L17,22 L6,44 L38,44 L27,22 L27,8" fill="none" stroke="#fb923c" stroke-width="2" class="flask-body"/>
+										<rect x="17" y="4" width="10" height="4" fill="none" stroke="#fb923c" stroke-width="2" class="flask-neck"/>
+										<path d="M10,36 Q22,32 34,36 L38,44 L6,44 Z" fill="#fdba74" opacity="0.5" class="liquid"/>
+										<circle cx="15" cy="40" r="2" fill="#ffedd5" class="bubble b-1" opacity="0"/>
+										<circle cx="22" cy="38" r="1.5" fill="#ffedd5" class="bubble b-2" opacity="0"/>
+										<circle cx="28" cy="41" r="2.5" fill="#ffedd5" class="bubble b-3" opacity="0"/>
+										<circle cx="18" cy="35" r="1" fill="#ffedd5" class="bubble b-4" opacity="0"/>
+									</svg>
+								</div>
+								<div>
+									<h1 class="text-xl font-rajdhani text-orange-300" data-topbar-role="title">SUNSET<span class="text-orange-100">BREW</span></h1>
+									<p class="text-xs text-orange-500 font-space" data-topbar-role="subtitle">Gentle infusion...</p>
+								</div>
+							</div>
+							<div class="flex items-center gap-4" data-topbar-role="actions">
+								<span class="text-xs text-orange-400 font-space">37°C</span>
+								<div class="topbar-badge bg-orange-900/50 border-orange-500/50 text-orange-300" data-topbar-role="badge">WARMING</div>
+							</div>
+						</div>
+					</header>
+				</article>
+
+				<!-- =============================================
+				     5. SPECTRUM PEAKS SERIES (3 variations)
+				     ============================================= -->
+
+				<!-- 05A - Spectrum Peaks (Original) -->
+				<article class="topbar-demo-card">
+					<div class="topbar-demo-meta">
+						<div>
+							<div class="topbar-demo-title text-rose-400">05A // Spectrum Peaks</div>
+							<div class="topbar-demo-subtitle">Mass spectrometry peaks rising and identifying compounds</div>
+						</div>
+						<button class="topbar-demo-replay text-rose-400 border-rose-400/50 hover:bg-rose-400/10" type="button" data-topbar-replay>Replay</button>
+					</div>
+					<header class="topbar-demo-bar theme-spectrum" data-topbar-anim="spectrumPeaks">
+						<canvas class="topbar-bg-canvas" data-bg="dataStream"></canvas>
+						<div class="w-full px-6 py-5 flex items-center justify-between topbar-demo__content">
+							<div class="flex items-center gap-4">
+								<div class="topbar-demo-logo spectrum-logo" data-topbar-role="logo">
+									<svg viewBox="0 0 60 40" class="w-14 h-10">
+										<line x1="5" y1="35" x2="55" y2="35" stroke="#be185d" stroke-width="1" opacity="0.5"/>
+										<path d="M10,35 L10,28 L12,28 L12,35" fill="#fb7185" class="peak peak-1" opacity="0"/>
+										<path d="M18,35 L18,15 L22,15 L22,35" fill="#f43f5e" class="peak peak-2" opacity="0"/>
+										<path d="M28,35 L28,22 L30,22 L30,35" fill="#fb7185" class="peak peak-3" opacity="0"/>
+										<path d="M36,35 L36,8 L40,8 L40,35" fill="#e11d48" class="peak peak-4" opacity="0"/>
+										<path d="M46,35 L46,20 L50,20 L50,35" fill="#fb7185" class="peak peak-5" opacity="0"/>
+										<text x="20" y="12" font-size="5" fill="#fda4af" class="peak-label pl-2" opacity="0">342</text>
+										<text x="38" y="5" font-size="5" fill="#fda4af" class="peak-label pl-4" opacity="0">528</text>
+									</svg>
+								</div>
+								<div>
+									<h1 class="text-xl font-electrolize text-rose-300" data-topbar-role="title">MASS<span class="text-rose-100">SPEC</span></h1>
+									<p class="text-xs text-rose-500 font-jetbrains" data-topbar-role="subtitle">Analyzing m/z ratios...</p>
+								</div>
+							</div>
+							<div class="flex items-center gap-4" data-topbar-role="actions">
+								<span class="text-xs text-rose-400 font-jetbrains">MW: 528.6</span>
+								<div class="topbar-badge bg-rose-900/50 border-rose-500/50 text-rose-300" data-topbar-role="badge">SCAN</div>
+							</div>
+						</div>
+					</header>
+				</article>
+
+				<!-- 05B - Electric Blue -->
+				<article class="topbar-demo-card">
+					<div class="topbar-demo-meta">
+						<div>
+							<div class="topbar-demo-title text-blue-400">05B // Electric Blue</div>
+							<div class="topbar-demo-subtitle">Sharp digital peaks with glitch aesthetics</div>
+						</div>
+						<button class="topbar-demo-replay text-blue-400 border-blue-400/50 hover:bg-blue-400/10" type="button" data-topbar-replay>Replay</button>
+					</div>
+					<header class="topbar-demo-bar theme-spectrum-electric" data-topbar-anim="spectrumElectric">
+						<canvas class="topbar-bg-canvas" data-bg="dataStreamElectric"></canvas>
+						<div class="w-full px-6 py-5 flex items-center justify-between topbar-demo__content">
+							<div class="flex items-center gap-4">
+								<div class="topbar-demo-logo spectrum-electric-logo" data-topbar-role="logo">
+									<svg viewBox="0 0 60 40" class="w-14 h-10">
+										<line x1="5" y1="35" x2="55" y2="35" stroke="#1d4ed8" stroke-width="1" opacity="0.5"/>
+										<path d="M10,35 L10,28 L12,28 L12,35" fill="#60a5fa" class="peak peak-1" opacity="0"/>
+										<path d="M18,35 L18,15 L22,15 L22,35" fill="#3b82f6" class="peak peak-2" opacity="0"/>
+										<path d="M28,35 L28,22 L30,22 L30,35" fill="#60a5fa" class="peak peak-3" opacity="0"/>
+										<path d="M36,35 L36,8 L40,8 L40,35" fill="#2563eb" class="peak peak-4" opacity="0"/>
+										<path d="M46,35 L46,20 L50,20 L50,35" fill="#60a5fa" class="peak peak-5" opacity="0"/>
+										<text x="20" y="12" font-size="5" fill="#93c5fd" class="peak-label pl-2" opacity="0">421</text>
+										<text x="38" y="5" font-size="5" fill="#93c5fd" class="peak-label pl-4" opacity="0">687</text>
+									</svg>
+								</div>
+								<div>
+									<h1 class="text-xl font-orbitron text-blue-300" data-topbar-role="title">ELECTRIC<span class="text-blue-100">SPEC</span></h1>
+									<p class="text-xs text-blue-500 font-jetbrains" data-topbar-role="subtitle">Digital ion detection...</p>
+								</div>
+							</div>
+							<div class="flex items-center gap-4" data-topbar-role="actions">
+								<span class="text-xs text-blue-400 font-jetbrains">MW: 687.2</span>
+								<div class="topbar-badge bg-blue-900/50 border-blue-500/50 text-blue-300" data-topbar-role="badge">DIGITAL</div>
+							</div>
+						</div>
+					</header>
+				</article>
+
+				<!-- 05C - Infrared -->
+				<article class="topbar-demo-card">
+					<div class="topbar-demo-meta">
+						<div>
+							<div class="topbar-demo-title text-red-500">05C // Infrared</div>
+							<div class="topbar-demo-subtitle">Heat-map style with thermal pulsing peaks</div>
+						</div>
+						<button class="topbar-demo-replay text-red-500 border-red-500/50 hover:bg-red-500/10" type="button" data-topbar-replay>Replay</button>
+					</div>
+					<header class="topbar-demo-bar theme-spectrum-infrared" data-topbar-anim="spectrumInfrared">
+						<canvas class="topbar-bg-canvas" data-bg="dataStreamInfrared"></canvas>
+						<div class="w-full px-6 py-5 flex items-center justify-between topbar-demo__content">
+							<div class="flex items-center gap-4">
+								<div class="topbar-demo-logo spectrum-infrared-logo" data-topbar-role="logo">
+									<svg viewBox="0 0 60 40" class="w-14 h-10">
+										<line x1="5" y1="35" x2="55" y2="35" stroke="#991b1b" stroke-width="1" opacity="0.5"/>
+										<path d="M10,35 L10,28 L12,28 L12,35" fill="#f87171" class="peak peak-1" opacity="0"/>
+										<path d="M18,35 L18,15 L22,15 L22,35" fill="#ef4444" class="peak peak-2" opacity="0"/>
+										<path d="M28,35 L28,22 L30,22 L30,35" fill="#f87171" class="peak peak-3" opacity="0"/>
+										<path d="M36,35 L36,8 L40,8 L40,35" fill="#dc2626" class="peak peak-4" opacity="0"/>
+										<path d="M46,35 L46,20 L50,20 L50,35" fill="#fb923c" class="peak peak-5" opacity="0"/>
+										<text x="20" y="12" font-size="5" fill="#fca5a5" class="peak-label pl-2" opacity="0">1650</text>
+										<text x="38" y="5" font-size="5" fill="#fca5a5" class="peak-label pl-4" opacity="0">3400</text>
+									</svg>
+								</div>
+								<div>
+									<h1 class="text-xl font-audiowide text-red-400" data-topbar-role="title">INFRA<span class="text-orange-200">RED</span></h1>
+									<p class="text-xs text-red-500 font-jetbrains" data-topbar-role="subtitle">Thermal absorption...</p>
+								</div>
+							</div>
+							<div class="flex items-center gap-4" data-topbar-role="actions">
+								<span class="text-xs text-red-400 font-jetbrains">cm⁻¹: 3400</span>
+								<div class="topbar-badge bg-red-900/50 border-red-500/50 text-red-300" data-topbar-role="badge">THERMAL</div>
+							</div>
+						</div>
+					</header>
+				</article>
+
+				<!-- =============================================
+				     6. PROTEIN FOLD SERIES (3 variations)
+				     ============================================= -->
+
+				<!-- 06A - Protein Fold (Original) -->
+				<article class="topbar-demo-card">
+					<div class="topbar-demo-meta">
+						<div>
+							<div class="topbar-demo-title text-blue-400">06A // Protein Fold</div>
+							<div class="topbar-demo-subtitle">Polypeptide chain folding into tertiary structure</div>
+						</div>
+						<button class="topbar-demo-replay text-blue-400 border-blue-400/50 hover:bg-blue-400/10" type="button" data-topbar-replay>Replay</button>
+					</div>
+					<header class="topbar-demo-bar theme-protein" data-topbar-anim="proteinFold">
+						<canvas class="topbar-bg-canvas" data-bg="hBonds"></canvas>
+						<div class="w-full px-6 py-5 flex items-center justify-between topbar-demo__content">
+							<div class="flex items-center gap-4">
+								<div class="topbar-demo-logo protein-logo" data-topbar-role="logo">
+									<svg viewBox="0 0 50 50" class="w-12 h-12">
+										<path d="M10,40 Q15,35 20,38 Q25,42 30,35 Q35,28 40,32 Q45,36 45,25 Q45,15 40,18 Q35,22 30,15 Q25,8 20,12 Q15,16 10,10" 
+											fill="none" stroke="#3b82f6" stroke-width="3" stroke-linecap="round" class="protein-chain"/>
+										<circle cx="20" cy="25" r="2" fill="#93c5fd" class="h-bond hb-1" opacity="0"/>
+										<circle cx="35" cy="25" r="2" fill="#93c5fd" class="h-bond hb-2" opacity="0"/>
+									</svg>
+								</div>
+								<div>
+									<h1 class="text-xl font-exo font-bold text-blue-300" data-topbar-role="title">PROTEIN<span class="text-blue-100">FOLD</span></h1>
+									<p class="text-xs text-blue-500 font-space" data-topbar-role="subtitle">Tertiary structure forming...</p>
+								</div>
+							</div>
+							<div class="flex items-center gap-4" data-topbar-role="actions">
+								<span class="text-xs text-blue-400 font-space">α-helix</span>
+								<div class="topbar-badge bg-blue-900/50 border-blue-500/50 text-blue-300" data-topbar-role="badge">FOLDING</div>
+							</div>
+						</div>
+					</header>
+				</article>
+
+				<!-- 06B - Mint Fresh -->
+				<article class="topbar-demo-card">
+					<div class="topbar-demo-meta">
+						<div>
+							<div class="topbar-demo-title text-teal-400">06B // Mint Fresh</div>
+							<div class="topbar-demo-subtitle">Crisp, clean folding with fresh aesthetic</div>
+						</div>
+						<button class="topbar-demo-replay text-teal-400 border-teal-400/50 hover:bg-teal-400/10" type="button" data-topbar-replay>Replay</button>
+					</div>
+					<header class="topbar-demo-bar theme-protein-mint" data-topbar-anim="proteinMint">
+						<canvas class="topbar-bg-canvas" data-bg="hBondsMint"></canvas>
+						<div class="w-full px-6 py-5 flex items-center justify-between topbar-demo__content">
+							<div class="flex items-center gap-4">
+								<div class="topbar-demo-logo protein-mint-logo" data-topbar-role="logo">
+									<svg viewBox="0 0 50 50" class="w-12 h-12">
+										<path d="M10,40 Q15,35 20,38 Q25,42 30,35 Q35,28 40,32 Q45,36 45,25 Q45,15 40,18 Q35,22 30,15 Q25,8 20,12 Q15,16 10,10" 
+											fill="none" stroke="#2dd4bf" stroke-width="3" stroke-linecap="round" class="protein-chain"/>
+										<circle cx="20" cy="25" r="2" fill="#99f6e4" class="h-bond hb-1" opacity="0"/>
+										<circle cx="35" cy="25" r="2" fill="#99f6e4" class="h-bond hb-2" opacity="0"/>
+									</svg>
+								</div>
+								<div>
+									<h1 class="text-xl font-rajdhani font-bold text-teal-300" data-topbar-role="title">MINT<span class="text-teal-100">FOLD</span></h1>
+									<p class="text-xs text-teal-500 font-space" data-topbar-role="subtitle">Native state achieved</p>
+								</div>
+							</div>
+							<div class="flex items-center gap-4" data-topbar-role="actions">
+								<span class="text-xs text-teal-400 font-space">β-sheet</span>
+								<div class="topbar-badge bg-teal-900/50 border-teal-500/50 text-teal-300" data-topbar-role="badge">NATIVE</div>
+							</div>
+						</div>
+					</header>
+				</article>
+
+				<!-- 06C - Twilight -->
+				<article class="topbar-demo-card">
+					<div class="topbar-demo-meta">
+						<div>
+							<div class="topbar-demo-title text-fuchsia-400">06C // Twilight</div>
+							<div class="topbar-demo-subtitle">Mystical folding with ethereal glowing bonds</div>
+						</div>
+						<button class="topbar-demo-replay text-fuchsia-400 border-fuchsia-400/50 hover:bg-fuchsia-400/10" type="button" data-topbar-replay>Replay</button>
+					</div>
+					<header class="topbar-demo-bar theme-protein-twilight" data-topbar-anim="proteinTwilight">
+						<canvas class="topbar-bg-canvas" data-bg="hBondsTwilight"></canvas>
+						<div class="w-full px-6 py-5 flex items-center justify-between topbar-demo__content">
+							<div class="flex items-center gap-4">
+								<div class="topbar-demo-logo protein-twilight-logo" data-topbar-role="logo">
+									<svg viewBox="0 0 50 50" class="w-12 h-12">
+										<path d="M10,40 Q15,35 20,38 Q25,42 30,35 Q35,28 40,32 Q45,36 45,25 Q45,15 40,18 Q35,22 30,15 Q25,8 20,12 Q15,16 10,10" 
+											fill="none" stroke="#d946ef" stroke-width="3" stroke-linecap="round" class="protein-chain"/>
+										<circle cx="20" cy="25" r="2" fill="#f5d0fe" class="h-bond hb-1" opacity="0"/>
+										<circle cx="35" cy="25" r="2" fill="#f5d0fe" class="h-bond hb-2" opacity="0"/>
+									</svg>
+								</div>
+								<div>
+									<h1 class="text-xl font-michroma text-fuchsia-300" data-topbar-role="title">TWILIGHT<span class="text-pink-200">FOLD</span></h1>
+									<p class="text-xs text-fuchsia-500 font-space" data-topbar-role="subtitle">Quantum conformation</p>
+								</div>
+							</div>
+							<div class="flex items-center gap-4" data-topbar-role="actions">
+								<span class="text-xs text-fuchsia-400 font-space">coil</span>
+								<div class="topbar-badge bg-fuchsia-900/50 border-fuchsia-500/50 text-fuchsia-300" data-topbar-role="badge">MYSTICAL</div>
+							</div>
+						</div>
+					</header>
+				</article>
+
+				<!-- =============================================
+				     7. MEMBRANE FLOW SERIES (3 variations)
+				     ============================================= -->
+
+				<!-- 07A - Membrane Flow (Original) -->
+				<article class="topbar-demo-card">
+					<div class="topbar-demo-meta">
+						<div>
+							<div class="topbar-demo-title text-teal-400">07A // Membrane Flow</div>
+							<div class="topbar-demo-subtitle">Molecules crossing the phospholipid bilayer membrane</div>
+						</div>
+						<button class="topbar-demo-replay text-teal-400 border-teal-400/50 hover:bg-teal-400/10" type="button" data-topbar-replay>Replay</button>
+					</div>
+					<header class="topbar-demo-bar theme-membrane" data-topbar-anim="membraneFlow">
+						<canvas class="topbar-bg-canvas" data-bg="lipids"></canvas>
+						<div class="w-full px-6 py-5 flex items-center justify-between topbar-demo__content">
+							<div class="flex items-center gap-4">
+								<div class="topbar-demo-logo membrane-logo" data-topbar-role="logo">
+									<svg viewBox="0 0 50 50" class="w-12 h-12">
+										<circle cx="10" cy="15" r="4" fill="#2dd4bf" class="lipid-head lh-1"/>
+										<circle cx="22" cy="15" r="4" fill="#2dd4bf" class="lipid-head lh-2"/>
+										<circle cx="34" cy="15" r="4" fill="#2dd4bf" class="lipid-head lh-3"/>
+										<line x1="10" y1="19" x2="10" y2="25" stroke="#5eead4" stroke-width="2" class="lipid-tail"/>
+										<line x1="22" y1="19" x2="22" y2="25" stroke="#5eead4" stroke-width="2" class="lipid-tail"/>
+										<line x1="34" y1="19" x2="34" y2="25" stroke="#5eead4" stroke-width="2" class="lipid-tail"/>
+										<line x1="10" y1="25" x2="10" y2="31" stroke="#5eead4" stroke-width="2" class="lipid-tail"/>
+										<line x1="22" y1="25" x2="22" y2="31" stroke="#5eead4" stroke-width="2" class="lipid-tail"/>
+										<line x1="34" y1="25" x2="34" y2="31" stroke="#5eead4" stroke-width="2" class="lipid-tail"/>
+										<circle cx="10" cy="35" r="4" fill="#2dd4bf" class="lipid-head lh-4"/>
+										<circle cx="22" cy="35" r="4" fill="#2dd4bf" class="lipid-head lh-5"/>
+										<circle cx="34" cy="35" r="4" fill="#2dd4bf" class="lipid-head lh-6"/>
+										<circle cx="44" cy="25" r="3" fill="#f0fdfa" class="passing-molecule"/>
+									</svg>
+								</div>
+								<div>
+									<h1 class="text-xl font-rajdhani font-bold text-teal-300" data-topbar-role="title">MEMBRANE<span class="text-teal-100">X</span></h1>
+									<p class="text-xs text-teal-500 font-space" data-topbar-role="subtitle">Transport active</p>
+								</div>
+							</div>
+							<div class="flex items-center gap-4" data-topbar-role="actions">
+								<span class="text-xs text-teal-400 font-space">ΔG = -3.2</span>
+								<div class="topbar-badge bg-teal-900/50 border-teal-500/50 text-teal-300" data-topbar-role="badge">PERMEABLE</div>
+							</div>
+						</div>
+					</header>
+				</article>
+
+				<!-- 07B - Golden Gate -->
+				<article class="topbar-demo-card">
+					<div class="topbar-demo-meta">
+						<div>
+							<div class="topbar-demo-title text-yellow-400">07B // Golden Gate</div>
+							<div class="topbar-demo-subtitle">Premium golden membrane with metallic sheen</div>
+						</div>
+						<button class="topbar-demo-replay text-yellow-400 border-yellow-400/50 hover:bg-yellow-400/10" type="button" data-topbar-replay>Replay</button>
+					</div>
+					<header class="topbar-demo-bar theme-membrane-gold" data-topbar-anim="membraneGold">
+						<canvas class="topbar-bg-canvas" data-bg="lipidsGold"></canvas>
+						<div class="w-full px-6 py-5 flex items-center justify-between topbar-demo__content">
+							<div class="flex items-center gap-4">
+								<div class="topbar-demo-logo membrane-gold-logo" data-topbar-role="logo">
+									<svg viewBox="0 0 50 50" class="w-12 h-12">
+										<circle cx="10" cy="15" r="4" fill="#fbbf24" class="lipid-head lh-1"/>
+										<circle cx="22" cy="15" r="4" fill="#fbbf24" class="lipid-head lh-2"/>
+										<circle cx="34" cy="15" r="4" fill="#fbbf24" class="lipid-head lh-3"/>
+										<line x1="10" y1="19" x2="10" y2="25" stroke="#fcd34d" stroke-width="2" class="lipid-tail"/>
+										<line x1="22" y1="19" x2="22" y2="25" stroke="#fcd34d" stroke-width="2" class="lipid-tail"/>
+										<line x1="34" y1="19" x2="34" y2="25" stroke="#fcd34d" stroke-width="2" class="lipid-tail"/>
+										<line x1="10" y1="25" x2="10" y2="31" stroke="#fcd34d" stroke-width="2" class="lipid-tail"/>
+										<line x1="22" y1="25" x2="22" y2="31" stroke="#fcd34d" stroke-width="2" class="lipid-tail"/>
+										<line x1="34" y1="25" x2="34" y2="31" stroke="#fcd34d" stroke-width="2" class="lipid-tail"/>
+										<circle cx="10" cy="35" r="4" fill="#fbbf24" class="lipid-head lh-4"/>
+										<circle cx="22" cy="35" r="4" fill="#fbbf24" class="lipid-head lh-5"/>
+										<circle cx="34" cy="35" r="4" fill="#fbbf24" class="lipid-head lh-6"/>
+										<circle cx="44" cy="25" r="3" fill="#fef3c7" class="passing-molecule"/>
+									</svg>
+								</div>
+								<div>
+									<h1 class="text-xl font-audiowide text-yellow-300" data-topbar-role="title">GOLDEN<span class="text-yellow-100">GATE</span></h1>
+									<p class="text-xs text-yellow-500 font-space" data-topbar-role="subtitle">Premium transport</p>
+								</div>
+							</div>
+							<div class="flex items-center gap-4" data-topbar-role="actions">
+								<span class="text-xs text-yellow-400 font-space">Au-channel</span>
+								<div class="topbar-badge bg-yellow-900/50 border-yellow-500/50 text-yellow-300" data-topbar-role="badge">PREMIUM</div>
+							</div>
+						</div>
+					</header>
+				</article>
+
+				<!-- 07C - Deep Sea -->
+				<article class="topbar-demo-card">
+					<div class="topbar-demo-meta">
+						<div>
+							<div class="topbar-demo-title text-blue-500">07C // Deep Sea</div>
+							<div class="topbar-demo-subtitle">Bioluminescent underwater membrane with soft glow</div>
+						</div>
+						<button class="topbar-demo-replay text-blue-500 border-blue-500/50 hover:bg-blue-500/10" type="button" data-topbar-replay>Replay</button>
+					</div>
+					<header class="topbar-demo-bar theme-membrane-deep" data-topbar-anim="membraneDeep">
+						<canvas class="topbar-bg-canvas" data-bg="lipidsDeep"></canvas>
+						<div class="w-full px-6 py-5 flex items-center justify-between topbar-demo__content">
+							<div class="flex items-center gap-4">
+								<div class="topbar-demo-logo membrane-deep-logo" data-topbar-role="logo">
+									<svg viewBox="0 0 50 50" class="w-12 h-12">
+										<circle cx="10" cy="15" r="4" fill="#3b82f6" class="lipid-head lh-1"/>
+										<circle cx="22" cy="15" r="4" fill="#3b82f6" class="lipid-head lh-2"/>
+										<circle cx="34" cy="15" r="4" fill="#3b82f6" class="lipid-head lh-3"/>
+										<line x1="10" y1="19" x2="10" y2="25" stroke="#60a5fa" stroke-width="2" class="lipid-tail"/>
+										<line x1="22" y1="19" x2="22" y2="25" stroke="#60a5fa" stroke-width="2" class="lipid-tail"/>
+										<line x1="34" y1="19" x2="34" y2="25" stroke="#60a5fa" stroke-width="2" class="lipid-tail"/>
+										<line x1="10" y1="25" x2="10" y2="31" stroke="#60a5fa" stroke-width="2" class="lipid-tail"/>
+										<line x1="22" y1="25" x2="22" y2="31" stroke="#60a5fa" stroke-width="2" class="lipid-tail"/>
+										<line x1="34" y1="25" x2="34" y2="31" stroke="#60a5fa" stroke-width="2" class="lipid-tail"/>
+										<circle cx="10" cy="35" r="4" fill="#3b82f6" class="lipid-head lh-4"/>
+										<circle cx="22" cy="35" r="4" fill="#3b82f6" class="lipid-head lh-5"/>
+										<circle cx="34" cy="35" r="4" fill="#3b82f6" class="lipid-head lh-6"/>
+										<circle cx="44" cy="25" r="3" fill="#22d3ee" class="passing-molecule"/>
+									</svg>
+								</div>
+								<div>
+									<h1 class="text-xl font-exo font-bold text-blue-300" data-topbar-role="title">DEEP<span class="text-cyan-200">SEA</span></h1>
+									<p class="text-xs text-blue-500 font-space" data-topbar-role="subtitle">Bioluminescent flow</p>
+								</div>
+							</div>
+							<div class="flex items-center gap-4" data-topbar-role="actions">
+								<span class="text-xs text-blue-400 font-space">-1000m</span>
+								<div class="topbar-badge bg-blue-900/50 border-blue-500/50 text-blue-300" data-topbar-role="badge">ABYSSAL</div>
+							</div>
+						</div>
+					</header>
+				</article>
+
+				<!-- =============================================
+				     8. CRYSTAL LATTICE SERIES (3 variations)
+				     ============================================= -->
+
+				<!-- 08A - Crystal Lattice (Original) -->
+				<article class="topbar-demo-card">
+					<div class="topbar-demo-meta">
+						<div>
+							<div class="topbar-demo-title text-indigo-400">08A // Crystal Lattice</div>
+							<div class="topbar-demo-subtitle">Molecular crystal structure growing and forming patterns</div>
+						</div>
+						<button class="topbar-demo-replay text-indigo-400 border-indigo-400/50 hover:bg-indigo-400/10" type="button" data-topbar-replay>Replay</button>
+					</div>
+					<header class="topbar-demo-bar theme-crystal" data-topbar-anim="crystalLattice">
+						<canvas class="topbar-bg-canvas" data-bg="lattice"></canvas>
+						<div class="w-full px-6 py-5 flex items-center justify-between topbar-demo__content">
+							<div class="flex items-center gap-4">
+								<div class="topbar-demo-logo crystal-logo" data-topbar-role="logo">
+									<svg viewBox="0 0 50 50" class="w-12 h-12">
+										<circle cx="10" cy="10" r="3" fill="#818cf8" class="node n-1"/>
+										<circle cx="25" cy="10" r="3" fill="#818cf8" class="node n-2"/>
+										<circle cx="40" cy="10" r="3" fill="#818cf8" class="node n-3"/>
+										<circle cx="10" cy="25" r="3" fill="#a5b4fc" class="node n-4"/>
+										<circle cx="25" cy="25" r="4" fill="#c7d2fe" class="node n-5"/>
+										<circle cx="40" cy="25" r="3" fill="#a5b4fc" class="node n-6"/>
+										<circle cx="10" cy="40" r="3" fill="#818cf8" class="node n-7"/>
+										<circle cx="25" cy="40" r="3" fill="#818cf8" class="node n-8"/>
+										<circle cx="40" cy="40" r="3" fill="#818cf8" class="node n-9"/>
+										<line x1="10" y1="10" x2="25" y2="10" stroke="#6366f1" stroke-width="1" class="lattice-line"/>
+										<line x1="25" y1="10" x2="40" y2="10" stroke="#6366f1" stroke-width="1" class="lattice-line"/>
+										<line x1="10" y1="10" x2="10" y2="25" stroke="#6366f1" stroke-width="1" class="lattice-line"/>
+										<line x1="25" y1="10" x2="25" y2="25" stroke="#6366f1" stroke-width="1" class="lattice-line"/>
+										<line x1="40" y1="10" x2="40" y2="25" stroke="#6366f1" stroke-width="1" class="lattice-line"/>
+										<line x1="10" y1="25" x2="25" y2="25" stroke="#6366f1" stroke-width="1" class="lattice-line"/>
+										<line x1="25" y1="25" x2="40" y2="25" stroke="#6366f1" stroke-width="1" class="lattice-line"/>
+										<line x1="10" y1="25" x2="10" y2="40" stroke="#6366f1" stroke-width="1" class="lattice-line"/>
+										<line x1="25" y1="25" x2="25" y2="40" stroke="#6366f1" stroke-width="1" class="lattice-line"/>
+										<line x1="40" y1="25" x2="40" y2="40" stroke="#6366f1" stroke-width="1" class="lattice-line"/>
+										<line x1="10" y1="40" x2="25" y2="40" stroke="#6366f1" stroke-width="1" class="lattice-line"/>
+										<line x1="25" y1="40" x2="40" y2="40" stroke="#6366f1" stroke-width="1" class="lattice-line"/>
+									</svg>
+								</div>
+								<div>
+									<h1 class="text-xl font-oxanium font-bold text-indigo-300" data-topbar-role="title">CRYSTAL<span class="text-indigo-100">LAT</span></h1>
+									<p class="text-xs text-indigo-500 font-space" data-topbar-role="subtitle">Unit cell: Cubic</p>
+								</div>
+							</div>
+							<div class="flex items-center gap-4" data-topbar-role="actions">
+								<span class="text-xs text-indigo-400 font-space">a=b=c</span>
+								<div class="topbar-badge bg-indigo-900/50 border-indigo-500/50 text-indigo-300" data-topbar-role="badge">GROWING</div>
+							</div>
+						</div>
+					</header>
+				</article>
+
+				<!-- 08B - Ruby Matrix -->
+				<article class="topbar-demo-card">
+					<div class="topbar-demo-meta">
+						<div>
+							<div class="topbar-demo-title text-rose-400">08B // Ruby Matrix</div>
+							<div class="topbar-demo-subtitle">Gem-like ruby nodes with sparkle effects</div>
+						</div>
+						<button class="topbar-demo-replay text-rose-400 border-rose-400/50 hover:bg-rose-400/10" type="button" data-topbar-replay>Replay</button>
+					</div>
+					<header class="topbar-demo-bar theme-crystal-ruby" data-topbar-anim="crystalRuby">
+						<canvas class="topbar-bg-canvas" data-bg="latticeRuby"></canvas>
+						<div class="w-full px-6 py-5 flex items-center justify-between topbar-demo__content">
+							<div class="flex items-center gap-4">
+								<div class="topbar-demo-logo crystal-ruby-logo" data-topbar-role="logo">
+									<svg viewBox="0 0 50 50" class="w-12 h-12">
+										<circle cx="10" cy="10" r="3" fill="#f43f5e" class="node n-1"/>
+										<circle cx="25" cy="10" r="3" fill="#f43f5e" class="node n-2"/>
+										<circle cx="40" cy="10" r="3" fill="#f43f5e" class="node n-3"/>
+										<circle cx="10" cy="25" r="3" fill="#fb7185" class="node n-4"/>
+										<circle cx="25" cy="25" r="4" fill="#fda4af" class="node n-5"/>
+										<circle cx="40" cy="25" r="3" fill="#fb7185" class="node n-6"/>
+										<circle cx="10" cy="40" r="3" fill="#f43f5e" class="node n-7"/>
+										<circle cx="25" cy="40" r="3" fill="#f43f5e" class="node n-8"/>
+										<circle cx="40" cy="40" r="3" fill="#f43f5e" class="node n-9"/>
+										<line x1="10" y1="10" x2="25" y2="10" stroke="#e11d48" stroke-width="1" class="lattice-line"/>
+										<line x1="25" y1="10" x2="40" y2="10" stroke="#e11d48" stroke-width="1" class="lattice-line"/>
+										<line x1="10" y1="10" x2="10" y2="25" stroke="#e11d48" stroke-width="1" class="lattice-line"/>
+										<line x1="25" y1="10" x2="25" y2="25" stroke="#e11d48" stroke-width="1" class="lattice-line"/>
+										<line x1="40" y1="10" x2="40" y2="25" stroke="#e11d48" stroke-width="1" class="lattice-line"/>
+										<line x1="10" y1="25" x2="25" y2="25" stroke="#e11d48" stroke-width="1" class="lattice-line"/>
+										<line x1="25" y1="25" x2="40" y2="25" stroke="#e11d48" stroke-width="1" class="lattice-line"/>
+										<line x1="10" y1="25" x2="10" y2="40" stroke="#e11d48" stroke-width="1" class="lattice-line"/>
+										<line x1="25" y1="25" x2="25" y2="40" stroke="#e11d48" stroke-width="1" class="lattice-line"/>
+										<line x1="40" y1="25" x2="40" y2="40" stroke="#e11d48" stroke-width="1" class="lattice-line"/>
+										<line x1="10" y1="40" x2="25" y2="40" stroke="#e11d48" stroke-width="1" class="lattice-line"/>
+										<line x1="25" y1="40" x2="40" y2="40" stroke="#e11d48" stroke-width="1" class="lattice-line"/>
+									</svg>
+								</div>
+								<div>
+									<h1 class="text-xl font-orbitron text-rose-300" data-topbar-role="title">RUBY<span class="text-rose-100">MATRIX</span></h1>
+									<p class="text-xs text-rose-500 font-space" data-topbar-role="subtitle">Corundum structure</p>
+								</div>
+							</div>
+							<div class="flex items-center gap-4" data-topbar-role="actions">
+								<span class="text-xs text-rose-400 font-space">Al₂O₃</span>
+								<div class="topbar-badge bg-rose-900/50 border-rose-500/50 text-rose-300" data-topbar-role="badge">PRECIOUS</div>
+							</div>
+						</div>
+					</header>
+				</article>
+
+				<!-- 08C - Diamond Clear -->
+				<article class="topbar-demo-card">
+					<div class="topbar-demo-meta">
+						<div>
+							<div class="topbar-demo-title text-slate-300">08C // Diamond Clear</div>
+							<div class="topbar-demo-subtitle">Pure crystalline diamond with sharp geometry</div>
+						</div>
+						<button class="topbar-demo-replay text-slate-300 border-slate-300/50 hover:bg-slate-300/10" type="button" data-topbar-replay>Replay</button>
+					</div>
+					<header class="topbar-demo-bar theme-crystal-diamond" data-topbar-anim="crystalDiamond">
+						<canvas class="topbar-bg-canvas" data-bg="latticeDiamond"></canvas>
+						<div class="w-full px-6 py-5 flex items-center justify-between topbar-demo__content">
+							<div class="flex items-center gap-4">
+								<div class="topbar-demo-logo crystal-diamond-logo" data-topbar-role="logo">
+									<svg viewBox="0 0 50 50" class="w-12 h-12">
+										<circle cx="10" cy="10" r="3" fill="#e2e8f0" class="node n-1"/>
+										<circle cx="25" cy="10" r="3" fill="#e2e8f0" class="node n-2"/>
+										<circle cx="40" cy="10" r="3" fill="#e2e8f0" class="node n-3"/>
+										<circle cx="10" cy="25" r="3" fill="#f1f5f9" class="node n-4"/>
+										<circle cx="25" cy="25" r="4" fill="#ffffff" class="node n-5"/>
+										<circle cx="40" cy="25" r="3" fill="#f1f5f9" class="node n-6"/>
+										<circle cx="10" cy="40" r="3" fill="#e2e8f0" class="node n-7"/>
+										<circle cx="25" cy="40" r="3" fill="#e2e8f0" class="node n-8"/>
+										<circle cx="40" cy="40" r="3" fill="#e2e8f0" class="node n-9"/>
+										<line x1="10" y1="10" x2="25" y2="10" stroke="#cbd5e1" stroke-width="1" class="lattice-line"/>
+										<line x1="25" y1="10" x2="40" y2="10" stroke="#cbd5e1" stroke-width="1" class="lattice-line"/>
+										<line x1="10" y1="10" x2="10" y2="25" stroke="#cbd5e1" stroke-width="1" class="lattice-line"/>
+										<line x1="25" y1="10" x2="25" y2="25" stroke="#cbd5e1" stroke-width="1" class="lattice-line"/>
+										<line x1="40" y1="10" x2="40" y2="25" stroke="#cbd5e1" stroke-width="1" class="lattice-line"/>
+										<line x1="10" y1="25" x2="25" y2="25" stroke="#cbd5e1" stroke-width="1" class="lattice-line"/>
+										<line x1="25" y1="25" x2="40" y2="25" stroke="#cbd5e1" stroke-width="1" class="lattice-line"/>
+										<line x1="10" y1="25" x2="10" y2="40" stroke="#cbd5e1" stroke-width="1" class="lattice-line"/>
+										<line x1="25" y1="25" x2="25" y2="40" stroke="#cbd5e1" stroke-width="1" class="lattice-line"/>
+										<line x1="40" y1="25" x2="40" y2="40" stroke="#cbd5e1" stroke-width="1" class="lattice-line"/>
+										<line x1="10" y1="40" x2="25" y2="40" stroke="#cbd5e1" stroke-width="1" class="lattice-line"/>
+										<line x1="25" y1="40" x2="40" y2="40" stroke="#cbd5e1" stroke-width="1" class="lattice-line"/>
+									</svg>
+								</div>
+								<div>
+									<h1 class="text-xl font-michroma text-slate-200" data-topbar-role="title">DIAMOND<span class="text-white">CLEAR</span></h1>
+									<p class="text-xs text-slate-400 font-space" data-topbar-role="subtitle">sp³ hybridization</p>
+								</div>
+							</div>
+							<div class="flex items-center gap-4" data-topbar-role="actions">
+								<span class="text-xs text-slate-300 font-space">C</span>
+								<div class="topbar-badge bg-slate-800/50 border-slate-400/50 text-slate-200" data-topbar-role="badge">PURE</div>
+							</div>
+						</div>
+					</header>
+				</article>
+
+				<!-- =============================================
+				     9. FLUORESCENT SCAN SERIES (3 variations)
+				     ============================================= -->
+
+				<!-- 09A - Fluorescent Scan (Original) -->
+				<article class="topbar-demo-card">
+					<div class="topbar-demo-meta">
+						<div>
+							<div class="topbar-demo-title text-lime-400">09A // Fluorescent Scan</div>
+							<div class="topbar-demo-subtitle">UV light scanning and illuminating fluorescent markers</div>
+						</div>
+						<button class="topbar-demo-replay text-lime-400 border-lime-400/50 hover:bg-lime-400/10" type="button" data-topbar-replay>Replay</button>
+					</div>
+					<header class="topbar-demo-bar theme-fluorescent" data-topbar-anim="fluorescentScan">
+						<canvas class="topbar-bg-canvas" data-bg="uvSweep"></canvas>
+						<div class="w-full px-6 py-5 flex items-center justify-between topbar-demo__content">
+							<div class="flex items-center gap-4">
+								<div class="topbar-demo-logo fluorescent-logo" data-topbar-role="logo">
+									<svg viewBox="0 0 50 50" class="w-12 h-12">
+										<circle cx="12" cy="15" r="4" fill="#365314" class="fluoro-mol fm-1"/>
+										<circle cx="30" cy="12" r="5" fill="#365314" class="fluoro-mol fm-2"/>
+										<circle cx="40" cy="28" r="4" fill="#365314" class="fluoro-mol fm-3"/>
+										<circle cx="15" cy="35" r="5" fill="#365314" class="fluoro-mol fm-4"/>
+										<circle cx="35" cy="40" r="3" fill="#365314" class="fluoro-mol fm-5"/>
+										<circle cx="12" cy="15" r="6" fill="#84cc16" opacity="0" class="glow g-1"/>
+										<circle cx="30" cy="12" r="7" fill="#a3e635" opacity="0" class="glow g-2"/>
+										<circle cx="40" cy="28" r="6" fill="#84cc16" opacity="0" class="glow g-3"/>
+										<circle cx="15" cy="35" r="7" fill="#a3e635" opacity="0" class="glow g-4"/>
+										<circle cx="35" cy="40" r="5" fill="#84cc16" opacity="0" class="glow g-5"/>
+									</svg>
+								</div>
+								<div>
+									<h1 class="text-xl font-audiowide text-lime-300" data-topbar-role="title">FLUORO<span class="text-lime-100">TAG</span></h1>
+									<p class="text-xs text-lime-500 font-space" data-topbar-role="subtitle">λex: 488nm | λem: 520nm</p>
+								</div>
+							</div>
+							<div class="flex items-center gap-4" data-topbar-role="actions">
+								<span class="text-xs text-lime-400 font-space">GFP</span>
+								<div class="topbar-badge bg-lime-900/50 border-lime-500/50 text-lime-300" data-topbar-role="badge">UV ON</div>
+							</div>
+						</div>
+					</header>
+				</article>
+
+				<!-- 09B - Blacklight Party -->
+				<article class="topbar-demo-card">
+					<div class="topbar-demo-meta">
+						<div>
+							<div class="topbar-demo-title text-purple-400">09B // Blacklight Party</div>
+							<div class="topbar-demo-subtitle">Rave aesthetic with intense UV and hot pink glow</div>
+						</div>
+						<button class="topbar-demo-replay text-purple-400 border-purple-400/50 hover:bg-purple-400/10" type="button" data-topbar-replay>Replay</button>
+					</div>
+					<header class="topbar-demo-bar theme-fluorescent-party" data-topbar-anim="fluorescentParty">
+						<canvas class="topbar-bg-canvas" data-bg="uvSweepParty"></canvas>
+						<div class="w-full px-6 py-5 flex items-center justify-between topbar-demo__content">
+							<div class="flex items-center gap-4">
+								<div class="topbar-demo-logo fluorescent-party-logo" data-topbar-role="logo">
+									<svg viewBox="0 0 50 50" class="w-12 h-12">
+										<circle cx="12" cy="15" r="4" fill="#581c87" class="fluoro-mol fm-1"/>
+										<circle cx="30" cy="12" r="5" fill="#581c87" class="fluoro-mol fm-2"/>
+										<circle cx="40" cy="28" r="4" fill="#581c87" class="fluoro-mol fm-3"/>
+										<circle cx="15" cy="35" r="5" fill="#581c87" class="fluoro-mol fm-4"/>
+										<circle cx="35" cy="40" r="3" fill="#581c87" class="fluoro-mol fm-5"/>
+										<circle cx="12" cy="15" r="6" fill="#f472b6" opacity="0" class="glow g-1"/>
+										<circle cx="30" cy="12" r="7" fill="#e879f9" opacity="0" class="glow g-2"/>
+										<circle cx="40" cy="28" r="6" fill="#f472b6" opacity="0" class="glow g-3"/>
+										<circle cx="15" cy="35" r="7" fill="#e879f9" opacity="0" class="glow g-4"/>
+										<circle cx="35" cy="40" r="5" fill="#f472b6" opacity="0" class="glow g-5"/>
+									</svg>
+								</div>
+								<div>
+									<h1 class="text-xl font-orbitron text-purple-300" data-topbar-role="title">BLACK<span class="text-pink-300">LIGHT</span></h1>
+									<p class="text-xs text-purple-500 font-space" data-topbar-role="subtitle">λex: 365nm | λem: RAVE</p>
+								</div>
+							</div>
+							<div class="flex items-center gap-4" data-topbar-role="actions">
+								<span class="text-xs text-purple-400 font-space">PARTY</span>
+								<div class="topbar-badge bg-purple-900/50 border-purple-500/50 text-purple-300 animate-pulse" data-topbar-role="badge">INTENSE</div>
+							</div>
+						</div>
+					</header>
+				</article>
+
+				<!-- 09C - Bioluminescence -->
+				<article class="topbar-demo-card">
+					<div class="topbar-demo-meta">
+						<div>
+							<div class="topbar-demo-title text-cyan-400">09C // Bioluminescence</div>
+							<div class="topbar-demo-subtitle">Ocean organism style with soft, natural pulses</div>
+						</div>
+						<button class="topbar-demo-replay text-cyan-400 border-cyan-400/50 hover:bg-cyan-400/10" type="button" data-topbar-replay>Replay</button>
+					</div>
+					<header class="topbar-demo-bar theme-fluorescent-bio" data-topbar-anim="fluorescentBio">
+						<canvas class="topbar-bg-canvas" data-bg="uvSweepBio"></canvas>
+						<div class="w-full px-6 py-5 flex items-center justify-between topbar-demo__content">
+							<div class="flex items-center gap-4">
+								<div class="topbar-demo-logo fluorescent-bio-logo" data-topbar-role="logo">
+									<svg viewBox="0 0 50 50" class="w-12 h-12">
+										<circle cx="12" cy="15" r="4" fill="#164e63" class="fluoro-mol fm-1"/>
+										<circle cx="30" cy="12" r="5" fill="#164e63" class="fluoro-mol fm-2"/>
+										<circle cx="40" cy="28" r="4" fill="#164e63" class="fluoro-mol fm-3"/>
+										<circle cx="15" cy="35" r="5" fill="#164e63" class="fluoro-mol fm-4"/>
+										<circle cx="35" cy="40" r="3" fill="#164e63" class="fluoro-mol fm-5"/>
+										<circle cx="12" cy="15" r="6" fill="#22d3ee" opacity="0" class="glow g-1"/>
+										<circle cx="30" cy="12" r="7" fill="#67e8f9" opacity="0" class="glow g-2"/>
+										<circle cx="40" cy="28" r="6" fill="#22d3ee" opacity="0" class="glow g-3"/>
+										<circle cx="15" cy="35" r="7" fill="#67e8f9" opacity="0" class="glow g-4"/>
+										<circle cx="35" cy="40" r="5" fill="#22d3ee" opacity="0" class="glow g-5"/>
+									</svg>
+								</div>
+								<div>
+									<h1 class="text-xl font-exo text-cyan-300" data-topbar-role="title">BIO<span class="text-cyan-100">LUMIN</span></h1>
+									<p class="text-xs text-cyan-500 font-space" data-topbar-role="subtitle">Luciferin reaction</p>
+								</div>
+							</div>
+							<div class="flex items-center gap-4" data-topbar-role="actions">
+								<span class="text-xs text-cyan-400 font-space">ATP</span>
+								<div class="topbar-badge bg-cyan-900/50 border-cyan-500/50 text-cyan-300" data-topbar-role="badge">NATURAL</div>
+							</div>
+						</div>
+					</header>
+				</article>
+
+				<!-- =============================================
+				     10. DATA EXTRACT SERIES (3 variations)
+				     ============================================= -->
+
+				<!-- 10A - Data Extract (Original) -->
+				<article class="topbar-demo-card">
+					<div class="topbar-demo-meta">
+						<div>
+							<div class="topbar-demo-title text-fuchsia-400">10A // Data Extract</div>
+							<div class="topbar-demo-subtitle">Scientific literature being scanned and data extracted</div>
+						</div>
+						<button class="topbar-demo-replay text-fuchsia-400 border-fuchsia-400/50 hover:bg-fuchsia-400/10" type="button" data-topbar-replay>Replay</button>
+					</div>
+					<header class="topbar-demo-bar theme-extract" data-topbar-anim="dataExtract">
+						<canvas class="topbar-bg-canvas" data-bg="documents"></canvas>
+						<div class="w-full px-6 py-5 flex items-center justify-between topbar-demo__content">
+							<div class="flex items-center gap-4">
+								<div class="topbar-demo-logo extract-logo" data-topbar-role="logo">
+									<svg viewBox="0 0 44 50" class="w-11 h-12">
+										<rect x="6" y="4" width="28" height="36" rx="2" fill="none" stroke="#d946ef" stroke-width="2" class="doc-outline"/>
+										<line x1="10" y1="12" x2="30" y2="12" stroke="#a855f7" stroke-width="2" class="text-line tl-1"/>
+										<line x1="10" y1="18" x2="26" y2="18" stroke="#a855f7" stroke-width="2" class="text-line tl-2"/>
+										<line x1="10" y1="24" x2="28" y2="24" stroke="#a855f7" stroke-width="2" class="text-line tl-3"/>
+										<line x1="10" y1="30" x2="22" y2="30" stroke="#a855f7" stroke-width="2" class="text-line tl-4"/>
+										<rect x="10" y="16" width="18" height="4" fill="#f0abfc" opacity="0" class="highlight hl-1"/>
+										<rect x="10" y="28" width="12" height="4" fill="#f0abfc" opacity="0" class="highlight hl-2"/>
+										<path d="M34,20 L40,20 L40,25 L46,20 L40,15 L40,20" fill="#e879f9" class="extract-arrow" opacity="0"/>
+									</svg>
+								</div>
+								<div>
+									<h1 class="text-xl font-orbitron text-fuchsia-300" data-topbar-role="title">PEPTIDE<span class="text-fuchsia-100">LIT</span></h1>
+									<p class="text-xs text-fuchsia-500 font-jetbrains" data-topbar-role="subtitle">Extracting structured data...</p>
+								</div>
+							</div>
+							<div class="flex items-center gap-4" data-topbar-role="actions">
+								<span class="text-xs text-fuchsia-400 font-jetbrains">47 papers</span>
+								<div class="topbar-badge bg-fuchsia-900/50 border-fuchsia-500/50 text-fuchsia-300" data-topbar-role="badge">PARSING</div>
+							</div>
+						</div>
+					</header>
+				</article>
+
+				<!-- 10B - Matrix Code -->
+				<article class="topbar-demo-card">
+					<div class="topbar-demo-meta">
+						<div>
+							<div class="topbar-demo-title text-green-400">10B // Matrix Code</div>
+							<div class="topbar-demo-subtitle">Matrix-style falling code with digital rain aesthetic</div>
+						</div>
+						<button class="topbar-demo-replay text-green-400 border-green-400/50 hover:bg-green-400/10" type="button" data-topbar-replay>Replay</button>
+					</div>
+					<header class="topbar-demo-bar theme-extract-matrix" data-topbar-anim="dataMatrix">
+						<canvas class="topbar-bg-canvas" data-bg="documentsMatrix"></canvas>
+						<div class="w-full px-6 py-5 flex items-center justify-between topbar-demo__content">
+							<div class="flex items-center gap-4">
+								<div class="topbar-demo-logo extract-matrix-logo" data-topbar-role="logo">
+									<svg viewBox="0 0 44 50" class="w-11 h-12">
+										<rect x="6" y="4" width="28" height="36" rx="2" fill="none" stroke="#22c55e" stroke-width="2" class="doc-outline"/>
+										<line x1="10" y1="12" x2="30" y2="12" stroke="#4ade80" stroke-width="2" class="text-line tl-1"/>
+										<line x1="10" y1="18" x2="26" y2="18" stroke="#4ade80" stroke-width="2" class="text-line tl-2"/>
+										<line x1="10" y1="24" x2="28" y2="24" stroke="#4ade80" stroke-width="2" class="text-line tl-3"/>
+										<line x1="10" y1="30" x2="22" y2="30" stroke="#4ade80" stroke-width="2" class="text-line tl-4"/>
+										<rect x="10" y="16" width="18" height="4" fill="#86efac" opacity="0" class="highlight hl-1"/>
+										<rect x="10" y="28" width="12" height="4" fill="#86efac" opacity="0" class="highlight hl-2"/>
+										<path d="M34,20 L40,20 L40,25 L46,20 L40,15 L40,20" fill="#4ade80" class="extract-arrow" opacity="0"/>
+									</svg>
+								</div>
+								<div>
+									<h1 class="text-xl font-jetbrains text-green-300" data-topbar-role="title">MATRIX<span class="text-green-100">CODE</span></h1>
+									<p class="text-xs text-green-500 font-jetbrains" data-topbar-role="subtitle">Decoding the simulation...</p>
+								</div>
+							</div>
+							<div class="flex items-center gap-4" data-topbar-role="actions">
+								<span class="text-xs text-green-400 font-jetbrains">∞ lines</span>
+								<div class="topbar-badge bg-green-900/50 border-green-500/50 text-green-300" data-topbar-role="badge">MATRIX</div>
+							</div>
+						</div>
+					</header>
+				</article>
+
+				<!-- 10C - Blueprint -->
+				<article class="topbar-demo-card">
+					<div class="topbar-demo-meta">
+						<div>
+							<div class="topbar-demo-title text-blue-400">10C // Blueprint</div>
+							<div class="topbar-demo-subtitle">Technical blueprint style with schematic precision</div>
+						</div>
+						<button class="topbar-demo-replay text-blue-400 border-blue-400/50 hover:bg-blue-400/10" type="button" data-topbar-replay>Replay</button>
+					</div>
+					<header class="topbar-demo-bar theme-extract-blueprint" data-topbar-anim="dataBlueprint">
+						<canvas class="topbar-bg-canvas" data-bg="documentsBlueprint"></canvas>
+						<div class="w-full px-6 py-5 flex items-center justify-between topbar-demo__content">
+							<div class="flex items-center gap-4">
+								<div class="topbar-demo-logo extract-blueprint-logo" data-topbar-role="logo">
+									<svg viewBox="0 0 44 50" class="w-11 h-12">
+										<rect x="6" y="4" width="28" height="36" rx="2" fill="none" stroke="#3b82f6" stroke-width="2" class="doc-outline"/>
+										<line x1="10" y1="12" x2="30" y2="12" stroke="#60a5fa" stroke-width="2" class="text-line tl-1"/>
+										<line x1="10" y1="18" x2="26" y2="18" stroke="#60a5fa" stroke-width="2" class="text-line tl-2"/>
+										<line x1="10" y1="24" x2="28" y2="24" stroke="#60a5fa" stroke-width="2" class="text-line tl-3"/>
+										<line x1="10" y1="30" x2="22" y2="30" stroke="#60a5fa" stroke-width="2" class="text-line tl-4"/>
+										<rect x="10" y="16" width="18" height="4" fill="#bfdbfe" opacity="0" class="highlight hl-1"/>
+										<rect x="10" y="28" width="12" height="4" fill="#bfdbfe" opacity="0" class="highlight hl-2"/>
+										<path d="M34,20 L40,20 L40,25 L46,20 L40,15 L40,20" fill="#93c5fd" class="extract-arrow" opacity="0"/>
+									</svg>
+								</div>
+								<div>
+									<h1 class="text-xl font-space text-blue-300" data-topbar-role="title">BLUE<span class="text-white">PRINT</span></h1>
+									<p class="text-xs text-blue-500 font-space" data-topbar-role="subtitle">Technical specification...</p>
+								</div>
+							</div>
+							<div class="flex items-center gap-4" data-topbar-role="actions">
+								<span class="text-xs text-blue-400 font-space">Rev. 2.1</span>
+								<div class="topbar-badge bg-blue-900/50 border-blue-500/50 text-blue-300" data-topbar-role="badge">SPEC</div>
+							</div>
+						</div>
+					</header>
+				</article>
+
+			</section>
+		</main>
+		<script type="module" src="/static/js/topbar_animations.js?v=dev5"></script>
+	</body>
+</html>

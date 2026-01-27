@@ -12,10 +12,19 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse, StreamingResponse
 from sqlmodel import Session, select, func, or_
+from sqlalchemy import delete
 
 from .config import settings
 from .db import init_db, get_session, session_scope
-from .persistence.models import Paper, Extraction, ExtractionRun, ExtractionEntity, RunStatus
+from .persistence.models import Paper, Extraction, ExtractionRun, ExtractionEntity, RunStatus, BaselineCaseRun
+from .baseline.loader import load_index, list_cases, get_case
+from .integrations.document import DocumentExtractor
+from .persistence.repository import (
+	PromptRepository,
+	PaperRepository,
+	ExtractionRepository,
+	BaselineCaseRunRepository,
+)
 from .schemas import (
 	SearchResponse,
 	SearchItem,
@@ -30,6 +39,10 @@ from .schemas import (
 	EntityAggregateItem,
 	QualityRulesRequest,
 	QualityRulesResponse,
+	PromptListResponse,
+	PromptCreateRequest,
+	PromptVersionCreateRequest,
+	PromptInfo,
 	PaperRow,
 	PapersResponse,
 	EnqueueRequest,
@@ -42,9 +55,26 @@ from .schemas import (
 	FailedRunsResponse,
 	BulkRetryRequest,
 	BulkRetryResponse,
+	BaselineCasesResponse,
+	BaselineCaseSummary,
+	BaselineCase,
+	BaselineDatasetInfo,
+	BaselineRunSummary,
+	BaselineEnqueueRequest,
+	BaselineEnqueueResponse,
+	BaselineEnqueuedRun,
+	BaselineShadowSeedRequest,
+	BaselineShadowSeedResponse,
+	BaselineRetryRequest,
+	RunRetryWithSourceRequest,
+	ResolvedSourceResponse,
+	PaperMeta,
+	ExtractionPayload,
 )
 from .services.search_service import search_all_free_sources
+from .prompts import build_system_prompt
 from .services.extraction_service import run_extraction, run_extraction_from_file, run_followup, run_followup_stream, run_edit
+from .services.upload_store import store_upload
 from .services.quality_service import (
 	get_quality_rules,
 	update_quality_rules,
@@ -167,6 +197,253 @@ def create_app() -> FastAPI:
 		except Exception:
 			return []
 
+	def _build_prompt_info(prompt, versions) -> PromptInfo:
+		version_entries = []
+		for version in versions:
+			version_entries.append({
+				"id": version.id,
+				"prompt_id": version.prompt_id,
+				"version_index": version.version_index,
+				"content": version.content,
+				"notes": version.notes,
+				"created_by": version.created_by,
+				"created_at": version.created_at.isoformat() + "Z" if version.created_at else None,
+			})
+		latest_version = version_entries[0] if version_entries else None
+		return PromptInfo(
+			id=prompt.id,
+			name=prompt.name,
+			description=prompt.description,
+			is_active=prompt.is_active,
+			created_at=prompt.created_at.isoformat() + "Z" if prompt.created_at else None,
+			updated_at=prompt.updated_at.isoformat() + "Z" if prompt.updated_at else None,
+			latest_version=latest_version,
+			versions=version_entries,
+		)
+
+	def _baseline_title(case: BaselineCase) -> str:
+		sequence = case.sequence or "Unknown sequence"
+		return f"Baseline {case.dataset}: {sequence}"
+
+	def _baseline_dataset_infos(dataset_filter: Optional[str] = None) -> List[BaselineDatasetInfo]:
+		index = load_index()
+		datasets: List[BaselineDatasetInfo] = []
+		for entry in index.get("datasets", []):
+			if dataset_filter and entry.get("id") != dataset_filter:
+				continue
+			datasets.append(BaselineDatasetInfo(
+				id=entry.get("id"),
+				label=entry.get("label"),
+				description=entry.get("description"),
+				count=entry.get("count", 0),
+			))
+		return datasets
+
+	def _build_baseline_run_summary(run: ExtractionRun) -> BaselineRunSummary:
+		normalized_failure = None
+		if run.status == RunStatus.FAILED.value:
+			normalized_failure = _normalize_failure_reason(run.failure_reason)
+		return BaselineRunSummary(
+			run_id=run.id,
+			paper_id=run.paper_id,
+			status=run.status,
+			failure_reason=normalized_failure,
+			created_at=run.created_at.isoformat() + "Z" if run.created_at else None,
+			model_provider=run.model_provider,
+			model_name=run.model_name,
+		)
+
+	def _select_baseline_result(results: List[SearchItem], doi: Optional[str]) -> Optional[SearchItem]:
+		if not results:
+			return None
+		if doi:
+			needle = doi.strip().lower()
+			for item in results:
+				if item.doi and item.doi.strip().lower() == needle:
+					return item
+			return None
+		return results[0]
+
+	async def _resolve_baseline_source(case: BaselineCase) -> Optional[SearchItem]:
+		if case.pdf_url and DocumentExtractor.looks_like_pdf_url(case.pdf_url):
+			return SearchItem(
+				title=_baseline_title(case),
+				doi=case.doi,
+				url=case.paper_url or case.pdf_url,
+				pdf_url=case.pdf_url,
+				source="baseline",
+				year=None,
+				authors=[],
+			)
+		if case.paper_url:
+			return SearchItem(
+				title=_baseline_title(case),
+				doi=case.doi,
+				url=case.paper_url,
+				pdf_url=case.paper_url if DocumentExtractor.looks_like_pdf_url(case.paper_url) else None,
+				source="baseline",
+				year=None,
+				authors=[],
+			)
+		query = case.doi or case.pubmed_id
+		if not query:
+			return None
+		results = await search_all_free_sources(query, per_source=3)
+		return _select_baseline_result(results, case.doi)
+
+	def _get_source_key(case: BaselineCase, resolved_url: Optional[str]) -> Optional[str]:
+		"""Canonical key for sharing extractions across baseline cases."""
+		source_url = resolved_url or case.pdf_url or case.paper_url
+		if source_url:
+			return f"url:{source_url.strip()}"
+		if case.doi:
+			return f"doi:{case.doi.strip().lower()}"
+		if case.pubmed_id:
+			return f"pubmed:{case.pubmed_id.strip()}"
+		return None
+
+	def _get_source_keys(case: BaselineCase, resolved_url: Optional[str]) -> List[str]:
+		keys: List[str] = []
+		source_url = resolved_url or case.pdf_url or case.paper_url
+		if source_url:
+			keys.append(f"url:{source_url.strip()}")
+		if case.doi:
+			keys.append(f"doi:{case.doi.strip().lower()}")
+		if case.pubmed_id:
+			keys.append(f"pubmed:{case.pubmed_id.strip()}")
+		return keys
+
+	def _get_latest_baseline_run(session: Session, case_id: str) -> Optional[ExtractionRun]:
+		stmt = (
+			select(ExtractionRun)
+			.join(BaselineCaseRun, BaselineCaseRun.run_id == ExtractionRun.id)
+			.where(BaselineCaseRun.baseline_case_id == case_id)
+			.order_by(ExtractionRun.created_at.desc())
+			.limit(1)
+		)
+		run = session.exec(stmt).first()
+		if run:
+			return run
+		stmt = (
+			select(ExtractionRun)
+			.where(ExtractionRun.baseline_case_id == case_id)
+			.order_by(ExtractionRun.created_at.desc())
+			.limit(1)
+		)
+		return session.exec(stmt).first()
+
+	def _get_latest_baseline_runs(
+		session: Session,
+		case_ids: List[str],
+	) -> dict[str, BaselineRunSummary]:
+		latest_by_case: dict[str, BaselineRunSummary] = {}
+		if not case_ids:
+			return latest_by_case
+		stmt = (
+			select(BaselineCaseRun.baseline_case_id, ExtractionRun)
+			.join(ExtractionRun, BaselineCaseRun.run_id == ExtractionRun.id)
+			.where(BaselineCaseRun.baseline_case_id.in_(case_ids))
+			.order_by(ExtractionRun.created_at.desc())
+		)
+		for case_id, run in session.exec(stmt).all():
+			if case_id not in latest_by_case:
+				latest_by_case[case_id] = _build_baseline_run_summary(run)
+		missing = [case_id for case_id in case_ids if case_id not in latest_by_case]
+		if missing:
+			stmt = (
+				select(ExtractionRun)
+				.where(ExtractionRun.baseline_case_id.in_(missing))
+				.order_by(ExtractionRun.created_at.desc())
+			)
+			for run in session.exec(stmt).all():
+				case_id = run.baseline_case_id
+				if case_id and case_id not in latest_by_case:
+					latest_by_case[case_id] = _build_baseline_run_summary(run)
+		return latest_by_case
+
+	def _link_cases_to_run(session: Session, case_ids: List[str], run_id: int) -> None:
+		BaselineCaseRunRepository(session).link_cases_to_run(case_ids, run_id)
+
+	def _get_latest_run_for_cases(session: Session, case_ids: List[str]) -> Optional[ExtractionRun]:
+		if not case_ids:
+			return None
+		stmt = (
+			select(ExtractionRun)
+			.join(BaselineCaseRun, BaselineCaseRun.run_id == ExtractionRun.id)
+			.where(BaselineCaseRun.baseline_case_id.in_(case_ids))
+			.order_by(ExtractionRun.created_at.desc())
+			.limit(1)
+		)
+		run = session.exec(stmt).first()
+		if run:
+			return run
+		stmt = (
+			select(ExtractionRun)
+			.where(ExtractionRun.baseline_case_id.in_(case_ids))
+			.order_by(ExtractionRun.created_at.desc())
+			.limit(1)
+		)
+		return session.exec(stmt).first()
+
+	def _load_shadow_entries(dataset: Optional[str] = None) -> List[dict]:
+		shadow_path = Path(__file__).parent / "baseline" / "data_shadow" / "shadow_extractions.json"
+		if not shadow_path.exists():
+			return []
+		entries = json.loads(shadow_path.read_text(encoding="utf-8"))
+		if dataset:
+			entries = [entry for entry in entries if entry.get("dataset") == dataset]
+		return entries
+
+	def _build_run_payload(run: ExtractionRun, paper: Optional[Paper]) -> dict:
+		authors = []
+		if paper and paper.authors_json:
+			try:
+				authors = json.loads(paper.authors_json)
+			except Exception:
+				authors = []
+
+		prompts = None
+		if run.prompts_json:
+			try:
+				prompts = json.loads(run.prompts_json)
+			except Exception:
+				prompts = {"raw": run.prompts_json}
+
+		raw_json = None
+		if run.raw_json:
+			try:
+				raw_json = json.loads(run.raw_json)
+			except Exception:
+				raw_json = {"raw": run.raw_json}
+
+		return {
+			"paper": {
+				"id": paper.id if paper else None,
+				"title": paper.title if paper else None,
+				"doi": paper.doi if paper else None,
+				"url": paper.url if paper else None,
+				"source": paper.source if paper else None,
+				"year": paper.year if paper else None,
+				"authors": authors,
+			},
+			"run": {
+				"id": run.id,
+				"paper_id": run.paper_id,
+				"parent_run_id": run.parent_run_id,
+				"baseline_case_id": run.baseline_case_id,
+				"baseline_dataset": run.baseline_dataset,
+				"status": run.status,
+				"failure_reason": run.failure_reason,
+				"prompts": prompts,
+				"raw_json": raw_json,
+				"comment": run.comment,
+				"model_provider": run.model_provider,
+				"model_name": run.model_name,
+				"pdf_url": run.pdf_url,
+				"created_at": run.created_at.isoformat() + "Z" if run.created_at else None,
+			},
+		}
+
 	def _backfill_failed_runs() -> None:
 		with session_scope() as session:
 			stmt = select(ExtractionRun).where(ExtractionRun.status == RunStatus.FAILED.value)
@@ -228,6 +505,18 @@ def create_app() -> FastAPI:
 		async def help_page() -> FileResponse:
 			return FileResponse(static_dir / "help.html")
 
+		@app.get("/baseline", include_in_schema=False)
+		async def baseline_page() -> FileResponse:
+			return FileResponse(static_dir / "baseline.html")
+
+		@app.get("/topbar_animations.html", include_in_schema=False)
+		async def topbar_animations_page() -> FileResponse:
+			return FileResponse(static_dir / "topbar_animations.html")
+
+		@app.get("/topbar-animations", include_in_schema=False)
+		async def topbar_animations_alias() -> FileResponse:
+			return FileResponse(static_dir / "topbar_animations.html")
+
 	@app.get("/api/health")
 	async def health() -> dict:
 		# Include model name for display
@@ -237,6 +526,20 @@ def create_app() -> FastAPI:
 		elif settings.LLM_PROVIDER == "deepseek":
 			model = settings.DEEPSEEK_MODEL
 		return {"status": "ok", "provider": settings.LLM_PROVIDER, "model": model}
+
+	@app.post("/api/admin/clear-extractions")
+	async def clear_extractions(session: Session = Depends(get_session)) -> dict:
+		"""Dangerous: wipe all extracted runs and papers."""
+		await stop_queue()
+		try:
+			session.exec(delete(ExtractionEntity))
+			session.exec(delete(ExtractionRun))
+			session.exec(delete(Extraction))
+			session.exec(delete(Paper))
+			session.commit()
+		finally:
+			await start_queue()
+		return {"status": "ok"}
 
 	@app.get("/api/search", response_model=SearchResponse)
 	async def search(
@@ -350,6 +653,26 @@ def create_app() -> FastAPI:
 					))
 					skipped += 1
 					continue
+
+			if await queue.is_url_pending(item.pdf_url):
+				stmt = (
+					select(ExtractionRun)
+					.where(ExtractionRun.pdf_url == item.pdf_url)
+					.order_by(ExtractionRun.created_at.desc())
+					.limit(1)
+				)
+				existing_run = session.exec(stmt).first()
+				if existing_run:
+					runs.append(EnqueuedRun(
+						run_id=existing_run.id,
+						paper_id=existing_run.paper_id or (paper.id if paper else 0),
+						title=item.title,
+						status=existing_run.status,
+						skipped=True,
+						skip_reason="Already queued",
+					))
+					skipped += 1
+					continue
 			
 			# Create or update paper
 			if not paper:
@@ -371,6 +694,7 @@ def create_app() -> FastAPI:
 				status=RunStatus.QUEUED.value,
 				model_provider=req.provider,
 				pdf_url=item.pdf_url,
+				prompt_id=req.prompt_id,
 			)
 			session.add(run)
 			session.commit()
@@ -384,6 +708,7 @@ def create_app() -> FastAPI:
 				title=item.title,
 				provider=req.provider,
 				force=item.force,
+				prompt_id=req.prompt_id,
 			))
 			
 			runs.append(EnqueuedRun(
@@ -399,6 +724,507 @@ def create_app() -> FastAPI:
 			runs=runs,
 			total=len(req.papers),
 			enqueued=enqueued,
+			skipped=skipped,
+		)
+
+	@app.get("/api/baseline/cases", response_model=BaselineCasesResponse)
+	async def list_baseline_cases(
+		dataset: Optional[str] = Query(None),
+		session: Session = Depends(get_session),
+	) -> BaselineCasesResponse:
+		cases_raw = list_cases(dataset)
+		datasets = _baseline_dataset_infos(dataset)
+		case_ids = [case.get("id") for case in cases_raw if case.get("id")]
+		latest_by_case = _get_latest_baseline_runs(session, case_ids)
+
+		cases: List[BaselineCaseSummary] = []
+		for case_data in cases_raw:
+			case = BaselineCase(**case_data)
+			cases.append(BaselineCaseSummary(
+				**case.model_dump(),
+				latest_run=latest_by_case.get(case.id),
+			))
+
+		return BaselineCasesResponse(
+			cases=cases,
+			datasets=datasets,
+			total_cases=len(cases_raw),
+		)
+
+	@app.get("/api/baseline/cases/{case_id}", response_model=BaselineCaseSummary)
+	async def get_baseline_case(
+		case_id: str,
+		session: Session = Depends(get_session),
+	) -> BaselineCaseSummary:
+		case_data = get_case(case_id)
+		if not case_data:
+			raise HTTPException(status_code=404, detail="Baseline case not found")
+		run = _get_latest_baseline_run(session, case_id)
+		case = BaselineCase(**case_data)
+		return BaselineCaseSummary(
+			**case.model_dump(),
+			latest_run=_build_baseline_run_summary(run) if run else None,
+		)
+
+	@app.get("/api/baseline/cases/{case_id}/latest-run")
+	async def get_baseline_latest_run(
+		case_id: str,
+		session: Session = Depends(get_session),
+	) -> dict:
+		run = _get_latest_baseline_run(session, case_id)
+		if not run:
+			raise HTTPException(status_code=404, detail="No runs for baseline case")
+		paper = session.get(Paper, run.paper_id) if run.paper_id else None
+		return _build_run_payload(run, paper)
+
+	@app.post("/api/baseline/cases/{case_id}/resolve-source", response_model=ResolvedSourceResponse)
+	async def resolve_baseline_case_source(case_id: str) -> ResolvedSourceResponse:
+		case_data = get_case(case_id)
+		if not case_data:
+			raise HTTPException(status_code=404, detail="Baseline case not found")
+		case = BaselineCase(**case_data)
+		source = await _resolve_baseline_source(case)
+		if not source:
+			return ResolvedSourceResponse(found=False)
+		return ResolvedSourceResponse(
+			found=True,
+			title=source.title,
+			doi=source.doi,
+			url=source.url,
+			pdf_url=source.pdf_url,
+			source=source.source,
+			year=source.year,
+			authors=source.authors or [],
+		)
+
+	@app.post("/api/baseline/cases/{case_id}/retry")
+	async def retry_baseline_case(
+		case_id: str,
+		req: BaselineRetryRequest,
+		session: Session = Depends(get_session),
+	) -> dict:
+		case_data = get_case(case_id)
+		if not case_data:
+			raise HTTPException(status_code=404, detail="Baseline case not found")
+		case = BaselineCase(**case_data)
+
+		source_url = req.source_url
+		source = None
+		if not source_url:
+			source = await _resolve_baseline_source(case)
+			if source:
+				source_url = source.pdf_url or source.url
+
+		if not source_url:
+			raise HTTPException(status_code=400, detail="No source URL resolved for baseline case")
+
+		resolved_url = source_url
+		source_keys = _get_source_keys(case, resolved_url)
+		case_ids = [case.id]
+		if source_keys:
+			for other_data in list_cases():
+				other = BaselineCase(**other_data)
+				other_keys = _get_source_keys(other, None)
+				if any(key in source_keys for key in other_keys):
+					case_ids.append(other.id)
+		case_ids = sorted(set(case_ids))
+
+		processing_statuses = {
+			RunStatus.QUEUED.value,
+			RunStatus.FETCHING.value,
+			RunStatus.PROVIDER.value,
+			RunStatus.VALIDATING.value,
+		}
+		existing = None
+		if resolved_url:
+			stmt = (
+				select(ExtractionRun)
+				.where(ExtractionRun.pdf_url == resolved_url)
+				.order_by(ExtractionRun.created_at.desc())
+				.limit(1)
+			)
+			existing = session.exec(stmt).first()
+		if not existing:
+			existing = _get_latest_run_for_cases(session, case_ids)
+		if existing and existing.status in processing_statuses:
+			_link_cases_to_run(session, case_ids, existing.id)
+			return {
+				"id": existing.id,
+				"status": existing.status,
+				"message": "Baseline case already queued for processing",
+				"source_url": source_url,
+			}
+
+		queue = get_queue()
+		if await queue.is_url_pending(source_url):
+			if existing:
+				_link_cases_to_run(session, case_ids, existing.id)
+				return {
+					"id": existing.id,
+					"status": existing.status,
+					"message": "Baseline case already queued for processing",
+					"source_url": source_url,
+				}
+			return {
+				"id": None,
+				"status": RunStatus.QUEUED.value,
+				"message": "Baseline case already queued for processing",
+				"source_url": source_url,
+			}
+
+		meta = PaperMeta(
+			title=(source.title if source else None) or _baseline_title(case),
+			doi=(source.doi if source else None) or case.doi,
+			url=(source.url if source else None) or case.paper_url,
+			source=source.source if source else "baseline",
+			year=source.year if source else None,
+			authors=source.authors if source and source.authors else [],
+		)
+		paper_repo = PaperRepository(session)
+		paper_id = paper_repo.upsert(meta)
+
+		use_provider = req.provider or settings.LLM_PROVIDER
+		run = ExtractionRun(
+			paper_id=paper_id,
+			status=RunStatus.QUEUED.value,
+			model_provider=use_provider,
+			pdf_url=source_url,
+			prompt_id=req.prompt_id,
+		)
+		session.add(run)
+		session.commit()
+		session.refresh(run)
+		_link_cases_to_run(session, case_ids, run.id)
+
+		await queue.enqueue(QueueItem(
+			run_id=run.id,
+			paper_id=paper_id,
+			pdf_url=source_url,
+			title=meta.title or _baseline_title(case),
+			provider=use_provider,
+			force=True,
+			prompt_id=req.prompt_id,
+		))
+
+		return {
+			"id": run.id,
+			"status": run.status,
+			"message": "Baseline case re-queued for processing",
+			"source_url": source_url,
+		}
+
+	@app.post("/api/baseline/cases/{case_id}/upload")
+	async def upload_baseline_case(
+		case_id: str,
+		file: UploadFile = File(...),
+		provider: Optional[str] = Form(None),
+		prompt_id: Optional[int] = Form(None),
+		session: Session = Depends(get_session),
+	) -> dict:
+		case_data = get_case(case_id)
+		if not case_data:
+			raise HTTPException(status_code=404, detail="Baseline case not found")
+		case = BaselineCase(**case_data)
+		if not file.filename:
+			raise HTTPException(status_code=400, detail="No file provided")
+		if not file.filename.lower().endswith(".pdf"):
+			raise HTTPException(status_code=400, detail="Only PDF files are supported")
+		content = await file.read()
+		if len(content) == 0:
+			raise HTTPException(status_code=400, detail="Empty file")
+		if len(content) > 20 * 1024 * 1024:
+			raise HTTPException(status_code=400, detail="File too large (max 20MB)")
+
+		upload_url = store_upload(content, file.filename)
+		case_ids = [case.id]
+		source_keys = _get_source_keys(case, None)
+		if source_keys:
+			for other_data in list_cases():
+				other = BaselineCase(**other_data)
+				other_keys = _get_source_keys(other, None)
+				if any(key in source_keys for key in other_keys):
+					case_ids.append(other.id)
+		case_ids = sorted(set(case_ids))
+
+		meta = PaperMeta(
+			title=_baseline_title(case),
+			doi=case.doi,
+			url=case.paper_url,
+			source="upload",
+		)
+		paper_repo = PaperRepository(session)
+		paper_id = paper_repo.upsert(meta)
+
+		use_provider = provider or settings.LLM_PROVIDER
+		run = ExtractionRun(
+			paper_id=paper_id,
+			status=RunStatus.QUEUED.value,
+			model_provider=use_provider,
+			prompt_id=prompt_id,
+		)
+		session.add(run)
+		session.commit()
+		session.refresh(run)
+		_link_cases_to_run(session, case_ids, run.id)
+
+		queue = get_queue()
+		await queue.enqueue(QueueItem(
+			run_id=run.id,
+			paper_id=paper_id,
+			pdf_url=upload_url,
+			title=meta.title or _baseline_title(case),
+			provider=use_provider,
+			force=True,
+			prompt_id=prompt_id,
+		))
+
+		return {
+			"id": run.id,
+			"status": run.status,
+			"message": "Upload accepted and queued for processing",
+		}
+
+	@app.post("/api/baseline/enqueue", response_model=BaselineEnqueueResponse)
+	async def enqueue_baseline(
+		req: BaselineEnqueueRequest,
+		session: Session = Depends(get_session),
+	) -> BaselineEnqueueResponse:
+		queue = get_queue()
+		paper_repo = PaperRepository(session)
+		cases_raw = list_cases(req.dataset)
+		cases = [BaselineCase(**case_data) for case_data in cases_raw]
+
+		runs: List[BaselineEnqueuedRun] = []
+		enqueued = 0
+		skipped = 0
+		processing_statuses = {
+			RunStatus.QUEUED.value,
+			RunStatus.FETCHING.value,
+			RunStatus.PROVIDER.value,
+			RunStatus.VALIDATING.value,
+		}
+
+		entries: List[dict] = []
+		for case in cases:
+			source = await _resolve_baseline_source(case)
+			resolved_url = source.pdf_url if source and source.pdf_url else (source.url if source else None)
+			source_key = _get_source_key(case, resolved_url)
+			entries.append({
+				"case": case,
+				"source": source,
+				"resolved_url": resolved_url,
+				"source_key": source_key,
+			})
+
+		grouped: dict[str, List[dict]] = {}
+		for entry in entries:
+			group_key = entry["source_key"] or f"case:{entry['case'].id}"
+			grouped.setdefault(group_key, []).append(entry)
+
+		for group_entries in grouped.values():
+			case_ids = [entry["case"].id for entry in group_entries]
+			resolved_url = next(
+				(entry["resolved_url"] for entry in group_entries if entry["resolved_url"]),
+				None,
+			)
+			source = next((entry["source"] for entry in group_entries if entry["source"]), None)
+			case = group_entries[0]["case"]
+
+			existing = None
+			if resolved_url:
+				stmt = (
+					select(ExtractionRun)
+					.where(ExtractionRun.pdf_url == resolved_url)
+					.order_by(ExtractionRun.created_at.desc())
+					.limit(1)
+				)
+				existing = session.exec(stmt).first()
+			if not existing:
+				existing = _get_latest_run_for_cases(session, case_ids)
+
+			if resolved_url and await queue.is_url_pending(resolved_url):
+				if existing:
+					_link_cases_to_run(session, case_ids, existing.id)
+				for case_id in case_ids:
+					runs.append(BaselineEnqueuedRun(
+						baseline_case_id=case_id,
+						run_id=existing.id if existing else None,
+						status=existing.status if existing else None,
+						skipped=True,
+						skip_reason="Already queued",
+					))
+				skipped += len(case_ids)
+				continue
+
+			if existing:
+				if existing.status in processing_statuses:
+					_link_cases_to_run(session, case_ids, existing.id)
+					skip_reason = "Already queued" if existing.status == RunStatus.QUEUED.value else "Already in progress"
+					for case_id in case_ids:
+						runs.append(BaselineEnqueuedRun(
+							baseline_case_id=case_id,
+							run_id=existing.id,
+							status=existing.status,
+							skipped=True,
+							skip_reason=skip_reason,
+						))
+					skipped += len(case_ids)
+					continue
+				if existing.status == RunStatus.STORED.value and not req.force:
+					_link_cases_to_run(session, case_ids, existing.id)
+					for case_id in case_ids:
+						runs.append(BaselineEnqueuedRun(
+							baseline_case_id=case_id,
+							run_id=existing.id,
+							status=existing.status,
+							skipped=True,
+							skip_reason="Already stored",
+						))
+					skipped += len(case_ids)
+					continue
+
+			if not resolved_url:
+				meta = PaperMeta(
+					title=_baseline_title(case),
+					doi=case.doi,
+					url=case.paper_url,
+					source="baseline",
+					year=None,
+					authors=[],
+				)
+				paper_id = paper_repo.upsert(meta)
+				run = ExtractionRun(
+					paper_id=paper_id,
+					status=RunStatus.FAILED.value,
+					failure_reason="No source URL resolved for baseline case",
+					raw_json=json.dumps({"error": "No source URL resolved for baseline case"}),
+					model_provider=req.provider,
+					pdf_url=resolved_url,
+					prompt_id=req.prompt_id,
+				)
+				session.add(run)
+				session.commit()
+				session.refresh(run)
+				_link_cases_to_run(session, case_ids, run.id)
+				for case_id in case_ids:
+					runs.append(BaselineEnqueuedRun(
+						baseline_case_id=case_id,
+						run_id=run.id,
+						status=run.status,
+						skipped=False,
+					))
+				continue
+
+			meta = PaperMeta(
+				title=(source.title if source else None) or _baseline_title(case),
+				doi=(source.doi if source else None) or case.doi,
+				url=(source.url if source else None) or case.paper_url,
+				source=source.source if source else "baseline",
+				year=source.year if source else None,
+				authors=source.authors if source and source.authors else [],
+			)
+			paper_id = paper_repo.upsert(meta)
+			run = ExtractionRun(
+				paper_id=paper_id,
+				status=RunStatus.QUEUED.value,
+				model_provider=req.provider,
+				pdf_url=resolved_url,
+				prompt_id=req.prompt_id,
+			)
+			session.add(run)
+			session.commit()
+			session.refresh(run)
+			_link_cases_to_run(session, case_ids, run.id)
+
+			enqueued += len(case_ids)
+			await queue.enqueue(QueueItem(
+				run_id=run.id,
+				paper_id=paper_id,
+				pdf_url=resolved_url,
+				title=meta.title or _baseline_title(case),
+				provider=req.provider,
+				force=req.force,
+				prompt_id=req.prompt_id,
+			))
+
+			for case_id in case_ids:
+				runs.append(BaselineEnqueuedRun(
+					baseline_case_id=case_id,
+					run_id=run.id,
+					status=run.status,
+					skipped=False,
+				))
+
+		return BaselineEnqueueResponse(
+			runs=runs,
+			total=len(cases_raw),
+			enqueued=enqueued,
+			skipped=skipped,
+		)
+
+	@app.post("/api/baseline/shadow-seed", response_model=BaselineShadowSeedResponse)
+	async def seed_shadow_baseline(
+		req: BaselineShadowSeedRequest,
+		session: Session = Depends(get_session),
+	) -> BaselineShadowSeedResponse:
+		if settings.ENV != "development":
+			raise HTTPException(status_code=403, detail="Shadow seeding is only available in development.")
+
+		entries = _load_shadow_entries(req.dataset)
+		total = len(entries)
+		if total == 0:
+			return BaselineShadowSeedResponse(total=0, seeded=0, skipped=0)
+
+		seeded = 0
+		skipped = 0
+		paper_repo = PaperRepository(session)
+		extraction_repo = ExtractionRepository(session)
+
+		for entry in entries:
+			if req.limit is not None and seeded >= req.limit:
+				break
+			case_id = entry.get("case_id")
+			dataset = entry.get("dataset")
+			if not case_id:
+				continue
+
+			if not req.force:
+				stmt = (
+					select(BaselineCaseRun)
+					.where(BaselineCaseRun.baseline_case_id == case_id)
+					.limit(1)
+				)
+				existing_link = session.exec(stmt).first()
+				if existing_link:
+					skipped += 1
+					continue
+				stmt = (
+					select(ExtractionRun)
+					.where(ExtractionRun.baseline_case_id == case_id)
+					.limit(1)
+				)
+				existing = session.exec(stmt).first()
+				if existing:
+					skipped += 1
+					continue
+
+			payload = ExtractionPayload.model_validate(entry.get("payload", {}))
+			paper_id = paper_repo.upsert(payload.paper)
+			run_id, _entity_ids = extraction_repo.save_extraction(
+				payload=payload,
+				paper_id=paper_id,
+				provider_name="shadow",
+				model_name="shadow-data",
+				status=RunStatus.STORED.value,
+				baseline_case_id=case_id,
+				baseline_dataset=dataset,
+			)
+			_link_cases_to_run(session, [case_id], run_id)
+			seeded += 1
+
+		return BaselineShadowSeedResponse(
+			total=total,
+			seeded=seeded,
 			skipped=skipped,
 		)
 
@@ -452,6 +1278,7 @@ def create_app() -> FastAPI:
 	async def extract_file(
 		file: UploadFile = File(...),
 		title: Optional[str] = Form(None),
+		prompt_id: Optional[int] = Form(None),
 		session: Session = Depends(get_session),
 	) -> ExtractResponse:
 		# Validate file type
@@ -476,6 +1303,7 @@ def create_app() -> FastAPI:
 				file_content=content,
 				filename=file.filename,
 				title=title,
+				prompt_id=prompt_id,
 			)
 		except (ValueError, RuntimeError) as exc:
 			raise HTTPException(status_code=400, detail=str(exc)) from exc
@@ -769,6 +1597,75 @@ def create_app() -> FastAPI:
 	) -> QualityRulesResponse:
 		rules = update_quality_rules(session, req.rules)
 		return QualityRulesResponse(rules=rules)
+
+	@app.get("/api/prompts", response_model=PromptListResponse)
+	async def list_prompts(session: Session = Depends(get_session)) -> PromptListResponse:
+		repo = PromptRepository(session)
+		repo.ensure_default_prompt(build_system_prompt())
+		prompts = repo.list_prompts()
+		active = repo.get_active_prompt()
+		payload = []
+		for prompt in prompts:
+			versions = repo.list_versions(prompt.id)
+			payload.append(_build_prompt_info(prompt, versions))
+		return PromptListResponse(
+			prompts=payload,
+			active_prompt_id=active.id if active else None,
+		)
+
+	@app.post("/api/prompts", response_model=PromptInfo)
+	async def create_prompt_endpoint(
+		req: PromptCreateRequest,
+		session: Session = Depends(get_session),
+	) -> PromptInfo:
+		if not req.name.strip():
+			raise HTTPException(status_code=400, detail="Prompt name is required.")
+		if not req.content.strip():
+			raise HTTPException(status_code=400, detail="Prompt content is required.")
+		repo = PromptRepository(session)
+		prompt, _version = repo.create_prompt(
+			name=req.name.strip(),
+			description=req.description,
+			content=req.content.strip(),
+			notes=req.notes,
+			created_by=req.created_by,
+			activate=req.activate,
+		)
+		versions = repo.list_versions(prompt.id)
+		return _build_prompt_info(prompt, versions)
+
+	@app.post("/api/prompts/{prompt_id}/versions", response_model=PromptInfo)
+	async def create_prompt_version_endpoint(
+		prompt_id: int,
+		req: PromptVersionCreateRequest,
+		session: Session = Depends(get_session),
+	) -> PromptInfo:
+		if not req.content.strip():
+			raise HTTPException(status_code=400, detail="Prompt content is required.")
+		repo = PromptRepository(session)
+		prompt = repo.get_prompt(prompt_id)
+		if not prompt:
+			raise HTTPException(status_code=404, detail="Prompt not found.")
+		repo.create_version(
+			prompt_id=prompt_id,
+			content=req.content.strip(),
+			notes=req.notes,
+			created_by=req.created_by,
+		)
+		versions = repo.list_versions(prompt_id)
+		return _build_prompt_info(prompt, versions)
+
+	@app.post("/api/prompts/{prompt_id}/activate", response_model=PromptInfo)
+	async def activate_prompt_endpoint(
+		prompt_id: int,
+		session: Session = Depends(get_session),
+	) -> PromptInfo:
+		repo = PromptRepository(session)
+		prompt = repo.set_active(prompt_id)
+		if not prompt:
+			raise HTTPException(status_code=404, detail="Prompt not found.")
+		versions = repo.list_versions(prompt_id)
+		return _build_prompt_info(prompt, versions)
 
 	@app.get("/api/entities", response_model=EntitiesResponse)
 	async def list_entities(
@@ -1344,6 +2241,7 @@ def create_app() -> FastAPI:
 		skipped_missing_paper = 0
 		skipped_not_failed = 0
 		to_enqueue: List[QueueItem] = []
+		queue = get_queue()
 
 		for run, paper in rows:
 			bucket_key = _bucket_failure_reason(run.failure_reason)
@@ -1367,6 +2265,9 @@ def create_app() -> FastAPI:
 				skipped_missing_pdf += 1
 				skipped += 1
 				continue
+			if await queue.is_url_pending(run.pdf_url):
+				skipped += 1
+				continue
 
 			run.status = RunStatus.QUEUED.value
 			run.failure_reason = None
@@ -1378,11 +2279,12 @@ def create_app() -> FastAPI:
 				title=paper.title or "(Untitled)",
 				provider=run.model_provider or settings.LLM_PROVIDER,
 				force=True,
+				prompt_id=run.prompt_id,
+				prompt_version_id=run.prompt_version_id,
 			))
 
 		if to_enqueue:
 			session.commit()
-			queue = get_queue()
 			for item in to_enqueue:
 				await queue.enqueue(item)
 				enqueued += 1
@@ -1408,52 +2310,7 @@ def create_app() -> FastAPI:
 			raise HTTPException(status_code=404, detail="Run not found")
 
 		paper = session.get(Paper, run.paper_id) if run.paper_id else None
-		authors = []
-		if paper and paper.authors_json:
-			try:
-				authors = json.loads(paper.authors_json)
-			except Exception:
-				authors = []
-
-		prompts = None
-		if run.prompts_json:
-			try:
-				prompts = json.loads(run.prompts_json)
-			except Exception:
-				prompts = {"raw": run.prompts_json}
-
-		raw_json = None
-		if run.raw_json:
-			try:
-				raw_json = json.loads(run.raw_json)
-			except Exception:
-				raw_json = {"raw": run.raw_json}
-
-		return {
-			"paper": {
-				"id": paper.id if paper else None,
-				"title": paper.title if paper else None,
-				"doi": paper.doi if paper else None,
-				"url": paper.url if paper else None,
-				"source": paper.source if paper else None,
-				"year": paper.year if paper else None,
-				"authors": authors,
-			},
-			"run": {
-				"id": run.id,
-				"paper_id": run.paper_id,
-				"parent_run_id": run.parent_run_id,
-				"status": run.status,
-				"failure_reason": run.failure_reason,
-				"prompts": prompts,
-				"raw_json": raw_json,
-				"comment": run.comment,
-				"model_provider": run.model_provider,
-				"model_name": run.model_name,
-				"pdf_url": run.pdf_url,
-				"created_at": run.created_at.isoformat() + "Z" if run.created_at else None,
-			},
-		}
+		return _build_run_payload(run, paper)
 
 	@app.post("/api/runs/{run_id}/followup", response_model=ExtractResponse)
 	async def followup_run(
@@ -1560,6 +2417,14 @@ def create_app() -> FastAPI:
 		paper = session.get(Paper, run.paper_id)
 		if not paper:
 			raise HTTPException(status_code=404, detail="Paper not found")
+
+		queue = get_queue()
+		if run.pdf_url and await queue.is_url_pending(run.pdf_url):
+			return {
+				"id": run.id,
+				"status": run.status,
+				"message": "Run already queued for processing",
+			}
 		
 		# Reset status to queued
 		run.status = RunStatus.QUEUED.value
@@ -1569,7 +2434,6 @@ def create_app() -> FastAPI:
 		session.refresh(run)
 		
 		# Add to queue
-		queue = get_queue()
 		await queue.enqueue(QueueItem(
 			run_id=run.id,
 			paper_id=paper.id,
@@ -1577,6 +2441,8 @@ def create_app() -> FastAPI:
 			title=paper.title,
 			provider=run.model_provider or settings.LLM_PROVIDER,
 			force=True,
+			prompt_id=run.prompt_id,
+			prompt_version_id=run.prompt_version_id,
 		))
 		
 		return {
@@ -1584,6 +2450,164 @@ def create_app() -> FastAPI:
 			"status": run.status,
 			"message": "Run re-queued for processing",
 		}
+
+	@app.post("/api/runs/{run_id}/resolve-source", response_model=ResolvedSourceResponse)
+	async def resolve_run_source(
+		run_id: int,
+		session: Session = Depends(get_session),
+	) -> ResolvedSourceResponse:
+		run = session.get(ExtractionRun, run_id)
+		if not run:
+			raise HTTPException(status_code=404, detail="Run not found")
+		paper = session.get(Paper, run.paper_id) if run.paper_id else None
+		if run.pdf_url and DocumentExtractor.looks_like_pdf_url(run.pdf_url):
+			return ResolvedSourceResponse(
+				found=True,
+				title=paper.title if paper else None,
+				doi=paper.doi if paper else None,
+				url=paper.url if paper else None,
+				pdf_url=run.pdf_url,
+				source=paper.source if paper else None,
+				year=paper.year if paper else None,
+				authors=json.loads(paper.authors_json) if paper and paper.authors_json else [],
+			)
+		query = (paper.doi if paper else None) or (paper.url if paper else None)
+		if not query:
+			return ResolvedSourceResponse(found=False)
+		results = await search_all_free_sources(query, per_source=3)
+		source = _select_baseline_result(results, paper.doi if paper else None)
+		if not source:
+			if paper and paper.url:
+				return ResolvedSourceResponse(
+					found=True,
+					title=paper.title,
+					doi=paper.doi,
+					url=paper.url,
+					pdf_url=run.pdf_url if run.pdf_url and DocumentExtractor.looks_like_pdf_url(run.pdf_url) else None,
+					source=paper.source,
+					year=paper.year,
+					authors=json.loads(paper.authors_json) if paper.authors_json else [],
+				)
+			return ResolvedSourceResponse(found=False)
+		return ResolvedSourceResponse(
+			found=True,
+			title=source.title,
+			doi=source.doi,
+			url=source.url,
+			pdf_url=source.pdf_url,
+			source=source.source,
+			year=source.year,
+			authors=source.authors or [],
+		)
+
+	@app.post("/api/runs/{run_id}/retry-with-source")
+	async def retry_run_with_source(
+		run_id: int,
+		req: RunRetryWithSourceRequest,
+		session: Session = Depends(get_session),
+	) -> dict:
+		run = session.get(ExtractionRun, run_id)
+		if not run:
+			raise HTTPException(status_code=404, detail="Run not found")
+		paper = session.get(Paper, run.paper_id) if run.paper_id else None
+		if not paper:
+			raise HTTPException(status_code=404, detail="Paper not found")
+
+		source_url = req.source_url or run.pdf_url or paper.url
+		if not source_url:
+			raise HTTPException(status_code=400, detail="No source URL available for retry")
+
+		use_provider = req.provider or run.model_provider or settings.LLM_PROVIDER
+		use_prompt_id = req.prompt_id or run.prompt_id
+		queue = get_queue()
+		if await queue.is_url_pending(source_url):
+			return {
+				"id": run.id,
+				"status": RunStatus.QUEUED.value,
+				"message": "Run already queued for processing",
+			}
+
+		new_run = ExtractionRun(
+			paper_id=paper.id,
+			status=RunStatus.QUEUED.value,
+			model_provider=use_provider,
+			pdf_url=source_url,
+			prompt_id=use_prompt_id,
+			prompt_version_id=run.prompt_version_id,
+			parent_run_id=run.id,
+		)
+		session.add(new_run)
+		session.commit()
+		session.refresh(new_run)
+
+		linked_cases = BaselineCaseRunRepository(session).list_case_ids_for_run(run.id)
+		if not linked_cases and run.baseline_case_id:
+			linked_cases = [run.baseline_case_id]
+		_link_cases_to_run(session, linked_cases, new_run.id)
+
+		await queue.enqueue(QueueItem(
+			run_id=new_run.id,
+			paper_id=paper.id,
+			pdf_url=source_url,
+			title=paper.title or "(Untitled)",
+			provider=use_provider,
+			force=True,
+			prompt_id=use_prompt_id,
+			prompt_version_id=run.prompt_version_id,
+		))
+
+		return {
+			"id": new_run.id,
+			"status": new_run.status,
+			"message": "New run created and queued",
+		}
+
+	@app.post("/api/runs/{run_id}/upload", response_model=ExtractResponse)
+	async def upload_run_file(
+		run_id: int,
+		file: UploadFile = File(...),
+		provider: Optional[str] = Form(None),
+		prompt_id: Optional[int] = Form(None),
+		session: Session = Depends(get_session),
+	) -> ExtractResponse:
+		run = session.get(ExtractionRun, run_id)
+		if not run:
+			raise HTTPException(status_code=404, detail="Run not found")
+		paper = session.get(Paper, run.paper_id) if run.paper_id else None
+		if not file.filename:
+			raise HTTPException(status_code=400, detail="No file provided")
+		if not file.filename.lower().endswith(".pdf"):
+			raise HTTPException(status_code=400, detail="Only PDF files are supported")
+		content = await file.read()
+		if len(content) == 0:
+			raise HTTPException(status_code=400, detail="Empty file")
+		if len(content) > 20 * 1024 * 1024:
+			raise HTTPException(status_code=400, detail="File too large (max 20MB)")
+
+		use_prompt_id = prompt_id or run.prompt_id
+		use_provider = provider or run.model_provider or settings.LLM_PROVIDER
+		title = paper.title if paper and paper.title else file.filename.rsplit(".", 1)[0]
+		try:
+			extraction_id, paper_id, payload = await run_extraction_from_file(
+				session=session,
+				file_content=content,
+				filename=file.filename,
+				title=title,
+				prompt_id=use_prompt_id,
+				provider_name=use_provider,
+				baseline_case_id=run.baseline_case_id,
+				baseline_dataset=run.baseline_dataset,
+				parent_run_id=run.id,
+			)
+		except (ValueError, RuntimeError) as exc:
+			raise HTTPException(status_code=400, detail=str(exc)) from exc
+
+		linked_cases = BaselineCaseRunRepository(session).list_case_ids_for_run(run.id)
+		if not linked_cases and run.baseline_case_id:
+			linked_cases = [run.baseline_case_id]
+		_link_cases_to_run(session, linked_cases, extraction_id)
+
+		return ExtractResponse(extraction=payload, extraction_id=extraction_id, paper_id=paper_id)
 
 	@app.post("/api/papers/{paper_id}/force-reextract")
 	async def force_reextract(
@@ -1614,9 +2638,26 @@ def create_app() -> FastAPI:
 				status_code=400,
 				detail="No PDF URL available for this paper"
 			)
+
+		queue = get_queue()
+		if await queue.is_url_pending(pdf_url):
+			return {
+				"id": latest_run.id if latest_run else None,
+				"paper_id": paper.id,
+				"status": RunStatus.QUEUED.value,
+				"message": "Extraction already queued for this paper",
+			}
 		
 		# Use specified provider or fallback to latest run's provider or default
 		use_provider = provider or (latest_run.model_provider if latest_run else None) or settings.LLM_PROVIDER
+
+		prompt_id = latest_run.prompt_id if latest_run and latest_run.prompt_id else None
+		if not prompt_id:
+			prompt_repo = PromptRepository(session)
+			active_prompt = prompt_repo.get_active_prompt()
+			if not active_prompt:
+				active_prompt, _ = prompt_repo.ensure_default_prompt(build_system_prompt())
+			prompt_id = active_prompt.id if active_prompt else None
 		
 		# Create a new run
 		new_run = ExtractionRun(
@@ -1624,13 +2665,13 @@ def create_app() -> FastAPI:
 			status=RunStatus.QUEUED.value,
 			model_provider=use_provider,
 			pdf_url=pdf_url,
+			prompt_id=prompt_id,
 		)
 		session.add(new_run)
 		session.commit()
 		session.refresh(new_run)
 		
 		# Add to queue
-		queue = get_queue()
 		await queue.enqueue(QueueItem(
 			run_id=new_run.id,
 			paper_id=paper.id,
@@ -1638,6 +2679,7 @@ def create_app() -> FastAPI:
 			title=paper.title,
 			provider=use_provider,
 			force=True,
+			prompt_id=prompt_id,
 		))
 		
 		return {

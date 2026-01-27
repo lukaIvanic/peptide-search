@@ -2,9 +2,15 @@
  * Main application entry point.
  */
 
-import * as api from './js/api.js?v=dev45';
-import { initTour } from './js/tour.js?v=dev45';
-import { markMilestone, renderChecklist, resetMilestones } from './js/onboarding.js?v=dev45';
+import * as api from './js/api.js?v=dev48';
+import { initTour } from './js/tour.js?v=dev46';
+import { markMilestone, renderChecklist, resetMilestones } from './js/onboarding.js?v=dev46';
+import {
+    DEFAULT_PROMPT_CONTENT,
+    DEFAULT_PROMPT_DESCRIPTION,
+    DEFAULT_PROMPT_NAME,
+    DEFAULT_PROMPT_NOTES,
+} from './js/default_prompt.js?v=dev54';
 import {
     appStore,
     setSearchResults,
@@ -16,13 +22,16 @@ import {
     isPaperSelected,
     setSelectedProvider,
     getSelectedProvider,
+    setPrompts,
+    setSelectedPrompt,
+    getSelectedPrompt,
     setPapers,
     updatePaperStatus,
     addPaperToList,
     openDrawer,
     closeDrawer,
     setDrawerContent,
-} from './js/state.js?v=dev45';
+} from './js/state.js?v=dev46';
 import {
     $,
     renderProviderBadge,
@@ -35,7 +44,7 @@ import {
     setDrawerOpen,
     setSearchCount,
     setDrawerCallbacks,
-} from './js/renderers.js?v=dev45';
+} from './js/renderers.js?v=dev46';
 
 let sseConnection = null;
 let failureModalState = null;
@@ -75,6 +84,57 @@ const DASHBOARD_STEPS = [
     { key: 'enqueued', label: 'Start batch extraction' },
     { key: 'opened_paper', label: 'Open a paper drawer' },
 ];
+const SIDE_DRAWERS = {
+    onboarding: {
+        drawer: '#onboardingDrawer',
+        openBtn: '#openOnboardingDrawer',
+        closeBtn: '#closeOnboardingDrawer',
+    },
+    prompt: {
+        drawer: '#promptDrawer',
+        openBtn: '#openPromptDrawer',
+        closeBtn: '#closePromptDrawer',
+    },
+    failure: {
+        drawer: '#failureDrawer',
+        openBtn: '#openFailureDrawer',
+        closeBtn: '#closeFailureDrawer',
+    },
+};
+const FALLBACK_PROMPT_ID = 0;
+const FALLBACK_PROMPT_VERSION_ID = 0;
+const CREATE_PROMPT_OPTION = '__create__';
+
+function getFallbackPrompts() {
+    const version = {
+        id: FALLBACK_PROMPT_VERSION_ID,
+        prompt_id: FALLBACK_PROMPT_ID,
+        version_index: 1,
+        content: DEFAULT_PROMPT_CONTENT,
+        notes: DEFAULT_PROMPT_NOTES,
+        created_by: 'system',
+        created_at: null,
+    };
+    return [
+        {
+            id: FALLBACK_PROMPT_ID,
+            name: DEFAULT_PROMPT_NAME,
+            description: DEFAULT_PROMPT_DESCRIPTION,
+            is_active: true,
+            created_at: null,
+            updated_at: null,
+            latest_version: version,
+            versions: [version],
+        },
+    ];
+}
+
+function appendCreatePromptOption(select) {
+    const option = document.createElement('option');
+    option.value = CREATE_PROMPT_OPTION;
+    option.textContent = 'Create new prompt…';
+    select.appendChild(option);
+}
 
 // Initialize application
 async function init() {
@@ -93,6 +153,9 @@ async function init() {
     setDrawerCallbacks({
         onRetry: handleRetryRun,
         onForceReextract: handleForceReextract,
+        onResolveSource: handleResolveRunSource,
+        onUpload: handleUploadRunFile,
+        onRetryWithSource: handleRetryRunWithResolved,
     });
     
     // Setup event handlers
@@ -100,6 +163,7 @@ async function init() {
     initTourGuide();
     renderOnboarding();
     initContextHints();
+    await loadPrompts();
     
     // Subscribe to state changes
     initStateSubscriptions();
@@ -109,7 +173,6 @@ async function init() {
     
     // Initial data load
     await refreshPapers();
-    await loadRecentFailures();
     await loadFailureSummary();
     hydratePaperFilters();
     renderFilteredPapers();
@@ -238,15 +301,275 @@ function renderOnboarding() {
     }
 }
 
+function setSideDrawerOpen(key, isOpen) {
+    const config = SIDE_DRAWERS[key];
+    if (!config) return;
+    const drawer = document.querySelector(config.drawer);
+    if (!drawer) return;
+    drawer.classList.toggle('sw-side-drawer--open', isOpen);
+    drawer.setAttribute('aria-hidden', String(!isOpen));
+    const trigger = document.querySelector(config.openBtn);
+    if (trigger) {
+        trigger.classList.toggle('is-active', isOpen);
+        trigger.setAttribute('aria-pressed', String(isOpen));
+    }
+}
+
+function closeAllSideDrawers(exceptKey = null) {
+    Object.keys(SIDE_DRAWERS).forEach((key) => {
+        if (key === exceptKey) return;
+        setSideDrawerOpen(key, false);
+    });
+}
+
+function openSideDrawer(key, options = {}) {
+    closeAllSideDrawers(key);
+    setSideDrawerOpen(key, true);
+    if (options.focusSelector) {
+        const target = document.querySelector(options.focusSelector);
+        if (target) {
+            setTimeout(() => target.focus(), 150);
+        }
+    }
+}
+
+function closeSideDrawer(key) {
+    setSideDrawerOpen(key, false);
+}
+
+function closeAnySideDrawer() {
+    let closed = false;
+    Object.keys(SIDE_DRAWERS).forEach((key) => {
+        const drawer = document.querySelector(SIDE_DRAWERS[key].drawer);
+        if (drawer && drawer.classList.contains('sw-side-drawer--open')) {
+            setSideDrawerOpen(key, false);
+            closed = true;
+        }
+    });
+    return closed;
+}
+
+function setPromptStatus(message, isError = false) {
+    const status = document.querySelector('#promptCreateStatus');
+    if (!status) return;
+    status.textContent = message || '';
+    if (!message) return;
+    status.classList.toggle('text-red-600', isError);
+    status.classList.toggle('text-slate-500', !isError);
+}
+
+function renderPromptSelect(prompts, activePromptId, selectedPromptId) {
+    const select = document.querySelector('#promptSelect');
+    const manageBtn = document.querySelector('#promptManageBtn');
+    if (!select) return;
+    select.innerHTML = '';
+    if (!prompts || prompts.length === 0) {
+        const option = document.createElement('option');
+        option.value = '';
+        option.textContent = 'No prompts available';
+        select.appendChild(option);
+        appendCreatePromptOption(select);
+        select.disabled = false;
+        if (manageBtn) manageBtn.textContent = 'Create prompt';
+        return;
+    }
+    prompts.forEach((prompt) => {
+        const option = document.createElement('option');
+        option.value = String(prompt.id);
+        option.textContent = prompt.is_active ? `${prompt.name} (active)` : prompt.name;
+        select.appendChild(option);
+    });
+    appendCreatePromptOption(select);
+    select.disabled = false;
+    if (manageBtn) manageBtn.textContent = 'Manage prompts';
+    if (selectedPromptId) {
+        select.value = String(selectedPromptId);
+    } else if (activePromptId) {
+        select.value = String(activePromptId);
+    } else {
+        select.value = String(prompts[0].id);
+    }
+}
+
+function renderPromptList(prompts, activePromptId) {
+    const container = document.querySelector('#promptList');
+    if (!container) return;
+    container.innerHTML = '';
+    if (!prompts || prompts.length === 0) {
+        const empty = document.createElement('div');
+        empty.className = 'sw-empty p-3 text-xs text-slate-500';
+        empty.textContent = 'No prompts available yet.';
+        container.appendChild(empty);
+        return;
+    }
+
+    prompts.forEach((prompt) => {
+        const card = document.createElement('div');
+        card.className = 'sw-card p-3 space-y-2';
+
+        const header = document.createElement('div');
+        header.className = 'flex items-start justify-between gap-3';
+
+        const meta = document.createElement('div');
+        const name = document.createElement('div');
+        name.className = 'list-title';
+        name.textContent = prompt.name;
+        meta.appendChild(name);
+        if (prompt.description) {
+            const desc = document.createElement('div');
+            desc.className = 'text-xs text-slate-500 mt-1';
+            desc.textContent = prompt.description;
+            meta.appendChild(desc);
+        }
+        const versionCount = document.createElement('div');
+        versionCount.className = 'text-[10px] text-slate-400 mt-2';
+        versionCount.textContent = `${prompt.versions.length} version${prompt.versions.length === 1 ? '' : 's'}`;
+        meta.appendChild(versionCount);
+
+        header.appendChild(meta);
+
+        const actions = document.createElement('div');
+        actions.className = 'flex flex-col gap-2 text-xs';
+        if (prompt.is_active) {
+            const badge = document.createElement('span');
+            badge.className = 'sw-chip sw-chip--success text-[10px]';
+            badge.textContent = 'Active';
+            actions.appendChild(badge);
+        } else {
+            const activateBtn = document.createElement('button');
+            activateBtn.className = 'sw-btn sw-btn--sm sw-btn--ghost';
+            activateBtn.textContent = 'Activate';
+            activateBtn.addEventListener('click', async () => {
+                await handleActivatePrompt(prompt.id);
+            });
+            actions.appendChild(activateBtn);
+        }
+
+        const versionToggle = document.createElement('button');
+        versionToggle.className = 'sw-btn sw-btn--sm sw-btn--ghost';
+        versionToggle.textContent = 'New version';
+        actions.appendChild(versionToggle);
+
+        header.appendChild(actions);
+        card.appendChild(header);
+
+        const latest = prompt.latest_version || prompt.versions[0];
+        if (latest) {
+            const latestMeta = document.createElement('div');
+            latestMeta.className = 'text-[10px] text-slate-400';
+            const updatedLabel = latest.created_at ? `Updated ${new Date(latest.created_at).toLocaleString()}` : 'Latest version';
+            latestMeta.textContent = latest.notes ? `${updatedLabel} · ${latest.notes}` : updatedLabel;
+            card.appendChild(latestMeta);
+        }
+
+        const form = document.createElement('div');
+        form.className = 'hidden mt-2 space-y-2';
+        const contentLabel = document.createElement('div');
+        contentLabel.className = 'sw-kicker text-[10px] text-slate-500';
+        contentLabel.textContent = 'New version content';
+        const contentArea = document.createElement('textarea');
+        contentArea.rows = 4;
+        contentArea.className = 'sw-textarea w-full sw-textarea--sm';
+        contentArea.value = latest?.content || '';
+        const notesInput = document.createElement('input');
+        notesInput.type = 'text';
+        notesInput.placeholder = 'Version notes (optional)';
+        notesInput.className = 'sw-input w-full sw-input--sm';
+        const formActions = document.createElement('div');
+        formActions.className = 'flex items-center gap-2';
+        const saveBtn = document.createElement('button');
+        saveBtn.className = 'sw-btn sw-btn--sm sw-btn--primary';
+        saveBtn.textContent = 'Save version';
+        saveBtn.addEventListener('click', async () => {
+            await handleCreatePromptVersion(prompt.id, contentArea.value, notesInput.value);
+        });
+        const cancelBtn = document.createElement('button');
+        cancelBtn.className = 'sw-btn sw-btn--sm sw-btn--ghost';
+        cancelBtn.textContent = 'Cancel';
+        cancelBtn.addEventListener('click', () => {
+            form.classList.add('hidden');
+        });
+        formActions.appendChild(saveBtn);
+        formActions.appendChild(cancelBtn);
+        form.appendChild(contentLabel);
+        form.appendChild(contentArea);
+        form.appendChild(notesInput);
+        form.appendChild(formActions);
+        card.appendChild(form);
+
+        versionToggle.addEventListener('click', () => {
+            form.classList.toggle('hidden');
+        });
+
+        const history = document.createElement('details');
+        history.className = 'text-xs text-slate-500';
+        const summary = document.createElement('summary');
+        summary.className = 'cursor-pointer';
+        summary.textContent = 'Version history';
+        history.appendChild(summary);
+        const historyList = document.createElement('div');
+        historyList.className = 'mt-2 space-y-1';
+        prompt.versions.forEach((version) => {
+            const row = document.createElement('div');
+            row.className = 'text-[10px] text-slate-400';
+            const stamp = version.created_at ? new Date(version.created_at).toLocaleString() : `v${version.version_index}`;
+            row.textContent = version.notes ? `v${version.version_index} · ${stamp} · ${version.notes}` : `v${version.version_index} · ${stamp}`;
+            historyList.appendChild(row);
+        });
+        history.appendChild(historyList);
+        card.appendChild(history);
+
+        container.appendChild(card);
+    });
+}
+
+async function loadPrompts({ keepSelection = false } = {}) {
+    try {
+        const data = await api.getPrompts();
+        let prompts = data.prompts || [];
+        let activePromptId = data.active_prompt_id || null;
+        if (!prompts.length) {
+            prompts = getFallbackPrompts();
+            activePromptId = prompts[0].id;
+        }
+        setPrompts(prompts, activePromptId);
+        const selectedPromptId = keepSelection ? getSelectedPrompt() : null;
+        const resolved = selectedPromptId || activePromptId || (prompts[0] ? prompts[0].id : null);
+        if (resolved !== null && resolved !== undefined) {
+            setSelectedPrompt(resolved);
+        }
+        renderPromptSelect(prompts, activePromptId, resolved);
+        renderPromptList(prompts, activePromptId);
+    } catch (err) {
+        const prompts = getFallbackPrompts();
+        const activePromptId = prompts[0].id;
+        setPrompts(prompts, activePromptId);
+        const selectedPromptId = keepSelection ? getSelectedPrompt() : null;
+        const resolved = selectedPromptId || activePromptId;
+        if (resolved !== null && resolved !== undefined) {
+            setSelectedPrompt(resolved);
+        }
+        renderPromptSelect(prompts, activePromptId, resolved);
+        renderPromptList(prompts, activePromptId);
+    }
+}
+
 function initEventHandlers() {
     // Search
     $('#searchBtn').addEventListener('click', handleSearch);
     $('#queryInput').addEventListener('keydown', (e) => {
         if (e.key === 'Enter') handleSearch();
     });
-    const refreshFailuresBtn = document.querySelector('#refreshFailures');
-    if (refreshFailuresBtn) {
-        refreshFailuresBtn.addEventListener('click', loadRecentFailures);
+    const uploadPdfBtn = document.querySelector('#uploadPdfBtn');
+    const uploadPdfInput = document.querySelector('#uploadPdfInput');
+    if (uploadPdfBtn && uploadPdfInput) {
+        uploadPdfBtn.addEventListener('click', () => uploadPdfInput.click());
+        uploadPdfInput.addEventListener('change', async (event) => {
+            const file = event.target.files && event.target.files[0];
+            if (!file) return;
+            await handleDashboardUpload(file);
+            uploadPdfInput.value = '';
+        });
     }
     const refreshFailureSummaryBtn = document.querySelector('#refreshFailureSummary');
     if (refreshFailureSummaryBtn) {
@@ -352,19 +675,75 @@ function initEventHandlers() {
     if (failureExportCsv) {
         failureExportCsv.addEventListener('click', handleExportFailureCsv);
     }
+    const promptSelect = document.querySelector('#promptSelect');
+    if (promptSelect) {
+        promptSelect.addEventListener('change', (e) => {
+            const rawValue = e.target.value;
+            if (rawValue === CREATE_PROMPT_OPTION) {
+                openSideDrawer('prompt', { focusSelector: '#promptName' });
+                const fallback = getSelectedPrompt() ?? appStore.get('activePromptId');
+                e.target.value = fallback !== null && fallback !== undefined ? String(fallback) : '';
+                return;
+            }
+            const value = parseInt(rawValue, 10);
+            setSelectedPrompt(Number.isNaN(value) ? null : value);
+        });
+    }
+    const promptManageBtn = document.querySelector('#promptManageBtn');
+    if (promptManageBtn) {
+        promptManageBtn.addEventListener('click', () => {
+            openSideDrawer('prompt', { focusSelector: '#promptName' });
+        });
+    }
+    const promptCreateBtn = document.querySelector('#promptCreateBtn');
+    if (promptCreateBtn) {
+        promptCreateBtn.addEventListener('click', handleCreatePrompt);
+    }
+    const searchExamples = document.querySelector('#searchExamples');
+    if (searchExamples) {
+        searchExamples.addEventListener('click', (e) => {
+            const target = e.target.closest('button[data-search-example]');
+            if (!target) return;
+            const input = document.querySelector('#queryInput');
+            if (!input) return;
+            input.value = target.dataset.searchExample || '';
+            input.focus();
+            input.select();
+        });
+    }
+    Object.keys(SIDE_DRAWERS).forEach((key) => {
+        const config = SIDE_DRAWERS[key];
+        const openBtn = document.querySelector(config.openBtn);
+        if (openBtn) {
+            openBtn.addEventListener('click', () => {
+                openSideDrawer(key);
+            });
+        }
+        const closeBtn = document.querySelector(config.closeBtn);
+        if (closeBtn) {
+            closeBtn.addEventListener('click', () => {
+                closeSideDrawer(key);
+            });
+        }
+        const drawer = document.querySelector(config.drawer);
+        const overlay = drawer?.querySelector('.sw-side-drawer__overlay');
+        if (overlay) {
+            overlay.addEventListener('click', () => {
+                closeSideDrawer(key);
+            });
+        }
+    });
     document.addEventListener('keydown', handleKeyboardShortcuts);
     document.addEventListener('visibilitychange', () => {
         if (document.visibilityState === 'visible') {
             connectSSE();
             refreshPapers();
-            loadRecentFailures();
             loadFailureSummary();
         }
     });
     window.addEventListener('focus', () => {
         connectSSE();
         refreshPapers();
-        loadRecentFailures();
         loadFailureSummary();
     });
     
@@ -407,8 +786,8 @@ function initStateSubscriptions() {
         if (state.drawerOpen !== prev.drawerOpen) {
             setDrawerOpen(state.drawerOpen);
         }
-        if (state.drawerPaper !== prev.drawerPaper || state.drawerRuns !== prev.drawerRuns) {
-            renderDrawer(state.drawerPaper, state.drawerRuns);
+        if (state.drawerPaper !== prev.drawerPaper || state.drawerRuns !== prev.drawerRuns || state.resolvedRunSources !== prev.resolvedRunSources) {
+            renderDrawer(state.drawerPaper, state.drawerRuns, { resolvedSources: state.resolvedRunSources || {} });
         }
     });
 }
@@ -432,7 +811,6 @@ function connectSSE() {
                 if (appStore.get('drawerPaperId') === paper_id) {
                     loadPaperDetails(paper_id);
                 }
-                loadRecentFailures();
                 if (status === 'failed') {
                     loadFailureSummary();
                 }
@@ -651,7 +1029,14 @@ function renderFilteredPapers(papers = appStore.get('papers')) {
     const emptyMessage = filtersActive()
         ? 'No papers match these filters. Click Clear filters to show all papers.'
         : 'No papers yet. Search and extract papers to see them here.';
-    renderPapersTable(filtered, handlePaperClick, { emptyMessage });
+    renderPapersTable(filtered, handlePaperClick, {
+        emptyMessage,
+        resolvedSources: appStore.get('resolvedRunSources') || {},
+        onRetryRun: handleRetryRun,
+        onResolveRun: handleResolveRunSource,
+        onUploadRun: handleUploadRunFile,
+        onRunWithSource: handleRetryRunWithResolved,
+    });
     updatePaperFilterCount(filtered.length, papers.length || 0);
     updatePaperFilterNotice(filtered.length, papers.length || 0);
     persistPaperFilters();
@@ -666,9 +1051,14 @@ function isTypingTarget(target) {
 }
 
 function handleKeyboardShortcuts(e) {
-    if (e.key === 'Escape' && failureModalState) {
-        closeFailureModal();
-        return;
+    if (e.key === 'Escape') {
+        if (failureModalState) {
+            closeFailureModal();
+            return;
+        }
+        if (closeAnySideDrawer()) {
+            return;
+        }
     }
     if (isTypingTarget(e.target)) {
         return;
@@ -824,6 +1214,8 @@ async function handleStartBatch() {
     if (papers.length === 0) return;
     
     const provider = getSelectedProvider();
+    const promptId = getSelectedPrompt();
+    const resolvedPromptId = promptId ? promptId : null;
     
     // Prepare papers for enqueue
     const enqueueItems = papers.map(p => ({
@@ -838,7 +1230,7 @@ async function handleStartBatch() {
     }));
     
     try {
-        const result = await api.enqueue(enqueueItems, provider);
+        const result = await api.enqueue(enqueueItems, provider, resolvedPromptId);
         console.log('Enqueue result:', result);
         
         const selectedKeys = new Set(papers.map(p => p.pdf_url || p.url));
@@ -866,6 +1258,78 @@ async function handleStartBatch() {
         }
     } catch (e) {
         alert(e.message || 'Failed to start extraction');
+    }
+}
+
+async function handleCreatePrompt() {
+    const nameInput = document.querySelector('#promptName');
+    const descriptionInput = document.querySelector('#promptDescription');
+    const contentInput = document.querySelector('#promptContent');
+    const notesInput = document.querySelector('#promptNotes');
+    const activateInput = document.querySelector('#promptActivate');
+    if (!nameInput || !contentInput) return;
+    const name = nameInput.value.trim();
+    const description = descriptionInput?.value.trim() || null;
+    const content = contentInput.value.trim();
+    const notes = notesInput?.value.trim() || null;
+    const activate = activateInput?.checked ?? false;
+
+    if (!name || !content) {
+        setPromptStatus('Name and content are required.', true);
+        return;
+    }
+    setPromptStatus('Creating prompt...');
+    try {
+        await api.createPrompt({
+            name,
+            description,
+            content,
+            notes,
+            activate,
+            created_by: 'dashboard',
+        });
+        nameInput.value = '';
+        if (descriptionInput) descriptionInput.value = '';
+        contentInput.value = '';
+        if (notesInput) notesInput.value = '';
+        if (activateInput) activateInput.checked = true;
+        setPromptStatus('Prompt created.');
+        await loadPrompts();
+    } catch (err) {
+        setPromptStatus(err.message || 'Failed to create prompt.', true);
+    }
+}
+
+async function handleCreatePromptVersion(promptId, content, notes) {
+    if (!promptId) return;
+    if (!content || !content.trim()) {
+        setPromptStatus('Prompt content is required.', true);
+        return;
+    }
+    setPromptStatus('Saving version...');
+    try {
+        await api.createPromptVersion(promptId, {
+            content: content.trim(),
+            notes: notes?.trim() || null,
+            created_by: 'dashboard',
+        });
+        setPromptStatus('Version saved.');
+        await loadPrompts({ keepSelection: true });
+    } catch (err) {
+        setPromptStatus(err.message || 'Failed to save version.', true);
+    }
+}
+
+async function handleActivatePrompt(promptId) {
+    if (!promptId) return;
+    setPromptStatus('Updating active prompt...');
+    try {
+        await api.activatePrompt(promptId);
+        setSelectedPrompt(promptId);
+        setPromptStatus('Active prompt updated.');
+        await loadPrompts({ keepSelection: true });
+    } catch (err) {
+        setPromptStatus(err.message || 'Failed to update active prompt.', true);
     }
 }
 
@@ -900,62 +1364,94 @@ async function handleRetryRun(runId) {
         
         // Refresh papers table
         await refreshPapers();
-        await loadRecentFailures();
     } catch (e) {
         console.error('Failed to retry run:', e);
         alert(e.message || 'Failed to retry run');
     }
 }
 
-async function loadRecentFailures() {
-    const list = document.querySelector('#recentFailuresList');
-    const empty = document.querySelector('#recentFailuresEmpty');
-    if (!list || !empty) return;
+async function handleResolveRunSource(runId) {
     try {
-        const data = await api.getRecentRuns('failed', 10);
-        list.innerHTML = '';
-        const runs = data.runs || [];
-        if (!runs.length) {
-            empty.classList.remove('hidden');
+        const result = await api.resolveRunSource(runId);
+        if (!result.found) {
+            alert('No open-access source found for this run.');
             return;
         }
-        empty.classList.add('hidden');
-        runs.forEach((run) => {
-            const row = document.createElement('div');
-            row.className = 'sw-row sw-card sw-card--danger border-l-red-400 p-4 flex items-start justify-between gap-4';
-            const info = document.createElement('div');
-            info.className = 'text-xs text-slate-600';
-            const title = run.paper?.title || `Paper ${run.paper_id || ''}`;
-            const meta = [run.paper?.doi, run.paper?.source, run.paper?.year].filter(Boolean).join(' · ');
-            info.innerHTML = `
-                <div class="text-sm font-medium text-slate-800">${title}</div>
-                <div class="text-xs text-slate-500 mt-1">${meta}</div>
-                <div class="text-xs text-red-600 mt-2">${run.failure_reason || 'Unknown failure'}</div>
-            `;
-            const actions = document.createElement('div');
-            actions.className = 'flex flex-col gap-2 text-xs';
-            const open = document.createElement('a');
-            open.className = 'sw-chip text-indigo-600 hover:bg-indigo-50';
-            open.href = `/runs/${run.id}`;
-            open.target = '_blank';
-            open.textContent = 'Open run';
-            const retry = document.createElement('button');
-            retry.className = 'sw-chip border-red-200 bg-red-50 text-red-700 hover:bg-red-50';
-            retry.textContent = 'Retry';
-            retry.addEventListener('click', async () => {
-                await api.retryRun(run.id);
-                await refreshPapers();
-                await loadRecentFailures();
-            });
-            actions.appendChild(open);
-            actions.appendChild(retry);
-            row.appendChild(info);
-            row.appendChild(actions);
-            list.appendChild(row);
+        const resolved = {
+            url: result.pdf_url || result.url,
+            label: result.pdf_url ? 'PDF URL' : 'Source URL',
+        };
+        if (!resolved.url) {
+            alert('Resolved source did not include a usable URL.');
+            return;
+        }
+        const current = appStore.get('resolvedRunSources') || {};
+        appStore.set({
+            resolvedRunSources: { ...current, [runId]: resolved },
         });
-    } catch (err) {
-        empty.classList.remove('hidden');
-        empty.textContent = 'Failed to load recent failures.';
+    } catch (e) {
+        console.error('Failed to resolve source:', e);
+        alert(e.message || 'Failed to resolve source');
+    }
+}
+
+async function handleRetryRunWithResolved(runId, sourceUrl) {
+    try {
+        const provider = getSelectedProvider();
+        const result = await api.retryRunWithSource(runId, { source_url: sourceUrl, provider });
+        console.log('Retry with source result:', result);
+        const current = { ...(appStore.get('resolvedRunSources') || {}) };
+        delete current[runId];
+        appStore.set({ resolvedRunSources: current });
+        const paperId = appStore.get('drawerPaperId');
+        if (paperId) {
+            await loadPaperDetails(paperId);
+        }
+        await refreshPapers();
+    } catch (e) {
+        console.error('Failed to retry with source:', e);
+        alert(e.message || 'Failed to retry with resolved source');
+    }
+}
+
+async function handleUploadRunFile(runId, file) {
+    try {
+        const provider = getSelectedProvider();
+        await api.uploadRunPdf(runId, file, provider);
+        const paperId = appStore.get('drawerPaperId');
+        if (paperId) {
+            await loadPaperDetails(paperId);
+        }
+        await refreshPapers();
+    } catch (e) {
+        console.error('Failed to upload PDF:', e);
+        alert(e.message || 'Failed to upload PDF');
+    }
+}
+
+async function handleDashboardUpload(file) {
+    if (!file) return;
+    if (!file.name || !file.name.toLowerCase().endsWith('.pdf')) {
+        alert('Please choose a PDF file.');
+        return;
+    }
+    const promptId = getSelectedPrompt();
+    const title = file.name.replace(/\.pdf$/i, '');
+    setSearchStatus('Uploading PDF...', true);
+    
+    try {
+        const result = await api.extractFile(file, promptId, title);
+        await refreshPapers();
+        setSearchStatus('PDF uploaded. Extraction started.');
+        if (result?.paper_id) {
+            await handlePaperClick(result.paper_id);
+        }
+    } catch (e) {
+        console.error('Failed to upload PDF:', e);
+        setSearchStatus('Upload failed.');
+        alert(e.message || 'Failed to upload PDF');
+    } finally {
+        setSearchStatus(document.querySelector('#searchStatus')?.textContent || '', false);
     }
 }
 
@@ -978,7 +1474,7 @@ function renderFailureGroup(title, items, options = {}) {
     const maxCount = Math.max(...items.map(item => item.count || 0), 1);
     items.forEach((item) => {
         const row = document.createElement('div');
-        row.className = 'sw-row px-3 py-2 flex items-center justify-between gap-3';
+        row.className = 'sw-row list-row px-3 py-2 flex items-center justify-between gap-3';
 
         const label = document.createElement('div');
         label.className = 'flex-1 min-w-0';
@@ -988,9 +1484,9 @@ function renderFailureGroup(title, items, options = {}) {
         labelText.textContent = item.label || item.key;
 
         const bar = document.createElement('div');
-        bar.className = 'sw-meter h-1 mt-1 rounded-full overflow-hidden';
+        bar.className = 'sw-progress h-1 mt-1';
         const fill = document.createElement('div');
-        fill.className = 'sw-meter__fill h-full';
+        fill.className = 'sw-progress__fill h-full';
         const ratio = Math.round((item.count / maxCount) * 100);
         fill.style.width = `${Math.max(ratio, 8)}%`;
         bar.appendChild(fill);
@@ -1007,7 +1503,7 @@ function renderFailureGroup(title, items, options = {}) {
 
         if (item.example_run_id) {
             const link = document.createElement('a');
-            link.className = 'sw-chip text-indigo-600 hover:bg-indigo-50';
+            link.className = 'sw-chip sw-chip--info text-[10px]';
             link.href = `/runs/${item.example_run_id}`;
             link.target = '_blank';
             link.textContent = 'Open';
@@ -1015,7 +1511,7 @@ function renderFailureGroup(title, items, options = {}) {
         }
         if (options.onSelect) {
             const view = document.createElement('button');
-            view.className = 'sw-chip text-indigo-600 hover:bg-indigo-50';
+            view.className = 'sw-btn sw-btn--sm sw-btn--ghost';
             view.textContent = 'View';
             view.addEventListener('click', () => options.onSelect(item));
             meta.appendChild(view);
@@ -1029,14 +1525,28 @@ function renderFailureGroup(title, items, options = {}) {
     return section;
 }
 
+function getTopFailureItem(items = []) {
+    if (!Array.isArray(items) || items.length === 0) return null;
+    return items.reduce((best, item) => {
+        if (!best || (item.count || 0) > (best.count || 0)) {
+            return item;
+        }
+        return best;
+    }, null);
+}
+
 function renderFailureSummary(summary) {
     const container = document.querySelector('#failureSummaryBody');
     const empty = document.querySelector('#failureSummaryEmpty');
+    const compact = document.querySelector('#failureSummaryCompact');
     if (!container || !empty) return;
     container.innerHTML = '';
 
     if (!summary || !summary.total_failed) {
         empty.classList.remove('hidden');
+        if (compact) {
+            compact.textContent = 'No failed runs in this window.';
+        }
         return;
     }
 
@@ -1047,6 +1557,19 @@ function renderFailureSummary(summary) {
     const windowLabel = windowStart ? windowStart.toLocaleDateString() : 'unknown';
     meta.textContent = `Failed runs: ${summary.total_failed}. Last ${summary.window_days} days (since ${windowLabel}).`;
     container.appendChild(meta);
+
+    if (compact) {
+        const topBucket = getTopFailureItem(summary.buckets || []);
+        const topReason = getTopFailureItem(summary.reasons || []);
+        const parts = [`Failed runs: ${summary.total_failed} in last ${summary.window_days} days`];
+        if (topBucket) {
+            parts.push(`Top category: ${topBucket.label || topBucket.key}`);
+        }
+        if (topReason) {
+            parts.push(`Top reason: ${topReason.label || topReason.key}`);
+        }
+        compact.textContent = parts.join(' · ');
+    }
 
     container.appendChild(renderFailureGroup('By category', summary.buckets, {
         onSelect: (item) => openFailureModal({ bucket: item.key }, `Category: ${item.label || item.key}`),
@@ -1110,7 +1633,7 @@ function renderFailureModalList(items, days) {
     failureModalItems = items.slice();
     items.forEach((run) => {
         const row = document.createElement('div');
-        row.className = 'sw-row sw-card sw-card--danger border-l-red-400 p-4 flex items-start justify-between gap-4';
+        row.className = 'sw-row list-row sw-card sw-card--error p-4 flex items-start justify-between gap-4';
 
         const info = document.createElement('div');
         info.className = 'text-xs text-slate-600';
@@ -1118,26 +1641,25 @@ function renderFailureModalList(items, days) {
         const metaLine = [run.paper_doi, run.paper_source, run.paper_year, run.model_provider].filter(Boolean).join(' · ');
         const reason = run.normalized_reason || run.failure_reason || 'Unknown failure';
         info.innerHTML = `
-            <div class="text-sm font-medium text-slate-800">${title}</div>
+            <div class="list-title">${title}</div>
             <div class="text-xs text-slate-500 mt-1">${metaLine}</div>
             <div class="sw-kicker text-[11px] text-slate-500 mt-1">${run.bucket || 'unknown'}</div>
-            <div class="text-xs text-red-600 mt-2">${reason}</div>
+            <div class="text-xs text-red-500 mt-2">${reason}</div>
         `;
 
         const actions = document.createElement('div');
         actions.className = 'flex flex-col gap-2 text-xs';
         const open = document.createElement('a');
-        open.className = 'sw-chip text-indigo-600 hover:bg-indigo-50';
+        open.className = 'sw-btn sw-btn--sm sw-btn--ghost';
         open.href = `/runs/${run.id}`;
         open.target = '_blank';
         open.textContent = 'Open';
         const retry = document.createElement('button');
-        retry.className = 'sw-chip border-red-200 bg-red-50 text-red-700 hover:bg-red-50';
+        retry.className = 'sw-btn sw-btn--sm sw-btn--danger';
         retry.textContent = 'Retry';
         retry.addEventListener('click', async () => {
             await api.retryRun(run.id);
             await refreshPapers();
-            await loadRecentFailures();
             await loadFailureSummary();
             await loadFailureModalRuns();
         });
@@ -1181,7 +1703,6 @@ async function handleRetryFailureBatch() {
             maxRuns: 1000,
         });
         await refreshPapers();
-        await loadRecentFailures();
         await loadFailureSummary();
         await loadFailureModalRuns();
         alert(`Re-queued ${result.enqueued} runs. Skipped ${result.skipped}.`);
@@ -1273,9 +1794,13 @@ async function loadFailureSummary() {
     const container = document.querySelector('#failureSummaryBody');
     const empty = document.querySelector('#failureSummaryEmpty');
     const select = document.querySelector('#failureWindow');
+    const compact = document.querySelector('#failureSummaryCompact');
     if (!container || !empty) return;
     const days = Number.parseInt(select?.value || '30', 10);
     container.innerHTML = '<div class="sw-empty md:col-span-3 text-xs text-slate-500 p-4">Loading failure summary...</div>';
+    if (compact) {
+        compact.textContent = 'Loading failure summary...';
+    }
     try {
         const summary = await api.getFailureSummary(days, 1000);
         renderFailureSummary(summary);
@@ -1286,6 +1811,9 @@ async function loadFailureSummary() {
         container.innerHTML = '';
         empty.classList.remove('hidden');
         empty.textContent = 'Failed to load failure summary.';
+        if (compact) {
+            compact.textContent = 'Failed to load failure summary.';
+        }
     }
 }
 

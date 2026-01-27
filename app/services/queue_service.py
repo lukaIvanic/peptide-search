@@ -12,8 +12,10 @@ from dataclasses import dataclass, field
 from datetime import datetime
 from typing import Any, Callable, Dict, List, Optional, Set
 
+from sqlmodel import select
+
 from ..config import settings
-from ..persistence.models import Paper, ExtractionRun, RunStatus
+from ..persistence.models import Paper, ExtractionRun, RunStatus, BaselineCaseRun
 from ..db import session_scope
 
 logger = logging.getLogger(__name__)
@@ -28,6 +30,8 @@ class QueueItem:
     title: str
     provider: str = "openai"
     force: bool = False
+    prompt_id: Optional[int] = None
+    prompt_version_id: Optional[int] = None
 
 
 @dataclass
@@ -96,6 +100,7 @@ class ExtractionQueue:
         
         self._queue: asyncio.Queue[QueueItem] = asyncio.Queue()
         self._active_runs: Dict[int, QueueItem] = {}
+        self._pending_urls: Set[str] = set()
         self._workers: List[asyncio.Task] = []
         self._running = False
         self._lock = asyncio.Lock()
@@ -130,12 +135,37 @@ class ExtractionQueue:
             await asyncio.gather(*self._workers, return_exceptions=True)
         
         self._workers.clear()
+        async with self._lock:
+            self._active_runs.clear()
+            self._pending_urls.clear()
         logger.info("Queue stopped")
     
-    async def enqueue(self, item: QueueItem) -> None:
-        """Add an item to the queue."""
-        await self._queue.put(item)
+    async def is_url_pending(self, url: str) -> bool:
+        """Check if a PDF URL is already queued or processing."""
+        if not url:
+            return False
+        async with self._lock:
+            return url in self._pending_urls
+
+    async def enqueue(self, item: QueueItem) -> bool:
+        """Add an item to the queue if URL is not pending."""
+        if item.pdf_url:
+            async with self._lock:
+                if item.pdf_url in self._pending_urls:
+                    logger.info(
+                        f"Skipping enqueue for run {item.run_id}: URL already pending ({item.pdf_url})"
+                    )
+                    return False
+                self._pending_urls.add(item.pdf_url)
+        try:
+            await self._queue.put(item)
+        except Exception:
+            if item.pdf_url:
+                async with self._lock:
+                    self._pending_urls.discard(item.pdf_url)
+            raise
         logger.info(f"Enqueued run {item.run_id} for paper {item.paper_id}")
+        return True
     
     async def get_stats(self) -> QueueStats:
         """Get current queue statistics."""
@@ -170,6 +200,8 @@ class ExtractionQueue:
             finally:
                 async with self._lock:
                     self._active_runs.pop(item.run_id, None)
+                    if item.pdf_url:
+                        self._pending_urls.discard(item.pdf_url)
                 self._queue.task_done()
         
         logger.info(f"Worker {worker_id} stopped")
@@ -194,6 +226,8 @@ class ExtractionQueue:
                     paper_id=item.paper_id,
                     pdf_url=item.pdf_url,
                     provider=item.provider,
+                    prompt_id=item.prompt_id,
+                    prompt_version_id=item.prompt_version_id,
                 )
                 
                 # Update status to VALIDATING
@@ -226,12 +260,20 @@ class ExtractionQueue:
                 session.add(run)
                 session.commit()
                 
+                stmt = select(BaselineCaseRun.baseline_case_id).where(BaselineCaseRun.run_id == run_id)
+                linked_case_ids = [row for row in session.exec(stmt).all()]
+                if run.baseline_case_id and run.baseline_case_id not in linked_case_ids:
+                    linked_case_ids.append(run.baseline_case_id)
+
                 # Broadcast status update
                 await self.broadcaster.broadcast("run_status", {
                     "run_id": run_id,
                     "paper_id": run.paper_id,
                     "status": status.value,
                     "failure_reason": failure_reason,
+                    "baseline_case_id": run.baseline_case_id,
+                    "baseline_case_ids": linked_case_ids,
+                    "baseline_dataset": run.baseline_dataset,
                 })
 
 

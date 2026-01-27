@@ -3,11 +3,20 @@ from __future__ import annotations
 
 import hashlib
 import json
+from datetime import datetime
 from typing import List, Optional, Tuple
 
 from sqlmodel import Session, select
 
-from .models import Paper, ExtractionRun, ExtractionEntity, Extraction
+from .models import (
+    Paper,
+    ExtractionRun,
+    ExtractionEntity,
+    Extraction,
+    BasePrompt,
+    PromptVersion,
+    BaselineCaseRun,
+)
 from ..schemas import ExtractionPayload, PaperMeta
 
 
@@ -121,7 +130,11 @@ class ExtractionRepository:
         prompts_json: Optional[str] = None,
         pdf_url: Optional[str] = None,
         parent_run_id: Optional[int] = None,
+        prompt_id: Optional[int] = None,
+        prompt_version_id: Optional[int] = None,
         status: Optional[str] = None,
+        baseline_case_id: Optional[str] = None,
+        baseline_dataset: Optional[str] = None,
     ) -> Tuple[int, List[int]]:
         """
         Save an extraction run and its entities.
@@ -143,6 +156,10 @@ class ExtractionRepository:
             prompts_json=prompts_json,
             pdf_url=pdf_url,
             parent_run_id=parent_run_id,
+            prompt_id=prompt_id,
+            prompt_version_id=prompt_version_id,
+            baseline_case_id=baseline_case_id,
+            baseline_dataset=baseline_dataset,
         )
         if status:
             run.status = status
@@ -161,14 +178,14 @@ class ExtractionRepository:
 
         entity_ids = [e.id for e in entities if e.id is not None]
         return run.id, entity_ids
-    
+
     def _entity_to_row(self, entity, run_id: int, entity_index: int) -> ExtractionEntity:
         """Convert a Pydantic entity to a database entity."""
         peptide = entity.peptide if entity and entity.type == "peptide" else None
         molecule = entity.molecule if entity and entity.type == "molecule" else None
         conditions = entity.conditions if entity else None
         thresholds = entity.thresholds if entity else None
-        
+
         return ExtractionEntity(
             run_id=run_id,
             entity_index=entity_index,
@@ -194,6 +211,178 @@ class ExtractionRepository:
             process_protocol=entity.process_protocol if entity else None,
             reported_characteristics=json.dumps(entity.reported_characteristics, ensure_ascii=False) if entity and entity.reported_characteristics else None,
         )
+
+
+class PromptRepository:
+    """Repository for base prompts and versions."""
+
+    def __init__(self, session: Session):
+        self.session = session
+
+    def list_prompts(self) -> List[BasePrompt]:
+        stmt = select(BasePrompt).order_by(BasePrompt.created_at.desc())
+        return list(self.session.exec(stmt).all())
+
+    def get_prompt(self, prompt_id: int) -> Optional[BasePrompt]:
+        return self.session.get(BasePrompt, prompt_id)
+
+    def get_active_prompt(self) -> Optional[BasePrompt]:
+        stmt = select(BasePrompt).where(BasePrompt.is_active == True)  # noqa: E712
+        return self.session.exec(stmt).first()
+
+    def list_versions(self, prompt_id: int) -> List[PromptVersion]:
+        stmt = (
+            select(PromptVersion)
+            .where(PromptVersion.prompt_id == prompt_id)
+            .order_by(PromptVersion.version_index.desc())
+        )
+        return list(self.session.exec(stmt).all())
+
+    def get_latest_version(self, prompt_id: int) -> Optional[PromptVersion]:
+        stmt = (
+            select(PromptVersion)
+            .where(PromptVersion.prompt_id == prompt_id)
+            .order_by(PromptVersion.version_index.desc())
+            .limit(1)
+        )
+        return self.session.exec(stmt).first()
+
+    def create_prompt(
+        self,
+        name: str,
+        description: Optional[str],
+        content: str,
+        notes: Optional[str] = None,
+        created_by: Optional[str] = None,
+        activate: bool = False,
+    ) -> Tuple[BasePrompt, PromptVersion]:
+        if activate:
+            self._clear_active()
+        prompt = BasePrompt(
+            name=name,
+            description=description,
+            is_active=activate,
+            created_at=datetime.utcnow(),
+            updated_at=datetime.utcnow(),
+        )
+        self.session.add(prompt)
+        self.session.commit()
+        self.session.refresh(prompt)
+
+        version = PromptVersion(
+            prompt_id=prompt.id,
+            version_index=1,
+            content=content,
+            notes=notes,
+            created_by=created_by,
+        )
+        self.session.add(version)
+        self.session.commit()
+        self.session.refresh(version)
+        return prompt, version
+
+    def create_version(
+        self,
+        prompt_id: int,
+        content: str,
+        notes: Optional[str] = None,
+        created_by: Optional[str] = None,
+    ) -> PromptVersion:
+        latest = self.get_latest_version(prompt_id)
+        next_index = (latest.version_index if latest else 0) + 1
+        version = PromptVersion(
+            prompt_id=prompt_id,
+            version_index=next_index,
+            content=content,
+            notes=notes,
+            created_by=created_by,
+        )
+        self.session.add(version)
+        prompt = self.session.get(BasePrompt, prompt_id)
+        if prompt:
+            prompt.updated_at = datetime.utcnow()
+            self.session.add(prompt)
+        self.session.commit()
+        self.session.refresh(version)
+        return version
+
+    def set_active(self, prompt_id: int) -> Optional[BasePrompt]:
+        self._clear_active()
+        prompt = self.session.get(BasePrompt, prompt_id)
+        if not prompt:
+            return None
+        prompt.is_active = True
+        prompt.updated_at = datetime.utcnow()
+        self.session.add(prompt)
+        self.session.commit()
+        self.session.refresh(prompt)
+        return prompt
+
+    def ensure_default_prompt(self, default_content: str) -> Tuple[BasePrompt, PromptVersion]:
+        prompt = self.session.exec(select(BasePrompt).order_by(BasePrompt.created_at.asc())).first()
+        if not prompt:
+            prompt, version = self.create_prompt(
+                name="Default base prompt",
+                description="Built-in base prompt.",
+                content=default_content,
+                notes="Initial default prompt",
+                activate=True,
+                created_by="system",
+            )
+            return prompt, version
+
+        if not self.get_active_prompt():
+            prompt.is_active = True
+            prompt.updated_at = datetime.utcnow()
+            self.session.add(prompt)
+            self.session.commit()
+            self.session.refresh(prompt)
+
+        version = self.get_latest_version(prompt.id)
+        if not version:
+            version = self.create_version(
+                prompt_id=prompt.id,
+                content=default_content,
+                notes="Backfilled default prompt",
+                created_by="system",
+            )
+        return prompt, version
+
+    def resolve_prompt(
+        self,
+        default_content: str,
+        prompt_id: Optional[int] = None,
+        prompt_version_id: Optional[int] = None,
+    ) -> Tuple[BasePrompt, PromptVersion]:
+        if prompt_version_id:
+            version = self.session.get(PromptVersion, prompt_version_id)
+            if version:
+                prompt = self.session.get(BasePrompt, version.prompt_id)
+                if prompt:
+                    return prompt, version
+
+        if prompt_id:
+            prompt = self.session.get(BasePrompt, prompt_id)
+            if prompt:
+                version = self.get_latest_version(prompt.id)
+                if version:
+                    return prompt, version
+
+        active = self.get_active_prompt()
+        if active:
+            version = self.get_latest_version(active.id)
+            if version:
+                return active, version
+
+        return self.ensure_default_prompt(default_content)
+
+    def _clear_active(self) -> None:
+        stmt = select(BasePrompt).where(BasePrompt.is_active == True)  # noqa: E712
+        for prompt in self.session.exec(stmt).all():
+            prompt.is_active = False
+            prompt.updated_at = datetime.utcnow()
+            self.session.add(prompt)
+        self.session.commit()
     
     def find_run_by_text_hash(self, text_hash: str, paper_id: Optional[int] = None) -> Optional[ExtractionRun]:
         """Find an extraction run by source text hash (for deduplication)."""
@@ -201,6 +390,36 @@ class ExtractionRepository:
         if paper_id:
             stmt = stmt.where(ExtractionRun.paper_id == paper_id)
         return self.session.exec(stmt).first()
+
+
+class BaselineCaseRunRepository:
+    """Repository for baseline case/run linking."""
+
+    def __init__(self, session: Session):
+        self.session = session
+
+    def list_case_ids_for_run(self, run_id: int) -> List[str]:
+        stmt = select(BaselineCaseRun.baseline_case_id).where(BaselineCaseRun.run_id == run_id)
+        return [row for row in self.session.exec(stmt).all()]
+
+    def link_cases_to_run(self, case_ids: List[str], run_id: int) -> None:
+        if not case_ids:
+            return
+        stmt = (
+            select(BaselineCaseRun.baseline_case_id)
+            .where(BaselineCaseRun.run_id == run_id)
+            .where(BaselineCaseRun.baseline_case_id.in_(case_ids))
+        )
+        existing = set(self.session.exec(stmt).all())
+        new_links = [
+            BaselineCaseRun(baseline_case_id=case_id, run_id=run_id)
+            for case_id in case_ids
+            if case_id not in existing
+        ]
+        if not new_links:
+            return
+        self.session.add_all(new_links)
+        self.session.commit()
     
     # Legacy support: save to old Extraction table
     def save_extraction_legacy(

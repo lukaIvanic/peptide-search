@@ -1,0 +1,338 @@
+[
+  {
+    "id": "catalytic_non_prot:1",
+    "dataset": "catalytic_non_prot",
+    "sequence": "HSGVKVKVKVKVpPTKVKVKVKV",
+    "n_terminal": "Free",
+    "c_terminal": "Amidated",
+    "labels": [
+      "catalytic"
+    ],
+    "doi": "10.1002/anie.201708036",
+    "pubmed_id": null,
+    "paper_url": null,
+    "pdf_url": null,
+    "metadata": {
+      "substrate": "p-NPA",
+      "kcat_km": "19.18",
+      "secondary_structure": "beta-sheet/fibrils",
+      "mechanism": "Histidine",
+      "non_proteinogenic_residues": "D-proline"
+    }
+  },
+  {
+    "id": "catalytic_non_prot:2",
+    "dataset": "catalytic_non_prot",
+    "sequence": "YGOHOOSOGVKVKVKVKVpPTKVKVKVKV",
+    "n_terminal": "Acetylated",
+    "c_terminal": "Amidated",
+    "labels": [
+      "catalytic"
+    ],
+    "doi": "10.1021/acs.biomac.9b01620",
+    "pubmed_id": null,
+    "paper_url": null,
+    "pdf_url": null,
+    "metadata": {
+      "substrate": "p-NPA",
+      "kcat_km": "99.4",
+      "secondary_structure": "Polyproline II-beta-sheet/fibrils",
+      "mechanism": "Catalytic triad residues",
+      "non_proteinogenic_residues": "O is the abbreviation for (2S,4R)-hydroxyproline, D-proline"
+    }
+  },
+  {
+    "id": "catalytic_non_prot:3",
+    "dataset": "catalytic_non_prot",
+    "sequence": "YGOHOOSOGVKVKVKVKVpPTKVKVKVKV",
+    "n_terminal": "Acetylated",
+    "c_terminal": "Amidated",
+    "labels": [
+      "catalytic"
+    ],
+    "doi": "10.1021/acs.biomac.9b01620",
+    "pubmed_id": null,
+    "paper_url": null,
+    "pdf_url": null,
+    "metadata": {
+      "substrate": "p-NPP",
+      "kcat_km": "145",
+      "secondary_structure": "Polyproline II-beta-sheet/fibrils",
+      "mechanism": "Catalytic triad residues",
+      "non_proteinogenic_residues": "O is the abbreviation for (2S,4R)-hydroxyproline, D-proline"
+    }
+  },
+  {
+    "id": "catalytic_non_prot:4",
+    "dataset": "catalytic_non_prot",
+    "sequence": "YGOHOOSOGVKVKVKVKVpPTKVKVKVKV",
+    "n_terminal": "Acetylated",
+    "c_terminal": "Amidated",
+    "labels": [
+      "catalytic"
+    ],
+    "doi": "10.1021/acs.biomac.9b01620",
+    "pubmed_id": null,
+    "paper_url": null,
+    "pdf_url": null,
+    "metadata": {
+      "substrate": "p-NPMA",
+      "kcat_km": "203",
+      "secondary_structure": "Polyproline II-beta-sheet/fibrils",
+      "mechanism": "Catalytic triad residues",
+      "non_proteinogenic_residues": "O is the abbreviation for (2S,4R)-hydroxyproline, D-proline"
+    }
+  },
+  {
+    "id": "catalytic_non_prot:5",
+    "dataset": "catalytic_non_prot",
+    "sequence": "YGOHOOHOGVKVKVKVKVpPTKVKVKVKV",
+    "n_terminal": "Acetylated",
+    "c_terminal": "Amidated",
+    "labels": [
+      "catalytic"
+    ],
+    "doi": "10.1021/acs.biomac.9b01620",
+    "pubmed_id": null,
+    "paper_url": null,
+    "pdf_url": null,
+    "metadata": {
+      "substrate": "p-NPA",
+      "kcat_km": "24.3",
+      "secondary_structure": "Polyproline II-beta-sheet/fibrils",
+      "mechanism": "Histidine",
+      "non_proteinogenic_residues": "O is the abbreviation for (2S,4R)-hydroxyproline, D-proline"
+    }
+  },
+  {
+    "id": "catalytic_non_prot:6",
+    "dataset": "catalytic_non_prot",
+    "sequence": "YGOHOOHOGVKVKVKVKVpPTKVKVKVKV",
+    "n_terminal": "Acetylated",
+    "c_terminal": "Amidated",
+    "labels": [
+      "catalytic"
+    ],
+    "doi": "10.1021/acs.biomac.9b01620",
+    "pubmed_id": null,
+    "paper_url": null,
+    "pdf_url": null,
+    "metadata": {
+      "substrate": "p-NPP",
+      "kcat_km": "58.1",
+      "secondary_structure": "Polyproline II-beta-sheet/fibrils",
+      "mechanism": "Histidine",
+      "non_proteinogenic_residues": "O is the abbreviation for (2S,4R)-hydroxyproline, D-proline"
+    }
+  },
+  {
+    "id": "catalytic_non_prot:7",
+    "dataset": "catalytic_non_prot",
+    "sequence": "YGOHOOHOGVKVKVKVKVpPTKVKVKVKV",
+    "n_terminal": "Acetylated",
+    "c_terminal": "Amidated",
+    "labels": [
+      "catalytic"
+    ],
+    "doi": "10.1021/acs.biomac.9b01620",
+    "pubmed_id": null,
+    "paper_url": null,
+    "pdf_url": null,
+    "metadata": {
+      "substrate": "p-NPMA",
+      "kcat_km": "452",
+      "secondary_structure": "Polyproline II-beta-sheet/fibrils",
+      "mechanism": "Histidine",
+      "non_proteinogenic_residues": "O is the abbreviation for (2S,4R)-hydroxyproline, D-proline"
+    }
+  },
+  {
+    "id": "catalytic_non_prot:8",
+    "dataset": "catalytic_non_prot",
+    "sequence": "OOHOOHOOOOOGY",
+    "n_terminal": "Acetylated",
+    "c_terminal": "Amidated",
+    "labels": [
+      "catalytic"
+    ],
+    "doi": "10.1021/acsomega.7b00928",
+    "pubmed_id": null,
+    "paper_url": null,
+    "pdf_url": null,
+    "metadata": {
+      "substrate": "p-NPA",
+      "kcat_km": "1.23",
+      "secondary_structure": "left-handed helix",
+      "mechanism": "Histidine",
+      "non_proteinogenic_residues": "O is the abbreviation for (2S,4R)-hydroxyproline"
+    }
+  },
+  {
+    "id": "catalytic_non_prot:9",
+    "dataset": "catalytic_non_prot",
+    "sequence": "OOCOOHOODOOGY",
+    "n_terminal": "Acetylated",
+    "c_terminal": "Amidated",
+    "labels": [
+      "catalytic"
+    ],
+    "doi": "10.1021/acsomega.7b00928",
+    "pubmed_id": null,
+    "paper_url": null,
+    "pdf_url": null,
+    "metadata": {
+      "substrate": "p-NPA",
+      "kcat_km": "0.99",
+      "secondary_structure": "left-handed helix",
+      "mechanism": "Catalytic triad residues",
+      "non_proteinogenic_residues": "O is the abbreviation for (2S,4R)-hydroxyproline"
+    }
+  },
+  {
+    "id": "catalytic_non_prot:10",
+    "dataset": "catalytic_non_prot",
+    "sequence": "O'O'HO'O'HO'O'O'O'O'GY",
+    "n_terminal": "Acetylated",
+    "c_terminal": "Amidated",
+    "labels": [
+      "catalytic"
+    ],
+    "doi": "10.1021/acsomega.7b00928",
+    "pubmed_id": null,
+    "paper_url": null,
+    "pdf_url": null,
+    "metadata": {
+      "substrate": "p-NPA",
+      "kcat_km": "0.62",
+      "secondary_structure": "left-handed helix",
+      "mechanism": "Histidine",
+      "non_proteinogenic_residues": "O' is the abbreviation for (2S,4R)-methoxyproline"
+    }
+  },
+  {
+    "id": "catalytic_non_prot:11",
+    "dataset": "catalytic_non_prot",
+    "sequence": "HLlIHLl",
+    "n_terminal": "Free",
+    "c_terminal": "Free",
+    "labels": [
+      "catalytic"
+    ],
+    "doi": "10.3390/molecules25132995",
+    "pubmed_id": null,
+    "paper_url": null,
+    "pdf_url": null,
+    "metadata": {
+      "substrate": "p-NPA",
+      "kcat_km": "2.9",
+      "secondary_structure": "beta-sheet/nanofibers",
+      "mechanism": "Histidine",
+      "non_proteinogenic_residues": "D-leucine"
+    }
+  },
+  {
+    "id": "catalytic_non_prot:12",
+    "dataset": "catalytic_non_prot",
+    "sequence": "Hff",
+    "n_terminal": "Free",
+    "c_terminal": "Free",
+    "labels": [
+      "catalytic"
+    ],
+    "doi": "10.1039/c7cc03371k",
+    "pubmed_id": null,
+    "paper_url": null,
+    "pdf_url": null,
+    "metadata": {
+      "substrate": "p-NPA",
+      "kcat_km": null,
+      "secondary_structure": "beta-sheet/amiloid-like structures",
+      "mechanism": "Histidine",
+      "non_proteinogenic_residues": "D-phenylalanine"
+    }
+  },
+  {
+    "id": "catalytic_non_prot:13",
+    "dataset": "catalytic_non_prot",
+    "sequence": "S-Aib-FH-Aib-F-Aib",
+    "n_terminal": "Free",
+    "c_terminal": "Free",
+    "labels": [
+      "catalytic"
+    ],
+    "doi": "https://doi.org/10.1021/acscatal.1c00129",
+    "pubmed_id": null,
+    "paper_url": null,
+    "pdf_url": null,
+    "metadata": {
+      "substrate": "p-NPA",
+      "kcat_km": "1.07",
+      "secondary_structure": "beta-helix/fibrils",
+      "mechanism": "Catalytic triad residues",
+      "non_proteinogenic_residues": "alfa-aminoisobutyric cid (Aib)"
+    }
+  },
+  {
+    "id": "catalytic_non_prot:14",
+    "dataset": "catalytic_non_prot",
+    "sequence": "S-Aib-FH-Aib-F-Aib",
+    "n_terminal": "Free",
+    "c_terminal": "Free",
+    "labels": [
+      "catalytic"
+    ],
+    "doi": "https://doi.org/10.1021/acscatal.1c00129",
+    "pubmed_id": null,
+    "paper_url": null,
+    "pdf_url": null,
+    "metadata": {
+      "substrate": "p-NPP",
+      "kcat_km": "0.7",
+      "secondary_structure": "beta-helix/fibrils",
+      "mechanism": "Catalytic triad residues",
+      "non_proteinogenic_residues": "alfa-aminoisobutyric cid (Aib)"
+    }
+  },
+  {
+    "id": "catalytic_non_prot:15",
+    "dataset": "catalytic_non_prot",
+    "sequence": "H-Aib-FS-Aib-F-Aib",
+    "n_terminal": "Free",
+    "c_terminal": "Free",
+    "labels": [
+      "catalytic"
+    ],
+    "doi": "https://doi.org/10.1021/acscatal.1c00129",
+    "pubmed_id": null,
+    "paper_url": null,
+    "pdf_url": null,
+    "metadata": {
+      "substrate": "p-NPA",
+      "kcat_km": "0.9",
+      "secondary_structure": "beta-helix/fibrils",
+      "mechanism": "Catalytic triad residues",
+      "non_proteinogenic_residues": "alfa-aminoisobutyric cid (Aib)"
+    }
+  },
+  {
+    "id": "catalytic_non_prot:16",
+    "dataset": "catalytic_non_prot",
+    "sequence": "H-Aib-FS-Aib-F-Aib",
+    "n_terminal": "Free",
+    "c_terminal": "Free",
+    "labels": [
+      "catalytic"
+    ],
+    "doi": "https://doi.org/10.1021/acscatal.1c00129",
+    "pubmed_id": null,
+    "paper_url": null,
+    "pdf_url": null,
+    "metadata": {
+      "substrate": "p-NPP",
+      "kcat_km": "0.28",
+      "secondary_structure": "beta-helix/fibrils",
+      "mechanism": "Catalytic triad residues",
+      "non_proteinogenic_residues": "alfa-aminoisobutyric cid (Aib)"
+    }
+  }
+]

@@ -1,0 +1,501 @@
+/* Peptide-themed animation showcase */
+.topbar-demo-page {
+	display: flex;
+	flex-direction: column;
+	gap: 32px;
+	min-height: 100vh;
+}
+
+.topbar-demo-intro {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 16px;
+}
+
+.topbar-demo-intro__text h1 {
+	text-shadow: 0 0 12px rgba(255, 0, 255, 0.35);
+}
+
+.topbar-demo-grid {
+	display: flex;
+	flex-direction: column;
+	gap: 64px;
+}
+
+.topbar-demo-card {
+	background: rgba(12, 6, 26, 0.75);
+	border: 1px solid rgba(255, 0, 255, 0.35);
+	border-radius: 18px;
+	overflow: hidden;
+	box-shadow: 0 20px 36px rgba(0, 0, 0, 0.35);
+	display: flex;
+	flex-direction: column;
+}
+
+.topbar-demo-meta {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 16px;
+	padding: 14px 18px;
+	background: rgba(18, 8, 32, 0.9);
+	border-bottom: 1px solid rgba(255, 0, 255, 0.35);
+}
+
+.topbar-demo-title {
+	font-size: 12px;
+	text-transform: uppercase;
+	letter-spacing: 1px;
+}
+
+.topbar-demo-subtitle {
+	font-size: 11px;
+	color: rgba(224, 224, 224, 0.7);
+	margin-top: 4px;
+}
+
+.topbar-demo-replay {
+	border: 1px solid currentColor;
+	background: transparent;
+	padding: 6px 12px;
+	font-size: 10px;
+	letter-spacing: 0.5px;
+	text-transform: uppercase;
+	border-radius: 999px;
+	transition: background 0.2s;
+}
+
+.topbar-demo-bar,
+.main-header {
+	position: relative;
+	overflow: hidden;
+	min-height: 80px;
+}
+
+/* Main header specific styles for dashboard */
+.main-header {
+	border-bottom: 1px solid rgba(16, 185, 129, 0.3);
+}
+
+.topbar-demo__content {
+	position: relative;
+	z-index: 2;
+}
+
+.topbar-demo-logo {
+	position: relative;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+}
+
+.topbar-badge {
+	padding: 4px 10px;
+	border-radius: 4px;
+	border: 1px solid currentColor;
+	font-size: 11px;
+}
+
+/* Background canvas for particle effects */
+.topbar-bg-canvas {
+	position: absolute;
+	inset: 0;
+	width: 100%;
+	height: 100%;
+	z-index: 1;
+	pointer-events: none;
+}
+
+/* Base overlay style */
+.topbar-anim-overlay {
+	position: absolute;
+	inset: 0;
+	pointer-events: none;
+	z-index: 1;
+	opacity: 0;
+}
+
+/* ============================================
+   1. PEPTIDE BOND SERIES
+   ============================================ */
+
+/* 01A - Original */
+.theme-peptide {
+	background: linear-gradient(135deg, #022c22 0%, #064e3b 50%, #065f46 100%);
+	border-bottom: 2px solid #10b981;
+}
+
+.peptide-logo {
+	filter: drop-shadow(0 0 8px rgba(16, 185, 129, 0.5));
+}
+
+/* 01B - Neon Synthesis */
+.theme-peptide-neon {
+	background: linear-gradient(135deg, #4a044e 0%, #701a75 50%, #9d174d 100%);
+	border-bottom: 2px solid #ec4899;
+}
+
+.peptide-neon-logo {
+	filter: drop-shadow(0 0 12px rgba(236, 72, 153, 0.7));
+}
+
+/* 01C - Deep Ocean */
+.theme-peptide-ocean {
+	background: linear-gradient(180deg, #0c4a6e 0%, #075985 50%, #0369a1 100%);
+	border-bottom: 2px solid #0ea5e9;
+}
+
+.peptide-ocean-logo {
+	filter: drop-shadow(0 0 10px rgba(14, 165, 233, 0.5));
+}
+
+/* ============================================
+   2. HELIX UNWIND SERIES
+   ============================================ */
+
+/* 02A - Original */
+.theme-helix {
+	background: linear-gradient(180deg, #042f2e 0%, #083344 50%, #0c4a6e 100%);
+	border-bottom: 2px solid #22d3ee;
+}
+
+.helix-logo {
+	filter: drop-shadow(0 0 8px rgba(34, 211, 238, 0.5));
+}
+
+/* 02B - Crimson Code */
+.theme-helix-crimson {
+	background: linear-gradient(135deg, #450a0a 0%, #7f1d1d 50%, #991b1b 100%);
+	border-bottom: 2px solid #ef4444;
+}
+
+.helix-crimson-logo {
+	filter: drop-shadow(0 0 10px rgba(239, 68, 68, 0.6));
+}
+
+/* 02C - Aurora */
+.theme-helix-aurora {
+	background: linear-gradient(135deg, #3b0764 0%, #4c1d95 50%, #166534 100%);
+	border-bottom: 2px solid #a855f7;
+}
+
+.helix-aurora-logo {
+	filter: drop-shadow(0 0 12px rgba(168, 85, 247, 0.6)) drop-shadow(0 0 20px rgba(34, 197, 94, 0.4));
+}
+
+/* ============================================
+   3. MOLECULAR ORBIT SERIES
+   ============================================ */
+
+/* 03A - Original */
+.theme-orbital {
+	background: linear-gradient(180deg, #1e1b4b 0%, #312e81 50%, #3730a3 100%);
+	border-bottom: 2px solid #8b5cf6;
+}
+
+.orbital-logo {
+	filter: drop-shadow(0 0 10px rgba(139, 92, 246, 0.6));
+}
+
+/* 03B - Solar Flare */
+.theme-orbital-solar {
+	background: linear-gradient(135deg, #451a03 0%, #78350f 50%, #92400e 100%);
+	border-bottom: 2px solid #f59e0b;
+}
+
+.orbital-solar-logo {
+	filter: drop-shadow(0 0 15px rgba(245, 158, 11, 0.8));
+}
+
+/* 03C - Ice Crystal */
+.theme-orbital-ice {
+	background: linear-gradient(180deg, #0c4a6e 0%, #0e7490 50%, #155e75 100%);
+	border-bottom: 2px solid #bae6fd;
+}
+
+.orbital-ice-logo {
+	filter: drop-shadow(0 0 12px rgba(186, 230, 253, 0.6));
+}
+
+/* ============================================
+   4. LAB REACTION SERIES
+   ============================================ */
+
+/* 04A - Original */
+.theme-lab {
+	background: linear-gradient(180deg, #1c1917 0%, #292524 50%, #44403c 100%);
+	border-bottom: 2px solid #f59e0b;
+}
+
+.lab-logo {
+	filter: drop-shadow(0 0 6px rgba(245, 158, 11, 0.5));
+}
+
+/* 04B - Toxic Green */
+.theme-lab-toxic {
+	background: linear-gradient(180deg, #052e16 0%, #14532d 50%, #166534 100%);
+	border-bottom: 2px solid #22c55e;
+}
+
+.lab-toxic-logo {
+	filter: drop-shadow(0 0 12px rgba(34, 197, 94, 0.7));
+}
+
+/* 04C - Sunset Brew */
+.theme-lab-sunset {
+	background: linear-gradient(135deg, #431407 0%, #7c2d12 50%, #9a3412 100%);
+	border-bottom: 2px solid #fb923c;
+}
+
+.lab-sunset-logo {
+	filter: drop-shadow(0 0 8px rgba(251, 146, 60, 0.5));
+}
+
+/* ============================================
+   5. SPECTRUM PEAKS SERIES
+   ============================================ */
+
+/* 05A - Original */
+.theme-spectrum {
+	background: linear-gradient(180deg, #1c1917 0%, #27272a 50%, #3f3f46 100%);
+	border-bottom: 2px solid #f43f5e;
+}
+
+.spectrum-logo {
+	filter: drop-shadow(0 0 6px rgba(244, 63, 94, 0.5));
+}
+
+/* 05B - Electric Blue */
+.theme-spectrum-electric {
+	background: linear-gradient(180deg, #0c1e3a 0%, #1e3a5f 50%, #1e40af 100%);
+	border-bottom: 2px solid #3b82f6;
+}
+
+.spectrum-electric-logo {
+	filter: drop-shadow(0 0 10px rgba(59, 130, 246, 0.6));
+}
+
+/* 05C - Infrared */
+.theme-spectrum-infrared {
+	background: linear-gradient(135deg, #450a0a 0%, #7f1d1d 50%, #78350f 100%);
+	border-bottom: 2px solid #dc2626;
+}
+
+.spectrum-infrared-logo {
+	filter: drop-shadow(0 0 10px rgba(220, 38, 38, 0.6));
+}
+
+/* ============================================
+   6. PROTEIN FOLD SERIES
+   ============================================ */
+
+/* 06A - Original */
+.theme-protein {
+	background: linear-gradient(135deg, #0c1e3a 0%, #1e3a5f 50%, #1e40af 100%);
+	border-bottom: 2px solid #3b82f6;
+}
+
+.protein-logo {
+	filter: drop-shadow(0 0 8px rgba(59, 130, 246, 0.5));
+}
+
+/* 06B - Mint Fresh */
+.theme-protein-mint {
+	background: linear-gradient(135deg, #042f2e 0%, #115e59 50%, #0f766e 100%);
+	border-bottom: 2px solid #2dd4bf;
+}
+
+.protein-mint-logo {
+	filter: drop-shadow(0 0 10px rgba(45, 212, 191, 0.6));
+}
+
+/* 06C - Twilight */
+.theme-protein-twilight {
+	background: linear-gradient(135deg, #4a044e 0%, #701a75 50%, #86198f 100%);
+	border-bottom: 2px solid #d946ef;
+}
+
+.protein-twilight-logo {
+	filter: drop-shadow(0 0 12px rgba(217, 70, 239, 0.6));
+}
+
+/* ============================================
+   7. MEMBRANE FLOW SERIES
+   ============================================ */
+
+/* 07A - Original */
+.theme-membrane {
+	background: linear-gradient(180deg, #042f2e 0%, #115e59 50%, #0f766e 100%);
+	border-bottom: 2px solid #2dd4bf;
+}
+
+.membrane-logo {
+	filter: drop-shadow(0 0 8px rgba(45, 212, 191, 0.5));
+}
+
+/* 07B - Golden Gate */
+.theme-membrane-gold {
+	background: linear-gradient(135deg, #451a03 0%, #78350f 50%, #92400e 100%);
+	border-bottom: 2px solid #fbbf24;
+}
+
+.membrane-gold-logo {
+	filter: drop-shadow(0 0 10px rgba(251, 191, 36, 0.6));
+}
+
+/* 07C - Deep Sea */
+.theme-membrane-deep {
+	background: linear-gradient(180deg, #0c1e3a 0%, #1e3a5f 50%, #1e40af 100%);
+	border-bottom: 2px solid #3b82f6;
+}
+
+.membrane-deep-logo {
+	filter: drop-shadow(0 0 12px rgba(59, 130, 246, 0.5)) drop-shadow(0 0 20px rgba(34, 211, 238, 0.3));
+}
+
+/* ============================================
+   8. CRYSTAL LATTICE SERIES
+   ============================================ */
+
+/* 08A - Original */
+.theme-crystal {
+	background: linear-gradient(135deg, #1e1b4b 0%, #312e81 50%, #4338ca 100%);
+	border-bottom: 2px solid #818cf8;
+}
+
+.crystal-logo {
+	filter: drop-shadow(0 0 8px rgba(129, 140, 248, 0.5));
+}
+
+/* 08B - Ruby Matrix */
+.theme-crystal-ruby {
+	background: linear-gradient(135deg, #4c0519 0%, #881337 50%, #9f1239 100%);
+	border-bottom: 2px solid #f43f5e;
+}
+
+.crystal-ruby-logo {
+	filter: drop-shadow(0 0 12px rgba(244, 63, 94, 0.6));
+}
+
+/* 08C - Diamond Clear */
+.theme-crystal-diamond {
+	background: linear-gradient(135deg, #1e293b 0%, #334155 50%, #475569 100%);
+	border-bottom: 2px solid #e2e8f0;
+}
+
+.crystal-diamond-logo {
+	filter: drop-shadow(0 0 10px rgba(226, 232, 240, 0.5));
+}
+
+/* ============================================
+   9. FLUORESCENT SCAN SERIES
+   ============================================ */
+
+/* 09A - Original */
+.theme-fluorescent {
+	background: linear-gradient(180deg, #14532d 0%, #166534 50%, #15803d 100%);
+	border-bottom: 2px solid #84cc16;
+}
+
+.fluorescent-logo {
+	filter: drop-shadow(0 0 10px rgba(132, 204, 22, 0.6));
+}
+
+/* 09B - Blacklight Party */
+.theme-fluorescent-party {
+	background: linear-gradient(135deg, #3b0764 0%, #581c87 50%, #701a75 100%);
+	border-bottom: 2px solid #e879f9;
+}
+
+.fluorescent-party-logo {
+	filter: drop-shadow(0 0 15px rgba(232, 121, 249, 0.7));
+}
+
+/* 09C - Bioluminescence */
+.theme-fluorescent-bio {
+	background: linear-gradient(180deg, #042f2e 0%, #083344 50%, #164e63 100%);
+	border-bottom: 2px solid #22d3ee;
+}
+
+.fluorescent-bio-logo {
+	filter: drop-shadow(0 0 12px rgba(34, 211, 238, 0.6));
+}
+
+/* ============================================
+   10. DATA EXTRACT SERIES
+   ============================================ */
+
+/* 10A - Original */
+.theme-extract {
+	background: linear-gradient(135deg, #4a044e 0%, #701a75 50%, #86198f 100%);
+	border-bottom: 2px solid #d946ef;
+}
+
+.extract-logo {
+	filter: drop-shadow(0 0 8px rgba(217, 70, 239, 0.5));
+}
+
+/* 10B - Matrix Code */
+.theme-extract-matrix {
+	background: linear-gradient(180deg, #052e16 0%, #14532d 50%, #166534 100%);
+	border-bottom: 2px solid #22c55e;
+}
+
+.extract-matrix-logo {
+	filter: drop-shadow(0 0 10px rgba(34, 197, 94, 0.6));
+}
+
+/* 10C - Blueprint */
+.theme-extract-blueprint {
+	background: linear-gradient(135deg, #0c1e3a 0%, #1e3a5f 50%, #1e40af 100%);
+	border-bottom: 2px solid #3b82f6;
+}
+
+.extract-blueprint-logo {
+	filter: drop-shadow(0 0 8px rgba(59, 130, 246, 0.5));
+}
+
+/* ============================================
+   OVERLAY HELPERS
+   ============================================ */
+
+/* UV Scan line animation helper */
+.topbar-anim-overlay--uv-scan {
+	background: linear-gradient(90deg, 
+		transparent 0%,
+		rgba(132, 204, 22, 0.1) 45%,
+		rgba(132, 204, 22, 0.4) 50%,
+		rgba(132, 204, 22, 0.1) 55%,
+		transparent 100%);
+}
+
+/* Document flow overlay */
+.topbar-anim-overlay--doc-scan {
+	background: linear-gradient(180deg,
+		transparent 0%,
+		rgba(217, 70, 239, 0.1) 45%,
+		rgba(217, 70, 239, 0.3) 50%,
+		rgba(217, 70, 239, 0.1) 55%,
+		transparent 100%);
+}
+
+/* Party UV scan */
+.topbar-anim-overlay--party-scan {
+	background: linear-gradient(90deg, 
+		transparent 0%,
+		rgba(232, 121, 249, 0.1) 45%,
+		rgba(232, 121, 249, 0.5) 50%,
+		rgba(232, 121, 249, 0.1) 55%,
+		transparent 100%);
+}
+
+/* Bio UV scan */
+.topbar-anim-overlay--bio-scan {
+	background: linear-gradient(90deg, 
+		transparent 0%,
+		rgba(34, 211, 238, 0.1) 45%,
+		rgba(34, 211, 238, 0.3) 50%,
+		rgba(34, 211, 238, 0.1) 55%,
+		transparent 100%);
+}

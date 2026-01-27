@@ -21,13 +21,35 @@ from ..integrations.llm import (
     DeepSeekProvider,
     MockProvider,
 )
-from ..integrations.document import DocumentExtractor, fetch_and_extract_text
-from ..persistence.repository import PaperRepository, ExtractionRepository
+from ..integrations.document import DocumentExtractor, fetch_and_extract_text, pdf_bytes_to_text
+from ..persistence.repository import PaperRepository, ExtractionRepository, PromptRepository
+from .upload_store import is_upload_url, pop_upload
 
 logger = logging.getLogger(__name__)
 
 # Maximum characters of text to send to LLM
 MAX_TEXT_LENGTH = 18000
+
+
+def _resolve_system_prompt(
+    session: Session,
+    prompt_id: Optional[int] = None,
+    prompt_version_id: Optional[int] = None,
+) -> Tuple[str, Optional[int], Optional[int], Optional[str], Optional[int]]:
+    repo = PromptRepository(session)
+    prompt, version = repo.resolve_prompt(
+        build_system_prompt(),
+        prompt_id=prompt_id,
+        prompt_version_id=prompt_version_id,
+    )
+    system_prompt = build_system_prompt(version.content)
+    return (
+        system_prompt,
+        prompt.id if prompt else None,
+        version.id if version else None,
+        prompt.name if prompt else None,
+        version.version_index if version else None,
+    )
 
 
 def _persist_failed_run(
@@ -40,6 +62,10 @@ def _persist_failed_run(
     failure_reason: str,
     pdf_url: Optional[str] = None,
     parent_run_id: Optional[int] = None,
+    prompt_id: Optional[int] = None,
+    prompt_version_id: Optional[int] = None,
+    baseline_case_id: Optional[str] = None,
+    baseline_dataset: Optional[str] = None,
 ) -> int:
     run = ExtractionRun(
         paper_id=paper_id,
@@ -54,6 +80,10 @@ def _persist_failed_run(
         parent_run_id=parent_run_id,
         status=RunStatus.FAILED.value,
         failure_reason=failure_reason,
+        prompt_id=prompt_id,
+        prompt_version_id=prompt_version_id,
+        baseline_case_id=baseline_case_id,
+        baseline_dataset=baseline_dataset,
     )
     session.add(run)
     session.commit()
@@ -70,9 +100,25 @@ def get_provider() -> Union[OpenAIProvider, DeepSeekProvider, MockProvider]:
     return MockProvider()
 
 
+def get_provider_by_name(name: Optional[str]) -> Union[OpenAIProvider, DeepSeekProvider, MockProvider]:
+    """Get an LLM provider by explicit name, fallback to configured provider."""
+    if not name:
+        return get_provider()
+    key = name.lower()
+    if key == "openai":
+        return OpenAIProvider()
+    if key == "deepseek":
+        return DeepSeekProvider()
+    if key == "mock":
+        return MockProvider()
+    return get_provider()
+
+
 def _should_force_text_extraction(url: Optional[str]) -> bool:
     if not url:
         return False
+    if not DocumentExtractor.looks_like_pdf_url(url):
+        return True
     lowered = url.lower()
     if "europepmc.org/backend/ptpmcrender.fcgi" in lowered:
         return True
@@ -147,14 +193,24 @@ async def _resolve_document_input(
 async def run_extraction(
     session: Session,
     req: ExtractRequest,
+    provider_name: Optional[str] = None,
+    baseline_case_id: Optional[str] = None,
+    baseline_dataset: Optional[str] = None,
+    parent_run_id: Optional[int] = None,
 ) -> Tuple[int, Optional[int], ExtractionPayload]:
     """
     Run extraction from a request.
     
     Returns (extraction_id, paper_id, payload).
     """
-    provider = get_provider()
-    system_prompt = build_system_prompt()
+    provider = get_provider_by_name(provider_name)
+    (
+        system_prompt,
+        resolved_prompt_id,
+        resolved_prompt_version_id,
+        resolved_prompt_name,
+        resolved_prompt_version_index,
+    ) = _resolve_system_prompt(session, prompt_id=req.prompt_id)
     
     # Build metadata
     meta = PaperMeta(
@@ -184,6 +240,10 @@ async def run_extraction(
     prompts_json = json.dumps({
         "system_prompt": system_prompt,
         "user_prompt": user_prompt,
+        "prompt_id": resolved_prompt_id,
+        "prompt_version_id": resolved_prompt_version_id,
+        "prompt_name": resolved_prompt_name,
+        "prompt_version_index": resolved_prompt_version_index,
     })
 
     # Call LLM with fallback
@@ -214,6 +274,10 @@ async def run_extraction(
                     prompts_json = json.dumps({
                         "system_prompt": system_prompt,
                         "user_prompt": user_prompt,
+                        "prompt_id": resolved_prompt_id,
+                        "prompt_version_id": resolved_prompt_version_id,
+                        "prompt_name": resolved_prompt_name,
+                        "prompt_version_index": resolved_prompt_version_index,
                     })
                     raw_json_text = await provider.generate(
                         system_prompt=system_prompt,
@@ -237,6 +301,11 @@ async def run_extraction(
                 raw_json_text=json.dumps({"error": error_msg}),
                 failure_reason=f"Provider error: {error_msg}",
                 pdf_url=req.pdf_url or req.url,
+                prompt_id=resolved_prompt_id,
+                prompt_version_id=resolved_prompt_version_id,
+                parent_run_id=parent_run_id,
+                baseline_case_id=baseline_case_id,
+                baseline_dataset=baseline_dataset,
             )
             raise
 
@@ -257,6 +326,11 @@ async def run_extraction(
             raw_json_text=raw_json_text,
             failure_reason=f"Parse/validation error: {exc}",
             pdf_url=req.pdf_url or req.url,
+            prompt_id=resolved_prompt_id,
+            prompt_version_id=resolved_prompt_version_id,
+            parent_run_id=parent_run_id,
+            baseline_case_id=baseline_case_id,
+            baseline_dataset=baseline_dataset,
         )
         raise RuntimeError(f"Failed to parse model output: {exc}") from exc
     
@@ -285,7 +359,12 @@ async def run_extraction(
         source_text=source_text,
         prompts_json=prompts_json,
         pdf_url=req.pdf_url or req.url,
+        prompt_id=resolved_prompt_id,
+        prompt_version_id=resolved_prompt_version_id,
         status=RunStatus.STORED.value,
+        baseline_case_id=baseline_case_id,
+        baseline_dataset=baseline_dataset,
+        parent_run_id=parent_run_id,
     )
     
     # NOTE: We intentionally do not write to the legacy `extraction` table anymore.
@@ -298,13 +377,18 @@ async def run_extraction_from_file(
     file_content: bytes,
     filename: str,
     title: Optional[str] = None,
+    prompt_id: Optional[int] = None,
+    provider_name: Optional[str] = None,
+    baseline_case_id: Optional[str] = None,
+    baseline_dataset: Optional[str] = None,
+    parent_run_id: Optional[int] = None,
 ) -> Tuple[int, Optional[int], ExtractionPayload]:
     """
     Run extraction on an uploaded PDF file.
     
     Returns (extraction_id, paper_id, payload).
     """
-    provider = get_provider()
+    provider = get_provider_by_name(provider_name)
     capabilities = provider.capabilities()
     
     # Check provider supports file uploads
@@ -322,11 +406,25 @@ async def run_extraction_from_file(
             text=text,
             title=title or filename.rsplit(".", 1)[0],
             source="upload",
+            prompt_id=prompt_id,
         )
-        return await run_extraction(session, req)
+        return await run_extraction(
+            session,
+            req,
+            provider_name=provider_name,
+            baseline_case_id=baseline_case_id,
+            baseline_dataset=baseline_dataset,
+            parent_run_id=parent_run_id,
+        )
     
     # Provider supports file uploads
-    system_prompt = build_system_prompt()
+    (
+        system_prompt,
+        resolved_prompt_id,
+        resolved_prompt_version_id,
+        resolved_prompt_name,
+        resolved_prompt_version_index,
+    ) = _resolve_system_prompt(session, prompt_id=prompt_id)
     
     meta = PaperMeta(
         title=title or filename.rsplit(".", 1)[0],
@@ -340,6 +438,10 @@ async def run_extraction_from_file(
     prompts_json = json.dumps({
         "system_prompt": system_prompt,
         "user_prompt": user_prompt,
+        "prompt_id": resolved_prompt_id,
+        "prompt_version_id": resolved_prompt_version_id,
+        "prompt_name": resolved_prompt_name,
+        "prompt_version_index": resolved_prompt_version_index,
     })
     
     try:
@@ -362,6 +464,11 @@ async def run_extraction_from_file(
             raw_json_text=json.dumps({"error": str(exc)}),
             failure_reason=f"Provider error: {exc}",
             pdf_url=None,
+            prompt_id=resolved_prompt_id,
+            prompt_version_id=resolved_prompt_version_id,
+            parent_run_id=parent_run_id,
+            baseline_case_id=baseline_case_id,
+            baseline_dataset=baseline_dataset,
         )
         raise
     
@@ -382,6 +489,11 @@ async def run_extraction_from_file(
             raw_json_text=raw_json_text,
             failure_reason=f"Parse/validation error: {exc}",
             pdf_url=None,
+            prompt_id=resolved_prompt_id,
+            prompt_version_id=resolved_prompt_version_id,
+            parent_run_id=parent_run_id,
+            baseline_case_id=baseline_case_id,
+            baseline_dataset=baseline_dataset,
         )
         raise RuntimeError(f"Failed to parse model output: {exc}") from exc
     
@@ -402,6 +514,11 @@ async def run_extraction_from_file(
         source_text=None,
         prompts_json=prompts_json,
         status=RunStatus.STORED.value,
+        prompt_id=resolved_prompt_id,
+        prompt_version_id=resolved_prompt_version_id,
+        baseline_case_id=baseline_case_id,
+        baseline_dataset=baseline_dataset,
+        parent_run_id=parent_run_id,
     )
     
     return run_id, paper_id, payload
@@ -412,6 +529,8 @@ async def run_queued_extraction(
     paper_id: int,
     pdf_url: str,
     provider: str = "openai",
+    prompt_id: Optional[int] = None,
+    prompt_version_id: Optional[int] = None,
 ) -> Dict[str, Any]:
     """
     Run extraction for a queued item.
@@ -439,13 +558,57 @@ async def run_queued_extraction(
     else:
         llm_provider = MockProvider()
     
-    # Build prompts
-    system_prompt = build_system_prompt()
+    (
+        system_prompt,
+        resolved_prompt_id,
+        resolved_prompt_version_id,
+        resolved_prompt_name,
+        resolved_prompt_version_index,
+    ) = (None, None, None, None, None)
+
+    with session_scope() as session:
+        run = session.get(ExtractionRun, run_id)
+        if run:
+            prompt_id = prompt_id or run.prompt_id
+            prompt_version_id = prompt_version_id or run.prompt_version_id
+        (
+            system_prompt,
+            resolved_prompt_id,
+            resolved_prompt_version_id,
+            resolved_prompt_name,
+            resolved_prompt_version_index,
+        ) = _resolve_system_prompt(
+            session,
+            prompt_id=prompt_id,
+            prompt_version_id=prompt_version_id,
+        )
+        if run:
+            run.prompt_id = resolved_prompt_id
+            run.prompt_version_id = resolved_prompt_version_id
+            session.add(run)
     
-    # Build document input - use PDF URL directly for OpenAI
+    # Build document input - handle uploads and URLs
     capabilities = llm_provider.capabilities()
+    is_upload = is_upload_url(pdf_url)
     
-    if capabilities.supports_pdf_url and not _should_force_text_extraction(pdf_url):
+    if is_upload:
+        upload = pop_upload(pdf_url)
+        if not upload:
+            raise RuntimeError("Uploaded file not found or expired. Please upload again.")
+        file_content, filename = upload
+        if capabilities.supports_pdf_file:
+            document = DocumentInput.from_file(file_content, filename, "")
+            user_prompt = build_user_prompt("", "[PDF document attached - analyze the full document]")
+        else:
+            text = pdf_bytes_to_text(file_content)
+            if not text or not text.strip():
+                raise RuntimeError(
+                    "The current LLM provider does not support file uploads, "
+                    "and text extraction from the uploaded PDF failed."
+                )
+            document = DocumentInput.from_text(text[:MAX_TEXT_LENGTH], "")
+            user_prompt = build_user_prompt("", text[:MAX_TEXT_LENGTH])
+    elif capabilities.supports_pdf_url and not _should_force_text_extraction(pdf_url):
         document = DocumentInput.from_url(pdf_url, "")
         user_prompt = build_user_prompt("", "[PDF document attached - analyze the full document]")
     else:
@@ -463,6 +626,10 @@ async def run_queued_extraction(
     prompts_json = json.dumps({
         "system_prompt": system_prompt,
         "user_prompt": user_prompt,
+        "prompt_id": resolved_prompt_id,
+        "prompt_version_id": resolved_prompt_version_id,
+        "prompt_name": resolved_prompt_name,
+        "prompt_version_index": resolved_prompt_version_index,
     })
 
     # Call LLM with fallback for URL download errors
@@ -477,11 +644,12 @@ async def run_queued_extraction(
         )
     except Exception as exc:
         error_msg = str(exc)
-        if capabilities.supports_pdf_url and (
+        if (not is_upload) and capabilities.supports_pdf_url and (
             "timeout while downloading" in error_msg.lower()
             or "error while downloading" in error_msg.lower()
             or "couldn't be processed" in error_msg.lower()
-            or "empty response" in error_msg.lower()
+			or "empty response" in error_msg.lower()
+			or "stream has ended unexpectedly" in error_msg.lower()
         ):
             logger.warning(f"Direct PDF processing failed, trying text extraction: {error_msg}")
             text = await fetch_and_extract_text(pdf_url)
@@ -494,6 +662,10 @@ async def run_queued_extraction(
             prompts_json = json.dumps({
                 "system_prompt": system_prompt,
                 "user_prompt": user_prompt,
+                "prompt_id": resolved_prompt_id,
+                "prompt_version_id": resolved_prompt_version_id,
+                "prompt_name": resolved_prompt_name,
+                "prompt_version_index": resolved_prompt_version_index,
             })
             raw_json_text = await llm_provider.generate(
                 system_prompt=system_prompt,
@@ -509,6 +681,8 @@ async def run_queued_extraction(
                     run.prompts_json = prompts_json
                     run.model_provider = llm_provider.name()
                     run.model_name = llm_provider.model_name()
+                    run.prompt_id = resolved_prompt_id
+                    run.prompt_version_id = resolved_prompt_version_id
                     run.status = RunStatus.FAILED.value
                     run.failure_reason = f"Provider error: {error_msg}"
                     session.add(run)
@@ -529,6 +703,8 @@ async def run_queued_extraction(
                 run.model_name = llm_provider.model_name()
                 run.prompts_json = prompts_json
                 run.prompt_version = ExtractionRepository.PROMPT_VERSION
+                run.prompt_id = resolved_prompt_id
+                run.prompt_version_id = resolved_prompt_version_id
                 run.status = RunStatus.FAILED.value
                 run.failure_reason = f"Parse/validation error: {exc}"
                 session.add(run)
@@ -548,6 +724,8 @@ async def run_queued_extraction(
         run.model_name = llm_provider.model_name()
         run.prompts_json = prompts_json
         run.prompt_version = ExtractionRepository.PROMPT_VERSION
+        run.prompt_id = resolved_prompt_id
+        run.prompt_version_id = resolved_prompt_version_id
         
         session.add(run)
         
@@ -601,7 +779,17 @@ async def run_followup(
     else:
         provider = MockProvider()
 
-    system_prompt = build_system_prompt()
+    (
+        system_prompt,
+        resolved_prompt_id,
+        resolved_prompt_version_id,
+        resolved_prompt_name,
+        resolved_prompt_version_index,
+    ) = _resolve_system_prompt(
+        session,
+        prompt_id=parent_run.prompt_id,
+        prompt_version_id=parent_run.prompt_version_id,
+    )
 
     # Build follow-up prompt using prior JSON + instruction + PDF URL (context only)
     user_prompt = build_followup_prompt(
@@ -613,6 +801,10 @@ async def run_followup(
     prompts_json = json.dumps({
         "system_prompt": system_prompt,
         "user_prompt": user_prompt,
+        "prompt_id": resolved_prompt_id,
+        "prompt_version_id": resolved_prompt_version_id,
+        "prompt_name": resolved_prompt_name,
+        "prompt_version_index": resolved_prompt_version_index,
     })
 
     try:
@@ -633,6 +825,8 @@ async def run_followup(
             failure_reason=f"Provider error: {exc}",
             pdf_url=parent_run.pdf_url,
             parent_run_id=parent_run_id,
+            prompt_id=resolved_prompt_id,
+            prompt_version_id=resolved_prompt_version_id,
         )
         raise RuntimeError(f"Failed to run followup: {exc}") from exc
 
@@ -650,6 +844,8 @@ async def run_followup(
             failure_reason=f"Parse/validation error: {exc}",
             pdf_url=parent_run.pdf_url,
             parent_run_id=parent_run_id,
+            prompt_id=resolved_prompt_id,
+            prompt_version_id=resolved_prompt_version_id,
         )
         raise RuntimeError(f"Failed to parse model output: {exc}") from exc
 
@@ -685,6 +881,8 @@ async def run_followup(
         prompts_json=prompts_json,
         pdf_url=parent_run.pdf_url,
         parent_run_id=parent_run_id,
+        prompt_id=resolved_prompt_id,
+        prompt_version_id=resolved_prompt_version_id,
         status=RunStatus.STORED.value,
     )
 
@@ -726,7 +924,17 @@ async def run_followup_stream(
     else:
         provider = MockProvider()
 
-    system_prompt = build_system_prompt()
+    (
+        system_prompt,
+        resolved_prompt_id,
+        resolved_prompt_version_id,
+        resolved_prompt_name,
+        resolved_prompt_version_index,
+    ) = _resolve_system_prompt(
+        session,
+        prompt_id=parent_run.prompt_id,
+        prompt_version_id=parent_run.prompt_version_id,
+    )
     user_prompt = build_followup_prompt(
         prior_json=parent_run.raw_json,
         instruction=instruction,
@@ -736,6 +944,10 @@ async def run_followup_stream(
     prompts_json = json.dumps({
         "system_prompt": system_prompt,
         "user_prompt": user_prompt,
+        "prompt_id": resolved_prompt_id,
+        "prompt_version_id": resolved_prompt_version_id,
+        "prompt_name": resolved_prompt_name,
+        "prompt_version_index": resolved_prompt_version_index,
     })
 
     buffer = ""
@@ -785,6 +997,8 @@ async def run_followup_stream(
             failure_reason=f"Provider error: {exc}",
             pdf_url=parent_run.pdf_url,
             parent_run_id=parent_run_id,
+            prompt_id=resolved_prompt_id,
+            prompt_version_id=resolved_prompt_version_id,
         )
         yield {"event": "error", "data": {"message": str(exc)}}
         return
@@ -803,6 +1017,8 @@ async def run_followup_stream(
             failure_reason=f"Parse/validation error: {exc}",
             pdf_url=parent_run.pdf_url,
             parent_run_id=parent_run_id,
+            prompt_id=resolved_prompt_id,
+            prompt_version_id=resolved_prompt_version_id,
         )
         yield {"event": "error", "data": {"message": f"Invalid JSON: {exc}"}}
         return
@@ -838,6 +1054,8 @@ async def run_followup_stream(
         prompts_json=prompts_json,
         pdf_url=parent_run.pdf_url,
         parent_run_id=parent_run_id,
+        prompt_id=resolved_prompt_id,
+        prompt_version_id=resolved_prompt_version_id,
         status=RunStatus.STORED.value,
     )
 
@@ -891,6 +1109,8 @@ def run_edit(
         prompts_json=prompts_json,
         pdf_url=parent_run.pdf_url,
         parent_run_id=parent_run_id,
+        prompt_id=parent_run.prompt_id,
+        prompt_version_id=parent_run.prompt_version_id,
         status=RunStatus.STORED.value,
     )
 

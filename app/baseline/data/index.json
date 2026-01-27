@@ -1,0 +1,47 @@
+{
+  "schema_version": "v1",
+  "generated_at": "2026-01-24T16:26:03.078085+00:00",
+  "datasets": [
+    {
+      "id": "self_assembly",
+      "label": "Self-assembly (positive + negative)",
+      "description": "Self-assembling vs non-assembling peptide sequences with DOI and validation method.",
+      "source_file": "Peptide LLM/Datasets/42256_2024_928_MOESM3_ESM.xlsx",
+      "count": 368,
+      "file": "self_assembly.json"
+    },
+    {
+      "id": "llps",
+      "label": "LLPS peptides",
+      "description": "Phase separation dataset with conditions and article links.",
+      "source_file": "Peptide LLM/Datasets/LLPS peptides.xlsx",
+      "count": 76,
+      "file": "llps.json"
+    },
+    {
+      "id": "catalytic_prot",
+      "label": "Catalytic peptides (proteinogenic)",
+      "description": "Catalytic peptides with Kcat/KM and mechanistic notes.",
+      "source_file": "Peptide LLM/Datasets/Peptides cat. func. prot. AA.csv",
+      "count": 110,
+      "file": "catalytic_prot.json"
+    },
+    {
+      "id": "catalytic_non_prot",
+      "label": "Catalytic peptides (non-proteinogenic)",
+      "description": "Catalytic peptides including non-proteinogenic residues.",
+      "source_file": "Peptide LLM/Datasets/Peptides cat. func. non-prot. AA.csv",
+      "count": 16,
+      "file": "catalytic_non_prot.json"
+    },
+    {
+      "id": "avp",
+      "label": "Antiviral peptides (AVP)",
+      "description": "Antiviral peptides with virus and PubMed/Patent IDs.",
+      "source_file": "Peptide LLM/Datasets/AVP dataset.csv",
+      "count": 1056,
+      "file": "avp.json"
+    }
+  ],
+  "total_cases": 1626
+}

@@ -40,10 +40,33 @@ async function request(path, opts = {}) {
 }
 
 /**
+ * Make a multipart/form-data request (e.g., file upload).
+ */
+async function requestForm(path, formData, opts = {}) {
+    const url = buildUrl(path.startsWith('/') ? path : `/${path}`);
+    const res = await fetch(url, {
+        ...opts,
+        body: formData,
+    });
+    if (!res.ok) {
+        const err = await res.text();
+        throw new Error(err || res.statusText);
+    }
+    return res.json();
+}
+
+/**
  * Get health/status info including current provider.
  */
 export async function getHealth() {
     return request('/api/health');
+}
+
+/**
+ * Danger: delete all extracted runs and papers.
+ */
+export async function clearExtractionData() {
+    return request('/api/admin/clear-extractions', { method: 'POST' });
 }
 
 /**
@@ -59,10 +82,10 @@ export async function search(query, rows = 10) {
  * @param {object[]} papers - Papers to enqueue (with pdf_url, title, etc.)
  * @param {string} provider - Provider name (openai, mock)
  */
-export async function enqueue(papers, provider = 'openai') {
+export async function enqueue(papers, provider = 'openai', promptId = null) {
     return request('/api/enqueue', {
         method: 'POST',
-        body: JSON.stringify({ papers, provider }),
+        body: JSON.stringify({ papers, provider, prompt_id: promptId }),
     });
 }
 
@@ -112,6 +135,38 @@ export async function retryRun(runId) {
 }
 
 /**
+ * Resolve a new source URL for a run.
+ */
+export async function resolveRunSource(runId) {
+    return request(`/api/runs/${runId}/resolve-source`, {
+        method: 'POST',
+    });
+}
+
+/**
+ * Retry a run with an optional override source URL.
+ */
+export async function retryRunWithSource(runId, payload = {}) {
+    return request(`/api/runs/${runId}/retry-with-source`, {
+        method: 'POST',
+        body: JSON.stringify(payload),
+    });
+}
+
+/**
+ * Upload a PDF for a run (creates a new run).
+ */
+export async function uploadRunPdf(runId, file, provider, promptId) {
+    const formData = new FormData();
+    formData.append('file', file);
+    if (provider) formData.append('provider', provider);
+    if (promptId !== undefined && promptId !== null) formData.append('prompt_id', String(promptId));
+    return requestForm(`/api/runs/${runId}/upload`, formData, {
+        method: 'POST',
+    });
+}
+
+/**
  * Get recent runs (optionally filtered by status).
  * @param {string} [status]
  * @param {number} [limit]
@@ -149,6 +204,91 @@ export async function getFailedRuns(filters = {}) {
     if (filters.source) params.set('source', filters.source);
     if (filters.reason) params.set('reason', filters.reason);
     return request(`/api/runs/failures?${params.toString()}`);
+}
+
+/**
+ * List baseline cases (optionally filter by dataset).
+ */
+export async function getBaselineCases(dataset) {
+    const params = new URLSearchParams();
+    if (dataset) params.set('dataset', dataset);
+    const query = params.toString();
+    return request(query ? `/api/baseline/cases?${query}` : '/api/baseline/cases');
+}
+
+/**
+ * Get a baseline case by ID.
+ */
+export async function getBaselineCase(caseId) {
+    return request(`/api/baseline/cases/${encodeURIComponent(caseId)}`);
+}
+
+/**
+ * Resolve a fresh source URL for a baseline case.
+ */
+export async function resolveBaselineSource(caseId) {
+    return request(`/api/baseline/cases/${encodeURIComponent(caseId)}/resolve-source`, {
+        method: 'POST',
+    });
+}
+
+/**
+ * Get the latest run for a baseline case.
+ */
+export async function getBaselineLatestRun(caseId) {
+    return request(`/api/baseline/cases/${encodeURIComponent(caseId)}/latest-run`);
+}
+
+/**
+ * Enqueue baseline cases (optionally dataset-filtered).
+ */
+export async function enqueueBaselineAll(provider = 'openai', promptId = null, dataset = null, force = false) {
+    return request('/api/baseline/enqueue', {
+        method: 'POST',
+        body: JSON.stringify({
+            provider,
+            prompt_id: promptId,
+            dataset,
+            force,
+        }),
+    });
+}
+
+/**
+ * Retry a baseline case (optionally with an override source URL).
+ */
+export async function retryBaselineCase(caseId, payload = {}) {
+    return request(`/api/baseline/cases/${encodeURIComponent(caseId)}/retry`, {
+        method: 'POST',
+        body: JSON.stringify(payload),
+    });
+}
+
+/**
+ * Upload a PDF for a baseline case (always linked to the case).
+ */
+export async function uploadBaselinePdf(caseId, file, provider, promptId) {
+    const formData = new FormData();
+    formData.append('file', file);
+    if (provider) formData.append('provider', provider);
+    if (promptId !== undefined && promptId !== null) formData.append('prompt_id', String(promptId));
+    return requestForm(`/api/baseline/cases/${encodeURIComponent(caseId)}/upload`, formData, {
+        method: 'POST',
+    });
+}
+
+/**
+ * Seed shadow baseline runs (development only).
+ */
+export async function seedBaselineShadow(dataset = null, limit = null, force = false) {
+    return request('/api/baseline/shadow-seed', {
+        method: 'POST',
+        body: JSON.stringify({
+            dataset,
+            limit,
+            force,
+        }),
+    });
 }
 
 /**
@@ -242,6 +382,46 @@ export async function updateQualityRules(rules) {
 }
 
 /**
+ * Get all base prompts and versions.
+ */
+export async function getPrompts() {
+    return request('/api/prompts');
+}
+
+/**
+ * Create a new base prompt with an initial version.
+ * @param {object} payload
+ */
+export async function createPrompt(payload) {
+    return request('/api/prompts', {
+        method: 'POST',
+        body: JSON.stringify(payload),
+    });
+}
+
+/**
+ * Create a new version for an existing prompt.
+ * @param {number} promptId
+ * @param {object} payload
+ */
+export async function createPromptVersion(promptId, payload) {
+    return request(`/api/prompts/${promptId}/versions`, {
+        method: 'POST',
+        body: JSON.stringify(payload),
+    });
+}
+
+/**
+ * Activate a prompt for default selection.
+ * @param {number} promptId
+ */
+export async function activatePrompt(promptId) {
+    return request(`/api/prompts/${promptId}/activate`, {
+        method: 'POST',
+    });
+}
+
+/**
  * Force re-extract a paper (creates a new run).
  * @param {number} paperId - The paper ID
  * @param {string} [provider] - Optional provider override
@@ -299,9 +479,11 @@ export async function extract(body) {
 /**
  * Upload a PDF file for extraction.
  */
-export async function extractFile(file) {
+export async function extractFile(file, promptId, title) {
     const formData = new FormData();
     formData.append('file', file);
+    if (title) formData.append('title', title);
+    if (promptId) formData.append('prompt_id', String(promptId));
     
     const res = await fetch('/api/extract-file', {
         method: 'POST',

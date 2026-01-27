@@ -33,6 +33,11 @@ const defaultState = {
     provider: 'openai',
     model: null,
     selectedProvider: 'openai',
+
+    // Prompt selection
+    prompts: [],
+    activePromptId: null,
+    selectedPromptId: null,
     
     // Search state
     searchQuery: '',
@@ -51,6 +56,7 @@ const defaultState = {
     drawerPaperId: null,
     drawerPaper: null,
     drawerRuns: [],
+    resolvedRunSources: {},
 };
 
 // Global app store
@@ -110,6 +116,23 @@ export function setSelectedProvider(provider) {
 
 export function getSelectedProvider() {
     return appStore.get('selectedProvider');
+}
+
+// --- Prompt Actions ---
+
+export function setPrompts(prompts, activePromptId = null) {
+    appStore.set({
+        prompts: Array.isArray(prompts) ? prompts : [],
+        activePromptId,
+    });
+}
+
+export function setSelectedPrompt(promptId) {
+    appStore.set({ selectedPromptId: promptId });
+}
+
+export function getSelectedPrompt() {
+    return appStore.get('selectedPromptId');
 }
 
 // --- Papers Table Actions ---

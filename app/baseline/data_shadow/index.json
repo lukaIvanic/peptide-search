@@ -1,0 +1,15 @@
+{
+  "schema_version": "v1-shadow",
+  "generated_at": "2026-01-24T16:59:02.930908+00:00",
+  "source_total_cases": 1626,
+  "mutation_counts": {
+    "match": 1114,
+    "molecule_entity": 51,
+    "empty_entities": 65,
+    "seq_mismatch": 166,
+    "label_mismatch": 78,
+    "extra_entity": 59,
+    "terminal_mismatch": 93
+  },
+  "file": "shadow_extractions.json"
+}

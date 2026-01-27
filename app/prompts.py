@@ -90,7 +90,10 @@ def read_definitions_text(path: Optional[Path] = None) -> str:
 		return ""
 
 
-def build_system_prompt() -> str:
+def build_system_prompt(override_text: Optional[str] = None) -> str:
+	if override_text:
+		return override_text.strip()
+
 	defs = read_definitions_text() if settings.INCLUDE_DEFINITIONS else ""
 	intro = dedent(
 		"""
