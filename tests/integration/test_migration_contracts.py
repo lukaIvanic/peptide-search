@@ -2,6 +2,7 @@ import tempfile
 import unittest
 from pathlib import Path
 
+from sqlalchemy import text
 from sqlmodel import create_engine
 
 from app.config import settings
@@ -32,11 +33,24 @@ class MigrationContractTests(unittest.TestCase):
             db_module.assert_schema_current()
 
         self.assertIn("out of date", str(ctx.exception))
+        self.assertIn("Current revision:", str(ctx.exception))
+        self.assertIn("required head:", str(ctx.exception))
         self.assertIn("alembic upgrade head", str(ctx.exception))
 
     def test_assert_schema_current_accepts_head_revision(self) -> None:
         db_module.run_migrations(db_url=str(self.engine.url))
         db_module.assert_schema_current()
+
+    def test_assert_schema_current_rejects_missing_alembic_version_table(self) -> None:
+        with self.engine.connect() as conn:
+            conn.execute(text("SELECT 1"))
+
+        with self.assertRaises(RuntimeError) as ctx:
+            db_module.assert_schema_current()
+
+        message = str(ctx.exception)
+        self.assertIn("not initialized with Alembic", message)
+        self.assertIn("alembic upgrade head", message)
 
 
 if __name__ == "__main__":

@@ -1,3 +1,4 @@
+import json
 import tempfile
 import unittest
 from pathlib import Path
@@ -7,7 +8,9 @@ from fastapi.testclient import TestClient
 from sqlmodel import Session, create_engine
 
 from app.config import settings
-from app.persistence.models import ExtractionRun, Paper
+from app.persistence.models import ActiveSourceLock, ExtractionRun, Paper, QueueJob, QueueJobStatus
+from app.services.queue_coordinator import QueueCoordinator
+from app.time_utils import utc_now
 
 
 class ApiIntegrationTestCase(unittest.TestCase):
@@ -72,3 +75,67 @@ class ApiIntegrationTestCase(unittest.TestCase):
             session.commit()
             session.refresh(run)
             return run.id
+
+    def create_run_row(self, **kwargs) -> ExtractionRun:
+        """Create a run row and return the hydrated object."""
+        with Session(self.db_module.engine) as session:
+            run = ExtractionRun(**kwargs)
+            session.add(run)
+            session.commit()
+            session.refresh(run)
+            return run
+
+    def create_queue_job(
+        self,
+        *,
+        run_id: int,
+        pdf_url: str,
+        status: str = QueueJobStatus.QUEUED.value,
+        attempt: int = 0,
+        available_at=None,
+        claimed_at=None,
+        claim_token: Optional[str] = None,
+        claimed_by: Optional[str] = None,
+        finished_at=None,
+    ) -> int:
+        """Create a queue job with deterministic defaults for tests."""
+        with Session(self.db_module.engine) as session:
+            now = utc_now()
+            payload = {
+                "run_id": run_id,
+                "paper_id": 0,
+                "pdf_url": pdf_url,
+                "title": "test",
+                "provider": "mock",
+            }
+            job = QueueJob(
+                run_id=run_id,
+                source_fingerprint=QueueCoordinator.source_fingerprint(pdf_url),
+                status=status,
+                claimed_by=claimed_by,
+                claim_token=claim_token,
+                attempt=attempt,
+                available_at=available_at or now,
+                claimed_at=claimed_at,
+                finished_at=finished_at,
+                payload_json=json.dumps(payload),
+                created_at=now,
+                updated_at=now,
+            )
+            session.add(job)
+            session.commit()
+            session.refresh(job)
+            return job.id
+
+    def create_source_lock(self, *, run_id: int, source_url: str) -> str:
+        """Create an active source lock and return its fingerprint."""
+        fingerprint = QueueCoordinator.source_fingerprint(source_url)
+        with Session(self.db_module.engine) as session:
+            lock = ActiveSourceLock(
+                source_fingerprint=fingerprint,
+                run_id=run_id,
+                created_at=utc_now(),
+            )
+            session.add(lock)
+            session.commit()
+        return fingerprint

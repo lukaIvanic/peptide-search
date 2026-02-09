@@ -8,6 +8,28 @@ from support import ApiIntegrationTestCase
 
 
 class ApiRunRetryEndpointTests(ApiIntegrationTestCase):
+    def test_retry_run_missing_run_returns_not_found_envelope(self) -> None:
+        response = self.client.post("/api/runs/999999/retry")
+        self.assertEqual(response.status_code, 404)
+        body = response.json()
+        self.assertEqual(body["error"]["code"], "not_found")
+        self.assertIn("Run not found", body["error"]["message"])
+
+    def test_retry_run_missing_paper_returns_not_found_envelope(self) -> None:
+        orphan_run_id = self.create_run(
+            paper_id=999999,
+            status=RunStatus.FAILED.value,
+            failure_reason="provider error",
+            model_provider="mock",
+            pdf_url="https://example.org/orphan.pdf",
+        )
+
+        response = self.client.post(f"/api/runs/{orphan_run_id}/retry")
+        self.assertEqual(response.status_code, 404)
+        body = response.json()
+        self.assertEqual(body["error"]["code"], "not_found")
+        self.assertIn("Paper not found", body["error"]["message"])
+
     def test_retry_run_rejects_non_failed_status(self) -> None:
         paper_id = self.create_paper(doi="10.1000/retry-nonfailed", url="https://example.org/nonfailed")
         run_id = self.create_run(
@@ -44,6 +66,101 @@ class ApiRunRetryEndpointTests(ApiIntegrationTestCase):
             updated = session.get(ExtractionRun, run_id)
             self.assertEqual(updated.status, RunStatus.QUEUED.value)
             self.assertIsNone(updated.failure_reason)
+
+    def test_retry_run_pending_source_conflict_does_not_requeue(self) -> None:
+        source_url = "https://example.org/conflict.pdf"
+        paper_id = self.create_paper(doi="10.1000/conflict", url="https://example.org/conflict")
+        retry_run_id = self.create_run(
+            paper_id=paper_id,
+            status=RunStatus.FAILED.value,
+            failure_reason="provider error",
+            model_provider="mock",
+            pdf_url=source_url,
+        )
+        blocker_run = self.create_run_row(
+            paper_id=paper_id,
+            status=RunStatus.QUEUED.value,
+            model_provider="mock",
+            pdf_url=source_url,
+        )
+        self.create_queue_job(
+            run_id=blocker_run.id,
+            pdf_url=source_url,
+            status="queued",
+        )
+        self.create_source_lock(run_id=blocker_run.id, source_url=source_url)
+
+        response = self.client.post(f"/api/runs/{retry_run_id}/retry")
+        self.assertEqual(response.status_code, 200)
+        payload = response.json()
+        self.assertEqual(payload["id"], retry_run_id)
+        self.assertEqual(payload["message"], "Run already queued for processing")
+
+        with Session(self.db_module.engine) as session:
+            run = session.get(ExtractionRun, retry_run_id)
+            self.assertEqual(run.status, RunStatus.FAILED.value)
+
+    def test_retry_with_source_missing_all_sources_returns_bad_request(self) -> None:
+        paper_id = self.create_paper(doi="10.1000/no-source", url=None)
+        run_id = self.create_run(
+            paper_id=paper_id,
+            status=RunStatus.FAILED.value,
+            failure_reason="provider error",
+            model_provider="mock",
+            pdf_url=None,
+        )
+
+        response = self.client.post(
+            f"/api/runs/{run_id}/retry-with-source",
+            json={},
+        )
+        self.assertEqual(response.status_code, 400)
+        body = response.json()
+        self.assertEqual(body["error"]["code"], "bad_request")
+        self.assertIn("No source URL available for retry", body["error"]["message"])
+
+    def test_retry_with_source_pending_conflict_does_not_create_child_run(self) -> None:
+        paper_id = self.create_paper(doi="10.1000/retry-pending", url="https://example.org/retry-pending")
+        parent_id = self.create_run(
+            paper_id=paper_id,
+            status=RunStatus.FAILED.value,
+            failure_reason="provider error",
+            model_provider="mock",
+            pdf_url="https://example.org/parent.pdf",
+        )
+        source_url = "https://example.org/pending-source.pdf"
+        blocker = self.create_run_row(
+            paper_id=paper_id,
+            status=RunStatus.QUEUED.value,
+            model_provider="mock",
+            pdf_url=source_url,
+        )
+        self.create_queue_job(
+            run_id=blocker.id,
+            pdf_url=source_url,
+            status="queued",
+        )
+        self.create_source_lock(run_id=blocker.id, source_url=source_url)
+
+        with Session(self.db_module.engine) as session:
+            before_count = len(
+                session.exec(select(ExtractionRun).where(ExtractionRun.paper_id == paper_id)).all()
+            )
+
+        response = self.client.post(
+            f"/api/runs/{parent_id}/retry-with-source",
+            json={"source_url": source_url, "provider": "mock"},
+        )
+        self.assertEqual(response.status_code, 200)
+        payload = response.json()
+        self.assertEqual(payload["id"], parent_id)
+        self.assertEqual(payload["message"], "Run already queued for processing")
+
+        with Session(self.db_module.engine) as session:
+            after_count = len(
+                session.exec(select(ExtractionRun).where(ExtractionRun.paper_id == paper_id)).all()
+            )
+        self.assertEqual(before_count, after_count)
 
     def test_retry_with_source_creates_child_run_and_copies_baseline_links(self) -> None:
         case_id = list_cases()[0]["id"]
