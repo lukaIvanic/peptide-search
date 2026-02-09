@@ -1,4 +1,4 @@
-import { getRun, editRun } from './js/api.js?v=dev48';
+import { getRun, editRun } from './js/api.js';
 
 const $ = (sel) => document.querySelector(sel);
 

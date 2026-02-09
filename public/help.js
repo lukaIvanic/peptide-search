@@ -1,4 +1,4 @@
-import { clearExtractionData } from './js/api.js?v=dev48';
+import { clearExtractionData } from './js/api.js';
 
 const resetBtn = document.querySelector('#resetDbBtn');
 const statusEl = document.querySelector('#resetDbStatus');

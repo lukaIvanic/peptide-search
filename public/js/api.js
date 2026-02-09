@@ -96,6 +96,31 @@ function normalizeFiles(input) {
 }
 
 /**
+ * Generic GET request.
+ */
+export async function get(path, opts = {}) {
+    return request(path, { method: 'GET', ...opts });
+}
+
+/**
+ * Generic POST request with JSON body.
+ */
+export async function post(path, body, opts = {}) {
+    return request(path, {
+        method: 'POST',
+        body: JSON.stringify(body),
+        ...opts,
+    });
+}
+
+/**
+ * Generic DELETE request.
+ */
+export async function del(path, opts = {}) {
+    return request(path, { method: 'DELETE', ...opts });
+}
+
+/**
  * Get health/status info including current provider.
  */
 export async function getHealth() {
@@ -290,6 +315,20 @@ export async function getBaselineLocalPdfInfo(caseId) {
  */
 export function getBaselineLocalPdfUrl(caseId) {
 	return buildUrl(`/api/baseline/cases/${encodeURIComponent(caseId)}/local-pdf`);
+}
+
+/**
+ * Get SI (supplementary) PDF availability for a baseline case.
+ */
+export async function getBaselineLocalPdfSiInfo(caseId) {
+	return request(`/api/baseline/cases/${encodeURIComponent(caseId)}/local-pdf-si-info`);
+}
+
+/**
+ * Build a direct URL to open an SI PDF in a new tab.
+ */
+export function getBaselineLocalPdfSiUrl(caseId, index = 0) {
+	return buildUrl(`/api/baseline/cases/${encodeURIComponent(caseId)}/local-pdf-si?index=${index}`);
 }
 
 /**
