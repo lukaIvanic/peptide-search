@@ -8,6 +8,7 @@ from ..baseline.loader import get_case, list_cases
 from ..persistence.models import BaselineCaseRun, BatchRun, BatchStatus, ExtractionRun, RunStatus
 from ..persistence.repository import PaperRepository
 from ..schemas import BaselineCase, BaselineRetryRequest, BatchRetryResponse, PaperMeta
+from ..time_utils import utc_now
 from .baseline_helpers import (
     baseline_title,
     get_latest_run_for_cases,
@@ -213,8 +214,20 @@ async def retry_batch_runs(
         else:
             skipped += 1
 
-    batch.failed = batch.failed - retried
-    batch.status = BatchStatus.RUNNING.value
+    batch.failed = max(0, batch.failed - retried)
+    remaining = max(0, batch.total_papers - (batch.completed + batch.failed))
+    if remaining > 0:
+        batch.status = BatchStatus.RUNNING.value
+        batch.completed_at = None
+    elif batch.failed == 0:
+        batch.status = BatchStatus.COMPLETED.value
+        batch.completed_at = batch.completed_at or utc_now()
+    elif batch.completed == 0:
+        batch.status = BatchStatus.FAILED.value
+        batch.completed_at = batch.completed_at or utc_now()
+    else:
+        batch.status = BatchStatus.PARTIAL.value
+        batch.completed_at = batch.completed_at or utc_now()
     session.add(batch)
     session.commit()
 

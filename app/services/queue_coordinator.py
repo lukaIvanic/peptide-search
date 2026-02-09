@@ -62,28 +62,31 @@ class QueueCoordinator:
         return url.strip()
 
     @classmethod
+    def normalize_source_urls(cls, pdf_url: str, pdf_urls: Optional[list[str]] = None) -> list[str]:
+        primary = cls.canonicalize_source_url(pdf_url or "")
+        normalized: list[str] = []
+        seen: set[str] = set()
+
+        def _add(raw: str) -> None:
+            canonical = cls.canonicalize_source_url(raw)
+            if not canonical or canonical in seen:
+                return
+            seen.add(canonical)
+            normalized.append(canonical)
+
+        _add(primary)
+        for raw in pdf_urls or []:
+            _add(raw)
+        return normalized
+
+    @classmethod
     def source_fingerprint(cls, url: str) -> str:
         canonical = cls.canonicalize_source_url(url)
         return hashlib.sha256(canonical.encode("utf-8")).hexdigest()
 
     @classmethod
     def source_fingerprints(cls, pdf_url: str, pdf_urls: Optional[list[str]] = None) -> list[str]:
-        urls: list[str] = []
-        if pdf_urls:
-            urls.extend([u for u in pdf_urls if u and u.strip()])
-        if pdf_url and pdf_url.strip() and pdf_url not in urls:
-            urls.insert(0, pdf_url)
-        normalized: list[str] = []
-        seen: set[str] = set()
-        for raw in urls:
-            canonical = cls.canonicalize_source_url(raw)
-            if not canonical:
-                continue
-            if canonical in seen:
-                continue
-            seen.add(canonical)
-            normalized.append(canonical)
-        return [cls.source_fingerprint(url) for url in normalized]
+        return [cls.source_fingerprint(url) for url in cls.normalize_source_urls(pdf_url, pdf_urls)]
 
     @staticmethod
     def _lock_conflict_result(
@@ -112,10 +115,12 @@ class QueueCoordinator:
         run.status = RunStatus.QUEUED.value
         run.failure_reason = None
 
-        primary_url = run.pdf_url or ""
-        fingerprints = self.source_fingerprints(primary_url, pdf_urls)
-        if not primary_url.strip() or not fingerprints:
+        primary_url = self.canonicalize_source_url(run.pdf_url or "")
+        normalized_urls = self.normalize_source_urls(primary_url, pdf_urls)
+        fingerprints = [self.source_fingerprint(url) for url in normalized_urls]
+        if not primary_url or not fingerprints:
             raise ValueError("Cannot enqueue without a source URL")
+        run.pdf_url = primary_url
 
         conflict_lock = session.exec(
             select(ActiveSourceLock)
@@ -137,7 +142,7 @@ class QueueCoordinator:
                 run_id=run.id,
                 paper_id=run.paper_id or 0,
                 pdf_url=primary_url,
-                pdf_urls=pdf_urls,
+                pdf_urls=normalized_urls,
                 title=title,
                 provider=run.model_provider or "openai",
                 prompt_id=run.prompt_id,
@@ -184,8 +189,9 @@ class QueueCoordinator:
         if not run.id:
             raise ValueError("Existing run must have an ID")
 
-        effective_pdf_url = (pdf_url or run.pdf_url or "").strip()
-        fingerprints = self.source_fingerprints(effective_pdf_url, pdf_urls)
+        effective_pdf_url = self.canonicalize_source_url(pdf_url or run.pdf_url or "")
+        normalized_urls = self.normalize_source_urls(effective_pdf_url, pdf_urls)
+        fingerprints = [self.source_fingerprint(url) for url in normalized_urls]
         if not effective_pdf_url or not fingerprints:
             raise ValueError("Cannot enqueue without a source URL")
 
@@ -233,7 +239,7 @@ class QueueCoordinator:
             run_id=run.id,
             paper_id=run.paper_id or 0,
             pdf_url=effective_pdf_url,
-            pdf_urls=pdf_urls,
+            pdf_urls=normalized_urls,
             title=title,
             provider=use_provider,
             prompt_id=use_prompt_id,

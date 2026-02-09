@@ -294,13 +294,46 @@ def run_history_payload(*, session: Session, run_id: int) -> dict:
     run = session.get(ExtractionRun, run_id)
     if not run:
         raise ServiceError(status_code=404, detail="Run not found")
-    stmt = (
-        select(ExtractionRun)
-        .where(ExtractionRun.paper_id == run.paper_id)
-        .order_by(ExtractionRun.created_at.desc())
-    )
+
+    if run.paper_id is not None:
+        stmt = (
+            select(ExtractionRun)
+            .where(ExtractionRun.paper_id == run.paper_id)
+            .order_by(ExtractionRun.created_at.desc())
+        )
+        runs = session.exec(stmt).all()
+    else:
+        lineage_ids: set[int] = {run.id}
+
+        # Walk ancestors.
+        parent_id = run.parent_run_id
+        while parent_id is not None and parent_id not in lineage_ids:
+            lineage_ids.add(parent_id)
+            parent = session.get(ExtractionRun, parent_id)
+            if not parent:
+                break
+            parent_id = parent.parent_run_id
+
+        # Walk descendants.
+        frontier = [run.id]
+        while frontier:
+            child_ids = session.exec(
+                select(ExtractionRun.id).where(ExtractionRun.parent_run_id.in_(frontier))
+            ).all()
+            next_frontier = [child_id for child_id in child_ids if child_id not in lineage_ids]
+            if not next_frontier:
+                break
+            lineage_ids.update(next_frontier)
+            frontier = next_frontier
+
+        runs = session.exec(
+            select(ExtractionRun)
+            .where(ExtractionRun.id.in_(lineage_ids))
+            .order_by(ExtractionRun.created_at.desc())
+        ).all()
+
     versions = []
-    for item in session.exec(stmt).all():
+    for item in runs:
         versions.append(
             {
                 "id": item.id,

@@ -1,6 +1,9 @@
 import unittest
+import json
 
-from app.persistence.models import RunStatus
+from sqlmodel import Session, select
+
+from app.persistence.models import ExtractionRun, QueueJob, RunStatus
 from support import ApiIntegrationTestCase
 
 
@@ -35,6 +38,31 @@ class ApiEnqueueAndHistoryContractTests(ApiIntegrationTestCase):
     def test_bad_request_error_mapping_for_extract_contract(self) -> None:
         response = self.client.post("/api/extract", json={})
         self.assert_error_envelope(response, status_code=400, code="bad_request")
+
+    def test_extract_file_enqueues_with_canonical_primary_source(self) -> None:
+        response = self.client.post(
+            "/api/extract-file",
+            files=[
+                ("files", ("paper-main.pdf", b"%PDF-1.4 main", "application/pdf")),
+                ("files", ("paper-si.pdf", b"%PDF-1.4 si", "application/pdf")),
+            ],
+        )
+        self.assertEqual(response.status_code, 200)
+        body = response.json()
+        run_id = body["run_id"]
+
+        with Session(self.db_module.engine) as session:
+            run = session.get(ExtractionRun, run_id)
+            self.assertIsNotNone(run)
+            self.assertTrue(run.pdf_url)
+
+            job = session.exec(select(QueueJob).where(QueueJob.run_id == run_id)).first()
+            self.assertIsNotNone(job)
+            payload = json.loads(job.payload_json or "{}")
+            self.assertEqual(payload.get("pdf_url"), run.pdf_url)
+            self.assertIsInstance(payload.get("pdf_urls"), list)
+            self.assertGreaterEqual(len(payload["pdf_urls"]), 2)
+            self.assertEqual(payload["pdf_urls"][0], run.pdf_url)
 
     def test_enqueue_contract_and_url_dedupe(self) -> None:
         payload = {
@@ -237,6 +265,38 @@ class ApiEnqueueAndHistoryContractTests(ApiIntegrationTestCase):
             self.assertIn("model_name", by_id[run_id])
             self.assertIn("created_at", by_id[run_id])
             self.assert_utc_timestamp(by_id[run_id]["created_at"])
+
+    def test_run_history_for_null_paper_is_scoped_to_lineage(self) -> None:
+        parent_id = self.create_run(
+            paper_id=None,
+            status=RunStatus.FAILED.value,
+            failure_reason="provider error",
+            model_provider="mock",
+            pdf_url="https://example.org/null-parent.pdf",
+        )
+        child_id = self.create_run(
+            paper_id=None,
+            parent_run_id=parent_id,
+            status=RunStatus.STORED.value,
+            model_provider="mock",
+            pdf_url="https://example.org/null-child.pdf",
+        )
+        unrelated_id = self.create_run(
+            paper_id=None,
+            status=RunStatus.STORED.value,
+            model_provider="mock",
+            pdf_url="https://example.org/null-unrelated.pdf",
+        )
+
+        history = self.client.get(f"/api/runs/{child_id}/history")
+        self.assertEqual(history.status_code, 200)
+        body = history.json()
+
+        self.assertIsNone(body["paper_id"])
+        version_ids = {item["id"] for item in body["versions"]}
+        self.assertIn(parent_id, version_ids)
+        self.assertIn(child_id, version_ids)
+        self.assertNotIn(unrelated_id, version_ids)
 
 
 if __name__ == "__main__":

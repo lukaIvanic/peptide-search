@@ -457,6 +457,47 @@ class ApiQueueAndBaselineRetryTests(ApiIntegrationTestCase):
             self.assertEqual(updated_upload_run.status, RunStatus.QUEUED.value)
             self.assertEqual(updated_upload_run.pdf_url, "https://example.org/remapped.pdf")
 
+    def test_batch_retry_keeps_failed_counter_non_negative(self) -> None:
+        batch_id = "batch_retry_counter_floor"
+        paper_id = self.create_paper(doi="10.1000/batch-counter", url="https://example.org/batch-counter")
+
+        with Session(self.db_module.engine) as session:
+            batch = BatchRun(
+                batch_id=batch_id,
+                label="Retry counter floor",
+                dataset="self_assembly",
+                model_provider="mock",
+                model_name="mock-model",
+                status=BatchStatus.RUNNING.value,
+                total_papers=1,
+                completed=0,
+                failed=0,
+            )
+            session.add(batch)
+            run = ExtractionRun(
+                paper_id=paper_id,
+                status=RunStatus.FAILED.value,
+                failure_reason="provider error: temp",
+                model_provider="mock",
+                pdf_url="https://example.org/batch-counter.pdf",
+                batch_id=batch_id,
+            )
+            session.add(run)
+            session.commit()
+
+        response = self.client.post(
+            "/api/baseline/batch-retry",
+            json={"batch_id": batch_id, "provider": "mock"},
+        )
+        self.assertEqual(response.status_code, 200)
+        payload = response.json()
+        self.assertEqual(payload["retried"], 1)
+
+        with Session(self.db_module.engine) as session:
+            batch = session.exec(select(BatchRun).where(BatchRun.batch_id == batch_id)).first()
+            self.assertEqual(batch.failed, 0)
+            self.assertEqual(batch.status, BatchStatus.RUNNING.value)
+
 
 if __name__ == "__main__":
     unittest.main()
