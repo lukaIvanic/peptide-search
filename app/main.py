@@ -24,8 +24,8 @@ from .db import assert_schema_current
 from .services.queue_service import get_queue, start_queue, stop_queue
 from .services.runtime_maintenance import (
     backfill_failed_runs,
-    cancel_stale_runs,
     ensure_runtime_defaults,
+    reconcile_orphan_run_states,
 )
 
 logger = logging.getLogger(__name__)
@@ -37,7 +37,7 @@ def create_app() -> FastAPI:
         assert_schema_current()
         ensure_runtime_defaults()
         backfill_failed_runs()
-        cancel_stale_runs()
+        reconcile_orphan_run_states()
         await start_queue()
         from .services.extraction_service import run_queued_extraction
 

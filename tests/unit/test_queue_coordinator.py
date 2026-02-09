@@ -4,6 +4,20 @@ from app.services.queue_coordinator import QueueCoordinator
 
 
 class QueueCoordinatorUnitTests(unittest.TestCase):
+    def test_normalize_source_urls_keeps_primary_first_and_filters_empty(self) -> None:
+        urls = QueueCoordinator.normalize_source_urls(
+            " https://example.org/main.pdf ",
+            pdf_urls=[
+                " ",
+                "https://example.org/si.pdf",
+                "https://example.org/main.pdf",
+            ],
+        )
+        self.assertEqual(
+            urls,
+            ["https://example.org/main.pdf", "https://example.org/si.pdf"],
+        )
+
     def test_source_fingerprints_normalize_and_dedupe_urls(self) -> None:
         fingerprints = QueueCoordinator.source_fingerprints(
             " https://example.org/main.pdf ",

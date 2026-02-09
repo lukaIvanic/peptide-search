@@ -6,7 +6,7 @@ import logging
 from sqlmodel import select
 
 from ..db import session_scope
-from ..persistence.models import ExtractionRun, RunStatus
+from ..persistence.models import ExtractionRun, QueueJob, QueueJobStatus, RunStatus
 from ..persistence.repository import PromptRepository
 from ..prompts import build_system_prompt
 from .quality_service import ensure_quality_rules
@@ -33,25 +33,60 @@ def backfill_failed_runs() -> None:
             logger.info("Backfilled %s failed runs missing metadata", updated)
 
 
-def cancel_stale_runs() -> None:
-    stale_statuses = {
+def reconcile_orphan_run_states() -> None:
+    """Reconcile transient runs that have no recoverable queue job backing them."""
+    transient_statuses = {
         RunStatus.QUEUED.value,
         RunStatus.FETCHING.value,
         RunStatus.PROVIDER.value,
         RunStatus.VALIDATING.value,
     }
+    recoverable_job_statuses = {
+        QueueJobStatus.QUEUED.value,
+        QueueJobStatus.CLAIMED.value,
+    }
     with session_scope() as session:
-        stmt = select(ExtractionRun).where(ExtractionRun.status.in_(stale_statuses))
+        stmt = select(ExtractionRun).where(ExtractionRun.status.in_(transient_statuses))
         runs = session.exec(stmt).all()
         if not runs:
             return
+        updated = 0
         for run in runs:
-            run.status = RunStatus.CANCELLED.value
-            if not run.failure_reason:
-                run.failure_reason = "Cancelled after server restart"
+            job = session.exec(
+                select(QueueJob)
+                .where(QueueJob.run_id == run.id)
+                .order_by(QueueJob.created_at.desc())
+                .limit(1)
+            ).first()
+            if job and job.status in recoverable_job_statuses:
+                continue
+
+            if job and job.status == QueueJobStatus.FAILED.value:
+                run.status = RunStatus.FAILED.value
+                if not run.failure_reason:
+                    run.failure_reason = "Recovered orphan run after failed queue job"
+            elif job and job.status == QueueJobStatus.CANCELLED.value:
+                run.status = RunStatus.CANCELLED.value
+                if not run.failure_reason:
+                    run.failure_reason = "Recovered orphan run after cancelled queue job"
+            elif job and job.status == QueueJobStatus.DONE.value:
+                # DONE should only happen once run reaches stored; treat as inconsistent failure.
+                run.status = RunStatus.FAILED.value
+                if not run.failure_reason:
+                    run.failure_reason = "Recovered inconsistent run after completed queue job"
+            else:
+                run.status = RunStatus.CANCELLED.value
+                if not run.failure_reason:
+                    run.failure_reason = "Recovered orphan run after restart (no queue job)"
             session.add(run)
-        session.commit()
-        logger.info("Cancelled %s stale runs after restart", len(runs))
+            updated += 1
+        if updated:
+            logger.info("Reconciled %s orphan transient runs after restart", updated)
+
+
+def cancel_stale_runs() -> None:
+    """Compatibility shim kept for older callsites/tests."""
+    reconcile_orphan_run_states()
 
 
 def ensure_runtime_defaults() -> None:

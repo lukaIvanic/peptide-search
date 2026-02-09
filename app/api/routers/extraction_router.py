@@ -60,6 +60,14 @@ async def extract_file(
         file_payloads.append((content, upload.filename))
 
     upload_urls = [store_upload(content, filename) for content, filename in file_payloads]
+    normalized_upload_urls: List[str] = []
+    for raw_url in upload_urls:
+        canonical_url = QueueCoordinator.canonicalize_source_url(raw_url)
+        if canonical_url:
+            normalized_upload_urls.append(canonical_url)
+    if not normalized_upload_urls:
+        raise HTTPException(status_code=400, detail="Unable to resolve upload source URLs")
+
     first_filename = file_payloads[0][1]
     if title:
         resolved_title = title
@@ -82,13 +90,14 @@ async def extract_file(
         paper_id=paper_id,
         status=RunStatus.QUEUED.value,
         model_provider=use_provider,
+        pdf_url=normalized_upload_urls[0],
         prompt_id=prompt_id,
     )
     result = QueueCoordinator().enqueue_new_run(
         session,
         run=run,
         title=meta.title or "(Untitled)",
-        pdf_urls=upload_urls,
+        pdf_urls=normalized_upload_urls,
     )
     if not result.enqueued:
         raise HTTPException(status_code=409, detail="Uploaded source is already queued")
