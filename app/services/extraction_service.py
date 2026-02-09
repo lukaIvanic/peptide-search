@@ -4,6 +4,7 @@ from __future__ import annotations
 import asyncio
 import json
 import logging
+import time
 from typing import Any, Dict, Optional, Tuple, Union, AsyncGenerator, List
 
 from sqlmodel import Session
@@ -779,6 +780,7 @@ async def run_queued_extraction(
 
     # Call LLM without text-extraction fallbacks for PDFs
     raw_json_text = None
+    extraction_start_time = time.monotonic()
     try:
         raw_json_text = await llm_provider.generate(
             system_prompt=system_prompt,
@@ -788,6 +790,7 @@ async def run_queued_extraction(
             max_tokens=settings.MAX_TOKENS,
         )
     except Exception as exc:
+        extraction_time_ms = int((time.monotonic() - extraction_start_time) * 1000)
         error_msg = str(exc)
         usage = _extract_usage(llm_provider)
         with session_scope() as session:
@@ -801,10 +804,13 @@ async def run_queued_extraction(
                 run.prompt_version_id = resolved_prompt_version_id
                 run.status = RunStatus.FAILED.value
                 run.failure_reason = f"Provider error: {error_msg}"
+                run.extraction_time_ms = extraction_time_ms
                 _apply_usage_to_run(run, usage)
                 session.add(run)
                 session.commit()
         raise
+
+    extraction_time_ms = int((time.monotonic() - extraction_start_time) * 1000)
 
     usage = _extract_usage(llm_provider)
     
@@ -846,6 +852,7 @@ async def run_queued_extraction(
         run.prompt_version = ExtractionRepository.PROMPT_VERSION
         run.prompt_id = resolved_prompt_id
         run.prompt_version_id = resolved_prompt_version_id
+        run.extraction_time_ms = extraction_time_ms
         _apply_usage_to_run(run, usage)
         
         session.add(run)

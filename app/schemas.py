@@ -10,6 +10,7 @@ class SearchItem(BaseModel):
 	doi: Optional[str] = None
 	url: Optional[str] = None
 	pdf_url: Optional[str] = None  # Direct link to free PDF
+	pdf_urls: Optional[List[str]] = None  # All PDFs including supplementary (for multi-file extraction)
 	source: Optional[str] = None
 	year: Optional[int] = None
 	authors: List[str] = Field(default_factory=list)
@@ -86,6 +87,10 @@ class BaselineRunSummary(BaseModel):
 	created_at: Optional[str] = None
 	model_provider: Optional[str] = None
 	model_name: Optional[str] = None
+	batch_id: Optional[str] = None
+	input_tokens: Optional[int] = None
+	output_tokens: Optional[int] = None
+	extraction_time_ms: Optional[int] = None
 
 
 class BaselineCase(BaseModel):
@@ -148,6 +153,12 @@ class ResolvedSourceResponse(BaseModel):
 class LocalPdfInfoResponse(BaseModel):
 	found: bool
 	filename: Optional[str] = None
+
+
+class LocalPdfSiInfoResponse(BaseModel):
+	found: bool
+	filenames: List[str] = Field(default_factory=list)
+	count: int = 0
 
 
 class BaselineRetryRequest(BaseModel):
@@ -252,6 +263,31 @@ class ExtractionEntity(BaseModel):
 	def _coerce_none_lists(cls, value):
 		# LLMs sometimes emit null for list fields; treat it as empty list.
 		return [] if value is None else value
+
+	@field_validator("thresholds", mode="before")
+	@classmethod
+	def _coerce_thresholds(cls, value):
+		# LLMs sometimes return thresholds as a list [{"cac": ...}] instead of {"cac": ...}
+		if isinstance(value, list) and len(value) > 0 and isinstance(value[0], dict):
+			return value[0]
+		return value
+
+	@field_validator("evidence", mode="before")
+	@classmethod
+	def _coerce_evidence(cls, value):
+		# LLMs sometimes return evidence in wrong formats:
+		# - As a flat list of EvidenceItems instead of Dict[str, List[EvidenceItem]]
+		# - As a single EvidenceItem dict instead of the expected structure
+		if value is None:
+			return None
+		if isinstance(value, list):
+			# Wrap flat list under a generic key
+			return {"general": value} if value else None
+		if isinstance(value, dict):
+			# Check if it's a flat EvidenceItem (has "quote" key at top level)
+			if "quote" in value:
+				return {"general": [value]}
+		return value
 
 
 class PaperMeta(BaseModel):
@@ -498,4 +534,63 @@ class BulkRetryResponse(BaseModel):
 	skipped_missing_pdf: int
 	skipped_missing_paper: int
 	skipped_not_failed: int
+
+
+# --- Batch extraction models ---
+
+class BatchEnqueueRequest(BaseModel):
+	"""Request to create a batch and enqueue all papers."""
+	dataset: str  # required - which dataset to run on
+	label: Optional[str] = None  # user-provided name for the batch
+	provider: str = "openai-nano"  # openai | openai-mini | openai-nano | mock | deepseek
+	prompt_id: Optional[int] = None
+	force: bool = False  # force re-extract even if already stored
+
+
+class BatchInfo(BaseModel):
+	"""Summary of a batch run."""
+	id: int
+	batch_id: str
+	label: Optional[str] = None
+	dataset: str
+	model_provider: str
+	model_name: str
+	status: str  # running, completed, partial, failed
+	total_papers: int
+	completed: int
+	failed: int
+	total_input_tokens: int
+	total_output_tokens: int
+	total_time_ms: int
+	matched_entities: int = 0
+	total_expected_entities: int = 0
+	match_rate: Optional[float] = None  # matched_entities / total_expected_entities
+	estimated_cost_usd: Optional[float] = None  # based on token counts and model pricing
+	created_at: str
+
+
+class BatchListResponse(BaseModel):
+	"""Response for batch list."""
+	batches: List[BatchInfo]
+
+
+class BatchEnqueueResponse(BaseModel):
+	"""Response from batch enqueue."""
+	batch_id: str
+	total_papers: int
+	enqueued: int
+	skipped: int
+
+
+class BatchRetryRequest(BaseModel):
+	"""Request to retry failed runs in a batch."""
+	batch_id: str
+	provider: Optional[str] = None  # use same provider as original if not specified
+
+
+class BatchRetryResponse(BaseModel):
+	"""Response from batch retry."""
+	batch_id: str
+	retried: int
+	skipped: int
 

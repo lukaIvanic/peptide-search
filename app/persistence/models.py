@@ -33,6 +33,16 @@ class BatchStatus(str, Enum):
     FAILED = "failed"  # All failed
 
 
+class QueueJobStatus(str, Enum):
+    """Lifecycle status for persistent queue jobs."""
+
+    QUEUED = "queued"
+    CLAIMED = "claimed"
+    DONE = "done"
+    FAILED = "failed"
+    CANCELLED = "cancelled"
+
+
 class BatchRun(SQLModel, table=True):
     """Tracks a batch of extraction runs for comparison."""
     __tablename__ = "batch_run"
@@ -118,6 +128,36 @@ class ExtractionRun(SQLModel, table=True):
     pdf_url: Optional[str] = Field(default=None)  # Original PDF URL for reference
     
     # Timing
+    created_at: datetime = Field(default_factory=utc_now, nullable=False)
+
+
+class QueueJob(SQLModel, table=True):
+    """Persistent queue job for resilient multi-worker processing."""
+
+    __tablename__ = "queue_job"
+
+    id: Optional[int] = Field(default=None, primary_key=True)
+    run_id: int = Field(foreign_key="extraction_run.id", index=True, unique=True)
+    source_fingerprint: str = Field(index=True)
+    status: str = Field(default=QueueJobStatus.QUEUED.value, index=True)
+    claimed_by: Optional[str] = Field(default=None, index=True)
+    claim_token: Optional[str] = Field(default=None, index=True)
+    attempt: int = Field(default=0)
+    available_at: datetime = Field(default_factory=utc_now, index=True)
+    claimed_at: Optional[datetime] = Field(default=None, index=True)
+    finished_at: Optional[datetime] = Field(default=None, index=True)
+    payload_json: Optional[str] = Field(default=None)
+    created_at: datetime = Field(default_factory=utc_now, nullable=False)
+    updated_at: datetime = Field(default_factory=utc_now, nullable=False)
+
+
+class ActiveSourceLock(SQLModel, table=True):
+    """A lock per source fingerprint to prevent duplicate active jobs."""
+
+    __tablename__ = "active_source_lock"
+
+    source_fingerprint: str = Field(primary_key=True)
+    run_id: int = Field(foreign_key="extraction_run.id", index=True)
     created_at: datetime = Field(default_factory=utc_now, nullable=False)
 
 
