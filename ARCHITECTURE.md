@@ -10,7 +10,16 @@ This document describes the main data flows and module responsibilities in the P
 app/
 ├── config.py               # Environment configuration
 ├── db.py                   # Engine/session initialization + init_db()
-├── main.py                 # FastAPI app + routes + static serving
+├── main.py                 # FastAPI bootstrap + router registration + static serving
+├── api/
+│   └── routers/            # Domain routers
+│       ├── system_router.py
+│       ├── search_router.py
+│       ├── extraction_router.py
+│       ├── papers_router.py
+│       ├── runs_router.py
+│       ├── metadata_router.py
+│       └── baseline_router.py
 ├── prompts.py              # Schema spec + prompt builders
 ├── schemas.py              # Pydantic request/response models
 ├── services/               # Use-case orchestration
@@ -31,11 +40,14 @@ app/
 
 public/                     # Static frontend
 ├── index.html
+├── app.js                  # Dashboard orchestration entry
+├── baseline.js             # Baseline page orchestration entry
 ├── js/
 │   ├── api.js              # API client module
 │   ├── state.js            # Application state
 │   └── renderers.js        # DOM rendering functions
-├── app.js                  # Main entry point
+│   ├── dashboard/paper_filters.js  # Dashboard filter state + CSV helpers
+│   └── baseline/helpers.js         # Baseline shared constants/helpers
 └── styles.css
 
 cli/                        # Batch processing CLI
@@ -126,10 +138,18 @@ Summary: extracted N, skipped M, failed K
 
 ## Module Responsibilities
 
-### `app/main.py` — HTTP Interface
-- Defines FastAPI routes and serves the static frontend
-- Validates request/response payloads with models from `app/schemas.py`
-- Uses DB sessions via `app/db.py`
+### `app/main.py` — HTTP Bootstrap
+- Initializes FastAPI app, startup/shutdown queue wiring, and static frontend routes
+- Registers domain routers from `app/api/routers/*`
+
+### `app/api/routers/` — HTTP Domains
+- `system_router.py`: health, admin reset, SSE stream
+- `search_router.py`: discovery + enqueue
+- `extraction_router.py`: single-run extraction and file upload enqueue
+- `papers_router.py`: papers list/detail and force re-extract
+- `runs_router.py`: run detail/history/retry/failure analytics
+- `metadata_router.py`: prompts, quality rules, entities
+- `baseline_router.py`: baseline case flows and batch flows
 
 ### `app/integrations/llm/` — LLM Providers
 - Abstract provider interface (`LLMProvider` protocol)

@@ -39,39 +39,21 @@ import {
     setSearchCount,
     setDrawerCallbacks,
 } from './js/renderers.js?v=dev46';
+import {
+    applyPaperFilters,
+    escapeCsv,
+    filtersActive,
+    hydratePaperFilters,
+    paperFilters,
+    persistPaperFilters,
+    syncPaperFilterInputs,
+    updatePaperFilterCount,
+    updatePaperFilterNotice,
+} from './js/dashboard/paper_filters.js?v=dev49';
 
 let sseConnection = null;
 let failureModalState = null;
 let failureModalItems = [];
-const PAPER_FILTERS_STORAGE_KEY = 'dashboard_paper_filters_v3';
-const PAPER_FILTERS_ALLOWED_STATUS = new Set([
-    '',
-    'processing',
-    'queued',
-    'failed',
-    'stored',
-    'cancelled',
-    'none',
-]);
-const PAPER_FILTERS_ALLOWED_SOURCE = new Set([
-    '',
-    'pmc',
-    'europepmc',
-    'arxiv',
-    'semanticscholar',
-    'upload',
-]);
-const PAPER_FILTERS_ALLOWED_SORT = new Set([
-    'recent',
-    'oldest',
-    'runs',
-]);
-const paperFilters = {
-    query: '',
-    status: '',
-    source: '',
-    sort: 'recent',
-};
 const DASHBOARD_ONBOARDING_KEY = 'onboarding_dashboard_v1';
 const DASHBOARD_STEPS = [
     { key: 'searched', label: 'Run a search' },
@@ -887,154 +869,11 @@ function syncSearchResultsWithPapers(papers) {
     setSearchResults(updated);
 }
 
-function applyPaperFilters(papers) {
-    const query = paperFilters.query.trim().toLowerCase();
-    const statusFilter = paperFilters.status;
-    const sourceFilter = paperFilters.source;
-    const sortFilter = paperFilters.sort || 'recent';
-
-    let filtered = Array.isArray(papers) ? papers : [];
-    if (query) {
-        filtered = filtered.filter((paper) => {
-            const title = (paper.title || '').toLowerCase();
-            const doi = (paper.doi || '').toLowerCase();
-            return title.includes(query) || doi.includes(query);
-        });
-    }
-    if (statusFilter) {
-        if (statusFilter === 'processing') {
-            const processing = new Set(['fetching', 'provider', 'validating']);
-            filtered = filtered.filter((paper) => processing.has(paper.status));
-        } else if (statusFilter === 'none') {
-            filtered = filtered.filter((paper) => !paper.status);
-        } else {
-            filtered = filtered.filter((paper) => paper.status === statusFilter);
-        }
-    }
-    if (sourceFilter) {
-        filtered = filtered.filter((paper) => paper.source === sourceFilter);
-    }
-
-    const sorted = [...filtered];
-    if (sortFilter === 'oldest') {
-        sorted.sort((a, b) => {
-            const aTime = a.last_run_at ? Date.parse(a.last_run_at) : 0;
-            const bTime = b.last_run_at ? Date.parse(b.last_run_at) : 0;
-            return aTime - bTime;
-        });
-    } else if (sortFilter === 'runs') {
-        sorted.sort((a, b) => (b.run_count || 0) - (a.run_count || 0));
-    } else {
-        sorted.sort((a, b) => {
-            const aTime = a.last_run_at ? Date.parse(a.last_run_at) : 0;
-            const bTime = b.last_run_at ? Date.parse(b.last_run_at) : 0;
-            return bTime - aTime;
-        });
-    }
-
-    return sorted;
-}
-
 function applyPaperPreset(status) {
     paperFilters.status = status;
     paperFilters.sort = 'recent';
     syncPaperFilterInputs();
     renderFilteredPapers();
-}
-
-function syncPaperFilterInputs() {
-    const papersFilterInput = document.querySelector('#papersFilterInput');
-    const papersFilterStatus = document.querySelector('#papersFilterStatus');
-    const papersFilterSource = document.querySelector('#papersFilterSource');
-    const papersFilterSort = document.querySelector('#papersFilterSort');
-    if (papersFilterInput) papersFilterInput.value = paperFilters.query;
-    if (papersFilterStatus) papersFilterStatus.value = paperFilters.status;
-    if (papersFilterSource) papersFilterSource.value = paperFilters.source;
-    if (papersFilterSort) papersFilterSort.value = paperFilters.sort || 'recent';
-}
-
-function persistPaperFilters() {
-    try {
-        localStorage.setItem(PAPER_FILTERS_STORAGE_KEY, JSON.stringify(paperFilters));
-    } catch {
-        // ignore
-    }
-}
-
-function hydratePaperFilters() {
-    try {
-        const raw = localStorage.getItem(PAPER_FILTERS_STORAGE_KEY);
-        if (!raw) {
-            syncPaperFilterInputs();
-            return;
-        }
-        const stored = JSON.parse(raw);
-        if (stored && typeof stored === 'object') {
-            paperFilters.query = stored.query || '';
-            paperFilters.status = stored.status || '';
-            paperFilters.source = stored.source || '';
-            paperFilters.sort = stored.sort || 'recent';
-        }
-    } catch {
-        // ignore
-    }
-    if (sanitizePaperFilters()) {
-        persistPaperFilters();
-    }
-    syncPaperFilterInputs();
-}
-
-function sanitizePaperFilters() {
-    let changed = false;
-    if (typeof paperFilters.query !== 'string') {
-        paperFilters.query = '';
-        changed = true;
-    }
-    if (!PAPER_FILTERS_ALLOWED_STATUS.has(paperFilters.status)) {
-        paperFilters.status = '';
-        changed = true;
-    }
-    if (!PAPER_FILTERS_ALLOWED_SOURCE.has(paperFilters.source)) {
-        paperFilters.source = '';
-        changed = true;
-    }
-    if (!PAPER_FILTERS_ALLOWED_SORT.has(paperFilters.sort)) {
-        paperFilters.sort = 'recent';
-        changed = true;
-    }
-    return changed;
-}
-
-function filtersActive() {
-    return Boolean(
-        paperFilters.query.trim()
-        || paperFilters.status
-        || paperFilters.source
-    );
-}
-
-function updatePaperFilterCount(filteredCount, totalCount) {
-    const countEl = document.querySelector('#papersFilterCount');
-    const clearBtn = document.querySelector('#papersFilterClear');
-    if (countEl) {
-        if (!totalCount) {
-            countEl.textContent = 'No papers yet';
-        } else if (filteredCount === totalCount && !filtersActive()) {
-            countEl.textContent = `${totalCount} papers`;
-        } else {
-            countEl.textContent = `Showing ${filteredCount} of ${totalCount}`;
-        }
-    }
-    if (clearBtn) {
-        clearBtn.classList.toggle('hidden', !filtersActive());
-    }
-}
-
-function updatePaperFilterNotice(filteredCount, totalCount) {
-    const notice = document.querySelector('#papersFilterNotice');
-    if (!notice) return;
-    const shouldShow = totalCount > 0 && filteredCount === 0 && filtersActive();
-    notice.classList.toggle('hidden', !shouldShow);
 }
 
 function renderFilteredPapers(papers = appStore.get('papers')) {
@@ -1130,15 +969,6 @@ function handleKeyboardShortcuts(e) {
     if (key === 'r' && failureModalState) {
         handleRetryFailureBatch();
     }
-}
-
-function escapeCsv(value) {
-    if (value === null || value === undefined) return '';
-    const text = String(value);
-    if (text.includes('"') || text.includes(',') || text.includes('\n')) {
-        return `"${text.replace(/"/g, '""')}"`;
-    }
-    return text;
 }
 
 function handleExportPapersCsv() {

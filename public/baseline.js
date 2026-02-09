@@ -1,30 +1,38 @@
 import * as api from './js/api.js?v=dev48';
 import { $, el, fmt } from './js/renderers.js?v=dev46';
-
-const STATUS_LABELS = {
-	queued: 'Queued',
-	fetching: 'Fetching',
-	provider: 'Processing',
-	validating: 'Validating',
-	stored: 'Complete',
-	failed: 'Error',
-	cancelled: 'Cancelled',
-	none: 'No run',
-};
-const MANUAL_PDF_TAG = 'Manual PDF required';
-const MANUAL_PDF_REASON_NO_OA = 'no-open-access';
-const MANUAL_PDF_DETAILS = {
-	[MANUAL_PDF_REASON_NO_OA]: 'No open-access PDF found',
-	provider_empty: 'Provider returned no usable output (retry or upload)',
-};
+import {
+	MANUAL_PDF_DETAILS,
+	MANUAL_PDF_REASON_NO_OA,
+	MANUAL_PDF_TAG,
+	bucketizeDeltas,
+	formatFailureReason,
+	formatNumber,
+	formatPercent,
+	getBatchIdFromUrl,
+	getCaseKey,
+	getStatusLabel,
+	getTopEntries,
+	incrementCount,
+	isLocalPdfUrl,
+	isNoSourceResolvedFailure,
+	isProcessingStatus,
+	isProviderEmptyFailure,
+	mean,
+	median,
+	normalizeDoiToUrl,
+	normalizeDoiVersion,
+	normalizeSequence,
+} from './js/baseline/helpers.js?v=dev49';
 
 const state = {
 	cases: [],
 	datasets: [],
-	filterDataset: '',
+	batches: [],
+	filterDataset: 'self_assembly', // Default to self_assembly dataset
+	filterBatchId: '',
 	search: '',
 	selectedPaperKey: null, // Changed from selectedId to track paper group
-	provider: 'openai',
+	provider: 'openai-nano',
 	pdfStatusFilter: 'all',
 	resolvedSource: null,
 	stagedFile: null,
@@ -34,33 +42,17 @@ const state = {
 	paperComparisonCache: new Map(), // Cache for paper-level comparisons
 	localPdfByCaseId: new Map(),
 	localPdfFileByCaseId: new Map(),
+	singleBatchMode: false, // True when viewing /baseline/{batch_id}
 };
 
 let sseConnection = null;
 let analysisToken = 0;
-
-function normalizeSequence(seq) {
-	if (!seq) return '';
-	return String(seq).replace(/\s+/g, '').toUpperCase();
-}
-
-function normalizeDoiVersion(doi) {
-	if (!doi) return null;
-	return String(doi).replace(/\/v\d+$/i, '');
-}
-
-function getCaseKey(caseItem) {
-	return caseItem.id || '';
-}
 
 function updateStatus(message) {
 	const status = $('#baselineStatus');
 	if (status) status.textContent = message || '';
 }
 
-function isProcessingStatus(status) {
-	return ['queued', 'fetching', 'provider', 'validating'].includes(status);
-}
 
 function ensureButtonLabel(button) {
 	if (!button) return null;
@@ -110,13 +102,6 @@ function createExternalLink(url, className = '') {
 	return link;
 }
 
-function normalizeDoiToUrl(doi) {
-	if (!doi) return null;
-	const cleaned = String(doi).trim();
-	if (!cleaned) return null;
-	if (/^https?:\/\//i.test(cleaned)) return cleaned;
-	return `https://doi.org/${cleaned.replace(/^doi:\s*/i, '')}`;
-}
 
 function getPreferredPdfUrl(caseItem, runPayload = null) {
 	return (
@@ -129,9 +114,6 @@ function getPreferredPdfUrl(caseItem, runPayload = null) {
 	);
 }
 
-function isLocalPdfUrl(url) {
-	return Boolean(url) && String(url).startsWith('upload://');
-}
 
 function markLocalPdfForGroup(paperGroup, sourceUrl) {
 	if (!paperGroup?.cases?.length || !isLocalPdfUrl(sourceUrl)) return;
@@ -159,53 +141,6 @@ function isLocalPdfFileAvailable(paperGroup) {
 	return paperGroup.cases.some((caseItem) => state.localPdfFileByCaseId.get(caseItem.id));
 }
 
-function getStatusLabel(status) {
-	if (!status) return STATUS_LABELS.none;
-	return STATUS_LABELS[status] || status;
-}
-
-function isProviderEmptyFailure(reason) {
-	if (!reason) return false;
-	const lower = String(reason).toLowerCase();
-	return lower.includes('openai returned empty response') || lower.includes('stream has ended unexpectedly');
-}
-
-function isNoSourceResolvedFailure(reason) {
-	if (!reason) return false;
-	const lower = String(reason).toLowerCase();
-	return lower.includes('no source url resolved') || lower.includes('no pdf url resolved');
-}
-
-function formatFailureReason(reason) {
-	if (!reason) return null;
-	const text = String(reason);
-	const lower = text.toLowerCase();
-	if (lower.includes('http 403')) {
-		return {
-			title: 'Access blocked (HTTP 403)',
-			detail: 'Publisher blocked this URL. Try open-access search or upload a PDF.',
-		};
-	}
-	if (lower.includes('no source url resolved') || lower.includes('no pdf url resolved')) {
-		return {
-			title: 'No source URL found',
-			detail: 'We could not find a usable PDF/HTML source. Try open-access search or upload a PDF.',
-		};
-	}
-	if (lower.includes('openai returned empty response') || lower.includes('stream has ended unexpectedly')) {
-		return {
-			title: 'Provider response was empty',
-			detail: 'The provider returned no usable output. Retry or upload a PDF for better reliability.',
-		};
-	}
-	if (lower.startsWith('provider error')) {
-		return {
-			title: 'Provider error',
-			detail: text.replace(/^provider error:\s*/i, '') || 'The provider failed. Retry or upload a PDF.',
-		};
-	}
-	return { title: text, detail: null };
-}
 
 function getManualPdfStatus(caseItem, runPayload = null) {
 	if (!caseItem) return null;
@@ -585,6 +520,12 @@ function renderCounts(paperCount, entityCount) {
 function filterCases() {
 	const query = state.search.trim().toLowerCase();
 	return state.cases.filter((item) => {
+		// Filter by batch if selected
+		if (state.filterBatchId) {
+			const runBatchId = item.latest_run?.batch_id;
+			if (runBatchId !== state.filterBatchId) return false;
+		}
+
 		const haystack = [
 			item.sequence,
 			item.doi,
@@ -692,62 +633,6 @@ function getPaperDisplayLabel(paperGroup) {
 		return url;
 	}
 	return paperGroup.cases[0]?.id || 'Unknown';
-}
-
-function mean(values) {
-	if (!values.length) return null;
-	return values.reduce((sum, value) => sum + value, 0) / values.length;
-}
-
-function median(values) {
-	if (!values.length) return null;
-	const sorted = [...values].sort((a, b) => a - b);
-	const mid = Math.floor(sorted.length / 2);
-	if (sorted.length % 2 === 0) {
-		return (sorted[mid - 1] + sorted[mid]) / 2;
-	}
-	return sorted[mid];
-}
-
-function formatNumber(value, digits = 1) {
-	if (value === null || value === undefined || Number.isNaN(value)) return 'n/a';
-	if (Number.isInteger(value)) return String(value);
-	return value.toFixed(digits);
-}
-
-function formatPercent(numerator, denominator, digits = 0) {
-	if (!denominator) return 'n/a';
-	const pct = (numerator / denominator) * 100;
-	return `${pct.toFixed(digits)}%`;
-}
-
-function incrementCount(map, value) {
-	if (value === null || value === undefined || value === '') return;
-	const key = String(value);
-	map.set(key, (map.get(key) || 0) + 1);
-}
-
-function getTopEntries(map, limit = 6) {
-	return Array.from(map.entries())
-		.sort((a, b) => b[1] - a[1])
-		.slice(0, limit)
-		.map(([label, count]) => ({ label, count }));
-}
-
-function bucketizeDeltas(values) {
-	const buckets = [
-		{ label: '≤ -3', test: (v) => v <= -3 },
-		{ label: '-2', test: (v) => v === -2 },
-		{ label: '-1', test: (v) => v === -1 },
-		{ label: '0', test: (v) => v === 0 },
-		{ label: '1', test: (v) => v === 1 },
-		{ label: '2', test: (v) => v === 2 },
-		{ label: '≥ 3', test: (v) => v >= 3 },
-	];
-	return buckets.map((bucket) => ({
-		label: bucket.label,
-		count: values.filter(bucket.test).length,
-	}));
 }
 
 async function mapWithConcurrency(items, limit, worker) {
@@ -1492,6 +1377,61 @@ function renderExtractionDetail(runPayload, paperGroupOrCase, comparison) {
 	}
 	container.appendChild(header);
 
+	// PDF view buttons row
+	if (firstCase) {
+		const pdfButtonsRow = el('div', 'mt-2 flex flex-wrap gap-2');
+		let hasButtons = false;
+
+		// Main PDF button - check if local PDF is available
+		if (isLocalPdfAvailable(paperGroup, runPayload)) {
+			const mainPdfBtn = el('button', 'sw-btn sw-btn--sm sw-btn--secondary');
+			mainPdfBtn.appendChild(el('span', 'sw-btn__label', '📄 View Main PDF'));
+			mainPdfBtn.addEventListener('click', () => {
+				window.open(api.getBaselineLocalPdfUrl(firstCase.id), '_blank');
+			});
+			pdfButtonsRow.appendChild(mainPdfBtn);
+			hasButtons = true;
+		}
+
+		// SI PDF button(s) - load asynchronously
+		api.getBaselineLocalPdfSiInfo(firstCase.id).then((siInfo) => {
+			if (siInfo?.found && siInfo.count > 0) {
+				if (siInfo.count === 1) {
+					// Single SI PDF
+					const siPdfBtn = el('button', 'sw-btn sw-btn--sm sw-btn--secondary');
+					siPdfBtn.appendChild(el('span', 'sw-btn__label', '📎 View SI PDF'));
+					siPdfBtn.addEventListener('click', () => {
+						window.open(api.getBaselineLocalPdfSiUrl(firstCase.id, 0), '_blank');
+					});
+					pdfButtonsRow.appendChild(siPdfBtn);
+				} else {
+					// Multiple SI PDFs - add buttons for each
+					for (let i = 0; i < siInfo.count; i++) {
+						const siPdfBtn = el('button', 'sw-btn sw-btn--sm sw-btn--secondary');
+						const filename = siInfo.filenames[i] || `SI ${i + 1}`;
+						const shortName = filename.length > 20 ? filename.substring(0, 17) + '...' : filename;
+						siPdfBtn.appendChild(el('span', 'sw-btn__label', `📎 ${shortName}`));
+						siPdfBtn.title = filename;
+						siPdfBtn.addEventListener('click', () => {
+							window.open(api.getBaselineLocalPdfSiUrl(firstCase.id, i), '_blank');
+						});
+						pdfButtonsRow.appendChild(siPdfBtn);
+					}
+				}
+				// Ensure row is visible if we added SI buttons but no main button was added initially
+				if (!hasButtons && pdfButtonsRow.parentElement === null) {
+					container.insertBefore(pdfButtonsRow, container.children[1] || null);
+				}
+			}
+		}).catch(() => {
+			// Silently ignore errors fetching SI info
+		});
+
+		if (hasButtons) {
+			container.appendChild(pdfButtonsRow);
+		}
+	}
+
 	if (localAction) {
 		container.appendChild(localAction);
 	}
@@ -2043,6 +1983,191 @@ async function loadCases() {
 	}
 }
 
+// --- Batch functions ---
+
+async function loadBatches() {
+	try {
+		const data = await api.get(`/api/baseline/batches${state.filterDataset ? `?dataset=${encodeURIComponent(state.filterDataset)}` : ''}`);
+		state.batches = data.batches || [];
+		renderBatchOptions();
+		updateBatchSummary();
+	} catch (err) {
+		console.error('Failed to load batches:', err);
+	}
+}
+
+function renderBatchOptions() {
+	const select = $('#batchFilter');
+	if (!select) return;
+
+	const currentValue = select.value;
+	select.innerHTML = '<option value="">All runs</option>';
+
+	for (const batch of state.batches) {
+		const opt = el('option', '', batch.label || batch.batch_id);
+		opt.value = batch.batch_id;
+		if (batch.status === 'running') {
+			opt.textContent += ' (running)';
+		}
+		select.appendChild(opt);
+	}
+
+	// Restore selection if still valid
+	if (currentValue && state.batches.some(b => b.batch_id === currentValue)) {
+		select.value = currentValue;
+	}
+}
+
+function updateBatchSummary() {
+	const summaryEl = $('#batchSummary');
+	if (!summaryEl) return;
+
+	if (!state.filterBatchId) {
+		summaryEl.classList.add('hidden');
+		$('#retryAllFailedBtn')?.classList.add('hidden');
+		return;
+	}
+
+	const batch = state.batches.find(b => b.batch_id === state.filterBatchId);
+	if (!batch) {
+		summaryEl.classList.add('hidden');
+		$('#retryAllFailedBtn')?.classList.add('hidden');
+		return;
+	}
+
+	summaryEl.classList.remove('hidden');
+
+	// Update page title in single-batch mode
+	if (state.singleBatchMode) {
+		const titleEl = $('#pageTitle');
+		const subtitleEl = $('#pageSubtitle');
+		if (titleEl) titleEl.textContent = batch.label || 'Batch Details';
+		if (subtitleEl) {
+			const matchInfo = batch.match_rate !== null && batch.match_rate !== undefined
+				? ` | Match rate: ${(batch.match_rate * 100).toFixed(0)}%`
+				: '';
+			subtitleEl.textContent = `${batch.model_name || batch.model_provider} | ${batch.status}${matchInfo}`;
+		}
+	}
+
+	$('#batchLabel').textContent = batch.label || batch.batch_id;
+	$('#batchModel').textContent = batch.model_name || batch.model_provider;
+	$('#batchProgress').textContent = `${batch.completed}/${batch.total_papers} complete` +
+		(batch.failed > 0 ? `, ${batch.failed} failed` : '');
+	$('#batchProgress').className = 'sw-chip' + (batch.failed > 0 ? ' sw-chip--warning' : '');
+
+	// Format tokens
+	const totalTokens = (batch.total_input_tokens || 0) + (batch.total_output_tokens || 0);
+	$('#batchTokens').textContent = totalTokens > 0 ? `${totalTokens.toLocaleString()} tokens` : 'N/A';
+
+	// Format time
+	const timeMs = batch.total_time_ms || 0;
+	if (timeMs > 0) {
+		const seconds = (timeMs / 1000).toFixed(1);
+		$('#batchTime').textContent = `${seconds}s`;
+	} else {
+		$('#batchTime').textContent = 'N/A';
+	}
+
+	// Format match rate
+	const matchRateEl = $('#batchMatchRate');
+	if (matchRateEl) {
+		if (batch.match_rate !== null && batch.match_rate !== undefined) {
+			const pct = (batch.match_rate * 100).toFixed(0);
+			matchRateEl.textContent = `${pct}%`;
+			matchRateEl.className = 'sw-chip' + (batch.match_rate >= 0.7 ? ' sw-chip--success' : batch.match_rate >= 0.4 ? ' sw-chip--info' : ' sw-chip--warning');
+		} else if (batch.total_expected_entities > 0) {
+			const pct = (batch.matched_entities / batch.total_expected_entities * 100).toFixed(0);
+			matchRateEl.textContent = `${pct}%`;
+		} else {
+			matchRateEl.textContent = 'N/A';
+		}
+	}
+
+	// Format cost
+	const costEl = $('#batchCost');
+	if (costEl) {
+		if (batch.estimated_cost_usd !== null && batch.estimated_cost_usd !== undefined) {
+			costEl.textContent = batch.estimated_cost_usd < 0.01 ? '<$0.01' : `$${batch.estimated_cost_usd.toFixed(2)}`;
+		} else {
+			costEl.textContent = 'N/A';
+		}
+	}
+
+	// Show retry button if there are failed runs
+	const retryBtn = $('#retryAllFailedBtn');
+	if (retryBtn) {
+		if (batch.failed > 0) {
+			retryBtn.classList.remove('hidden');
+			retryBtn.textContent = `Retry ${batch.failed} Failed`;
+		} else {
+			retryBtn.classList.add('hidden');
+		}
+	}
+}
+
+async function runAllBatch() {
+	const runAllBtn = $('#runAllBtn');
+	if (!runAllBtn) return;
+
+	const dataset = state.filterDataset;
+	if (!dataset) {
+		updateStatus('Please select a dataset first');
+		return;
+	}
+
+	// Prompt for optional batch label
+	const label = prompt('Enter a label for this batch (optional):', '');
+
+	setButtonLoading(runAllBtn, true, 'Starting...');
+
+	try {
+		const resp = await api.post('/api/baseline/batch-enqueue', {
+			dataset: dataset,
+			label: label || undefined,
+			provider: state.provider,
+			force: false,
+		});
+
+		updateStatus(`Batch ${resp.batch_id} created: ${resp.enqueued} papers enqueued`);
+
+		// Reload batches and select the new one
+		await loadBatches();
+		state.filterBatchId = resp.batch_id;
+		const batchSelect = $('#batchFilter');
+		if (batchSelect) batchSelect.value = resp.batch_id;
+		updateBatchSummary();
+
+	} catch (err) {
+		updateStatus(err.message || 'Failed to create batch');
+	} finally {
+		setButtonLoading(runAllBtn, false);
+	}
+}
+
+async function retryAllFailed() {
+	const retryBtn = $('#retryAllFailedBtn');
+	if (!retryBtn || !state.filterBatchId) return;
+
+	setButtonLoading(retryBtn, true, 'Retrying...');
+
+	try {
+		const resp = await api.post('/api/baseline/batch-retry', {
+			batch_id: state.filterBatchId,
+			provider: state.provider,
+		});
+
+		updateStatus(`Retrying ${resp.retried} failed runs`);
+		await loadBatches();
+		updateBatchSummary();
+
+	} catch (err) {
+		updateStatus(err.message || 'Failed to retry batch');
+	} finally {
+		setButtonLoading(retryBtn, false);
+	}
+}
+
 async function enqueueBaselineRuns() {
 	const runButton = $('#runBaselineBtn');
 	if (runButton) {
@@ -2244,11 +2369,60 @@ function initEventHandlers() {
 			resolveBaselineSourcesBulk();
 		});
 	}
+
+	// Batch controls
+	const batchFilter = $('#batchFilter');
+	if (batchFilter) {
+		batchFilter.addEventListener('change', (event) => {
+			state.filterBatchId = event.target.value || '';
+			updateBatchSummary();
+			renderCaseList();  // Re-render with batch filter
+		});
+	}
+
+	const runAllBtn = $('#runAllBtn');
+	if (runAllBtn) {
+		runAllBtn.addEventListener('click', () => {
+			runAllBatch();
+		});
+	}
+
+	const retryBtn = $('#retryAllFailedBtn');
+	if (retryBtn) {
+		retryBtn.addEventListener('click', () => {
+			retryAllFailed();
+		});
+	}
 }
 
 async function init() {
+	// Check if we're in single-batch mode (URL has batch_id)
+	const urlBatchId = getBatchIdFromUrl();
+	if (urlBatchId) {
+		state.singleBatchMode = true;
+		state.filterBatchId = urlBatchId;
+
+		// Update page title
+		const titleEl = $('#pageTitle');
+		const subtitleEl = $('#pageSubtitle');
+		if (titleEl) titleEl.textContent = 'Batch Details';
+		if (subtitleEl) subtitleEl.textContent = `Viewing batch: ${urlBatchId}`;
+	} else {
+		// Legacy mode - show all batches (should redirect to overview)
+		// Keep dropdowns visible for backward compatibility
+		$('#datasetFilterLabel')?.classList.remove('hidden');
+		$('#batchFilterLabel')?.classList.remove('hidden');
+		$('#runAllBtn')?.classList.remove('hidden');
+	}
+
 	initEventHandlers();
-	await loadCases();
+	await Promise.all([loadCases(), loadBatches()]);
+
+	// In single-batch mode, show batch summary immediately
+	if (state.singleBatchMode) {
+		updateBatchSummary();
+	}
+
 	connectSSE();
 }
 
