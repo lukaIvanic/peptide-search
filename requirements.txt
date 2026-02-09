@@ -12,3 +12,4 @@ alembic
 typer
 python-multipart
 openai
+

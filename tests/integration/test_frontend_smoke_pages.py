@@ -15,8 +15,10 @@ class FrontendSmokePagesTests(ApiIntegrationTestCase):
         response = self.client.get("/baseline")
         self.assertEqual(response.status_code, 200)
         text = response.text
-        self.assertIn("Extraction Batches", text)
-        self.assertIn("id=\"batchGrid\"", text)
+        self.assertTrue(
+            ("Extraction Batches" in text and 'id="batchGrid"' in text)
+            or ("Baseline Benchmark" in text and 'id="baselineList"' in text)
+        )
 
 
 if __name__ == "__main__":

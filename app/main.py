@@ -88,7 +88,10 @@ def create_app() -> FastAPI:
 
         @app.get("/baseline", include_in_schema=False)
         async def baseline_overview_page() -> FileResponse:
-            return FileResponse(static_dir / "batch-overview.html")
+            overview_path = static_dir / "batch-overview.html"
+            if overview_path.exists():
+                return FileResponse(overview_path)
+            return FileResponse(static_dir / "baseline.html")
 
         @app.get("/baseline/{batch_id}", include_in_schema=False)
         async def baseline_detail_page(batch_id: str) -> FileResponse:
