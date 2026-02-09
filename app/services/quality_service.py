@@ -1,12 +1,12 @@
 from __future__ import annotations
 
 import json
-from datetime import datetime
 from typing import Any, Dict, List, Tuple
 
 from sqlmodel import Session, select
 
 from ..persistence.models import QualityRuleConfig, ExtractionEntity
+from ..time_utils import utc_now
 
 
 DEFAULT_RULES: Dict[str, Any] = {
@@ -30,7 +30,7 @@ def get_quality_rules(session: Session) -> Dict[str, Any]:
 		except Exception:
 			return DEFAULT_RULES
 
-	row = QualityRuleConfig(rules_json=json.dumps(DEFAULT_RULES), updated_at=datetime.utcnow())
+	row = QualityRuleConfig(rules_json=json.dumps(DEFAULT_RULES), updated_at=utc_now())
 	session.add(row)
 	session.commit()
 	session.refresh(row)
@@ -40,11 +40,11 @@ def get_quality_rules(session: Session) -> Dict[str, Any]:
 def update_quality_rules(session: Session, rules: Dict[str, Any]) -> Dict[str, Any]:
 	row = session.exec(select(QualityRuleConfig)).first()
 	if not row:
-		row = QualityRuleConfig(rules_json=json.dumps(rules), updated_at=datetime.utcnow())
+		row = QualityRuleConfig(rules_json=json.dumps(rules), updated_at=utc_now())
 		session.add(row)
 	else:
 		row.rules_json = json.dumps(rules)
-		row.updated_at = datetime.utcnow()
+		row.updated_at = utc_now()
 	session.commit()
 	return rules
 

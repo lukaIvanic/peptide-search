@@ -31,6 +31,7 @@ from ...services.quality_service import (
     extract_entity_payload,
 )
 from ...services.view_builders import parse_json_list, build_prompt_info
+from ...time_utils import utc_now
 
 router = APIRouter(tags=["metadata"])
 
@@ -145,7 +146,7 @@ async def list_entities(
         if latest_run:
             stmt = stmt.where(ExtractionRun.id == latest_run.id)
     if recent_minutes:
-        cutoff = datetime.utcnow() - timedelta(minutes=recent_minutes)
+        cutoff = utc_now() - timedelta(minutes=recent_minutes)
         stmt = stmt.where(ExtractionRun.created_at >= cutoff)
     rows = session.exec(stmt).all()
     items: List[EntityListItem] = []
@@ -261,7 +262,7 @@ async def get_entity_kpis(
         if latest_run:
             stmt = stmt.where(ExtractionRun.id == latest_run.id)
     if recent_minutes:
-        cutoff = datetime.utcnow() - timedelta(minutes=recent_minutes)
+        cutoff = utc_now() - timedelta(minutes=recent_minutes)
         stmt = stmt.where(ExtractionRun.created_at >= cutoff)
     rows = session.exec(stmt).all()
     total_entities = 0

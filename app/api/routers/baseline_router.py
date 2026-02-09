@@ -1,8 +1,6 @@
 from __future__ import annotations
 
 import json
-import re
-from datetime import datetime
 from typing import Dict, List, Optional
 
 from fastapi import APIRouter, Depends, File, Form, HTTPException, Query, UploadFile
@@ -57,11 +55,20 @@ from ...services.baseline_helpers import (
     link_cases_to_run,
     load_shadow_entries,
     resolve_baseline_source,
-    resolve_local_pdf_source,
+)
+from ...services.baseline_retry_service import retry_baseline_case as retry_baseline_case_service
+from ...services.baseline_retry_service import retry_batch_runs
+from ...services.batch_metrics import (
+    compute_batch_cost,
+    compute_match_rate,
+    compute_wall_clock_time_ms,
+    generate_batch_id,
+    get_model_name_for_provider,
 )
 from ...services.queue_service import QueueItem, get_queue
-from ...services.upload_store import is_upload_url, store_upload
+from ...services.upload_store import store_upload
 from ...services.view_builders import build_run_payload
+from ...services.runs_retry_service import ServiceError
 
 router = APIRouter(tags=["baseline"])
 
@@ -71,56 +78,6 @@ PROCESSING_STATUSES = {
     RunStatus.PROVIDER.value,
     RunStatus.VALIDATING.value,
 }
-
-
-def _generate_batch_id(model_name: str) -> str:
-    """Generate a unique batch ID with timestamp and model name."""
-    timestamp = datetime.utcnow().strftime("%Y%m%d_%H%M%S")
-    safe_model = re.sub(r"[^a-zA-Z0-9-]", "", model_name.replace(" ", "-"))
-    return f"{timestamp}_{safe_model}"
-
-
-def _get_model_name_for_provider(provider: str) -> str:
-    """Get the model name for a given provider."""
-    provider_models = {
-        "openai": settings.OPENAI_MODEL,
-        "openai-mini": settings.OPENAI_MODEL_MINI,
-        "openai-nano": settings.OPENAI_MODEL_NANO,
-        "deepseek": settings.DEEPSEEK_MODEL,
-        "mock": "mock-model",
-    }
-    return provider_models.get(provider, provider)
-
-
-MODEL_PRICING = {
-    settings.OPENAI_MODEL: {"input": 2.50, "output": 10.00},
-    settings.OPENAI_MODEL_MINI: {"input": 0.15, "output": 0.60},
-    settings.OPENAI_MODEL_NANO: {"input": 0.10, "output": 0.40},
-    "mock-model": {"input": 0, "output": 0},
-}
-
-
-def _compute_batch_cost(batch: BatchRun) -> Optional[float]:
-    pricing = MODEL_PRICING.get(batch.model_name, MODEL_PRICING.get(settings.OPENAI_MODEL_NANO))
-    if not pricing:
-        return None
-    input_cost = (batch.total_input_tokens / 1_000_000) * pricing["input"]
-    output_cost = (batch.total_output_tokens / 1_000_000) * pricing["output"]
-    return input_cost + output_cost
-
-
-def _compute_match_rate(batch: BatchRun) -> Optional[float]:
-    if not batch.total_expected_entities:
-        return None
-    return batch.matched_entities / batch.total_expected_entities
-
-
-def _compute_wall_clock_time_ms(batch: BatchRun) -> int:
-    if not batch.created_at:
-        return 0
-    end_time = batch.completed_at if batch.completed_at else datetime.utcnow()
-    delta = end_time - batch.created_at
-    return int(delta.total_seconds() * 1000)
 
 
 @router.get("/api/baseline/cases", response_model=BaselineCasesResponse)
@@ -279,111 +236,17 @@ async def retry_baseline_case(
     req: BaselineRetryRequest,
     session: Session = Depends(get_session),
 ) -> dict:
-    case_data = get_case(case_id)
-    if not case_data:
-        raise HTTPException(status_code=404, detail="Baseline case not found")
-    case = BaselineCase(**case_data)
-
-    source_url = req.source_url
-    source = None
-    if not source_url:
-        source = await resolve_baseline_source(case)
-        if source:
-            source_url = source.pdf_url or source.url
-
-    if not source_url:
-        raise HTTPException(status_code=400, detail="No source URL resolved for baseline case")
-
-    resolved_url = source_url
-    source_keys = get_source_keys(case, resolved_url)
-    case_ids = [case.id]
-    if source_keys:
-        for other_data in list_cases():
-            other = BaselineCase(**other_data)
-            other_keys = get_source_keys(other, None)
-            if any(key in source_keys for key in other_keys):
-                case_ids.append(other.id)
-    case_ids = sorted(set(case_ids))
-
-    existing = None
-    if resolved_url:
-        stmt = (
-            select(ExtractionRun)
-            .where(ExtractionRun.pdf_url == resolved_url)
-            .order_by(ExtractionRun.created_at.desc())
-            .limit(1)
-        )
-        existing = session.exec(stmt).first()
-    if not existing:
-        existing = get_latest_run_for_cases(session, case_ids)
-    if existing and existing.status in PROCESSING_STATUSES:
-        link_cases_to_run(session, case_ids, existing.id)
-        return {
-            "id": existing.id,
-            "status": existing.status,
-            "message": "Baseline case already queued for processing",
-            "source_url": source_url,
-        }
-
     queue = get_queue()
-    if await queue.is_url_pending(source_url):
-        if existing:
-            link_cases_to_run(session, case_ids, existing.id)
-            return {
-                "id": existing.id,
-                "status": existing.status,
-                "message": "Baseline case already queued for processing",
-                "source_url": source_url,
-            }
-        return {
-            "id": None,
-            "status": RunStatus.QUEUED.value,
-            "message": "Baseline case already queued for processing",
-            "source_url": source_url,
-        }
-
-    meta = PaperMeta(
-        title=(source.title if source else None) or baseline_title(case),
-        doi=(source.doi if source else None) or case.doi,
-        url=(source.url if source else None) or case.paper_url,
-        source=source.source if source else "baseline",
-        year=source.year if source else None,
-        authors=source.authors if source and source.authors else [],
-    )
-    paper_repo = PaperRepository(session)
-    paper_id = paper_repo.upsert(meta)
-
-    use_provider = req.provider or settings.LLM_PROVIDER
-    run = ExtractionRun(
-        paper_id=paper_id,
-        status=RunStatus.QUEUED.value,
-        model_provider=use_provider,
-        pdf_url=source_url,
-        prompt_id=req.prompt_id,
-    )
-    session.add(run)
-    session.commit()
-    session.refresh(run)
-    link_cases_to_run(session, case_ids, run.id)
-
-    await queue.enqueue(
-        QueueItem(
-            run_id=run.id,
-            paper_id=paper_id,
-            pdf_url=source_url,
-            title=meta.title or baseline_title(case),
-            provider=use_provider,
-            force=True,
-            prompt_id=req.prompt_id,
+    try:
+        return await retry_baseline_case_service(
+            session=session,
+            case_id=case_id,
+            req=req,
+            queue=queue,
+            default_provider=settings.LLM_PROVIDER,
         )
-    )
-
-    return {
-        "id": run.id,
-        "status": run.status,
-        "message": "Baseline case re-queued for processing",
-        "source_url": source_url,
-    }
+    except ServiceError as exc:
+        raise HTTPException(status_code=exc.status_code, detail=exc.detail) from exc
 
 
 @router.post("/api/baseline/cases/{case_id}/upload")
@@ -737,11 +600,11 @@ async def list_batches(
                 failed=b.failed,
                 total_input_tokens=b.total_input_tokens,
                 total_output_tokens=b.total_output_tokens,
-                total_time_ms=_compute_wall_clock_time_ms(b),
+                total_time_ms=compute_wall_clock_time_ms(b),
                 matched_entities=b.matched_entities,
                 total_expected_entities=b.total_expected_entities,
-                match_rate=_compute_match_rate(b),
-                estimated_cost_usd=_compute_batch_cost(b),
+                match_rate=compute_match_rate(b),
+                estimated_cost_usd=compute_batch_cost(b),
                 created_at=b.created_at.isoformat() if b.created_at else "",
             )
             for b in batches
@@ -758,8 +621,8 @@ async def batch_enqueue(
     queue = get_queue()
     paper_repo = PaperRepository(session)
 
-    model_name = _get_model_name_for_provider(req.provider)
-    batch_id = _generate_batch_id(model_name)
+    model_name = get_model_name_for_provider(req.provider)
+    batch_id = generate_batch_id(model_name)
 
     batch = BatchRun(
         batch_id=batch_id,
@@ -866,80 +729,16 @@ async def batch_retry(
     req: BatchRetryRequest,
     session: Session = Depends(get_session),
 ) -> BatchRetryResponse:
-    """Retry all failed runs in a batch."""
     queue = get_queue()
-
-    stmt = select(BatchRun).where(BatchRun.batch_id == req.batch_id)
-    batch = session.exec(stmt).first()
-    if not batch:
-        raise HTTPException(status_code=404, detail=f"Batch not found: {req.batch_id}")
-
-    provider = req.provider or batch.model_provider
-
-    stmt = (
-        select(ExtractionRun)
-        .where(ExtractionRun.batch_id == req.batch_id)
-        .where(ExtractionRun.status == RunStatus.FAILED.value)
-    )
-    failed_runs = session.exec(stmt).all()
-
-    local_upload_cache: Dict[str, str] = {}
-
-    retried = 0
-    skipped = 0
-
-    for run in failed_runs:
-        pdf_url = run.pdf_url
-
-        if is_upload_url(pdf_url):
-            baseline_case_id = run.baseline_case_id
-            if not baseline_case_id:
-                link_stmt = select(BaselineCaseRun.baseline_case_id).where(BaselineCaseRun.run_id == run.id).limit(1)
-                linked_id = session.exec(link_stmt).first()
-                if linked_id:
-                    baseline_case_id = linked_id
-
-            if baseline_case_id:
-                case_data = get_case(baseline_case_id)
-                if case_data:
-                    case = BaselineCase(**case_data)
-                    local_source = resolve_local_pdf_source(case, local_upload_cache)
-                    if local_source and local_source.pdf_url:
-                        pdf_url = local_source.pdf_url
-                        run.pdf_url = pdf_url
-
-        if not pdf_url:
-            skipped += 1
-            continue
-
-        run.status = RunStatus.QUEUED.value
-        run.failure_reason = None
-        run.model_provider = provider
-        session.add(run)
-
-        await queue.enqueue(
-            QueueItem(
-                run_id=run.id,
-                paper_id=run.paper_id,
-                pdf_url=pdf_url,
-                title="",
-                provider=provider,
-                force=True,
-                prompt_id=run.prompt_id,
-            )
+    try:
+        return await retry_batch_runs(
+            session=session,
+            batch_id=req.batch_id,
+            provider=req.provider,
+            queue=queue,
         )
-        retried += 1
-
-    batch.failed = batch.failed - retried
-    batch.status = BatchStatus.RUNNING.value
-    session.add(batch)
-    session.commit()
-
-    return BatchRetryResponse(
-        batch_id=req.batch_id,
-        retried=retried,
-        skipped=skipped,
-    )
+    except ServiceError as exc:
+        raise HTTPException(status_code=exc.status_code, detail=exc.detail) from exc
 
 
 @router.get("/api/baseline/batch/{batch_id}")
@@ -965,11 +764,11 @@ async def get_batch(
         failed=batch.failed,
         total_input_tokens=batch.total_input_tokens,
         total_output_tokens=batch.total_output_tokens,
-        total_time_ms=_compute_wall_clock_time_ms(batch),
+        total_time_ms=compute_wall_clock_time_ms(batch),
         matched_entities=batch.matched_entities,
         total_expected_entities=batch.total_expected_entities,
-        match_rate=_compute_match_rate(batch),
-        estimated_cost_usd=_compute_batch_cost(batch),
+        match_rate=compute_match_rate(batch),
+        estimated_cost_usd=compute_batch_cost(batch),
         created_at=batch.created_at.isoformat() if batch.created_at else "",
     )
 

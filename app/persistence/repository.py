@@ -3,7 +3,6 @@ from __future__ import annotations
 
 import hashlib
 import json
-from datetime import datetime
 from typing import List, Optional, Tuple
 
 from sqlmodel import Session, select
@@ -18,6 +17,7 @@ from .models import (
     BaselineCaseRun,
 )
 from ..schemas import ExtractionPayload, PaperMeta
+from ..time_utils import utc_now
 
 
 class PaperRepository:
@@ -270,8 +270,8 @@ class PromptRepository:
             name=name,
             description=description,
             is_active=activate,
-            created_at=datetime.utcnow(),
-            updated_at=datetime.utcnow(),
+            created_at=utc_now(),
+            updated_at=utc_now(),
         )
         self.session.add(prompt)
         self.session.commit()
@@ -308,7 +308,7 @@ class PromptRepository:
         self.session.add(version)
         prompt = self.session.get(BasePrompt, prompt_id)
         if prompt:
-            prompt.updated_at = datetime.utcnow()
+            prompt.updated_at = utc_now()
             self.session.add(prompt)
         self.session.commit()
         self.session.refresh(version)
@@ -320,7 +320,7 @@ class PromptRepository:
         if not prompt:
             return None
         prompt.is_active = True
-        prompt.updated_at = datetime.utcnow()
+        prompt.updated_at = utc_now()
         self.session.add(prompt)
         self.session.commit()
         self.session.refresh(prompt)
@@ -341,7 +341,7 @@ class PromptRepository:
 
         if not self.get_active_prompt():
             prompt.is_active = True
-            prompt.updated_at = datetime.utcnow()
+            prompt.updated_at = utc_now()
             self.session.add(prompt)
             self.session.commit()
             self.session.refresh(prompt)
@@ -388,7 +388,7 @@ class PromptRepository:
         stmt = select(BasePrompt).where(BasePrompt.is_active == True)  # noqa: E712
         for prompt in self.session.exec(stmt).all():
             prompt.is_active = False
-            prompt.updated_at = datetime.utcnow()
+            prompt.updated_at = utc_now()
             self.session.add(prompt)
         self.session.commit()
     

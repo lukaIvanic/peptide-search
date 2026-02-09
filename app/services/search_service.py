@@ -34,7 +34,7 @@ class SearchStats:
 def _norm_year(year_like) -> int | None:
     try:
         y = int(year_like)
-        return y if 1800 <= y <= (_dt.datetime.utcnow().year + 1) else None
+        return y if 1800 <= y <= (_dt.datetime.now(_dt.timezone.utc).year + 1) else None
     except Exception:
         return None
 

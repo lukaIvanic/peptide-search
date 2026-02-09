@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import json
-from datetime import datetime, timedelta
+from datetime import timedelta
 from typing import List, Optional
 
 from fastapi import APIRouter, Depends, File, Form, HTTPException, Query, UploadFile
@@ -27,8 +27,17 @@ from ...schemas import (
 from ...services.baseline_helpers import link_cases_to_run, select_baseline_result
 from ...services.extraction_service import run_edit, run_extraction_from_files, run_followup, run_followup_stream
 from ...services.failure_reason import FAILURE_BUCKET_LABELS, bucket_failure_reason, normalize_failure_reason
-from ...services.queue_service import QueueItem, get_queue
+from ...services.queue_service import get_queue
+from ...services.runs_retry_service import (
+    ServiceError,
+    list_failed_runs_payload,
+    retry_failed_runs as retry_failed_runs_service,
+    retry_run as retry_run_service,
+    retry_run_with_source as retry_run_with_source_service,
+    run_history_payload,
+)
 from ...services.search_service import search_all_free_sources
+from ...time_utils import utc_now
 from ...services.view_builders import build_run_payload
 
 router = APIRouter(tags=["runs"])
@@ -248,7 +257,7 @@ async def get_failure_summary(
     max_runs: int = Query(default=1000, ge=50, le=10000),
     session: Session = Depends(get_session),
 ) -> FailureSummaryResponse:
-    cutoff = datetime.utcnow() - timedelta(days=days)
+    cutoff = utc_now() - timedelta(days=days)
     stmt = (
         select(ExtractionRun, Paper)
         .join(Paper, ExtractionRun.paper_id == Paper.id, isouter=True)
@@ -318,56 +327,17 @@ async def list_failed_runs(
     reason: Optional[str] = Query(default=None),
     session: Session = Depends(get_session),
 ) -> FailedRunsResponse:
-    cutoff = datetime.utcnow() - timedelta(days=days)
-    stmt = (
-        select(ExtractionRun, Paper)
-        .join(Paper, ExtractionRun.paper_id == Paper.id, isouter=True)
-        .where(ExtractionRun.status == RunStatus.FAILED.value)
-        .where(ExtractionRun.created_at >= cutoff)
-        .order_by(ExtractionRun.created_at.desc())
-        .limit(max_runs)
+    payload = list_failed_runs_payload(
+        session=session,
+        days=days,
+        limit=limit,
+        max_runs=max_runs,
+        bucket=bucket,
+        provider=provider,
+        source=source,
+        reason=reason,
     )
-    if provider:
-        stmt = stmt.where(ExtractionRun.model_provider == provider)
-    if source:
-        stmt = stmt.where(Paper.source == source)
-    rows = session.exec(stmt).all()
-    items = []
-    for run, paper in rows:
-        bucket_key = bucket_failure_reason(run.failure_reason)
-        normalized_reason = normalize_failure_reason(run.failure_reason)
-        if bucket and bucket_key != bucket:
-            continue
-        if reason and normalized_reason != reason:
-            continue
-        items.append(
-            {
-                "id": run.id,
-                "paper_id": run.paper_id,
-                "status": run.status,
-                "failure_reason": run.failure_reason,
-                "bucket": bucket_key,
-                "normalized_reason": normalized_reason,
-                "model_provider": run.model_provider,
-                "model_name": run.model_name,
-                "created_at": run.created_at.isoformat() + "Z" if run.created_at else None,
-                "paper_title": paper.title if paper else None,
-                "paper_doi": paper.doi if paper else None,
-                "paper_url": paper.url if paper else None,
-                "paper_source": paper.source if paper else None,
-                "paper_year": paper.year if paper else None,
-            }
-        )
-        if len(items) >= limit:
-            break
-
-    window_start = cutoff.isoformat() + "Z"
-    return FailedRunsResponse(
-        items=items,
-        total=len(items),
-        window_days=days,
-        window_start=window_start,
-    )
+    return FailedRunsResponse(**payload)
 
 
 @router.post("/api/runs/failures/retry", response_model=BulkRetryResponse)
@@ -375,90 +345,12 @@ async def retry_failed_runs(
     req: BulkRetryRequest,
     session: Session = Depends(get_session),
 ) -> BulkRetryResponse:
-    cutoff = datetime.utcnow() - timedelta(days=req.days)
-    stmt = (
-        select(ExtractionRun, Paper)
-        .join(Paper, ExtractionRun.paper_id == Paper.id, isouter=True)
-        .where(ExtractionRun.status == RunStatus.FAILED.value)
-        .where(ExtractionRun.created_at >= cutoff)
-        .order_by(ExtractionRun.created_at.desc())
-        .limit(req.max_runs)
-    )
-    if req.provider:
-        stmt = stmt.where(ExtractionRun.model_provider == req.provider)
-    if req.source:
-        stmt = stmt.where(Paper.source == req.source)
-    rows = session.exec(stmt).all()
-
-    requested = 0
-    enqueued = 0
-    skipped = 0
-    skipped_missing_pdf = 0
-    skipped_missing_paper = 0
-    skipped_not_failed = 0
-    to_enqueue: List[QueueItem] = []
     queue = get_queue()
-
-    for run, paper in rows:
-        bucket_key = bucket_failure_reason(run.failure_reason)
-        normalized_reason = normalize_failure_reason(run.failure_reason)
-        if req.bucket and bucket_key != req.bucket:
-            continue
-        if req.reason and normalized_reason != req.reason:
-            continue
-        if requested >= req.limit:
-            break
-        requested += 1
-
-        if run.status != RunStatus.FAILED.value:
-            skipped_not_failed += 1
-            continue
-        if not paper:
-            skipped_missing_paper += 1
-            skipped += 1
-            continue
-        if not run.pdf_url:
-            skipped_missing_pdf += 1
-            skipped += 1
-            continue
-        if await queue.is_url_pending(run.pdf_url):
-            skipped += 1
-            continue
-
-        run.status = RunStatus.QUEUED.value
-        run.failure_reason = None
-        session.add(run)
-        to_enqueue.append(
-            QueueItem(
-                run_id=run.id,
-                paper_id=paper.id,
-                pdf_url=run.pdf_url,
-                title=paper.title or "(Untitled)",
-                provider=run.model_provider or settings.LLM_PROVIDER,
-                force=True,
-                prompt_id=run.prompt_id,
-                prompt_version_id=run.prompt_version_id,
-            )
-        )
-
-    if to_enqueue:
-        session.commit()
-        for item in to_enqueue:
-            await queue.enqueue(item)
-            enqueued += 1
-    else:
-        session.commit()
-
-    if requested > (enqueued + skipped + skipped_not_failed):
-        skipped += requested - (enqueued + skipped + skipped_not_failed)
-
-    return BulkRetryResponse(
-        requested=requested,
-        enqueued=enqueued,
-        skipped=skipped,
-        skipped_missing_pdf=skipped_missing_pdf,
-        skipped_missing_paper=skipped_missing_paper,
-        skipped_not_failed=skipped_not_failed,
+    return await retry_failed_runs_service(
+        session=session,
+        req=req,
+        queue=queue,
+        default_provider=settings.LLM_PROVIDER,
     )
 
 
@@ -540,27 +432,10 @@ async def edit_run(
 
 @router.get("/api/runs/{run_id}/history")
 async def get_run_history(run_id: int, session: Session = Depends(get_session)) -> dict:
-    run = session.get(ExtractionRun, run_id)
-    if not run:
-        raise HTTPException(status_code=404, detail="Run not found")
-    stmt = (
-        select(ExtractionRun)
-        .where(ExtractionRun.paper_id == run.paper_id)
-        .order_by(ExtractionRun.created_at.desc())
-    )
-    versions = []
-    for item in session.exec(stmt).all():
-        versions.append(
-            {
-                "id": item.id,
-                "parent_run_id": item.parent_run_id,
-                "status": item.status,
-                "model_provider": item.model_provider,
-                "model_name": item.model_name,
-                "created_at": item.created_at.isoformat() + "Z" if item.created_at else None,
-            }
-        )
-    return {"paper_id": run.paper_id, "versions": versions}
+    try:
+        return run_history_payload(session=session, run_id=run_id)
+    except ServiceError as exc:
+        raise HTTPException(status_code=exc.status_code, detail=exc.detail) from exc
 
 
 @router.post("/api/runs/{run_id}/retry")
@@ -568,53 +443,16 @@ async def retry_run(
     run_id: int,
     session: Session = Depends(get_session),
 ) -> dict:
-    """Retry a failed extraction run."""
-    run = session.get(ExtractionRun, run_id)
-    if not run:
-        raise HTTPException(status_code=404, detail="Run not found")
-
-    if run.status != RunStatus.FAILED.value:
-        raise HTTPException(
-            status_code=400,
-            detail=f"Can only retry failed runs. Current status: {run.status}",
-        )
-
-    paper = session.get(Paper, run.paper_id)
-    if not paper:
-        raise HTTPException(status_code=404, detail="Paper not found")
-
     queue = get_queue()
-    if run.pdf_url and await queue.is_url_pending(run.pdf_url):
-        return {
-            "id": run.id,
-            "status": run.status,
-            "message": "Run already queued for processing",
-        }
-
-    run.status = RunStatus.QUEUED.value
-    run.failure_reason = None
-    session.add(run)
-    session.commit()
-    session.refresh(run)
-
-    await queue.enqueue(
-        QueueItem(
-            run_id=run.id,
-            paper_id=paper.id,
-            pdf_url=run.pdf_url,
-            title=paper.title,
-            provider=run.model_provider or settings.LLM_PROVIDER,
-            force=True,
-            prompt_id=run.prompt_id,
-            prompt_version_id=run.prompt_version_id,
+    try:
+        return await retry_run_service(
+            session=session,
+            run_id=run_id,
+            queue=queue,
+            default_provider=settings.LLM_PROVIDER,
         )
-    )
-
-    return {
-        "id": run.id,
-        "status": run.status,
-        "message": "Run re-queued for processing",
-    }
+    except ServiceError as exc:
+        raise HTTPException(status_code=exc.status_code, detail=exc.detail) from exc
 
 
 @router.post("/api/runs/{run_id}/resolve-source", response_model=ResolvedSourceResponse)
@@ -673,63 +511,19 @@ async def retry_run_with_source(
     req: RunRetryWithSourceRequest,
     session: Session = Depends(get_session),
 ) -> dict:
-    run = session.get(ExtractionRun, run_id)
-    if not run:
-        raise HTTPException(status_code=404, detail="Run not found")
-    paper = session.get(Paper, run.paper_id) if run.paper_id else None
-    if not paper:
-        raise HTTPException(status_code=404, detail="Paper not found")
-
-    source_url = req.source_url or run.pdf_url or paper.url
-    if not source_url:
-        raise HTTPException(status_code=400, detail="No source URL available for retry")
-
-    use_provider = req.provider or run.model_provider or settings.LLM_PROVIDER
-    use_prompt_id = req.prompt_id or run.prompt_id
     queue = get_queue()
-    if await queue.is_url_pending(source_url):
-        return {
-            "id": run.id,
-            "status": RunStatus.QUEUED.value,
-            "message": "Run already queued for processing",
-        }
-
-    new_run = ExtractionRun(
-        paper_id=paper.id,
-        status=RunStatus.QUEUED.value,
-        model_provider=use_provider,
-        pdf_url=source_url,
-        prompt_id=use_prompt_id,
-        prompt_version_id=run.prompt_version_id,
-        parent_run_id=run.id,
-    )
-    session.add(new_run)
-    session.commit()
-    session.refresh(new_run)
-
-    linked_cases = BaselineCaseRunRepository(session).list_case_ids_for_run(run.id)
-    if not linked_cases and run.baseline_case_id:
-        linked_cases = [run.baseline_case_id]
-    link_cases_to_run(session, linked_cases, new_run.id)
-
-    await queue.enqueue(
-        QueueItem(
-            run_id=new_run.id,
-            paper_id=paper.id,
-            pdf_url=source_url,
-            title=paper.title or "(Untitled)",
-            provider=use_provider,
-            force=True,
-            prompt_id=use_prompt_id,
-            prompt_version_id=run.prompt_version_id,
+    try:
+        return await retry_run_with_source_service(
+            session=session,
+            run_id=run_id,
+            source_url=req.source_url,
+            provider=req.provider,
+            prompt_id=req.prompt_id,
+            queue=queue,
+            default_provider=settings.LLM_PROVIDER,
         )
-    )
-
-    return {
-        "id": new_run.id,
-        "status": new_run.status,
-        "message": "New run created and queued",
-    }
+    except ServiceError as exc:
+        raise HTTPException(status_code=exc.status_code, detail=exc.detail) from exc
 
 
 @router.post("/api/runs/{run_id}/upload", response_model=ExtractResponse)

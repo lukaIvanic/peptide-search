@@ -11,6 +11,8 @@ from typing import Optional
 
 from sqlmodel import SQLModel, Field
 
+from ..time_utils import utc_now
+
 
 class RunStatus(str, Enum):
     """Status of an extraction run."""
@@ -23,6 +25,37 @@ class RunStatus(str, Enum):
     CANCELLED = "cancelled"
 
 
+class BatchStatus(str, Enum):
+    """Status of a batch run."""
+    RUNNING = "running"
+    COMPLETED = "completed"
+    PARTIAL = "partial"  # Some failed
+    FAILED = "failed"  # All failed
+
+
+class BatchRun(SQLModel, table=True):
+    """Tracks a batch of extraction runs for comparison."""
+    __tablename__ = "batch_run"
+
+    id: Optional[int] = Field(default=None, primary_key=True)
+    batch_id: str = Field(index=True, unique=True)  # e.g., "20260209_143052_001_gpt5-nano"
+    label: Optional[str] = Field(default=None)  # user-provided name
+    dataset: str = Field(index=True)  # which dataset this batch ran on
+    model_provider: str
+    model_name: str
+    status: str = Field(default=BatchStatus.RUNNING.value, index=True)
+    total_papers: int = 0
+    completed: int = 0
+    failed: int = 0
+    total_input_tokens: int = 0
+    total_output_tokens: int = 0
+    total_time_ms: int = 0
+    matched_entities: int = 0  # count of extracted sequences matching baseline
+    total_expected_entities: int = 0  # count of baseline entities checked
+    created_at: datetime = Field(default_factory=utc_now, nullable=False)
+    completed_at: Optional[datetime] = Field(default=None)  # when batch finished (for wall-clock time)
+
+
 class Paper(SQLModel, table=True):
     """A scientific paper from which peptides/molecules are extracted."""
     id: Optional[int] = Field(default=None, primary_key=True)
@@ -32,7 +65,7 @@ class Paper(SQLModel, table=True):
     source: Optional[str] = Field(default=None, index=True)  # pmc, europepmc, arxiv, semanticscholar, upload, manual
     year: Optional[int] = Field(default=None, index=True)
     authors_json: Optional[str] = Field(default=None)  # JSON-encoded list of authors
-    created_at: datetime = Field(default_factory=datetime.utcnow, nullable=False)
+    created_at: datetime = Field(default_factory=utc_now, nullable=False)
 
 
 class ExtractionRun(SQLModel, table=True):
@@ -67,11 +100,17 @@ class ExtractionRun(SQLModel, table=True):
     model_provider: Optional[str] = Field(default=None)
     model_name: Optional[str] = Field(default=None)
 
+    # Batch tracking
+    batch_id: Optional[str] = Field(default=None, index=True)  # links to BatchRun.batch_id
+
     # Token usage (nullable for backward compatibility)
     input_tokens: Optional[int] = Field(default=None)
     output_tokens: Optional[int] = Field(default=None)
     reasoning_tokens: Optional[int] = Field(default=None)
     total_tokens: Optional[int] = Field(default=None)
+
+    # Extraction timing
+    extraction_time_ms: Optional[int] = Field(default=None)  # how long the LLM call took
     
     # Provenance
     source_text_hash: Optional[str] = Field(default=None, index=True)  # SHA256 of input text
@@ -79,7 +118,7 @@ class ExtractionRun(SQLModel, table=True):
     pdf_url: Optional[str] = Field(default=None)  # Original PDF URL for reference
     
     # Timing
-    created_at: datetime = Field(default_factory=datetime.utcnow, nullable=False)
+    created_at: datetime = Field(default_factory=utc_now, nullable=False)
 
 
 class BaselineCaseRun(SQLModel, table=True):
@@ -89,7 +128,7 @@ class BaselineCaseRun(SQLModel, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
     baseline_case_id: str = Field(index=True)
     run_id: int = Field(foreign_key="extraction_run.id", index=True)
-    created_at: datetime = Field(default_factory=datetime.utcnow, nullable=False)
+    created_at: datetime = Field(default_factory=utc_now, nullable=False)
 
 
 class ExtractionEntity(SQLModel, table=True):
@@ -146,7 +185,7 @@ class QualityRuleConfig(SQLModel, table=True):
 
     id: Optional[int] = Field(default=None, primary_key=True)
     rules_json: str = Field(default="{}")
-    updated_at: datetime = Field(default_factory=datetime.utcnow, nullable=False)
+    updated_at: datetime = Field(default_factory=utc_now, nullable=False)
 
 
 class BasePrompt(SQLModel, table=True):
@@ -157,8 +196,8 @@ class BasePrompt(SQLModel, table=True):
     name: str = Field(index=True)
     description: Optional[str] = Field(default=None)
     is_active: bool = Field(default=False, index=True)
-    created_at: datetime = Field(default_factory=datetime.utcnow, nullable=False)
-    updated_at: datetime = Field(default_factory=datetime.utcnow, nullable=False)
+    created_at: datetime = Field(default_factory=utc_now, nullable=False)
+    updated_at: datetime = Field(default_factory=utc_now, nullable=False)
 
 
 class PromptVersion(SQLModel, table=True):
@@ -171,7 +210,7 @@ class PromptVersion(SQLModel, table=True):
     content: str
     notes: Optional[str] = Field(default=None)
     created_by: Optional[str] = Field(default=None)
-    created_at: datetime = Field(default_factory=datetime.utcnow, nullable=False)
+    created_at: datetime = Field(default_factory=utc_now, nullable=False)
 
 
 # Keep the old Extraction model for backward compatibility during migration
@@ -208,4 +247,4 @@ class Extraction(SQLModel, table=True):
     model_name: Optional[str] = Field(default=None)
     model_provider: Optional[str] = Field(default=None)
 
-    created_at: datetime = Field(default_factory=datetime.utcnow, nullable=False)
+    created_at: datetime = Field(default_factory=utc_now, nullable=False)
