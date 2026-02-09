@@ -5,29 +5,36 @@ from support import ApiIntegrationTestCase
 
 
 class ApiEnqueueAndHistoryContractTests(ApiIntegrationTestCase):
-    def test_error_envelope_shape_for_missing_run(self) -> None:
-        response = self.client.get("/api/runs/999999")
-        self.assertEqual(response.status_code, 404)
+    def assert_error_envelope(
+        self,
+        response,
+        *,
+        status_code: int,
+        code: str,
+    ) -> dict:
+        self.assertEqual(response.status_code, status_code)
         body = response.json()
         self.assertIn("error", body)
-        self.assertEqual(body["error"]["code"], "not_found")
+        self.assertEqual(body["error"]["code"], code)
         self.assertIn("message", body["error"])
+        return body
+
+    def assert_utc_timestamp(self, value: str) -> None:
+        self.assertIsInstance(value, str)
+        self.assertTrue(value.endswith("Z"))
+
+    def test_error_envelope_shape_for_missing_run(self) -> None:
+        response = self.client.get("/api/runs/999999")
+        self.assert_error_envelope(response, status_code=404, code="not_found")
 
     def test_validation_error_envelope_for_malformed_enqueue_payload(self) -> None:
         response = self.client.post("/api/enqueue", json={"provider": "mock"})
-        self.assertEqual(response.status_code, 422)
-        body = response.json()
-        self.assertIn("error", body)
-        self.assertEqual(body["error"]["code"], "validation_error")
-        self.assertIn("message", body["error"])
+        body = self.assert_error_envelope(response, status_code=422, code="validation_error")
         self.assertIsInstance(body["error"].get("details"), list)
 
     def test_bad_request_error_mapping_for_extract_contract(self) -> None:
         response = self.client.post("/api/extract", json={})
-        self.assertEqual(response.status_code, 400)
-        body = response.json()
-        self.assertEqual(body["error"]["code"], "bad_request")
-        self.assertIn("message", body["error"])
+        self.assert_error_envelope(response, status_code=400, code="bad_request")
 
     def test_enqueue_contract_and_url_dedupe(self) -> None:
         payload = {
@@ -115,7 +122,7 @@ class ApiEnqueueAndHistoryContractTests(ApiIntegrationTestCase):
             "created_at",
         ]:
             self.assertIn(key, run_payload)
-        self.assertTrue(run_payload["created_at"].endswith("Z"))
+        self.assert_utc_timestamp(run_payload["created_at"])
 
     def test_retry_response_schema_keys_are_stable(self) -> None:
         paper_id = self.create_paper(
@@ -156,7 +163,7 @@ class ApiEnqueueAndHistoryContractTests(ApiIntegrationTestCase):
         body = response.json()
         self.assertIn("runs", body)
         self.assertGreaterEqual(len(body["runs"]), 1)
-        self.assertTrue(body["runs"][0]["created_at"].endswith("Z"))
+        self.assert_utc_timestamp(body["runs"][0]["created_at"])
 
     def test_extractions_timestamp_contract_uses_utc_z_suffix(self) -> None:
         paper_id = self.create_paper(
@@ -177,7 +184,7 @@ class ApiEnqueueAndHistoryContractTests(ApiIntegrationTestCase):
         rows = response.json()
         row = next((item for item in rows if item["id"] == run_id), None)
         self.assertIsNotNone(row)
-        self.assertTrue(row["created_at"].endswith("Z"))
+        self.assert_utc_timestamp(row["created_at"])
 
     def test_run_history_lineage_contract(self) -> None:
         paper_id = self.create_paper(
@@ -229,9 +236,7 @@ class ApiEnqueueAndHistoryContractTests(ApiIntegrationTestCase):
             self.assertIn("model_provider", by_id[run_id])
             self.assertIn("model_name", by_id[run_id])
             self.assertIn("created_at", by_id[run_id])
-            created_at = by_id[run_id]["created_at"]
-            self.assertIsInstance(created_at, str)
-            self.assertTrue(created_at.endswith("Z"))
+            self.assert_utc_timestamp(by_id[run_id]["created_at"])
 
 
 if __name__ == "__main__":

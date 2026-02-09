@@ -10,6 +10,27 @@ from support import ApiIntegrationTestCase
 
 
 class ApiQueueAndBaselineRetryTests(ApiIntegrationTestCase):
+    def first_case(self) -> dict:
+        cases = list_cases()
+        self.assertGreater(len(cases), 0)
+        return cases[0]
+
+    def first_case_id(self) -> str:
+        return self.first_case()["id"]
+
+    def assert_error(
+        self,
+        response,
+        *,
+        status_code: int,
+        code: str,
+        message_contains: str,
+    ) -> None:
+        self.assertEqual(response.status_code, status_code)
+        body = response.json()
+        self.assertEqual(body["error"]["code"], code)
+        self.assertIn(message_contains, body["error"]["message"])
+
     def test_retry_failed_runs_api_transitions_to_queued(self) -> None:
         paper_id = self.create_paper(doi="10.1000/test-queue", url="https://example.org/queue")
         run_id = self.create_run(
@@ -41,7 +62,7 @@ class ApiQueueAndBaselineRetryTests(ApiIntegrationTestCase):
             self.assertIsNone(updated.failure_reason)
 
     def test_baseline_case_retry_requeues_once_and_then_deduplicates(self) -> None:
-        case = list_cases()[0]
+        case = self.first_case()
         case_id = case["id"]
         source_url = "https://example.org/baseline-case.pdf"
 
@@ -285,13 +306,15 @@ class ApiQueueAndBaselineRetryTests(ApiIntegrationTestCase):
             "/api/baseline/cases/does-not-exist/retry",
             json={"provider": "mock"},
         )
-        self.assertEqual(response.status_code, 404)
-        body = response.json()
-        self.assertEqual(body["error"]["code"], "not_found")
-        self.assertIn("Baseline case not found", body["error"]["message"])
+        self.assert_error(
+            response,
+            status_code=404,
+            code="not_found",
+            message_contains="Baseline case not found",
+        )
 
     def test_retry_baseline_case_unresolved_source_returns_bad_request(self) -> None:
-        case_id = list_cases()[0]["id"]
+        case_id = self.first_case_id()
         with patch(
             "app.services.baseline_retry_service.resolve_baseline_source",
             new=AsyncMock(return_value=None),
@@ -300,10 +323,12 @@ class ApiQueueAndBaselineRetryTests(ApiIntegrationTestCase):
                 f"/api/baseline/cases/{case_id}/retry",
                 json={"provider": "mock"},
             )
-        self.assertEqual(response.status_code, 400)
-        body = response.json()
-        self.assertEqual(body["error"]["code"], "bad_request")
-        self.assertIn("No source URL resolved", body["error"]["message"])
+        self.assert_error(
+            response,
+            status_code=400,
+            code="bad_request",
+            message_contains="No source URL resolved",
+        )
 
     def test_retry_baseline_case_links_related_cases_by_shared_source_keys(self) -> None:
         shared_case_id = "case-shared-1"
@@ -363,7 +388,7 @@ class ApiQueueAndBaselineRetryTests(ApiIntegrationTestCase):
             self.assertEqual(links, [shared_case_id, related_case_id])
 
     def test_batch_retry_remaps_upload_source_and_skips_missing_pdf(self) -> None:
-        case_id = list_cases()[0]["id"]
+        case_id = self.first_case_id()
         batch_id = "batch_retry_mixed"
         paper_id = self.create_paper(doi="10.1000/batch-mixed", url="https://example.org/batch-mixed")
 

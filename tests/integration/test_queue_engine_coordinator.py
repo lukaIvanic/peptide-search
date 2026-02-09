@@ -10,6 +10,22 @@ from support import ApiIntegrationTestCase
 
 
 class QueueEngineCoordinatorTests(ApiIntegrationTestCase):
+    def _claim_and_mark_stale(
+        self,
+        coordinator: QueueCoordinator,
+        *,
+        worker_id: str,
+        minutes_old: int = 20,
+    ) -> None:
+        with Session(self.db_module.engine) as session:
+            claimed = coordinator.claim_next_job(session, worker_id=worker_id)
+            self.assertIsNotNone(claimed)
+            job = session.get(QueueJob, claimed.id)
+            self.assertIsNotNone(job)
+            job.claimed_at = utc_now() - timedelta(minutes=minutes_old)
+            session.add(job)
+            session.commit()
+
     def test_enqueue_new_run_rejects_blank_source_url(self) -> None:
         coordinator = QueueCoordinator()
         paper_id = self.create_paper(title="Blank source")
@@ -503,14 +519,7 @@ class QueueEngineCoordinatorTests(ApiIntegrationTestCase):
             self.assertTrue(enqueue_result.enqueued)
             run_id = enqueue_result.run_id
 
-        with Session(self.db_module.engine) as session:
-            claimed = coordinator.claim_next_job(session, worker_id="worker-1")
-            self.assertIsNotNone(claimed)
-            job = session.get(QueueJob, claimed.id)
-            self.assertIsNotNone(job)
-            job.claimed_at = utc_now() - timedelta(minutes=20)
-            session.add(job)
-            session.commit()
+        self._claim_and_mark_stale(coordinator, worker_id="worker-1")
 
         with Session(self.db_module.engine) as session:
             summary = coordinator.recover_stale_claims(
@@ -526,76 +535,7 @@ class QueueEngineCoordinatorTests(ApiIntegrationTestCase):
             self.assertEqual(job.status, QueueJobStatus.QUEUED.value)
             self.assertEqual(job.attempt, 1)
 
-        with Session(self.db_module.engine) as session:
-            claimed_again = coordinator.claim_next_job(session, worker_id="worker-2")
-            self.assertIsNotNone(claimed_again)
-            job = session.get(QueueJob, claimed_again.id)
-            job.claimed_at = utc_now() - timedelta(minutes=20)
-            session.add(job)
-            session.commit()
-
-        with Session(self.db_module.engine) as session:
-            summary = coordinator.recover_stale_claims(
-                session,
-                stale_after_seconds=60,
-                max_attempts=2,
-            )
-            self.assertEqual(summary.requeued, 0)
-            self.assertEqual(summary.failed, 1)
-
-            job = session.exec(select(QueueJob).where(QueueJob.run_id == run_id)).first()
-            self.assertEqual(job.status, QueueJobStatus.FAILED.value)
-
-            run = session.get(ExtractionRun, run_id)
-            self.assertEqual(run.status, RunStatus.FAILED.value)
-            self.assertEqual(run.failure_reason, DEFAULT_STALE_FAILURE_REASON)
-
-            lock = session.exec(
-                select(ActiveSourceLock).where(ActiveSourceLock.run_id == run_id)
-            ).first()
-            self.assertIsNone(lock)
-
-        with Session(self.db_module.engine) as session:
-            run = ExtractionRun(
-                paper_id=paper_id,
-                status=RunStatus.QUEUED.value,
-                model_provider="mock",
-                pdf_url=source_url,
-            )
-            enqueue_result = coordinator.enqueue_new_run(session, run=run, title="Stale")
-            self.assertTrue(enqueue_result.enqueued)
-            run_id = enqueue_result.run_id
-
-        with Session(self.db_module.engine) as session:
-            claimed = coordinator.claim_next_job(session, worker_id="worker-1")
-            self.assertIsNotNone(claimed)
-            job = session.get(QueueJob, claimed.id)
-            self.assertIsNotNone(job)
-            job.claimed_at = utc_now() - timedelta(minutes=20)
-            session.add(job)
-            session.commit()
-
-        with Session(self.db_module.engine) as session:
-            summary = coordinator.recover_stale_claims(
-                session,
-                stale_after_seconds=60,
-                max_attempts=3,
-            )
-            self.assertEqual(summary.requeued, 1)
-            self.assertEqual(summary.failed, 0)
-
-            job = session.exec(select(QueueJob).where(QueueJob.run_id == run_id)).first()
-            self.assertIsNotNone(job)
-            self.assertEqual(job.status, QueueJobStatus.QUEUED.value)
-            self.assertEqual(job.attempt, 1)
-
-        with Session(self.db_module.engine) as session:
-            claimed_again = coordinator.claim_next_job(session, worker_id="worker-2")
-            self.assertIsNotNone(claimed_again)
-            job = session.get(QueueJob, claimed_again.id)
-            job.claimed_at = utc_now() - timedelta(minutes=20)
-            session.add(job)
-            session.commit()
+        self._claim_and_mark_stale(coordinator, worker_id="worker-2")
 
         with Session(self.db_module.engine) as session:
             summary = coordinator.recover_stale_claims(
