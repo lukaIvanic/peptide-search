@@ -3,17 +3,37 @@ import unittest
 from sqlmodel import Session, select
 
 from app.baseline.loader import list_cases
-from app.persistence.models import BaselineCaseRun, ExtractionRun, RunStatus
+from app.persistence.models import BaselineCaseRun, ExtractionRun, QueueJobStatus, RunStatus
 from support import ApiIntegrationTestCase
 
 
 class ApiRunRetryEndpointTests(ApiIntegrationTestCase):
+    def first_case_id(self) -> str:
+        cases = list_cases()
+        self.assertGreater(len(cases), 0)
+        return cases[0]["id"]
+
+    def assert_error(
+        self,
+        response,
+        *,
+        status_code: int,
+        code: str,
+        message_contains: str,
+    ) -> None:
+        self.assertEqual(response.status_code, status_code)
+        body = response.json()
+        self.assertEqual(body["error"]["code"], code)
+        self.assertIn(message_contains, body["error"]["message"])
+
     def test_retry_run_missing_run_returns_not_found_envelope(self) -> None:
         response = self.client.post("/api/runs/999999/retry")
-        self.assertEqual(response.status_code, 404)
-        body = response.json()
-        self.assertEqual(body["error"]["code"], "not_found")
-        self.assertIn("Run not found", body["error"]["message"])
+        self.assert_error(
+            response,
+            status_code=404,
+            code="not_found",
+            message_contains="Run not found",
+        )
 
     def test_retry_run_missing_paper_returns_not_found_envelope(self) -> None:
         orphan_run_id = self.create_run(
@@ -25,10 +45,12 @@ class ApiRunRetryEndpointTests(ApiIntegrationTestCase):
         )
 
         response = self.client.post(f"/api/runs/{orphan_run_id}/retry")
-        self.assertEqual(response.status_code, 404)
-        body = response.json()
-        self.assertEqual(body["error"]["code"], "not_found")
-        self.assertIn("Paper not found", body["error"]["message"])
+        self.assert_error(
+            response,
+            status_code=404,
+            code="not_found",
+            message_contains="Paper not found",
+        )
 
     def test_retry_run_rejects_non_failed_status(self) -> None:
         paper_id = self.create_paper(doi="10.1000/retry-nonfailed", url="https://example.org/nonfailed")
@@ -86,7 +108,7 @@ class ApiRunRetryEndpointTests(ApiIntegrationTestCase):
         self.create_queue_job(
             run_id=blocker_run.id,
             pdf_url=source_url,
-            status="queued",
+            status=QueueJobStatus.QUEUED,
         )
         self.create_source_lock(run_id=blocker_run.id, source_url=source_url)
 
@@ -114,10 +136,12 @@ class ApiRunRetryEndpointTests(ApiIntegrationTestCase):
             f"/api/runs/{run_id}/retry-with-source",
             json={},
         )
-        self.assertEqual(response.status_code, 400)
-        body = response.json()
-        self.assertEqual(body["error"]["code"], "bad_request")
-        self.assertIn("No source URL available for retry", body["error"]["message"])
+        self.assert_error(
+            response,
+            status_code=400,
+            code="bad_request",
+            message_contains="No source URL available for retry",
+        )
 
     def test_retry_with_source_pending_conflict_does_not_create_child_run(self) -> None:
         paper_id = self.create_paper(doi="10.1000/retry-pending", url="https://example.org/retry-pending")
@@ -138,7 +162,7 @@ class ApiRunRetryEndpointTests(ApiIntegrationTestCase):
         self.create_queue_job(
             run_id=blocker.id,
             pdf_url=source_url,
-            status="queued",
+            status=QueueJobStatus.QUEUED,
         )
         self.create_source_lock(run_id=blocker.id, source_url=source_url)
 
@@ -163,7 +187,7 @@ class ApiRunRetryEndpointTests(ApiIntegrationTestCase):
         self.assertEqual(before_count, after_count)
 
     def test_retry_with_source_creates_child_run_and_copies_baseline_links(self) -> None:
-        case_id = list_cases()[0]["id"]
+        case_id = self.first_case_id()
         paper_id = self.create_paper(doi="10.1000/retry-source", url="https://example.org/retry-source")
 
         with Session(self.db_module.engine) as session:

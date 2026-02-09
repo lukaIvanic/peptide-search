@@ -2,7 +2,7 @@ import json
 import tempfile
 import unittest
 from pathlib import Path
-from typing import Optional
+from typing import Optional, Union
 
 from fastapi.testclient import TestClient
 from sqlmodel import Session, create_engine
@@ -69,12 +69,7 @@ class ApiIntegrationTestCase(unittest.TestCase):
             return paper.id
 
     def create_run(self, **kwargs) -> int:
-        with Session(self.db_module.engine) as session:
-            run = ExtractionRun(**kwargs)
-            session.add(run)
-            session.commit()
-            session.refresh(run)
-            return run.id
+        return self.create_run_row(**kwargs).id
 
     def create_run_row(self, **kwargs) -> ExtractionRun:
         """Create a run row and return the hydrated object."""
@@ -90,7 +85,7 @@ class ApiIntegrationTestCase(unittest.TestCase):
         *,
         run_id: int,
         pdf_url: str,
-        status: str = QueueJobStatus.QUEUED.value,
+        status: Union[str, QueueJobStatus] = QueueJobStatus.QUEUED.value,
         attempt: int = 0,
         available_at=None,
         claimed_at=None,
@@ -111,7 +106,7 @@ class ApiIntegrationTestCase(unittest.TestCase):
             job = QueueJob(
                 run_id=run_id,
                 source_fingerprint=QueueCoordinator.source_fingerprint(pdf_url),
-                status=status,
+                status=status.value if isinstance(status, QueueJobStatus) else status,
                 claimed_by=claimed_by,
                 claim_token=claim_token,
                 attempt=attempt,
