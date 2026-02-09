@@ -1,5 +1,6 @@
 import unittest
 
+from app.persistence.models import RunStatus
 from support import ApiIntegrationTestCase
 
 
@@ -10,6 +11,22 @@ class ApiEnqueueAndHistoryContractTests(ApiIntegrationTestCase):
         body = response.json()
         self.assertIn("error", body)
         self.assertEqual(body["error"]["code"], "not_found")
+        self.assertIn("message", body["error"])
+
+    def test_validation_error_envelope_for_malformed_enqueue_payload(self) -> None:
+        response = self.client.post("/api/enqueue", json={"provider": "mock"})
+        self.assertEqual(response.status_code, 422)
+        body = response.json()
+        self.assertIn("error", body)
+        self.assertEqual(body["error"]["code"], "validation_error")
+        self.assertIn("message", body["error"])
+        self.assertIsInstance(body["error"].get("details"), list)
+
+    def test_bad_request_error_mapping_for_extract_contract(self) -> None:
+        response = self.client.post("/api/extract", json={})
+        self.assertEqual(response.status_code, 400)
+        body = response.json()
+        self.assertEqual(body["error"]["code"], "bad_request")
         self.assertIn("message", body["error"])
 
     def test_enqueue_contract_and_url_dedupe(self) -> None:
@@ -59,6 +76,108 @@ class ApiEnqueueAndHistoryContractTests(ApiIntegrationTestCase):
         self.assertEqual(second_run["skip_reason"], "Already queued")
         self.assertEqual(second_run["run_id"], first_run["run_id"])
         self.assertEqual(second_run["paper_id"], first_run["paper_id"])
+
+    def test_run_detail_schema_keys_are_stable(self) -> None:
+        paper_id = self.create_paper(
+            title="Detail Paper",
+            doi="10.1000/detail",
+            url="https://example.org/detail",
+        )
+        run_id = self.create_run(
+            paper_id=paper_id,
+            status=RunStatus.FAILED.value,
+            failure_reason="provider error",
+            model_provider="mock",
+            model_name="mock-model",
+            pdf_url="https://example.org/detail.pdf",
+        )
+
+        response = self.client.get(f"/api/runs/{run_id}")
+        self.assertEqual(response.status_code, 200)
+        body = response.json()
+        self.assertSetEqual(set(body.keys()), {"paper", "run"})
+
+        run_payload = body["run"]
+        for key in [
+            "id",
+            "paper_id",
+            "parent_run_id",
+            "baseline_case_id",
+            "baseline_dataset",
+            "status",
+            "failure_reason",
+            "prompts",
+            "raw_json",
+            "comment",
+            "model_provider",
+            "model_name",
+            "pdf_url",
+            "created_at",
+        ]:
+            self.assertIn(key, run_payload)
+        self.assertTrue(run_payload["created_at"].endswith("Z"))
+
+    def test_retry_response_schema_keys_are_stable(self) -> None:
+        paper_id = self.create_paper(
+            title="Retry Contract",
+            doi="10.1000/retry-contract",
+            url="https://example.org/retry-contract",
+        )
+        run_id = self.create_run(
+            paper_id=paper_id,
+            status=RunStatus.FAILED.value,
+            failure_reason="provider error",
+            model_provider="mock",
+            pdf_url="https://example.org/retry-contract.pdf",
+        )
+
+        response = self.client.post(f"/api/runs/{run_id}/retry")
+        self.assertEqual(response.status_code, 200)
+        payload = response.json()
+        self.assertSetEqual(set(payload.keys()), {"id", "status", "message", "source_url"})
+        self.assertEqual(payload["id"], run_id)
+        self.assertEqual(payload["status"], RunStatus.QUEUED.value)
+
+    def test_recent_runs_timestamp_contract_uses_utc_z_suffix(self) -> None:
+        paper_id = self.create_paper(
+            title="Recent Contract",
+            doi="10.1000/recent-contract",
+            url="https://example.org/recent-contract",
+        )
+        self.create_run(
+            paper_id=paper_id,
+            status=RunStatus.QUEUED.value,
+            model_provider="mock",
+            pdf_url="https://example.org/recent-contract.pdf",
+        )
+
+        response = self.client.get("/api/runs/recent?limit=5")
+        self.assertEqual(response.status_code, 200)
+        body = response.json()
+        self.assertIn("runs", body)
+        self.assertGreaterEqual(len(body["runs"]), 1)
+        self.assertTrue(body["runs"][0]["created_at"].endswith("Z"))
+
+    def test_extractions_timestamp_contract_uses_utc_z_suffix(self) -> None:
+        paper_id = self.create_paper(
+            title="Extraction Contract",
+            doi="10.1000/extraction-contract",
+            url="https://example.org/extraction-contract",
+        )
+        run_id = self.create_run(
+            paper_id=paper_id,
+            status=RunStatus.STORED.value,
+            model_provider="mock",
+            model_name="mock-model",
+            pdf_url="https://example.org/extraction-contract.pdf",
+        )
+
+        response = self.client.get("/api/extractions")
+        self.assertEqual(response.status_code, 200)
+        rows = response.json()
+        row = next((item for item in rows if item["id"] == run_id), None)
+        self.assertIsNotNone(row)
+        self.assertTrue(row["created_at"].endswith("Z"))
 
     def test_run_history_lineage_contract(self) -> None:
         paper_id = self.create_paper(
