@@ -22,7 +22,7 @@ engine = create_engine(settings.DB_URL, echo=False)
 
 
 def _ensure_extraction_run_prompt_columns() -> None:
-	"""Ensure new prompt columns exist on legacy SQLite databases."""
+	"""Ensure newer extraction_run columns exist on legacy SQLite databases."""
 	if engine.url.get_backend_name() != "sqlite":
 		return
 	inspector = inspect(engine)
@@ -34,6 +34,18 @@ def _ensure_extraction_run_prompt_columns() -> None:
 		alter_statements.append("ALTER TABLE extraction_run ADD COLUMN prompt_id INTEGER")
 	if "prompt_version_id" not in columns:
 		alter_statements.append("ALTER TABLE extraction_run ADD COLUMN prompt_version_id INTEGER")
+	if "batch_id" not in columns:
+		alter_statements.append("ALTER TABLE extraction_run ADD COLUMN batch_id VARCHAR")
+	if "extraction_time_ms" not in columns:
+		alter_statements.append("ALTER TABLE extraction_run ADD COLUMN extraction_time_ms INTEGER")
+	if "input_tokens" not in columns:
+		alter_statements.append("ALTER TABLE extraction_run ADD COLUMN input_tokens INTEGER")
+	if "output_tokens" not in columns:
+		alter_statements.append("ALTER TABLE extraction_run ADD COLUMN output_tokens INTEGER")
+	if "reasoning_tokens" not in columns:
+		alter_statements.append("ALTER TABLE extraction_run ADD COLUMN reasoning_tokens INTEGER")
+	if "total_tokens" not in columns:
+		alter_statements.append("ALTER TABLE extraction_run ADD COLUMN total_tokens INTEGER")
 	if not alter_statements:
 		return
 	with engine.begin() as conn:
@@ -65,5 +77,4 @@ def session_scope() -> Iterator[Session]:
 		raise
 	finally:
 		session.close()
-
 
