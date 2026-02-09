@@ -1,0 +1,6507 @@
+[
+  {
+    "id": "self_assembly:pos:1",
+    "dataset": "self_assembly",
+    "sequence": "QEIARLEQEIARLEYEIARLE",
+    "n_terminal": null,
+    "c_terminal": null,
+    "labels": [
+      "self-assembly"
+    ],
+    "doi": "10.1002/anie.200604014",
+    "pubmed_id": null,
+    "paper_url": null,
+    "pdf_url": null,
+    "metadata": {
+      "source_sheet": "Self-assembling sequences",
+      "validation_methods_raw": "CD spectroscopy, TEM"
+    }
+  },
+  {
+    "id": "self_assembly:pos:2",
+    "dataset": "self_assembly",
+    "sequence": "KFG",
+    "n_terminal": null,
+    "c_terminal": null,
+    "labels": [
+      "self-assembly"
+    ],
+    "doi": "10.1002/anie.201307247",
+    "pubmed_id": null,
+    "paper_url": null,
+    "pdf_url": null,
+    "metadata": {
+      "source_sheet": "Self-assembling sequences",
+      "validation_methods_raw": "Dynamic Light Scattering, Transmission Electron Microscopy, and Atomic Force Microscopy"
+    }
+  },
+  {
+    "id": "self_assembly:pos:3",
+    "dataset": "self_assembly",
+    "sequence": "KLDLKLDLKLDL",
+    "n_terminal": null,
+    "c_terminal": null,
+    "labels": [
+      "self-assembly"
+    ],
+    "doi": "10.1007/s11596-009-0424-6",
+    "pubmed_id": null,
+    "paper_url": null,
+    "pdf_url": null,
+    "metadata": {
+      "source_sheet": "Self-assembling sequences",
+      "validation_methods_raw": "AFM"
+    }
+  },
+  {
+    "id": "self_assembly:pos:4",
+    "dataset": "self_assembly",
+    "sequence": "QMAVHV",
+    "n_terminal": null,
+    "c_terminal": null,
+    "labels": [
+      "self-assembly"
+    ],
+    "doi": "10.1016/j.bbrc.2016.12.011",
+    "pubmed_id": null,
+    "paper_url": null,
+    "pdf_url": null,
+    "metadata": {
+      "source_sheet": "Self-assembling sequences",
+      "validation_methods_raw": "ThT binding, TEM"
+    }
+  },
+  {
+    "id": "self_assembly:pos:5",
+    "dataset": "self_assembly",
+    "sequence": "VKVKVKVRVP'PTRVKVKVKV",
+    "n_terminal": null,
+    "c_terminal": null,
+    "labels": [
+      "self-assembly"
+    ],
+    "doi": "10.1016/j.biomaterials.2012.08.046",
+    "pubmed_id": null,
+    "paper_url": null,
+    "pdf_url": null,
+    "metadata": {
+      "source_sheet": "Self-assembling sequences",
+      "validation_methods_raw": "CD spectroscopy, Oscillatory Rheology, Atomic Force Microscopy (AFM) imaging"
+    }
+  },
+  {
+    "id": "self_assembly:pos:6",
+    "dataset": "self_assembly",
+    "sequence": "VKVKVRVRVP'PTRVRVKVKV",
+    "n_terminal": null,
+    "c_terminal": null,
+    "labels": [
+      "self-assembly"
+    ],
+    "doi": "10.1016/j.biomaterials.2012.08.046",
+    "pubmed_id": null,
+    "paper_url": null,
+    "pdf_url": null,
+    "metadata": {
+      "source_sheet": "Self-assembling sequences",
+      "validation_methods_raw": "CD spectroscopy, Oscillatory Rheology, Atomic Force Microscopy (AFM) imaging"
+    }
+  },
+  {
+    "id": "self_assembly:pos:7",
+    "dataset": "self_assembly",
+    "sequence": "VKVRVRVRVP'PTRVRVRVKV",
+    "n_terminal": null,
+    "c_terminal": null,
+    "labels": [
+      "self-assembly"
+    ],
+    "doi": "10.1016/j.biomaterials.2012.08.046",
+    "pubmed_id": null,
+    "paper_url": null,
+    "pdf_url": null,
+    "metadata": {
+      "source_sheet": "Self-assembling sequences",
+      "validation_methods_raw": "CD spectroscopy, Oscillatory Rheology, Atomic Force Microscopy (AFM) imaging"
+    }
+  },
+  {
+    "id": "self_assembly:pos:8",
+    "dataset": "self_assembly",
+    "sequence": "VRVRVRVRVP'PTRVRVRVRV",
+    "n_terminal": null,
+    "c_terminal": null,
+    "labels": [
+      "self-assembly"
+    ],
+    "doi": "10.1016/j.biomaterials.2012.08.046",
+    "pubmed_id": null,
+    "paper_url": null,
+    "pdf_url": null,
+    "metadata": {
+      "source_sheet": "Self-assembling sequences",
+      "validation_methods_raw": "CD spectroscopy, Oscillatory Rheology, Atomic Force Microscopy (AFM) imaging"
+    }
+  },
+  {
+    "id": "self_assembly:pos:9",
+    "dataset": "self_assembly",
+    "sequence": "GGVVIA",
+    "n_terminal": null,
+    "c_terminal": null,
+    "labels": [
+      "self-assembly"
+    ],
+    "doi": "10.1016/j.bpj.2011.02.060",
+    "pubmed_id": null,
+    "paper_url": null,
+    "pdf_url": null,
+    "metadata": {
+      "source_sheet": "Self-assembling sequences",
+      "validation_methods_raw": "In silico (Molecular-Dynamics Simulation)"
+    }
+  },
+  {
+    "id": "self_assembly:pos:10",
+    "dataset": "self_assembly",
+    "sequence": "GNNQQNY",
+    "n_terminal": null,
+    "c_terminal": null,
+    "labels": [
+      "self-assembly"
+    ],
+    "doi": "10.1016/j.bpj.2011.02.060",
+    "pubmed_id": null,
+    "paper_url": null,
+    "pdf_url": null,
+    "metadata": {
+      "source_sheet": "Self-assembling sequences",
+      "validation_methods_raw": "In silico (Molecular-Dynamics Simulation)"
+    }
+  },
+  {
+    "id": "self_assembly:pos:11",
+    "dataset": "self_assembly",
+    "sequence": "SSTSAA",
+    "n_terminal": null,
+    "c_terminal": null,
+    "labels": [
+      "self-assembly"
+    ],
+    "doi": "10.1016/j.bpj.2011.02.060",
+    "pubmed_id": null,
+    "paper_url": null,
+    "pdf_url": null,
+    "metadata": {
+      "source_sheet": "Self-assembling sequences",
+      "validation_methods_raw": "In silico (Molecular-Dynamics Simulation)"
+    }
+  },
+  {
+    "id": "self_assembly:pos:12",
+    "dataset": "self_assembly",
+    "sequence": "RADARADFRADARADA",
+    "n_terminal": null,
+    "c_terminal": null,
+    "labels": [
+      "self-assembly"
+    ],
+    "doi": "10.1016/j.jconrel.2010.08.002",
+    "pubmed_id": null,
+    "paper_url": null,
+    "pdf_url": null,
+    "metadata": {
+      "source_sheet": "Self-assembling sequences",
+      "validation_methods_raw": "Circular dichroism (CD), Rheological characterization, AFM"
+    }
+  },
+  {
+    "id": "self_assembly:pos:13",
+    "dataset": "self_assembly",
+    "sequence": "RADFRADARADARADA",
+    "n_terminal": null,
+    "c_terminal": null,
+    "labels": [
+      "self-assembly"
+    ],
+    "doi": "10.1016/j.jconrel.2010.08.002",
+    "pubmed_id": null,
+    "paper_url": null,
+    "pdf_url": null,
+    "metadata": {
+      "source_sheet": "Self-assembling sequences",
+      "validation_methods_raw": "Circular dichroism (CD), Rheological characterization, AFM"
+    }
+  },
+  {
+    "id": "self_assembly:pos:14",
+    "dataset": "self_assembly",
+    "sequence": "FGAIL",
+    "n_terminal": null,
+    "c_terminal": null,
+    "labels": [
+      "self-assembly"
+    ],
+    "doi": "10.1021/acs.analchem.5b03454",
+    "pubmed_id": null,
+    "paper_url": null,
+    "pdf_url": null,
+    "metadata": {
+      "source_sheet": "Self-assembling sequences",
+      "validation_methods_raw": "In silico, TEM"
+    }
+  },
+  {
+    "id": "self_assembly:pos:15",
+    "dataset": "self_assembly",
+    "sequence": "NININI",
+    "n_terminal": null,
+    "c_terminal": null,
+    "labels": [
+      "self-assembly"
+    ],
+    "doi": "10.1021/acs.analchem.5b03454",
+    "pubmed_id": null,
+    "paper_url": null,
+    "pdf_url": null,
+    "metadata": {
+      "source_sheet": "Self-assembling sequences",
+      "validation_methods_raw": "In silico, TEM"
+    }
+  },
+  {
+    "id": "self_assembly:pos:16",
+    "dataset": "self_assembly",
+    "sequence": "SFSFSF",
+    "n_terminal": null,
+    "c_terminal": null,
+    "labels": [
+      "self-assembly"
+    ],
+    "doi": "10.1021/acs.analchem.5b03454",
+    "pubmed_id": null,
+    "paper_url": null,
+    "pdf_url": null,
+    "metadata": {
+      "source_sheet": "Self-assembling sequences",
+      "validation_methods_raw": "In silico, TEM"
+    }
+  },
+  {
+    "id": "self_assembly:pos:17",
+    "dataset": "self_assembly",
+    "sequence": "VQIVYK",
+    "n_terminal": null,
+    "c_terminal": null,
+    "labels": [
+      "self-assembly"
+    ],
+    "doi": "10.1021/acs.analchem.5b03454",
+    "pubmed_id": null,
+    "paper_url": null,
+    "pdf_url": null,
+    "metadata": {
+      "source_sheet": "Self-assembling sequences",
+      "validation_methods_raw": "In silico, TEM"
+    }
+  },
+  {
+    "id": "self_assembly:pos:18",
+    "dataset": "self_assembly",
+    "sequence": "INHVGGTGGAIMAPVAVTRQLVGS",
+    "n_terminal": null,
+    "c_terminal": null,
+    "labels": [
+      "self-assembly"
+    ],
+    "doi": "10.1021/acs.bioconjchem.9b00327",
+    "pubmed_id": null,
+    "paper_url": null,
+    "pdf_url": null,
+    "metadata": {
+      "source_sheet": "Self-assembling sequences",
+      "validation_methods_raw": "Dynamic Light Scattering, Transmission Electron Microscopy"
+    }
+  },
+  {
+    "id": "self_assembly:pos:19",
+    "dataset": "self_assembly",
+    "sequence": "VVVVVVK",
+    "n_terminal": null,
+    "c_terminal": null,
+    "labels": [
+      "self-assembly"
+    ],
+    "doi": "10.1021/acs.biomac.5b00850",
+    "pubmed_id": null,
+    "paper_url": null,
+    "pdf_url": null,
+    "metadata": {
+      "source_sheet": "Self-assembling sequences",
+      "validation_methods_raw": "In silico"
+    }
+  },
+  {
+    "id": "self_assembly:pos:20",
+    "dataset": "self_assembly",
+    "sequence": "FFSGHFDFF",
+    "n_terminal": null,
+    "c_terminal": null,
+    "labels": [
+      "self-assembly"
+    ],
+    "doi": "10.1021/acs.biomac.6b01169",
+    "pubmed_id": null,
+    "paper_url": null,
+    "pdf_url": null,
+    "metadata": {
+      "source_sheet": "Self-assembling sequences",
+      "validation_methods_raw": "CD spectroscopy, AFM, Congo Red Staining, Raman Spectroscopy, Wide-Angle X-ray Scattering (WAXS)"
+    }
+  },
+  {
+    "id": "self_assembly:pos:21",
+    "dataset": "self_assembly",
+    "sequence": "FGFHFSFDF",
+    "n_terminal": null,
+    "c_terminal": null,
+    "labels": [
+      "self-assembly"
+    ],
+    "doi": "10.1021/acs.biomac.6b01169",
+    "pubmed_id": null,
+    "paper_url": null,
+    "pdf_url": null,
+    "metadata": {
+      "source_sheet": "Self-assembling sequences",
+      "validation_methods_raw": "CD spectroscopy, AFM, Congo Red Staining, Raman Spectroscopy, Wide-Angle X-ray Scattering (WAXS)"
+    }
+  },
+  {
+    "id": "self_assembly:pos:22",
+    "dataset": "self_assembly",
+    "sequence": "AAVVLLLW",
+    "n_terminal": null,
+    "c_terminal": null,
+    "labels": [
+      "self-assembly"
+    ],
+    "doi": "10.1021/acs.molpharmaceut.6b01003",
+    "pubmed_id": null,
+    "paper_url": null,
+    "pdf_url": null,
+    "metadata": {
+      "source_sheet": "Self-assembling sequences",
+      "validation_methods_raw": "TEM, AFM, CD"
+    }
+  },
+  {
+    "id": "self_assembly:pos:23",
+    "dataset": "self_assembly",
+    "sequence": "GGGAAAVVVIIIKKK",
+    "n_terminal": null,
+    "c_terminal": null,
+    "labels": [
+      "self-assembly"
+    ],
+    "doi": "10.1021/acsami.7b11681",
+    "pubmed_id": null,
+    "paper_url": null,
+    "pdf_url": null,
+    "metadata": {
+      "source_sheet": "Self-assembling sequences",
+      "validation_methods_raw": "AFM, CD spectroscopy, ATR-FTIR, Small Angle Neutron Scattering (SANS), X-ray Diffraction (XRD)"
+    }
+  },
+  {
+    "id": "self_assembly:pos:24",
+    "dataset": "self_assembly",
+    "sequence": "IIIVVVAAAGGGKKK",
+    "n_terminal": null,
+    "c_terminal": null,
+    "labels": [
+      "self-assembly"
+    ],
+    "doi": "10.1021/acsami.7b11681",
+    "pubmed_id": null,
+    "paper_url": null,
+    "pdf_url": null,
+    "metadata": {
+      "source_sheet": "Self-assembling sequences",
+      "validation_methods_raw": "AFM, CD spectroscopy, ATR-FTIR, Small Angle Neutron Scattering (SANS), X-ray Diffraction (XRD)"
+    }
+  },
+  {
+    "id": "self_assembly:pos:25",
+    "dataset": "self_assembly",
+    "sequence": "KKKAAAIIIGGGVVV",
+    "n_terminal": null,
+    "c_terminal": null,
+    "labels": [
+      "self-assembly"
+    ],
+    "doi": "10.1021/acsami.7b11681",
+    "pubmed_id": null,
+    "paper_url": null,
+    "pdf_url": null,
+    "metadata": {
+      "source_sheet": "Self-assembling sequences",
+      "validation_methods_raw": "AFM, CD spectroscopy, ATR-FTIR, Small Angle Neutron Scattering (SANS), X-ray Diffraction (XRD)"
+    }
+  },
+  {
+    "id": "self_assembly:pos:26",
+    "dataset": "self_assembly",
+    "sequence": "KKKGGGAAAVVVIII",
+    "n_terminal": null,
+    "c_terminal": null,
+    "labels": [
+      "self-assembly"
+    ],
+    "doi": "10.1021/acsami.7b11681",
+    "pubmed_id": null,
+    "paper_url": null,
+    "pdf_url": null,
+    "metadata": {
+      "source_sheet": "Self-assembling sequences",
+      "validation_methods_raw": "AFM, CD spectroscopy, ATR-FTIR, Small Angle Neutron Scattering (SANS), X-ray Diffraction (XRD)"
+    }
+  },
+  {
+    "id": "self_assembly:pos:27",
+    "dataset": "self_assembly",
+    "sequence": "KKKIIIVVVAAAGGG",
+    "n_terminal": null,
+    "c_terminal": null,
+    "labels": [
+      "self-assembly"
+    ],
+    "doi": "10.1021/acsami.7b11681",
+    "pubmed_id": null,
+    "paper_url": null,
+    "pdf_url": null,
+    "metadata": {
+      "source_sheet": "Self-assembling sequences",
+      "validation_methods_raw": "AFM, CD spectroscopy, ATR-FTIR, Small Angle Neutron Scattering (SANS), X-ray Diffraction (XRD)"
+    }
+  },
+  {
+    "id": "self_assembly:pos:28",
+    "dataset": "self_assembly",
+    "sequence": "VVVGGGIIIAAAKKK",
+    "n_terminal": null,
+    "c_terminal": null,
+    "labels": [
+      "self-assembly"
+    ],
+    "doi": "10.1021/acsami.7b11681",
+    "pubmed_id": null,
+    "paper_url": null,
+    "pdf_url": null,
+    "metadata": {
+      "source_sheet": "Self-assembling sequences",
+      "validation_methods_raw": "AFM, CD spectroscopy, ATR-FTIR, Small Angle Neutron Scattering (SANS), X-ray Diffraction (XRD)"
+    }
+  },
+  {
+    "id": "self_assembly:pos:29",
+    "dataset": "self_assembly",
+    "sequence": "KLVFF",
+    "n_terminal": null,
+    "c_terminal": null,
+    "labels": [
+      "self-assembly"
+    ],
+    "doi": "10.1021/bi8000616",
+    "pubmed_id": null,
+    "paper_url": null,
+    "pdf_url": null,
+    "metadata": {
+      "source_sheet": "Self-assembling sequences",
+      "validation_methods_raw": "CD, FTIR, X-ray diffraction, cryo-TEM, SAXS, Static Light Scattering"
+    }
+  },
+  {
+    "id": "self_assembly:pos:30",
+    "dataset": "self_assembly",
+    "sequence": "AEAEAEAEAKAKAKAK",
+    "n_terminal": null,
+    "c_terminal": null,
+    "labels": [
+      "self-assembly"
+    ],
+    "doi": "10.1021/bm0341374",
+    "pubmed_id": null,
+    "paper_url": null,
+    "pdf_url": null,
+    "metadata": {
+      "source_sheet": "Self-assembling sequences",
+      "validation_methods_raw": "Atomic force microscopy (AFM) and axisymmetric drop shape analysis-profile (ASDA-P)"
+    }
+  },
+  {
+    "id": "self_assembly:pos:31",
+    "dataset": "self_assembly",
+    "sequence": "AEAEAKAKAEAEAKAK",
+    "n_terminal": null,
+    "c_terminal": null,
+    "labels": [
+      "self-assembly"
+    ],
+    "doi": "10.1021/bm0341374",
+    "pubmed_id": null,
+    "paper_url": null,
+    "pdf_url": null,
+    "metadata": {
+      "source_sheet": "Self-assembling sequences",
+      "validation_methods_raw": "Atomic force microscopy (AFM) and axisymmetric drop shape analysis-profile (ASDA-P)"
+    }
+  },
+  {
+    "id": "self_assembly:pos:32",
+    "dataset": "self_assembly",
+    "sequence": "AAVVLLLWEE",
+    "n_terminal": null,
+    "c_terminal": null,
+    "labels": [
+      "self-assembly"
+    ],
+    "doi": "10.1021/bm0704267",
+    "pubmed_id": null,
+    "paper_url": null,
+    "pdf_url": null,
+    "metadata": {
+      "source_sheet": "Self-assembling sequences",
+      "validation_methods_raw": "Fluorescence Anisotropy, Cryo-TEM, Zeta Potential, SLS, DLS"
+    }
+  },
+  {
+    "id": "self_assembly:pos:33",
+    "dataset": "self_assembly",
+    "sequence": "AAVVLLLWEEEEEEE",
+    "n_terminal": null,
+    "c_terminal": null,
+    "labels": [
+      "self-assembly"
+    ],
+    "doi": "10.1021/bm0704267",
+    "pubmed_id": null,
+    "paper_url": null,
+    "pdf_url": null,
+    "metadata": {
+      "source_sheet": "Self-assembling sequences",
+      "validation_methods_raw": "Fluorescence Anisotropy, Cryo-TEM, Zeta Potential, SLS, DLS"
+    }
+  },
+  {
+    "id": "self_assembly:pos:34",
+    "dataset": "self_assembly",
+    "sequence": "KKSLSLSLSLSLSLKK",
+    "n_terminal": null,
+    "c_terminal": null,
+    "labels": [
+      "self-assembly"
+    ],
+    "doi": "10.1021/bm1010195",
+    "pubmed_id": null,
+    "paper_url": null,
+    "pdf_url": null,
+    "metadata": {
+      "source_sheet": "Self-assembling sequences",
+      "validation_methods_raw": "Rheology, Atomic Force Microscopy (AFM)"
+    }
+  },
+  {
+    "id": "self_assembly:pos:35",
+    "dataset": "self_assembly",
+    "sequence": "EFFAAE",
+    "n_terminal": null,
+    "c_terminal": null,
+    "labels": [
+      "self-assembly"
+    ],
+    "doi": "10.1021/bm301141h",
+    "pubmed_id": null,
+    "paper_url": null,
+    "pdf_url": null,
+    "metadata": {
+      "source_sheet": "Self-assembling sequences",
+      "validation_methods_raw": "CD, TEM, FTIR, AFM"
+    }
+  },
+  {
+    "id": "self_assembly:pos:36",
+    "dataset": "self_assembly",
+    "sequence": "KFFAAK",
+    "n_terminal": null,
+    "c_terminal": null,
+    "labels": [
+      "self-assembly"
+    ],
+    "doi": "10.1021/bm301141h",
+    "pubmed_id": null,
+    "paper_url": null,
+    "pdf_url": null,
+    "metadata": {
+      "source_sheet": "Self-assembling sequences",
+      "validation_methods_raw": "CD, TEM, FTIR, AFM"
+    }
+  },
+  {
+    "id": "self_assembly:pos:37",
+    "dataset": "self_assembly",
+    "sequence": "WVNAKQYWRILKRRW",
+    "n_terminal": null,
+    "c_terminal": null,
+    "labels": [
+      "self-assembly"
+    ],
+    "doi": "10.1021/ja049477r",
+    "pubmed_id": null,
+    "paper_url": null,
+    "pdf_url": null,
+    "metadata": {
+      "source_sheet": "Self-assembling sequences",
+      "validation_methods_raw": "Neutron reflection"
+    }
+  },
+  {
+    "id": "self_assembly:pos:38",
+    "dataset": "self_assembly",
+    "sequence": "YVNAKQYYRILKRRY",
+    "n_terminal": null,
+    "c_terminal": null,
+    "labels": [
+      "self-assembly"
+    ],
+    "doi": "10.1021/ja049477r",
+    "pubmed_id": null,
+    "paper_url": null,
+    "pdf_url": null,
+    "metadata": {
+      "source_sheet": "Self-assembling sequences",
+      "validation_methods_raw": "Neutron reflection"
+    }
+  },
+  {
+    "id": "self_assembly:pos:39",
+    "dataset": "self_assembly",
+    "sequence": "GAIL",
+    "n_terminal": null,
+    "c_terminal": null,
+    "labels": [
+      "self-assembly"
+    ],
+    "doi": "10.1021/jp904251j",
+    "pubmed_id": null,
+    "paper_url": null,
+    "pdf_url": null,
+    "metadata": {
+      "source_sheet": "Self-assembling sequences",
+      "validation_methods_raw": "FTIR, CD, X-ray diffraction, SEM, TEM, AFM"
+    }
+  },
+  {
+    "id": "self_assembly:pos:40",
+    "dataset": "self_assembly",
+    "sequence": "GFIL",
+    "n_terminal": null,
+    "c_terminal": null,
+    "labels": [
+      "self-assembly"
+    ],
+    "doi": "10.1021/jp904251j",
+    "pubmed_id": null,
+    "paper_url": null,
+    "pdf_url": null,
+    "metadata": {
+      "source_sheet": "Self-assembling sequences",
+      "validation_methods_raw": "FTIR, CD, X-ray diffraction, SEM, TEM, AFM"
+    }
+  },
+  {
+    "id": "self_assembly:pos:41",
+    "dataset": "self_assembly",
+    "sequence": "IIIIIIKK",
+    "n_terminal": null,
+    "c_terminal": null,
+    "labels": [
+      "self-assembly"
+    ],
+    "doi": "10.1021/la801605b",
+    "pubmed_id": null,
+    "paper_url": null,
+    "pdf_url": null,
+    "metadata": {
+      "source_sheet": "Self-assembling sequences",
+      "validation_methods_raw": "AFM, TEM, CD spectroscopy"
+    }
+  },
+  {
+    "id": "self_assembly:pos:42",
+    "dataset": "self_assembly",
+    "sequence": "LLLLLLKK",
+    "n_terminal": null,
+    "c_terminal": null,
+    "labels": [
+      "self-assembly"
+    ],
+    "doi": "10.1021/la801605b",
+    "pubmed_id": null,
+    "paper_url": null,
+    "pdf_url": null,
+    "metadata": {
+      "source_sheet": "Self-assembling sequences",
+      "validation_methods_raw": "AFM, TEM, CD spectroscopy"
+    }
+  },
+  {
+    "id": "self_assembly:pos:43",
+    "dataset": "self_assembly",
+    "sequence": "GAVILRR",
+    "n_terminal": null,
+    "c_terminal": null,
+    "labels": [
+      "self-assembly"
+    ],
+    "doi": "10.1021/la8025232",
+    "pubmed_id": null,
+    "paper_url": null,
+    "pdf_url": null,
+    "metadata": {
+      "source_sheet": "Self-assembling sequences",
+      "validation_methods_raw": "Dynamic light scattering (DLS) and atomic force microscopy (AFM)"
+    }
+  },
+  {
+    "id": "self_assembly:pos:44",
+    "dataset": "self_assembly",
+    "sequence": "GGGGDD",
+    "n_terminal": null,
+    "c_terminal": null,
+    "labels": [
+      "self-assembly"
+    ],
+    "doi": "10.1021/nl025563i",
+    "pubmed_id": null,
+    "paper_url": null,
+    "pdf_url": null,
+    "metadata": {
+      "source_sheet": "Self-assembling sequences",
+      "validation_methods_raw": "DLS, TEM"
+    }
+  },
+  {
+    "id": "self_assembly:pos:45",
+    "dataset": "self_assembly",
+    "sequence": "GGGGGGDD",
+    "n_terminal": null,
+    "c_terminal": null,
+    "labels": [
+      "self-assembly"
+    ],
+    "doi": "10.1021/nl025563i",
+    "pubmed_id": null,
+    "paper_url": null,
+    "pdf_url": null,
+    "metadata": {
+      "source_sheet": "Self-assembling sequences",
+      "validation_methods_raw": "DLS, TEM"
+    }
+  },
+  {
+    "id": "self_assembly:pos:46",
+    "dataset": "self_assembly",
+    "sequence": "GGGGGGGGDD",
+    "n_terminal": null,
+    "c_terminal": null,
+    "labels": [
+      "self-assembly"
+    ],
+    "doi": "10.1021/nl025563i",
+    "pubmed_id": null,
+    "paper_url": null,
+    "pdf_url": null,
+    "metadata": {
+      "source_sheet": "Self-assembling sequences",
+      "validation_methods_raw": "DLS, TEM"
+    }
+  },
+  {
+    "id": "self_assembly:pos:47",
+    "dataset": "self_assembly",
+    "sequence": "GGGGGGGGGGDD",
+    "n_terminal": null,
+    "c_terminal": null,
+    "labels": [
+      "self-assembly"
+    ],
+    "doi": "10.1021/nl025563i",
+    "pubmed_id": null,
+    "paper_url": null,
+    "pdf_url": null,
+    "metadata": {
+      "source_sheet": "Self-assembling sequences",
+      "validation_methods_raw": "DLS, TEM"
+    }
+  },
+  {
+    "id": "self_assembly:pos:48",
+    "dataset": "self_assembly",
+    "sequence": "KYF",
+    "n_terminal": null,
+    "c_terminal": null,
+    "labels": [
+      "self-assembly"
+    ],
+    "doi": "10.1038/nchem.2122",
+    "pubmed_id": null,
+    "paper_url": null,
+    "pdf_url": null,
+    "metadata": {
+      "source_sheet": "Self-assembling sequences",
+      "validation_methods_raw": "TEM, FTIR, NMR, DLS"
+    }
+  },
+  {
+    "id": "self_assembly:pos:49",
+    "dataset": "self_assembly",
+    "sequence": "FKFEF",
+    "n_terminal": null,
+    "c_terminal": null,
+    "labels": [
+      "self-assembly"
+    ],
+    "doi": "10.1038/s41557-022-01055-3",
+    "pubmed_id": null,
+    "paper_url": null,
+    "pdf_url": null,
+    "metadata": {
+      "source_sheet": "Self-assembling sequences",
+      "validation_methods_raw": "AFM, FTIR"
+    }
+  },
+  {
+    "id": "self_assembly:pos:50",
+    "dataset": "self_assembly",
+    "sequence": "FKIDF",
+    "n_terminal": null,
+    "c_terminal": null,
+    "labels": [
+      "self-assembly"
+    ],
+    "doi": "10.1038/s41557-022-01055-3",
+    "pubmed_id": null,
+    "paper_url": null,
+    "pdf_url": null,
+    "metadata": {
+      "source_sheet": "Self-assembling sequences",
+      "validation_methods_raw": "AFM, FTIR"
+    }
+  },
+  {
+    "id": "self_assembly:pos:51",
+    "dataset": "self_assembly",
+    "sequence": "KFAFD",
+    "n_terminal": null,
+    "c_terminal": null,
+    "labels": [
+      "self-assembly"
+    ],
+    "doi": "10.1038/s41557-022-01055-3",
+    "pubmed_id": null,
+    "paper_url": null,
+    "pdf_url": null,
+    "metadata": {
+      "source_sheet": "Self-assembling sequences",
+      "validation_methods_raw": "AFM, FTIR"
+    }
+  },
+  {
+    "id": "self_assembly:pos:52",
+    "dataset": "self_assembly",
+    "sequence": "KFFFE",
+    "n_terminal": null,
+    "c_terminal": null,
+    "labels": [
+      "self-assembly"
+    ],
+    "doi": "10.1038/s41557-022-01055-3",
+    "pubmed_id": null,
+    "paper_url": null,
+    "pdf_url": null,
+    "metadata": {
+      "source_sheet": "Self-assembling sequences",
+      "validation_methods_raw": "AFM, FTIR"
+    }
+  },
+  {
+    "id": "self_assembly:pos:53",
+    "dataset": "self_assembly",
+    "sequence": "KWEFY",
+    "n_terminal": null,
+    "c_terminal": null,
+    "labels": [
+      "self-assembly"
+    ],
+    "doi": "10.1038/s41557-022-01055-3",
+    "pubmed_id": null,
+    "paper_url": null,
+    "pdf_url": null,
+    "metadata": {
+      "source_sheet": "Self-assembling sequences",
+      "validation_methods_raw": "AFM, FTIR"
+    }
+  },
+  {
+    "id": "self_assembly:pos:54",
+    "dataset": "self_assembly",
+    "sequence": "KWMDF",
+    "n_terminal": null,
+    "c_terminal": null,
+    "labels": [
+      "self-assembly"
+    ],
+    "doi": "10.1038/s41557-022-01055-3",
+    "pubmed_id": null,
+    "paper_url": null,
+    "pdf_url": null,
+    "metadata": {
+      "source_sheet": "Self-assembling sequences",
+      "validation_methods_raw": "AFM, FTIR"
+    }
+  },
+  {
+    "id": "self_assembly:pos:55",
+    "dataset": "self_assembly",
+    "sequence": "SYCGY",
+    "n_terminal": null,
+    "c_terminal": null,
+    "labels": [
+      "self-assembly"
+    ],
+    "doi": "10.1038/s41557-022-01055-3",
+    "pubmed_id": null,
+    "paper_url": null,
+    "pdf_url": null,
+    "metadata": {
+      "source_sheet": "Self-assembling sequences",
+      "validation_methods_raw": "AFM, FTIR"
+    }
+  },
+  {
+    "id": "self_assembly:pos:56",
+    "dataset": "self_assembly",
+    "sequence": "VKVEV",
+    "n_terminal": null,
+    "c_terminal": null,
+    "labels": [
+      "self-assembly"
+    ],
+    "doi": "10.1038/s41557-022-01055-3",
+    "pubmed_id": null,
+    "paper_url": null,
+    "pdf_url": null,
+    "metadata": {
+      "source_sheet": "Self-assembling sequences",
+      "validation_methods_raw": "AFM, FTIR"
+    }
+  },
+  {
+    "id": "self_assembly:pos:57",
+    "dataset": "self_assembly",
+    "sequence": "VKVFF",
+    "n_terminal": null,
+    "c_terminal": null,
+    "labels": [
+      "self-assembly"
+    ],
+    "doi": "10.1038/s41557-022-01055-3",
+    "pubmed_id": null,
+    "paper_url": null,
+    "pdf_url": null,
+    "metadata": {
+      "source_sheet": "Self-assembling sequences",
+      "validation_methods_raw": "AFM, FTIR"
+    }
+  },
+  {
+    "id": "self_assembly:pos:58",
+    "dataset": "self_assembly",
+    "sequence": "VVVVV",
+    "n_terminal": null,
+    "c_terminal": null,
+    "labels": [
+      "self-assembly"
+    ],
+    "doi": "10.1038/s41557-022-01055-3",
+    "pubmed_id": null,
+    "paper_url": null,
+    "pdf_url": null,
+    "metadata": {
+      "source_sheet": "Self-assembling sequences",
+      "validation_methods_raw": "AFM, FTIR"
+    }
+  },
+  {
+    "id": "self_assembly:pos:59",
+    "dataset": "self_assembly",
+    "sequence": "FFEKF",
+    "n_terminal": null,
+    "c_terminal": null,
+    "labels": [
+      "self-assembly"
+    ],
+    "doi": "10.1038/s41557-022-01055-3",
+    "pubmed_id": null,
+    "paper_url": null,
+    "pdf_url": null,
+    "metadata": {
+      "source_sheet": "Self-assembling sequences",
+      "validation_methods_raw": "AFM, FTIR"
+    }
+  },
+  {
+    "id": "self_assembly:pos:60",
+    "dataset": "self_assembly",
+    "sequence": "KFFDY",
+    "n_terminal": null,
+    "c_terminal": null,
+    "labels": [
+      "self-assembly"
+    ],
+    "doi": "10.1038/s41557-022-01055-3",
+    "pubmed_id": null,
+    "paper_url": null,
+    "pdf_url": null,
+    "metadata": {
+      "source_sheet": "Self-assembling sequences",
+      "validation_methods_raw": "AFM, FTIR"
+    }
+  },
+  {
+    "id": "self_assembly:pos:61",
+    "dataset": "self_assembly",
+    "sequence": "RWLDY",
+    "n_terminal": null,
+    "c_terminal": null,
+    "labels": [
+      "self-assembly"
+    ],
+    "doi": "10.1038/s41557-022-01055-3",
+    "pubmed_id": null,
+    "paper_url": null,
+    "pdf_url": null,
+    "metadata": {
+      "source_sheet": "Self-assembling sequences",
+      "validation_methods_raw": "AFM, FTIR"
+    }
+  },
+  {
+    "id": "self_assembly:pos:62",
+    "dataset": "self_assembly",
+    "sequence": "RATARAEARATARAEA",
+    "n_terminal": null,
+    "c_terminal": null,
+    "labels": [
+      "self-assembly"
+    ],
+    "doi": "10.1039/c9tb02590a",
+    "pubmed_id": null,
+    "paper_url": null,
+    "pdf_url": null,
+    "metadata": {
+      "source_sheet": "Self-assembling sequences",
+      "validation_methods_raw": "AFM, TEM, FTIR, CD"
+    }
+  },
+  {
+    "id": "self_assembly:pos:63",
+    "dataset": "self_assembly",
+    "sequence": "FYLLYY",
+    "n_terminal": null,
+    "c_terminal": null,
+    "labels": [
+      "self-assembly"
+    ],
+    "doi": "10.1073/pnas.0511298103",
+    "pubmed_id": null,
+    "paper_url": null,
+    "pdf_url": null,
+    "metadata": {
+      "source_sheet": "Self-assembling sequences",
+      "validation_methods_raw": "TEM, X-Ray Diffraction from Fibrils, ThT Binding Assay, CR Binding Assay"
+    }
+  },
+  {
+    "id": "self_assembly:pos:64",
+    "dataset": "self_assembly",
+    "sequence": "KDWSFY",
+    "n_terminal": null,
+    "c_terminal": null,
+    "labels": [
+      "self-assembly"
+    ],
+    "doi": "10.1073/pnas.0511298103",
+    "pubmed_id": null,
+    "paper_url": null,
+    "pdf_url": null,
+    "metadata": {
+      "source_sheet": "Self-assembling sequences",
+      "validation_methods_raw": "TEM, X-Ray Diffraction from Fibrils, ThT Binding Assay, CR Binding Assay"
+    }
+  },
+  {
+    "id": "self_assembly:pos:65",
+    "dataset": "self_assembly",
+    "sequence": "KIVKWD",
+    "n_terminal": null,
+    "c_terminal": null,
+    "labels": [
+      "self-assembly"
+    ],
+    "doi": "10.1073/pnas.0511298103",
+    "pubmed_id": null,
+    "paper_url": null,
+    "pdf_url": null,
+    "metadata": {
+      "source_sheet": "Self-assembling sequences",
+      "validation_methods_raw": "TEM, X-Ray Diffraction from Fibrils, ThT Binding Assay, CR Binding Assay"
+    }
+  },
+  {
+    "id": "self_assembly:pos:66",
+    "dataset": "self_assembly",
+    "sequence": "LLYYTE",
+    "n_terminal": null,
+    "c_terminal": null,
+    "labels": [
+      "self-assembly"
+    ],
+    "doi": "10.1073/pnas.0511298103",
+    "pubmed_id": null,
+    "paper_url": null,
+    "pdf_url": null,
+    "metadata": {
+      "source_sheet": "Self-assembling sequences",
+      "validation_methods_raw": "TEM, X-Ray Diffraction from Fibrils, ThT Binding Assay, CR Binding Assay"
+    }
+  },
+  {
+    "id": "self_assembly:pos:67",
+    "dataset": "self_assembly",
+    "sequence": "LVEALY",
+    "n_terminal": null,
+    "c_terminal": null,
+    "labels": [
+      "self-assembly"
+    ],
+    "doi": "10.1073/pnas.0511298103",
+    "pubmed_id": null,
+    "paper_url": null,
+    "pdf_url": null,
+    "metadata": {
+      "source_sheet": "Self-assembling sequences",
+      "validation_methods_raw": "TEM, X-Ray Diffraction from Fibrils, ThT Binding Assay, CR Binding Assay"
+    }
+  },
+  {
+    "id": "self_assembly:pos:68",
+    "dataset": "self_assembly",
+    "sequence": "LYQLEN",
+    "n_terminal": null,
+    "c_terminal": null,
+    "labels": [
+      "self-assembly"
+    ],
+    "doi": "10.1073/pnas.0511298103",
+    "pubmed_id": null,
+    "paper_url": null,
+    "pdf_url": null,
+    "metadata": {
+      "source_sheet": "Self-assembling sequences",
+      "validation_methods_raw": "TEM, X-Ray Diffraction from Fibrils, ThT Binding Assay, CR Binding Assay"
+    }
+  },
+  {
+    "id": "self_assembly:pos:69",
+    "dataset": "self_assembly",
+    "sequence": "NHVTLS",
+    "n_terminal": null,
+    "c_terminal": null,
+    "labels": [
+      "self-assembly"
+    ],
+    "doi": "10.1073/pnas.0511298103",
+    "pubmed_id": null,
+    "paper_url": null,
+    "pdf_url": null,
+    "metadata": {
+      "source_sheet": "Self-assembling sequences",
+      "validation_methods_raw": "TEM, X-Ray Diffraction from Fibrils, ThT Binding Assay, CR Binding Assay"
+    }
+  },
+  {
+    "id": "self_assembly:pos:70",
+    "dataset": "self_assembly",
+    "sequence": "VEALYL",
+    "n_terminal": null,
+    "c_terminal": null,
+    "labels": [
+      "self-assembly"
+    ],
+    "doi": "10.1073/pnas.0511298103",
+    "pubmed_id": null,
+    "paper_url": null,
+    "pdf_url": null,
+    "metadata": {
+      "source_sheet": "Self-assembling sequences",
+      "validation_methods_raw": "TEM, X-Ray Diffraction from Fibrils, ThT Binding Assay, CR Binding Assay"
+    }
+  },
+  {
+    "id": "self_assembly:pos:71",
+    "dataset": "self_assembly",
+    "sequence": "SAVIIE",
+    "n_terminal": null,
+    "c_terminal": null,
+    "labels": [
+      "self-assembly"
+    ],
+    "doi": "10.1073/pnas.2634884100",
+    "pubmed_id": null,
+    "paper_url": null,
+    "pdf_url": null,
+    "metadata": {
+      "source_sheet": "Self-assembling sequences",
+      "validation_methods_raw": "Far-UV CD, Electron Microscopy (EM)"
+    }
+  },
+  {
+    "id": "self_assembly:pos:72",
+    "dataset": "self_assembly",
+    "sequence": "SDVIIE",
+    "n_terminal": null,
+    "c_terminal": null,
+    "labels": [
+      "self-assembly"
+    ],
+    "doi": "10.1073/pnas.2634884100",
+    "pubmed_id": null,
+    "paper_url": null,
+    "pdf_url": null,
+    "metadata": {
+      "source_sheet": "Self-assembling sequences",
+      "validation_methods_raw": "Far-UV CD, Electron Microscopy (EM)"
+    }
+  },
+  {
+    "id": "self_assembly:pos:73",
+    "dataset": "self_assembly",
+    "sequence": "SEVIIE",
+    "n_terminal": null,
+    "c_terminal": null,
+    "labels": [
+      "self-assembly"
+    ],
+    "doi": "10.1073/pnas.2634884100",
+    "pubmed_id": null,
+    "paper_url": null,
+    "pdf_url": null,
+    "metadata": {
+      "source_sheet": "Self-assembling sequences",
+      "validation_methods_raw": "Far-UV CD, Electron Microscopy (EM)"
+    }
+  },
+  {
+    "id": "self_assembly:pos:74",
+    "dataset": "self_assembly",
+    "sequence": "SFVIIE",
+    "n_terminal": null,
+    "c_terminal": null,
+    "labels": [
+      "self-assembly"
+    ],
+    "doi": "10.1073/pnas.2634884100",
+    "pubmed_id": null,
+    "paper_url": null,
+    "pdf_url": null,
+    "metadata": {
+      "source_sheet": "Self-assembling sequences",
+      "validation_methods_raw": "Far-UV CD, Electron Microscopy (EM)"
+    }
+  },
+  {
+    "id": "self_assembly:pos:75",
+    "dataset": "self_assembly",
+    "sequence": "SGVIIE",
+    "n_terminal": null,
+    "c_terminal": null,
+    "labels": [
+      "self-assembly"
+    ],
+    "doi": "10.1073/pnas.2634884100",
+    "pubmed_id": null,
+    "paper_url": null,
+    "pdf_url": null,
+    "metadata": {
+      "source_sheet": "Self-assembling sequences",
+      "validation_methods_raw": "Far-UV CD, Electron Microscopy (EM)"
+    }
+  },
+  {
+    "id": "self_assembly:pos:76",
+    "dataset": "self_assembly",
+    "sequence": "SIVIIE",
+    "n_terminal": null,
+    "c_terminal": null,
+    "labels": [
+      "self-assembly"
+    ],
+    "doi": "10.1073/pnas.2634884100",
+    "pubmed_id": null,
+    "paper_url": null,
+    "pdf_url": null,
+    "metadata": {
+      "source_sheet": "Self-assembling sequences",
+      "validation_methods_raw": "Far-UV CD, Electron Microscopy (EM)"
+    }
+  },
+  {
+    "id": "self_assembly:pos:77",
+    "dataset": "self_assembly",
+    "sequence": "SLVIIE",
+    "n_terminal": null,
+    "c_terminal": null,
+    "labels": [
+      "self-assembly"
+    ],
+    "doi": "10.1073/pnas.2634884100",
+    "pubmed_id": null,
+    "paper_url": null,
+    "pdf_url": null,
+    "metadata": {
+      "source_sheet": "Self-assembling sequences",
+      "validation_methods_raw": "Far-UV CD, Electron Microscopy (EM)"
+    }
+  },
+  {
+    "id": "self_assembly:pos:78",
+    "dataset": "self_assembly",
+    "sequence": "SMVIIE",
+    "n_terminal": null,
+    "c_terminal": null,
+    "labels": [
+      "self-assembly"
+    ],
+    "doi": "10.1073/pnas.2634884100",
+    "pubmed_id": null,
+    "paper_url": null,
+    "pdf_url": null,
+    "metadata": {
+      "source_sheet": "Self-assembling sequences",
+      "validation_methods_raw": "Far-UV CD, Electron Microscopy (EM)"
+    }
+  },
+  {
+    "id": "self_assembly:pos:79",
+    "dataset": "self_assembly",
+    "sequence": "SNVIIE",
+    "n_terminal": null,
+    "c_terminal": null,
+    "labels": [
+      "self-assembly"
+    ],
+    "doi": "10.1073/pnas.2634884100",
+    "pubmed_id": null,
+    "paper_url": null,
+    "pdf_url": null,
+    "metadata": {
+      "source_sheet": "Self-assembling sequences",
+      "validation_methods_raw": "Far-UV CD, Electron Microscopy (EM)"
+    }
+  },
+  {
+    "id": "self_assembly:pos:80",
+    "dataset": "self_assembly",
+    "sequence": "SQVIIE",
+    "n_terminal": null,
+    "c_terminal": null,
+    "labels": [
+      "self-assembly"
+    ],
+    "doi": "10.1073/pnas.2634884100",
+    "pubmed_id": null,
+    "paper_url": null,
+    "pdf_url": null,
+    "metadata": {
+      "source_sheet": "Self-assembling sequences",
+      "validation_methods_raw": "Far-UV CD, Electron Microscopy (EM)"
+    }
+  },
+  {
+    "id": "self_assembly:pos:81",
+    "dataset": "self_assembly",
+    "sequence": "SSVIIE",
+    "n_terminal": null,
+    "c_terminal": null,
+    "labels": [
+      "self-assembly"
+    ],
+    "doi": "10.1073/pnas.2634884100",
+    "pubmed_id": null,
+    "paper_url": null,
+    "pdf_url": null,
+    "metadata": {
+      "source_sheet": "Self-assembling sequences",
+      "validation_methods_raw": "Far-UV CD, Electron Microscopy (EM)"
+    }
+  },
+  {
+    "id": "self_assembly:pos:82",
+    "dataset": "self_assembly",
+    "sequence": "STEIIE",
+    "n_terminal": null,
+    "c_terminal": null,
+    "labels": [
+      "self-assembly"
+    ],
+    "doi": "10.1073/pnas.2634884100",
+    "pubmed_id": null,
+    "paper_url": null,
+    "pdf_url": null,
+    "metadata": {
+      "source_sheet": "Self-assembling sequences",
+      "validation_methods_raw": "Far-UV CD, Electron Microscopy (EM)"
+    }
+  },
+  {
+    "id": "self_assembly:pos:83",
+    "dataset": "self_assembly",
+    "sequence": "STFIIE",
+    "n_terminal": null,
+    "c_terminal": null,
+    "labels": [
+      "self-assembly"
+    ],
+    "doi": "10.1073/pnas.2634884100",
+    "pubmed_id": null,
+    "paper_url": null,
+    "pdf_url": null,
+    "metadata": {
+      "source_sheet": "Self-assembling sequences",
+      "validation_methods_raw": "Far-UV CD, Electron Microscopy (EM)"
+    }
+  },
+  {
+    "id": "self_assembly:pos:84",
+    "dataset": "self_assembly",
+    "sequence": "STLIIE",
+    "n_terminal": null,
+    "c_terminal": null,
+    "labels": [
+      "self-assembly"
+    ],
+    "doi": "10.1073/pnas.2634884100",
+    "pubmed_id": null,
+    "paper_url": null,
+    "pdf_url": null,
+    "metadata": {
+      "source_sheet": "Self-assembling sequences",
+      "validation_methods_raw": "Far-UV CD, Electron Microscopy (EM)"
+    }
+  },
+  {
+    "id": "self_assembly:pos:85",
+    "dataset": "self_assembly",
+    "sequence": "STNIIE",
+    "n_terminal": null,
+    "c_terminal": null,
+    "labels": [
+      "self-assembly"
+    ],
+    "doi": "10.1073/pnas.2634884100",
+    "pubmed_id": null,
+    "paper_url": null,
+    "pdf_url": null,
+    "metadata": {
+      "source_sheet": "Self-assembling sequences",
+      "validation_methods_raw": "Far-UV CD, Electron Microscopy (EM)"
+    }
+  },
+  {
+    "id": "self_assembly:pos:86",
+    "dataset": "self_assembly",
+    "sequence": "STQIIE",
+    "n_terminal": null,
+    "c_terminal": null,
+    "labels": [
+      "self-assembly"
+    ],
+    "doi": "10.1073/pnas.2634884100",
+    "pubmed_id": null,
+    "paper_url": null,
+    "pdf_url": null,
+    "metadata": {
+      "source_sheet": "Self-assembling sequences",
+      "validation_methods_raw": "Far-UV CD, Electron Microscopy (EM)"
+    }
+  },
+  {
+    "id": "self_assembly:pos:87",
+    "dataset": "self_assembly",
+    "sequence": "STSIIE",
+    "n_terminal": null,
+    "c_terminal": null,
+    "labels": [
+      "self-assembly"
+    ],
+    "doi": "10.1073/pnas.2634884100",
+    "pubmed_id": null,
+    "paper_url": null,
+    "pdf_url": null,
+    "metadata": {
+      "source_sheet": "Self-assembling sequences",
+      "validation_methods_raw": "Far-UV CD, Electron Microscopy (EM)"
+    }
+  },
+  {
+    "id": "self_assembly:pos:88",
+    "dataset": "self_assembly",
+    "sequence": "STVEIE",
+    "n_terminal": null,
+    "c_terminal": null,
+    "labels": [
+      "self-assembly"
+    ],
+    "doi": "10.1073/pnas.2634884100",
+    "pubmed_id": null,
+    "paper_url": null,
+    "pdf_url": null,
+    "metadata": {
+      "source_sheet": "Self-assembling sequences",
+      "validation_methods_raw": "Far-UV CD, Electron Microscopy (EM)"
+    }
+  },
+  {
+    "id": "self_assembly:pos:89",
+    "dataset": "self_assembly",
+    "sequence": "STVFIE",
+    "n_terminal": null,
+    "c_terminal": null,
+    "labels": [
+      "self-assembly"
+    ],
+    "doi": "10.1073/pnas.2634884100",
+    "pubmed_id": null,
+    "paper_url": null,
+    "pdf_url": null,
+    "metadata": {
+      "source_sheet": "Self-assembling sequences",
+      "validation_methods_raw": "Far-UV CD, Electron Microscopy (EM)"
+    }
+  },
+  {
+    "id": "self_assembly:pos:90",
+    "dataset": "self_assembly",
+    "sequence": "STVIFE",
+    "n_terminal": null,
+    "c_terminal": null,
+    "labels": [
+      "self-assembly"
+    ],
+    "doi": "10.1073/pnas.2634884100",
+    "pubmed_id": null,
+    "paper_url": null,
+    "pdf_url": null,
+    "metadata": {
+      "source_sheet": "Self-assembling sequences",
+      "validation_methods_raw": "Far-UV CD, Electron Microscopy (EM)"
+    }
+  },
+  {
+    "id": "self_assembly:pos:91",
+    "dataset": "self_assembly",
+    "sequence": "STVIIA",
+    "n_terminal": null,
+    "c_terminal": null,
+    "labels": [
+      "self-assembly"
+    ],
+    "doi": "10.1073/pnas.2634884100",
+    "pubmed_id": null,
+    "paper_url": null,
+    "pdf_url": null,
+    "metadata": {
+      "source_sheet": "Self-assembling sequences",
+      "validation_methods_raw": "Far-UV CD, Electron Microscopy (EM)"
+    }
+  },
+  {
+    "id": "self_assembly:pos:92",
+    "dataset": "self_assembly",
+    "sequence": "STVIID",
+    "n_terminal": null,
+    "c_terminal": null,
+    "labels": [
+      "self-assembly"
+    ],
+    "doi": "10.1073/pnas.2634884100",
+    "pubmed_id": null,
+    "paper_url": null,
+    "pdf_url": null,
+    "metadata": {
+      "source_sheet": "Self-assembling sequences",
+      "validation_methods_raw": "Far-UV CD, Electron Microscopy (EM)"
+    }
+  },
+  {
+    "id": "self_assembly:pos:93",
+    "dataset": "self_assembly",
+    "sequence": "STVIIE",
+    "n_terminal": null,
+    "c_terminal": null,
+    "labels": [
+      "self-assembly"
+    ],
+    "doi": "10.1073/pnas.2634884100",
+    "pubmed_id": null,
+    "paper_url": null,
+    "pdf_url": null,
+    "metadata": {
+      "source_sheet": "Self-assembling sequences",
+      "validation_methods_raw": "Far-UV CD, Electron Microscopy (EM)"
+    }
+  },
+  {
+    "id": "self_assembly:pos:94",
+    "dataset": "self_assembly",
+    "sequence": "STVIIF",
+    "n_terminal": null,
+    "c_terminal": null,
+    "labels": [
+      "self-assembly"
+    ],
+    "doi": "10.1073/pnas.2634884100",
+    "pubmed_id": null,
+    "paper_url": null,
+    "pdf_url": null,
+    "metadata": {
+      "source_sheet": "Self-assembling sequences",
+      "validation_methods_raw": "Far-UV CD, Electron Microscopy (EM)"
+    }
+  },
+  {
+    "id": "self_assembly:pos:95",
+    "dataset": "self_assembly",
+    "sequence": "STVIII",
+    "n_terminal": null,
+    "c_terminal": null,
+    "labels": [
+      "self-assembly"
+    ],
+    "doi": "10.1073/pnas.2634884100",
+    "pubmed_id": null,
+    "paper_url": null,
+    "pdf_url": null,
+    "metadata": {
+      "source_sheet": "Self-assembling sequences",
+      "validation_methods_raw": "Far-UV CD, Electron Microscopy (EM)"
+    }
+  },
+  {
+    "id": "self_assembly:pos:96",
+    "dataset": "self_assembly",
+    "sequence": "STVIIL",
+    "n_terminal": null,
+    "c_terminal": null,
+    "labels": [
+      "self-assembly"
+    ],
+    "doi": "10.1073/pnas.2634884100",
+    "pubmed_id": null,
+    "paper_url": null,
+    "pdf_url": null,
+    "metadata": {
+      "source_sheet": "Self-assembling sequences",
+      "validation_methods_raw": "Far-UV CD, Electron Microscopy (EM)"
+    }
+  },
+  {
+    "id": "self_assembly:pos:97",
+    "dataset": "self_assembly",
+    "sequence": "STVIIM",
+    "n_terminal": null,
+    "c_terminal": null,
+    "labels": [
+      "self-assembly"
+    ],
+    "doi": "10.1073/pnas.2634884100",
+    "pubmed_id": null,
+    "paper_url": null,
+    "pdf_url": null,
+    "metadata": {
+      "source_sheet": "Self-assembling sequences",
+      "validation_methods_raw": "Far-UV CD, Electron Microscopy (EM)"
+    }
+  },
+  {
+    "id": "self_assembly:pos:98",
+    "dataset": "self_assembly",
+    "sequence": "STVIIN",
+    "n_terminal": null,
+    "c_terminal": null,
+    "labels": [
+      "self-assembly"
+    ],
+    "doi": "10.1073/pnas.2634884100",
+    "pubmed_id": null,
+    "paper_url": null,
+    "pdf_url": null,
+    "metadata": {
+      "source_sheet": "Self-assembling sequences",
+      "validation_methods_raw": "Far-UV CD, Electron Microscopy (EM)"
+    }
+  },
+  {
+    "id": "self_assembly:pos:99",
+    "dataset": "self_assembly",
+    "sequence": "STVIIQ",
+    "n_terminal": null,
+    "c_terminal": null,
+    "labels": [
+      "self-assembly"
+    ],
+    "doi": "10.1073/pnas.2634884100",
+    "pubmed_id": null,
+    "paper_url": null,
+    "pdf_url": null,
+    "metadata": {
+      "source_sheet": "Self-assembling sequences",
+      "validation_methods_raw": "Far-UV CD, Electron Microscopy (EM)"
+    }
+  },
+  {
+    "id": "self_assembly:pos:100",
+    "dataset": "self_assembly",
+    "sequence": "STVIIS",
+    "n_terminal": null,
+    "c_terminal": null,
+    "labels": [
+      "self-assembly"
+    ],
+    "doi": "10.1073/pnas.2634884100",
+    "pubmed_id": null,
+    "paper_url": null,
+    "pdf_url": null,
+    "metadata": {
+      "source_sheet": "Self-assembling sequences",
+      "validation_methods_raw": "Far-UV CD, Electron Microscopy (EM)"
+    }
+  },
+  {
+    "id": "self_assembly:pos:101",
+    "dataset": "self_assembly",
+    "sequence": "STVIIT",
+    "n_terminal": null,
+    "c_terminal": null,
+    "labels": [
+      "self-assembly"
+    ],
+    "doi": "10.1073/pnas.2634884100",
+    "pubmed_id": null,
+    "paper_url": null,
+    "pdf_url": null,
+    "metadata": {
+      "source_sheet": "Self-assembling sequences",
+      "validation_methods_raw": "Far-UV CD, Electron Microscopy (EM)"
+    }
+  },
+  {
+    "id": "self_assembly:pos:102",
+    "dataset": "self_assembly",
+    "sequence": "STVIIV",
+    "n_terminal": null,
+    "c_terminal": null,
+    "labels": [
+      "self-assembly"
+    ],
+    "doi": "10.1073/pnas.2634884100",
+    "pubmed_id": null,
+    "paper_url": null,
+    "pdf_url": null,
+    "metadata": {
+      "source_sheet": "Self-assembling sequences",
+      "validation_methods_raw": "Far-UV CD, Electron Microscopy (EM)"
+    }
+  },
+  {
+    "id": "self_assembly:pos:103",
+    "dataset": "self_assembly",
+    "sequence": "STVIIW",
+    "n_terminal": null,
+    "c_terminal": null,
+    "labels": [
+      "self-assembly"
+    ],
+    "doi": "10.1073/pnas.2634884100",
+    "pubmed_id": null,
+    "paper_url": null,
+    "pdf_url": null,
+    "metadata": {
+      "source_sheet": "Self-assembling sequences",
+      "validation_methods_raw": "Far-UV CD, Electron Microscopy (EM)"
+    }
+  },
+  {
+    "id": "self_assembly:pos:104",
+    "dataset": "self_assembly",
+    "sequence": "STVIIY",
+    "n_terminal": null,
+    "c_terminal": null,
+    "labels": [
+      "self-assembly"
+    ],
+    "doi": "10.1073/pnas.2634884100",
+    "pubmed_id": null,
+    "paper_url": null,
+    "pdf_url": null,
+    "metadata": {
+      "source_sheet": "Self-assembling sequences",
+      "validation_methods_raw": "Far-UV CD, Electron Microscopy (EM)"
+    }
+  },
+  {
+    "id": "self_assembly:pos:105",
+    "dataset": "self_assembly",
+    "sequence": "STVIYE",
+    "n_terminal": null,
+    "c_terminal": null,
+    "labels": [
+      "self-assembly"
+    ],
+    "doi": "10.1073/pnas.2634884100",
+    "pubmed_id": null,
+    "paper_url": null,
+    "pdf_url": null,
+    "metadata": {
+      "source_sheet": "Self-assembling sequences",
+      "validation_methods_raw": "Far-UV CD, Electron Microscopy (EM)"
+    }
+  },
+  {
+    "id": "self_assembly:pos:106",
+    "dataset": "self_assembly",
+    "sequence": "STVLIE",
+    "n_terminal": null,
+    "c_terminal": null,
+    "labels": [
+      "self-assembly"
+    ],
+    "doi": "10.1073/pnas.2634884100",
+    "pubmed_id": null,
+    "paper_url": null,
+    "pdf_url": null,
+    "metadata": {
+      "source_sheet": "Self-assembling sequences",
+      "validation_methods_raw": "Far-UV CD, Electron Microscopy (EM)"
+    }
+  },
+  {
+    "id": "self_assembly:pos:107",
+    "dataset": "self_assembly",
+    "sequence": "STVNIE",
+    "n_terminal": null,
+    "c_terminal": null,
+    "labels": [
+      "self-assembly"
+    ],
+    "doi": "10.1073/pnas.2634884100",
+    "pubmed_id": null,
+    "paper_url": null,
+    "pdf_url": null,
+    "metadata": {
+      "source_sheet": "Self-assembling sequences",
+      "validation_methods_raw": "Far-UV CD, Electron Microscopy (EM)"
+    }
+  },
+  {
+    "id": "self_assembly:pos:108",
+    "dataset": "self_assembly",
+    "sequence": "STVTIE",
+    "n_terminal": null,
+    "c_terminal": null,
+    "labels": [
+      "self-assembly"
+    ],
+    "doi": "10.1073/pnas.2634884100",
+    "pubmed_id": null,
+    "paper_url": null,
+    "pdf_url": null,
+    "metadata": {
+      "source_sheet": "Self-assembling sequences",
+      "validation_methods_raw": "Far-UV CD, Electron Microscopy (EM)"
+    }
+  },
+  {
+    "id": "self_assembly:pos:109",
+    "dataset": "self_assembly",
+    "sequence": "STVWIE",
+    "n_terminal": null,
+    "c_terminal": null,
+    "labels": [
+      "self-assembly"
+    ],
+    "doi": "10.1073/pnas.2634884100",
+    "pubmed_id": null,
+    "paper_url": null,
+    "pdf_url": null,
+    "metadata": {
+      "source_sheet": "Self-assembling sequences",
+      "validation_methods_raw": "Far-UV CD, Electron Microscopy (EM)"
+    }
+  },
+  {
+    "id": "self_assembly:pos:110",
+    "dataset": "self_assembly",
+    "sequence": "STVYIE",
+    "n_terminal": null,
+    "c_terminal": null,
+    "labels": [
+      "self-assembly"
+    ],
+    "doi": "10.1073/pnas.2634884100",
+    "pubmed_id": null,
+    "paper_url": null,
+    "pdf_url": null,
+    "metadata": {
+      "source_sheet": "Self-assembling sequences",
+      "validation_methods_raw": "Far-UV CD, Electron Microscopy (EM)"
+    }
+  },
+  {
+    "id": "self_assembly:pos:111",
+    "dataset": "self_assembly",
+    "sequence": "SVVIIE",
+    "n_terminal": null,
+    "c_terminal": null,
+    "labels": [
+      "self-assembly"
+    ],
+    "doi": "10.1073/pnas.2634884100",
+    "pubmed_id": null,
+    "paper_url": null,
+    "pdf_url": null,
+    "metadata": {
+      "source_sheet": "Self-assembling sequences",
+      "validation_methods_raw": "Far-UV CD, Electron Microscopy (EM)"
+    }
+  },
+  {
+    "id": "self_assembly:pos:112",
+    "dataset": "self_assembly",
+    "sequence": "SYVIIE",
+    "n_terminal": null,
+    "c_terminal": null,
+    "labels": [
+      "self-assembly"
+    ],
+    "doi": "10.1073/pnas.2634884100",
+    "pubmed_id": null,
+    "paper_url": null,
+    "pdf_url": null,
+    "metadata": {
+      "source_sheet": "Self-assembling sequences",
+      "validation_methods_raw": "Far-UV CD, Electron Microscopy (EM)"
+    }
+  },
+  {
+    "id": "self_assembly:pos:113",
+    "dataset": "self_assembly",
+    "sequence": "TTVIIE",
+    "n_terminal": null,
+    "c_terminal": null,
+    "labels": [
+      "self-assembly"
+    ],
+    "doi": "10.1073/pnas.2634884100",
+    "pubmed_id": null,
+    "paper_url": null,
+    "pdf_url": null,
+    "metadata": {
+      "source_sheet": "Self-assembling sequences",
+      "validation_methods_raw": "Far-UV CD, Electron Microscopy (EM)"
+    }
+  },
+  {
+    "id": "self_assembly:pos:114",
+    "dataset": "self_assembly",
+    "sequence": "VTVIIE",
+    "n_terminal": null,
+    "c_terminal": null,
+    "labels": [
+      "self-assembly"
+    ],
+    "doi": "10.1073/pnas.2634884100",
+    "pubmed_id": null,
+    "paper_url": null,
+    "pdf_url": null,
+    "metadata": {
+      "source_sheet": "Self-assembling sequences",
+      "validation_methods_raw": "Far-UV CD, Electron Microscopy (EM)"
+    }
+  },
+  {
+    "id": "self_assembly:pos:115",
+    "dataset": "self_assembly",
+    "sequence": "WTVIIE",
+    "n_terminal": null,
+    "c_terminal": null,
+    "labels": [
+      "self-assembly"
+    ],
+    "doi": "10.1073/pnas.2634884100",
+    "pubmed_id": null,
+    "paper_url": null,
+    "pdf_url": null,
+    "metadata": {
+      "source_sheet": "Self-assembling sequences",
+      "validation_methods_raw": "Far-UV CD, Electron Microscopy (EM)"
+    }
+  },
+  {
+    "id": "self_assembly:pos:116",
+    "dataset": "self_assembly",
+    "sequence": "ATVIIE",
+    "n_terminal": null,
+    "c_terminal": null,
+    "labels": [
+      "self-assembly"
+    ],
+    "doi": "10.1073/pnas.2634884100",
+    "pubmed_id": null,
+    "paper_url": null,
+    "pdf_url": null,
+    "metadata": {
+      "source_sheet": "Self-assembling sequences",
+      "validation_methods_raw": "Far-UV CD, Electron Microscopy (EM)"
+    }
+  },
+  {
+    "id": "self_assembly:pos:117",
+    "dataset": "self_assembly",
+    "sequence": "DTVIIE",
+    "n_terminal": null,
+    "c_terminal": null,
+    "labels": [
+      "self-assembly"
+    ],
+    "doi": "10.1073/pnas.2634884100",
+    "pubmed_id": null,
+    "paper_url": null,
+    "pdf_url": null,
+    "metadata": {
+      "source_sheet": "Self-assembling sequences",
+      "validation_methods_raw": "Far-UV CD, Electron Microscopy (EM)"
+    }
+  },
+  {
+    "id": "self_assembly:pos:118",
+    "dataset": "self_assembly",
+    "sequence": "ETVIIE",
+    "n_terminal": null,
+    "c_terminal": null,
+    "labels": [
+      "self-assembly"
+    ],
+    "doi": "10.1073/pnas.2634884100",
+    "pubmed_id": null,
+    "paper_url": null,
+    "pdf_url": null,
+    "metadata": {
+      "source_sheet": "Self-assembling sequences",
+      "validation_methods_raw": "Far-UV CD, Electron Microscopy (EM)"
+    }
+  },
+  {
+    "id": "self_assembly:pos:119",
+    "dataset": "self_assembly",
+    "sequence": "FTVIIE",
+    "n_terminal": null,
+    "c_terminal": null,
+    "labels": [
+      "self-assembly"
+    ],
+    "doi": "10.1073/pnas.2634884100",
+    "pubmed_id": null,
+    "paper_url": null,
+    "pdf_url": null,
+    "metadata": {
+      "source_sheet": "Self-assembling sequences",
+      "validation_methods_raw": "Far-UV CD, Electron Microscopy (EM)"
+    }
+  },
+  {
+    "id": "self_assembly:pos:120",
+    "dataset": "self_assembly",
+    "sequence": "GTVIIE",
+    "n_terminal": null,
+    "c_terminal": null,
+    "labels": [
+      "self-assembly"
+    ],
+    "doi": "10.1073/pnas.2634884100",
+    "pubmed_id": null,
+    "paper_url": null,
+    "pdf_url": null,
+    "metadata": {
+      "source_sheet": "Self-assembling sequences",
+      "validation_methods_raw": "Far-UV CD, Electron Microscopy (EM)"
+    }
+  },
+  {
+    "id": "self_assembly:pos:121",
+    "dataset": "self_assembly",
+    "sequence": "ITVIIE",
+    "n_terminal": null,
+    "c_terminal": null,
+    "labels": [
+      "self-assembly"
+    ],
+    "doi": "10.1073/pnas.2634884100",
+    "pubmed_id": null,
+    "paper_url": null,
+    "pdf_url": null,
+    "metadata": {
+      "source_sheet": "Self-assembling sequences",
+      "validation_methods_raw": "Far-UV CD, Electron Microscopy (EM)"
+    }
+  },
+  {
+    "id": "self_assembly:pos:122",
+    "dataset": "self_assembly",
+    "sequence": "LTVIIE",
+    "n_terminal": null,
+    "c_terminal": null,
+    "labels": [
+      "self-assembly"
+    ],
+    "doi": "10.1073/pnas.2634884100",
+    "pubmed_id": null,
+    "paper_url": null,
+    "pdf_url": null,
+    "metadata": {
+      "source_sheet": "Self-assembling sequences",
+      "validation_methods_raw": "Far-UV CD, Electron Microscopy (EM)"
+    }
+  },
+  {
+    "id": "self_assembly:pos:123",
+    "dataset": "self_assembly",
+    "sequence": "MTVIIE",
+    "n_terminal": null,
+    "c_terminal": null,
+    "labels": [
+      "self-assembly"
+    ],
+    "doi": "10.1073/pnas.2634884100",
+    "pubmed_id": null,
+    "paper_url": null,
+    "pdf_url": null,
+    "metadata": {
+      "source_sheet": "Self-assembling sequences",
+      "validation_methods_raw": "Far-UV CD, Electron Microscopy (EM)"
+    }
+  },
+  {
+    "id": "self_assembly:pos:124",
+    "dataset": "self_assembly",
+    "sequence": "NTVIIE",
+    "n_terminal": null,
+    "c_terminal": null,
+    "labels": [
+      "self-assembly"
+    ],
+    "doi": "10.1073/pnas.2634884100",
+    "pubmed_id": null,
+    "paper_url": null,
+    "pdf_url": null,
+    "metadata": {
+      "source_sheet": "Self-assembling sequences",
+      "validation_methods_raw": "Far-UV CD, Electron Microscopy (EM)"
+    }
+  },
+  {
+    "id": "self_assembly:pos:125",
+    "dataset": "self_assembly",
+    "sequence": "QTVIIE",
+    "n_terminal": null,
+    "c_terminal": null,
+    "labels": [
+      "self-assembly"
+    ],
+    "doi": "10.1073/pnas.2634884100",
+    "pubmed_id": null,
+    "paper_url": null,
+    "pdf_url": null,
+    "metadata": {
+      "source_sheet": "Self-assembling sequences",
+      "validation_methods_raw": "Far-UV CD, Electron Microscopy (EM)"
+    }
+  },
+  {
+    "id": "self_assembly:pos:126",
+    "dataset": "self_assembly",
+    "sequence": "YTVIIE",
+    "n_terminal": null,
+    "c_terminal": null,
+    "labels": [
+      "self-assembly"
+    ],
+    "doi": "10.1073/pnas.2634884100",
+    "pubmed_id": null,
+    "paper_url": null,
+    "pdf_url": null,
+    "metadata": {
+      "source_sheet": "Self-assembling sequences",
+      "validation_methods_raw": "Far-UV CD, Electron Microscopy (EM)"
+    }
+  },
+  {
+    "id": "self_assembly:pos:127",
+    "dataset": "self_assembly",
+    "sequence": "NFGSVQ",
+    "n_terminal": null,
+    "c_terminal": null,
+    "labels": [
+      "self-assembly"
+    ],
+    "doi": "10.1080/13506120412331272287",
+    "pubmed_id": null,
+    "paper_url": null,
+    "pdf_url": null,
+    "metadata": {
+      "source_sheet": "Self-assembling sequences",
+      "validation_methods_raw": "TEM, CR"
+    }
+  },
+  {
+    "id": "self_assembly:pos:128",
+    "dataset": "self_assembly",
+    "sequence": "IKVAV",
+    "n_terminal": null,
+    "c_terminal": null,
+    "labels": [
+      "self-assembly"
+    ],
+    "doi": "10.1126/science.1093783",
+    "pubmed_id": null,
+    "paper_url": null,
+    "pdf_url": null,
+    "metadata": {
+      "source_sheet": "Self-assembling sequences",
+      "validation_methods_raw": "Scanning electron microscope (SEM)"
+    }
+  },
+  {
+    "id": "self_assembly:pos:129",
+    "dataset": "self_assembly",
+    "sequence": "DFY",
+    "n_terminal": null,
+    "c_terminal": null,
+    "labels": [
+      "self-assembly"
+    ],
+    "doi": "10.1126/science.aal5005",
+    "pubmed_id": null,
+    "paper_url": null,
+    "pdf_url": null,
+    "metadata": {
+      "source_sheet": "Self-assembling sequences",
+      "validation_methods_raw": "TEM, FTIR"
+    }
+  },
+  {
+    "id": "self_assembly:pos:130",
+    "dataset": "self_assembly",
+    "sequence": "FAGFT",
+    "n_terminal": null,
+    "c_terminal": null,
+    "labels": [
+      "self-assembly"
+    ],
+    "doi": "10.21203/rs.3.rs-109949/v1",
+    "pubmed_id": null,
+    "paper_url": null,
+    "pdf_url": null,
+    "metadata": {
+      "source_sheet": "Self-assembling sequences",
+      "validation_methods_raw": "FT-IR and XRD spectra, TEM, CD spectra"
+    }
+  },
+  {
+    "id": "self_assembly:pos:131",
+    "dataset": "self_assembly",
+    "sequence": "FFVDF",
+    "n_terminal": null,
+    "c_terminal": null,
+    "labels": [
+      "self-assembly"
+    ],
+    "doi": "10.21203/rs.3.rs-109949/v1",
+    "pubmed_id": null,
+    "paper_url": null,
+    "pdf_url": null,
+    "metadata": {
+      "source_sheet": "Self-assembling sequences",
+      "validation_methods_raw": "FT-IR and XRD spectra, TEM, CD spectra"
+    }
+  },
+  {
+    "id": "self_assembly:pos:132",
+    "dataset": "self_assembly",
+    "sequence": "FFVLK",
+    "n_terminal": null,
+    "c_terminal": null,
+    "labels": [
+      "self-assembly"
+    ],
+    "doi": "10.21203/rs.3.rs-109949/v1",
+    "pubmed_id": null,
+    "paper_url": null,
+    "pdf_url": null,
+    "metadata": {
+      "source_sheet": "Self-assembling sequences",
+      "validation_methods_raw": "FT-IR and XRD spectra, TEM, CD spectra"
+    }
+  },
+  {
+    "id": "self_assembly:pos:133",
+    "dataset": "self_assembly",
+    "sequence": "FGFDP",
+    "n_terminal": null,
+    "c_terminal": null,
+    "labels": [
+      "self-assembly"
+    ],
+    "doi": "10.21203/rs.3.rs-109949/v1",
+    "pubmed_id": null,
+    "paper_url": null,
+    "pdf_url": null,
+    "metadata": {
+      "source_sheet": "Self-assembling sequences",
+      "validation_methods_raw": "FT-IR and XRD spectra, TEM, CD spectra"
+    }
+  },
+  {
+    "id": "self_assembly:pos:134",
+    "dataset": "self_assembly",
+    "sequence": "FTISD",
+    "n_terminal": null,
+    "c_terminal": null,
+    "labels": [
+      "self-assembly"
+    ],
+    "doi": "10.21203/rs.3.rs-109949/v1",
+    "pubmed_id": null,
+    "paper_url": null,
+    "pdf_url": null,
+    "metadata": {
+      "source_sheet": "Self-assembling sequences",
+      "validation_methods_raw": "FT-IR and XRD spectra, TEM, CD spectra"
+    }
+  },
+  {
+    "id": "self_assembly:pos:135",
+    "dataset": "self_assembly",
+    "sequence": "ISDNL",
+    "n_terminal": null,
+    "c_terminal": null,
+    "labels": [
+      "self-assembly"
+    ],
+    "doi": "10.21203/rs.3.rs-109949/v1",
+    "pubmed_id": null,
+    "paper_url": null,
+    "pdf_url": null,
+    "metadata": {
+      "source_sheet": "Self-assembling sequences",
+      "validation_methods_raw": "FT-IR and XRD spectra, TEM, CD spectra"
+    }
+  },
+  {
+    "id": "self_assembly:pos:136",
+    "dataset": "self_assembly",
+    "sequence": "ITSVV",
+    "n_terminal": null,
+    "c_terminal": null,
+    "labels": [
+      "self-assembly"
+    ],
+    "doi": "10.21203/rs.3.rs-109949/v1",
+    "pubmed_id": null,
+    "paper_url": null,
+    "pdf_url": null,
+    "metadata": {
+      "source_sheet": "Self-assembling sequences",
+      "validation_methods_raw": "FT-IR and XRD spectra, TEM, CD spectra"
+    }
+  },
+  {
+    "id": "self_assembly:pos:137",
+    "dataset": "self_assembly",
+    "sequence": "LDFPI",
+    "n_terminal": null,
+    "c_terminal": null,
+    "labels": [
+      "self-assembly"
+    ],
+    "doi": "10.21203/rs.3.rs-109949/v1",
+    "pubmed_id": null,
+    "paper_url": null,
+    "pdf_url": null,
+    "metadata": {
+      "source_sheet": "Self-assembling sequences",
+      "validation_methods_raw": "FT-IR and XRD spectra, TEM, CD spectra"
+    }
+  },
+  {
+    "id": "self_assembly:pos:138",
+    "dataset": "self_assembly",
+    "sequence": "LIVGD",
+    "n_terminal": null,
+    "c_terminal": null,
+    "labels": [
+      "self-assembly"
+    ],
+    "doi": "10.21203/rs.3.rs-109949/v1",
+    "pubmed_id": null,
+    "paper_url": null,
+    "pdf_url": null,
+    "metadata": {
+      "source_sheet": "Self-assembling sequences",
+      "validation_methods_raw": "FT-IR and XRD spectra, TEM, CD spectra"
+    }
+  },
+  {
+    "id": "self_assembly:pos:139",
+    "dataset": "self_assembly",
+    "sequence": "YFTEF",
+    "n_terminal": null,
+    "c_terminal": null,
+    "labels": [
+      "self-assembly"
+    ],
+    "doi": "10.21203/rs.3.rs-109949/v1",
+    "pubmed_id": null,
+    "paper_url": null,
+    "pdf_url": null,
+    "metadata": {
+      "source_sheet": "Self-assembling sequences",
+      "validation_methods_raw": "FT-IR and XRD spectra, TEM, CD spectra"
+    }
+  },
+  {
+    "id": "self_assembly:pos:140",
+    "dataset": "self_assembly",
+    "sequence": "KLVFFAE",
+    "n_terminal": null,
+    "c_terminal": null,
+    "labels": [
+      "self-assembly"
+    ],
+    "doi": "10.1529/biophysj.106.088542",
+    "pubmed_id": null,
+    "paper_url": null,
+    "pdf_url": null,
+    "metadata": {
+      "source_sheet": "Self-assembling sequences",
+      "validation_methods_raw": "In silico and X-ray scattering"
+    }
+  },
+  {
+    "id": "self_assembly:pos:141",
+    "dataset": "self_assembly",
+    "sequence": "CEIEIQI",
+    "n_terminal": null,
+    "c_terminal": null,
+    "labels": [
+      "self-assembly"
+    ],
+    "doi": "10.1002/adfm.202009382",
+    "pubmed_id": null,
+    "paper_url": null,
+    "pdf_url": null,
+    "metadata": {
+      "source_sheet": "Self-assembling sequences",
+      "validation_methods_raw": "TEM, ATR-FTIR, Zeta potential, Laser scanning microscopy"
+    }
+  },
+  {
+    "id": "self_assembly:pos:142",
+    "dataset": "self_assembly",
+    "sequence": "CEIEIQINM",
+    "n_terminal": null,
+    "c_terminal": null,
+    "labels": [
+      "self-assembly"
+    ],
+    "doi": "10.1002/adfm.202009382",
+    "pubmed_id": null,
+    "paper_url": null,
+    "pdf_url": null,
+    "metadata": {
+      "source_sheet": "Self-assembling sequences",
+      "validation_methods_raw": "TEM, ATR-FTIR, Zeta potential, Laser scanning microscopy"
+    }
+  },
+  {
+    "id": "self_assembly:pos:143",
+    "dataset": "self_assembly",
+    "sequence": "CEIEIQINMWQ",
+    "n_terminal": null,
+    "c_terminal": null,
+    "labels": [
+      "self-assembly"
+    ],
+    "doi": "10.1002/adfm.202009382",
+    "pubmed_id": null,
+    "paper_url": null,
+    "pdf_url": null,
+    "metadata": {
+      "source_sheet": "Self-assembling sequences",
+      "validation_methods_raw": "TEM, ATR-FTIR, Zeta potential, Laser scanning microscopy"
+    }
+  },
+  {
+    "id": "self_assembly:pos:144",
+    "dataset": "self_assembly",
+    "sequence": "CKAKAQA",
+    "n_terminal": null,
+    "c_terminal": null,
+    "labels": [
+      "self-assembly"
+    ],
+    "doi": "10.1002/adfm.202009382",
+    "pubmed_id": null,
+    "paper_url": null,
+    "pdf_url": null,
+    "metadata": {
+      "source_sheet": "Self-assembling sequences",
+      "validation_methods_raw": "TEM, ATR-FTIR, Zeta potential, Laser scanning microscopy"
+    }
+  },
+  {
+    "id": "self_assembly:pos:145",
+    "dataset": "self_assembly",
+    "sequence": "CKAKAQANM",
+    "n_terminal": null,
+    "c_terminal": null,
+    "labels": [
+      "self-assembly"
+    ],
+    "doi": "10.1002/adfm.202009382",
+    "pubmed_id": null,
+    "paper_url": null,
+    "pdf_url": null,
+    "metadata": {
+      "source_sheet": "Self-assembling sequences",
+      "validation_methods_raw": "TEM, ATR-FTIR, Zeta potential, Laser scanning microscopy"
+    }
+  },
+  {
+    "id": "self_assembly:pos:146",
+    "dataset": "self_assembly",
+    "sequence": "CKAKAQANMWQ",
+    "n_terminal": null,
+    "c_terminal": null,
+    "labels": [
+      "self-assembly"
+    ],
+    "doi": "10.1002/adfm.202009382",
+    "pubmed_id": null,
+    "paper_url": null,
+    "pdf_url": null,
+    "metadata": {
+      "source_sheet": "Self-assembling sequences",
+      "validation_methods_raw": "TEM, ATR-FTIR, Zeta potential, Laser scanning microscopy"
+    }
+  },
+  {
+    "id": "self_assembly:pos:147",
+    "dataset": "self_assembly",
+    "sequence": "CKFKFQF",
+    "n_terminal": null,
+    "c_terminal": null,
+    "labels": [
+      "self-assembly"
+    ],
+    "doi": "10.1002/adfm.202009382",
+    "pubmed_id": null,
+    "paper_url": null,
+    "pdf_url": null,
+    "metadata": {
+      "source_sheet": "Self-assembling sequences",
+      "validation_methods_raw": "TEM, ATR-FTIR, Zeta potential, Laser scanning microscopy"
+    }
+  },
+  {
+    "id": "self_assembly:pos:148",
+    "dataset": "self_assembly",
+    "sequence": "CKFKFQFNM",
+    "n_terminal": null,
+    "c_terminal": null,
+    "labels": [
+      "self-assembly"
+    ],
+    "doi": "10.1002/adfm.202009382",
+    "pubmed_id": null,
+    "paper_url": null,
+    "pdf_url": null,
+    "metadata": {
+      "source_sheet": "Self-assembling sequences",
+      "validation_methods_raw": "TEM, ATR-FTIR, Zeta potential, Laser scanning microscopy"
+    }
+  },
+  {
+    "id": "self_assembly:pos:149",
+    "dataset": "self_assembly",
+    "sequence": "CKFKFQFNMWQ",
+    "n_terminal": null,
+    "c_terminal": null,
+    "labels": [
+      "self-assembly"
+    ],
+    "doi": "10.1002/adfm.202009382",
+    "pubmed_id": null,
+    "paper_url": null,
+    "pdf_url": null,
+    "metadata": {
+      "source_sheet": "Self-assembling sequences",
+      "validation_methods_raw": "TEM, ATR-FTIR, Zeta potential, Laser scanning microscopy"
+    }
+  },
+  {
+    "id": "self_assembly:pos:150",
+    "dataset": "self_assembly",
+    "sequence": "CKIKIQI",
+    "n_terminal": null,
+    "c_terminal": null,
+    "labels": [
+      "self-assembly"
+    ],
+    "doi": "10.1002/adfm.202009382",
+    "pubmed_id": null,
+    "paper_url": null,
+    "pdf_url": null,
+    "metadata": {
+      "source_sheet": "Self-assembling sequences",
+      "validation_methods_raw": "TEM, ATR-FTIR, Zeta potential, Laser scanning microscopy"
+    }
+  },
+  {
+    "id": "self_assembly:pos:151",
+    "dataset": "self_assembly",
+    "sequence": "CKIKIQIN",
+    "n_terminal": null,
+    "c_terminal": null,
+    "labels": [
+      "self-assembly"
+    ],
+    "doi": "10.1002/adfm.202009382",
+    "pubmed_id": null,
+    "paper_url": null,
+    "pdf_url": null,
+    "metadata": {
+      "source_sheet": "Self-assembling sequences",
+      "validation_methods_raw": "TEM, ATR-FTIR, Zeta potential, Laser scanning microscopy"
+    }
+  },
+  {
+    "id": "self_assembly:pos:152",
+    "dataset": "self_assembly",
+    "sequence": "CKIKIQINMWQ",
+    "n_terminal": null,
+    "c_terminal": null,
+    "labels": [
+      "self-assembly"
+    ],
+    "doi": "10.1002/adfm.202009382",
+    "pubmed_id": null,
+    "paper_url": null,
+    "pdf_url": null,
+    "metadata": {
+      "source_sheet": "Self-assembling sequences",
+      "validation_methods_raw": "TEM, ATR-FTIR, Zeta potential, Laser scanning microscopy"
+    }
+  },
+  {
+    "id": "self_assembly:pos:153",
+    "dataset": "self_assembly",
+    "sequence": "CKIKQII",
+    "n_terminal": null,
+    "c_terminal": null,
+    "labels": [
+      "self-assembly"
+    ],
+    "doi": "10.1002/adfm.202009382",
+    "pubmed_id": null,
+    "paper_url": null,
+    "pdf_url": null,
+    "metadata": {
+      "source_sheet": "Self-assembling sequences",
+      "validation_methods_raw": "TEM, ATR-FTIR, Zeta potential, Laser scanning microscopy"
+    }
+  },
+  {
+    "id": "self_assembly:pos:154",
+    "dataset": "self_assembly",
+    "sequence": "CKIKQIINM",
+    "n_terminal": null,
+    "c_terminal": null,
+    "labels": [
+      "self-assembly"
+    ],
+    "doi": "10.1002/adfm.202009382",
+    "pubmed_id": null,
+    "paper_url": null,
+    "pdf_url": null,
+    "metadata": {
+      "source_sheet": "Self-assembling sequences",
+      "validation_methods_raw": "TEM, ATR-FTIR, Zeta potential, Laser scanning microscopy"
+    }
+  },
+  {
+    "id": "self_assembly:pos:155",
+    "dataset": "self_assembly",
+    "sequence": "CKIKQIINMWQ",
+    "n_terminal": null,
+    "c_terminal": null,
+    "labels": [
+      "self-assembly"
+    ],
+    "doi": "10.1002/adfm.202009382",
+    "pubmed_id": null,
+    "paper_url": null,
+    "pdf_url": null,
+    "metadata": {
+      "source_sheet": "Self-assembling sequences",
+      "validation_methods_raw": "TEM, ATR-FTIR, Zeta potential, Laser scanning microscopy"
+    }
+  },
+  {
+    "id": "self_assembly:pos:156",
+    "dataset": "self_assembly",
+    "sequence": "CSISIQI",
+    "n_terminal": null,
+    "c_terminal": null,
+    "labels": [
+      "self-assembly"
+    ],
+    "doi": "10.1002/adfm.202009382",
+    "pubmed_id": null,
+    "paper_url": null,
+    "pdf_url": null,
+    "metadata": {
+      "source_sheet": "Self-assembling sequences",
+      "validation_methods_raw": "TEM, ATR-FTIR, Zeta potential, Laser scanning microscopy"
+    }
+  },
+  {
+    "id": "self_assembly:pos:157",
+    "dataset": "self_assembly",
+    "sequence": "CSISIQINM",
+    "n_terminal": null,
+    "c_terminal": null,
+    "labels": [
+      "self-assembly"
+    ],
+    "doi": "10.1002/adfm.202009382",
+    "pubmed_id": null,
+    "paper_url": null,
+    "pdf_url": null,
+    "metadata": {
+      "source_sheet": "Self-assembling sequences",
+      "validation_methods_raw": "TEM, ATR-FTIR, Zeta potential, Laser scanning microscopy"
+    }
+  },
+  {
+    "id": "self_assembly:pos:158",
+    "dataset": "self_assembly",
+    "sequence": "KFKFQF",
+    "n_terminal": null,
+    "c_terminal": null,
+    "labels": [
+      "self-assembly"
+    ],
+    "doi": "10.1002/adfm.202009382",
+    "pubmed_id": null,
+    "paper_url": null,
+    "pdf_url": null,
+    "metadata": {
+      "source_sheet": "Self-assembling sequences",
+      "validation_methods_raw": "TEM, ATR-FTIR, Zeta potential, Laser scanning microscopy"
+    }
+  },
+  {
+    "id": "self_assembly:pos:159",
+    "dataset": "self_assembly",
+    "sequence": "KFKFQFN",
+    "n_terminal": null,
+    "c_terminal": null,
+    "labels": [
+      "self-assembly"
+    ],
+    "doi": "10.1002/adfm.202009382",
+    "pubmed_id": null,
+    "paper_url": null,
+    "pdf_url": null,
+    "metadata": {
+      "source_sheet": "Self-assembling sequences",
+      "validation_methods_raw": "TEM, ATR-FTIR, Zeta potential, Laser scanning microscopy"
+    }
+  },
+  {
+    "id": "self_assembly:pos:160",
+    "dataset": "self_assembly",
+    "sequence": "KFKFQFNMWQ",
+    "n_terminal": null,
+    "c_terminal": null,
+    "labels": [
+      "self-assembly"
+    ],
+    "doi": "10.1002/adfm.202009382",
+    "pubmed_id": null,
+    "paper_url": null,
+    "pdf_url": null,
+    "metadata": {
+      "source_sheet": "Self-assembling sequences",
+      "validation_methods_raw": "TEM, ATR-FTIR, Zeta potential, Laser scanning microscopy"
+    }
+  },
+  {
+    "id": "self_assembly:pos:161",
+    "dataset": "self_assembly",
+    "sequence": "KIKIQINM",
+    "n_terminal": null,
+    "c_terminal": null,
+    "labels": [
+      "self-assembly"
+    ],
+    "doi": "10.1002/adfm.202009382",
+    "pubmed_id": null,
+    "paper_url": null,
+    "pdf_url": null,
+    "metadata": {
+      "source_sheet": "Self-assembling sequences",
+      "validation_methods_raw": "TEM, ATR-FTIR, Zeta potential, Laser scanning microscopy"
+    }
+  },
+  {
+    "id": "self_assembly:pos:162",
+    "dataset": "self_assembly",
+    "sequence": "KIKIQINMWQ",
+    "n_terminal": null,
+    "c_terminal": null,
+    "labels": [
+      "self-assembly"
+    ],
+    "doi": "10.1002/adfm.202009382",
+    "pubmed_id": null,
+    "paper_url": null,
+    "pdf_url": null,
+    "metadata": {
+      "source_sheet": "Self-assembling sequences",
+      "validation_methods_raw": "TEM, ATR-FTIR, Zeta potential, Laser scanning microscopy"
+    }
+  },
+  {
+    "id": "self_assembly:pos:163",
+    "dataset": "self_assembly",
+    "sequence": "KIKQIINM",
+    "n_terminal": null,
+    "c_terminal": null,
+    "labels": [
+      "self-assembly"
+    ],
+    "doi": "10.1002/adfm.202009382",
+    "pubmed_id": null,
+    "paper_url": null,
+    "pdf_url": null,
+    "metadata": {
+      "source_sheet": "Self-assembling sequences",
+      "validation_methods_raw": "TEM, ATR-FTIR, Zeta potential, Laser scanning microscopy"
+    }
+  },
+  {
+    "id": "self_assembly:pos:164",
+    "dataset": "self_assembly",
+    "sequence": "KIKQIINMWQ",
+    "n_terminal": null,
+    "c_terminal": null,
+    "labels": [
+      "self-assembly"
+    ],
+    "doi": "10.1002/adfm.202009382",
+    "pubmed_id": null,
+    "paper_url": null,
+    "pdf_url": null,
+    "metadata": {
+      "source_sheet": "Self-assembling sequences",
+      "validation_methods_raw": "TEM, ATR-FTIR, Zeta potential, Laser scanning microscopy"
+    }
+  },
+  {
+    "id": "self_assembly:pos:165",
+    "dataset": "self_assembly",
+    "sequence": "MKFKFQF",
+    "n_terminal": null,
+    "c_terminal": null,
+    "labels": [
+      "self-assembly"
+    ],
+    "doi": "10.1002/adfm.202009382",
+    "pubmed_id": null,
+    "paper_url": null,
+    "pdf_url": null,
+    "metadata": {
+      "source_sheet": "Self-assembling sequences",
+      "validation_methods_raw": "TEM, ATR-FTIR, Zeta potential, Laser scanning microscopy"
+    }
+  },
+  {
+    "id": "self_assembly:pos:166",
+    "dataset": "self_assembly",
+    "sequence": "MKIKIQI",
+    "n_terminal": null,
+    "c_terminal": null,
+    "labels": [
+      "self-assembly"
+    ],
+    "doi": "10.1002/adfm.202009382",
+    "pubmed_id": null,
+    "paper_url": null,
+    "pdf_url": null,
+    "metadata": {
+      "source_sheet": "Self-assembling sequences",
+      "validation_methods_raw": "TEM, ATR-FTIR, Zeta potential, Laser scanning microscopy"
+    }
+  },
+  {
+    "id": "self_assembly:pos:167",
+    "dataset": "self_assembly",
+    "sequence": "KAKAQA",
+    "n_terminal": null,
+    "c_terminal": null,
+    "labels": [
+      "self-assembly"
+    ],
+    "doi": "10.1002/adfm.202009382",
+    "pubmed_id": null,
+    "paper_url": null,
+    "pdf_url": null,
+    "metadata": {
+      "source_sheet": "Self-assembling sequences",
+      "validation_methods_raw": "TEM, ATR-FTIR, Zeta potential, Laser scanning microscopy"
+    }
+  },
+  {
+    "id": "self_assembly:pos:168",
+    "dataset": "self_assembly",
+    "sequence": "KAKAQAN",
+    "n_terminal": null,
+    "c_terminal": null,
+    "labels": [
+      "self-assembly"
+    ],
+    "doi": "10.1002/adfm.202009382",
+    "pubmed_id": null,
+    "paper_url": null,
+    "pdf_url": null,
+    "metadata": {
+      "source_sheet": "Self-assembling sequences",
+      "validation_methods_raw": "TEM, ATR-FTIR, Zeta potential, Laser scanning microscopy"
+    }
+  },
+  {
+    "id": "self_assembly:pos:169",
+    "dataset": "self_assembly",
+    "sequence": "KAKAQANMWQ",
+    "n_terminal": null,
+    "c_terminal": null,
+    "labels": [
+      "self-assembly"
+    ],
+    "doi": "10.1002/adfm.202009382",
+    "pubmed_id": null,
+    "paper_url": null,
+    "pdf_url": null,
+    "metadata": {
+      "source_sheet": "Self-assembling sequences",
+      "validation_methods_raw": "TEM, ATR-FTIR, Zeta potential, Laser scanning microscopy"
+    }
+  },
+  {
+    "id": "self_assembly:pos:170",
+    "dataset": "self_assembly",
+    "sequence": "YFCFY",
+    "n_terminal": null,
+    "c_terminal": null,
+    "labels": [
+      "self-assembly"
+    ],
+    "doi": "10.1002/advs.201801255",
+    "pubmed_id": null,
+    "paper_url": null,
+    "pdf_url": null,
+    "metadata": {
+      "source_sheet": "Self-assembling sequences",
+      "validation_methods_raw": "TEM, AFM"
+    }
+  },
+  {
+    "id": "self_assembly:pos:171",
+    "dataset": "self_assembly",
+    "sequence": "YYACAYY",
+    "n_terminal": null,
+    "c_terminal": null,
+    "labels": [
+      "self-assembly"
+    ],
+    "doi": "10.1002/advs.201801255",
+    "pubmed_id": null,
+    "paper_url": null,
+    "pdf_url": null,
+    "metadata": {
+      "source_sheet": "Self-assembling sequences",
+      "validation_methods_raw": "TEM, AFM"
+    }
+  },
+  {
+    "id": "self_assembly:pos:172",
+    "dataset": "self_assembly",
+    "sequence": "MEMEMKMKMEMEMKMK",
+    "n_terminal": null,
+    "c_terminal": null,
+    "labels": [
+      "self-assembly"
+    ],
+    "doi": "10.1002/bip.21340",
+    "pubmed_id": null,
+    "paper_url": null,
+    "pdf_url": null,
+    "metadata": {
+      "source_sheet": "Self-assembling sequences",
+      "validation_methods_raw": "AFM, CD spectroscopy, Light Scattering"
+    }
+  },
+  {
+    "id": "self_assembly:pos:173",
+    "dataset": "self_assembly",
+    "sequence": "QQEFQWQFRQQ",
+    "n_terminal": null,
+    "c_terminal": null,
+    "labels": [
+      "self-assembly"
+    ],
+    "doi": "10.1002/bit.22274",
+    "pubmed_id": null,
+    "paper_url": null,
+    "pdf_url": null,
+    "metadata": {
+      "source_sheet": "Self-assembling sequences",
+      "validation_methods_raw": "TEM, CD spectroscopy"
+    }
+  },
+  {
+    "id": "self_assembly:pos:174",
+    "dataset": "self_assembly",
+    "sequence": "RADARADARADARADA",
+    "n_terminal": null,
+    "c_terminal": null,
+    "labels": [
+      "self-assembly"
+    ],
+    "doi": "10.1016/0142-9612(95)96874-Y",
+    "pubmed_id": null,
+    "paper_url": null,
+    "pdf_url": null,
+    "metadata": {
+      "source_sheet": "Self-assembling sequences",
+      "validation_methods_raw": "CD spectroscopy, SEM"
+    }
+  },
+  {
+    "id": "self_assembly:pos:175",
+    "dataset": "self_assembly",
+    "sequence": "RARADADARARADADA",
+    "n_terminal": null,
+    "c_terminal": null,
+    "labels": [
+      "self-assembly"
+    ],
+    "doi": "10.1016/0142-9612(95)96874-Y",
+    "pubmed_id": null,
+    "paper_url": null,
+    "pdf_url": null,
+    "metadata": {
+      "source_sheet": "Self-assembling sequences",
+      "validation_methods_raw": "CD spectroscopy, SEM"
+    }
+  },
+  {
+    "id": "self_assembly:pos:176",
+    "dataset": "self_assembly",
+    "sequence": "GFFL",
+    "n_terminal": null,
+    "c_terminal": null,
+    "labels": [
+      "self-assembly"
+    ],
+    "doi": "10.1016/j.biomaterials.2016.04.039",
+    "pubmed_id": null,
+    "paper_url": null,
+    "pdf_url": null,
+    "metadata": {
+      "source_sheet": "Self-assembling sequences",
+      "validation_methods_raw": "AFM, TEM, SEM, Confocal microscopy"
+    }
+  },
+  {
+    "id": "self_assembly:pos:177",
+    "dataset": "self_assembly",
+    "sequence": "GFFLG",
+    "n_terminal": null,
+    "c_terminal": null,
+    "labels": [
+      "self-assembly"
+    ],
+    "doi": "10.1016/j.biomaterials.2016.04.039",
+    "pubmed_id": null,
+    "paper_url": null,
+    "pdf_url": null,
+    "metadata": {
+      "source_sheet": "Self-assembling sequences",
+      "validation_methods_raw": "AFM, TEM, SEM, Confocal microscopy"
+    }
+  },
+  {
+    "id": "self_assembly:pos:178",
+    "dataset": "self_assembly",
+    "sequence": "GFFLGLDD",
+    "n_terminal": null,
+    "c_terminal": null,
+    "labels": [
+      "self-assembly"
+    ],
+    "doi": "10.1016/j.biomaterials.2016.04.039",
+    "pubmed_id": null,
+    "paper_url": null,
+    "pdf_url": null,
+    "metadata": {
+      "source_sheet": "Self-assembling sequences",
+      "validation_methods_raw": "AFM, TEM, SEM, Confocal microscopy"
+    }
+  },
+  {
+    "id": "self_assembly:pos:179",
+    "dataset": "self_assembly",
+    "sequence": "FLVHSS",
+    "n_terminal": null,
+    "c_terminal": null,
+    "labels": [
+      "self-assembly"
+    ],
+    "doi": "10.1016/S1047-8477(02)00630-5",
+    "pubmed_id": null,
+    "paper_url": null,
+    "pdf_url": null,
+    "metadata": {
+      "source_sheet": "Self-assembling sequences",
+      "validation_methods_raw": "TEM, CD"
+    }
+  },
+  {
+    "id": "self_assembly:pos:180",
+    "dataset": "self_assembly",
+    "sequence": "AAKAAAKAAAKAAAKA",
+    "n_terminal": null,
+    "c_terminal": null,
+    "labels": [
+      "self-assembly"
+    ],
+    "doi": "10.1021/acs.jpcb.6b07673",
+    "pubmed_id": null,
+    "paper_url": null,
+    "pdf_url": null,
+    "metadata": {
+      "source_sheet": "Self-assembling sequences",
+      "validation_methods_raw": "FTIR, Vibrational Circular Dichroism (VCD), and Solid State FTIR, AFM, Rheology"
+    }
+  },
+  {
+    "id": "self_assembly:pos:181",
+    "dataset": "self_assembly",
+    "sequence": "PRFRFRFRF",
+    "n_terminal": null,
+    "c_terminal": null,
+    "labels": [
+      "self-assembly"
+    ],
+    "doi": "10.1021/acs.langmuir.0c00198",
+    "pubmed_id": null,
+    "paper_url": null,
+    "pdf_url": null,
+    "metadata": {
+      "source_sheet": "Self-assembling sequences",
+      "validation_methods_raw": "CD, TEM, SAXS"
+    }
+  },
+  {
+    "id": "self_assembly:pos:182",
+    "dataset": "self_assembly",
+    "sequence": "RFRFRFRF",
+    "n_terminal": null,
+    "c_terminal": null,
+    "labels": [
+      "self-assembly"
+    ],
+    "doi": "10.1021/acs.langmuir.0c00198",
+    "pubmed_id": null,
+    "paper_url": null,
+    "pdf_url": null,
+    "metadata": {
+      "source_sheet": "Self-assembling sequences",
+      "validation_methods_raw": "CD, TEM, SAXS"
+    }
+  },
+  {
+    "id": "self_assembly:pos:183",
+    "dataset": "self_assembly",
+    "sequence": "GYGYGYG",
+    "n_terminal": null,
+    "c_terminal": null,
+    "labels": [
+      "self-assembly"
+    ],
+    "doi": "10.1021/acsnano.8b00417",
+    "pubmed_id": null,
+    "paper_url": null,
+    "pdf_url": null,
+    "metadata": {
+      "source_sheet": "Self-assembling sequences",
+      "validation_methods_raw": "Thioflavin-T (Th-T) and Congo Red (CR), FTIR, TEM"
+    }
+  },
+  {
+    "id": "self_assembly:pos:184",
+    "dataset": "self_assembly",
+    "sequence": "NYNNYN",
+    "n_terminal": null,
+    "c_terminal": null,
+    "labels": [
+      "self-assembly"
+    ],
+    "doi": "10.1021/acsnano.8b00417",
+    "pubmed_id": null,
+    "paper_url": null,
+    "pdf_url": null,
+    "metadata": {
+      "source_sheet": "Self-assembling sequences",
+      "validation_methods_raw": "Thioflavin-T (Th-T) and Congo Red (CR), FTIR, TEM"
+    }
+  },
+  {
+    "id": "self_assembly:pos:185",
+    "dataset": "self_assembly",
+    "sequence": "NYNYNYN",
+    "n_terminal": null,
+    "c_terminal": null,
+    "labels": [
+      "self-assembly"
+    ],
+    "doi": "10.1021/acsnano.8b00417",
+    "pubmed_id": null,
+    "paper_url": null,
+    "pdf_url": null,
+    "metadata": {
+      "source_sheet": "Self-assembling sequences",
+      "validation_methods_raw": "Thioflavin-T (Th-T) and Congo Red (CR), FTIR, TEM"
+    }
+  },
+  {
+    "id": "self_assembly:pos:186",
+    "dataset": "self_assembly",
+    "sequence": "QYQQYQ",
+    "n_terminal": null,
+    "c_terminal": null,
+    "labels": [
+      "self-assembly"
+    ],
+    "doi": "10.1021/acsnano.8b00417",
+    "pubmed_id": null,
+    "paper_url": null,
+    "pdf_url": null,
+    "metadata": {
+      "source_sheet": "Self-assembling sequences",
+      "validation_methods_raw": "Thioflavin-T (Th-T) and Congo Red (CR), FTIR, TEM"
+    }
+  },
+  {
+    "id": "self_assembly:pos:187",
+    "dataset": "self_assembly",
+    "sequence": "QYQYQYQ",
+    "n_terminal": null,
+    "c_terminal": null,
+    "labels": [
+      "self-assembly"
+    ],
+    "doi": "10.1021/acsnano.8b00417",
+    "pubmed_id": null,
+    "paper_url": null,
+    "pdf_url": null,
+    "metadata": {
+      "source_sheet": "Self-assembling sequences",
+      "validation_methods_raw": "Thioflavin-T (Th-T) and Congo Red (CR), FTIR, TEM"
+    }
+  },
+  {
+    "id": "self_assembly:pos:188",
+    "dataset": "self_assembly",
+    "sequence": "SYSSYS",
+    "n_terminal": null,
+    "c_terminal": null,
+    "labels": [
+      "self-assembly"
+    ],
+    "doi": "10.1021/acsnano.8b00417",
+    "pubmed_id": null,
+    "paper_url": null,
+    "pdf_url": null,
+    "metadata": {
+      "source_sheet": "Self-assembling sequences",
+      "validation_methods_raw": "Thioflavin-T (Th-T) and Congo Red (CR), FTIR, TEM"
+    }
+  },
+  {
+    "id": "self_assembly:pos:189",
+    "dataset": "self_assembly",
+    "sequence": "SYSYSYS",
+    "n_terminal": null,
+    "c_terminal": null,
+    "labels": [
+      "self-assembly"
+    ],
+    "doi": "10.1021/acsnano.8b00417",
+    "pubmed_id": null,
+    "paper_url": null,
+    "pdf_url": null,
+    "metadata": {
+      "source_sheet": "Self-assembling sequences",
+      "validation_methods_raw": "Thioflavin-T (Th-T) and Congo Red (CR), FTIR, TEM"
+    }
+  },
+  {
+    "id": "self_assembly:pos:190",
+    "dataset": "self_assembly",
+    "sequence": "FFALGLAGKK",
+    "n_terminal": null,
+    "c_terminal": null,
+    "labels": [
+      "self-assembly"
+    ],
+    "doi": "10.1021/acsnano.8b07401",
+    "pubmed_id": null,
+    "paper_url": null,
+    "pdf_url": null,
+    "metadata": {
+      "source_sheet": "Self-assembling sequences",
+      "validation_methods_raw": "AFM, FTIR, TEM"
+    }
+  },
+  {
+    "id": "self_assembly:pos:191",
+    "dataset": "self_assembly",
+    "sequence": "FFGAAGLDGD",
+    "n_terminal": null,
+    "c_terminal": null,
+    "labels": [
+      "self-assembly"
+    ],
+    "doi": "10.1021/acsnano.8b07401",
+    "pubmed_id": null,
+    "paper_url": null,
+    "pdf_url": null,
+    "metadata": {
+      "source_sheet": "Self-assembling sequences",
+      "validation_methods_raw": "AFM, FTIR, TEM"
+    }
+  },
+  {
+    "id": "self_assembly:pos:192",
+    "dataset": "self_assembly",
+    "sequence": "FFGAAGLKGK",
+    "n_terminal": null,
+    "c_terminal": null,
+    "labels": [
+      "self-assembly"
+    ],
+    "doi": "10.1021/acsnano.8b07401",
+    "pubmed_id": null,
+    "paper_url": null,
+    "pdf_url": null,
+    "metadata": {
+      "source_sheet": "Self-assembling sequences",
+      "validation_methods_raw": "AFM, FTIR, TEM"
+    }
+  },
+  {
+    "id": "self_assembly:pos:193",
+    "dataset": "self_assembly",
+    "sequence": "FFGALGLDGD",
+    "n_terminal": null,
+    "c_terminal": null,
+    "labels": [
+      "self-assembly"
+    ],
+    "doi": "10.1021/acsnano.8b07401",
+    "pubmed_id": null,
+    "paper_url": null,
+    "pdf_url": null,
+    "metadata": {
+      "source_sheet": "Self-assembling sequences",
+      "validation_methods_raw": "AFM, FTIR, TEM"
+    }
+  },
+  {
+    "id": "self_assembly:pos:194",
+    "dataset": "self_assembly",
+    "sequence": "FFGALGLKGK",
+    "n_terminal": null,
+    "c_terminal": null,
+    "labels": [
+      "self-assembly"
+    ],
+    "doi": "10.1021/acsnano.8b07401",
+    "pubmed_id": null,
+    "paper_url": null,
+    "pdf_url": null,
+    "metadata": {
+      "source_sheet": "Self-assembling sequences",
+      "validation_methods_raw": "AFM, FTIR, TEM"
+    }
+  },
+  {
+    "id": "self_assembly:pos:195",
+    "dataset": "self_assembly",
+    "sequence": "FFGPAGLDGD",
+    "n_terminal": null,
+    "c_terminal": null,
+    "labels": [
+      "self-assembly"
+    ],
+    "doi": "10.1021/acsnano.8b07401",
+    "pubmed_id": null,
+    "paper_url": null,
+    "pdf_url": null,
+    "metadata": {
+      "source_sheet": "Self-assembling sequences",
+      "validation_methods_raw": "AFM, FTIR, TEM"
+    }
+  },
+  {
+    "id": "self_assembly:pos:196",
+    "dataset": "self_assembly",
+    "sequence": "FFGPAGLKGK",
+    "n_terminal": null,
+    "c_terminal": null,
+    "labels": [
+      "self-assembly"
+    ],
+    "doi": "10.1021/acsnano.8b07401",
+    "pubmed_id": null,
+    "paper_url": null,
+    "pdf_url": null,
+    "metadata": {
+      "source_sheet": "Self-assembling sequences",
+      "validation_methods_raw": "AFM, FTIR, TEM"
+    }
+  },
+  {
+    "id": "self_assembly:pos:197",
+    "dataset": "self_assembly",
+    "sequence": "FFGPLGLDGD",
+    "n_terminal": null,
+    "c_terminal": null,
+    "labels": [
+      "self-assembly"
+    ],
+    "doi": "10.1021/acsnano.8b07401",
+    "pubmed_id": null,
+    "paper_url": null,
+    "pdf_url": null,
+    "metadata": {
+      "source_sheet": "Self-assembling sequences",
+      "validation_methods_raw": "AFM, FTIR, TEM"
+    }
+  },
+  {
+    "id": "self_assembly:pos:198",
+    "dataset": "self_assembly",
+    "sequence": "FFGPLGLKGK",
+    "n_terminal": null,
+    "c_terminal": null,
+    "labels": [
+      "self-assembly"
+    ],
+    "doi": "10.1021/acsnano.8b07401",
+    "pubmed_id": null,
+    "paper_url": null,
+    "pdf_url": null,
+    "metadata": {
+      "source_sheet": "Self-assembling sequences",
+      "validation_methods_raw": "AFM, FTIR, TEM"
+    }
+  },
+  {
+    "id": "self_assembly:pos:199",
+    "dataset": "self_assembly",
+    "sequence": "FFPLGLAGDD",
+    "n_terminal": null,
+    "c_terminal": null,
+    "labels": [
+      "self-assembly"
+    ],
+    "doi": "10.1021/acsnano.8b07401",
+    "pubmed_id": null,
+    "paper_url": null,
+    "pdf_url": null,
+    "metadata": {
+      "source_sheet": "Self-assembling sequences",
+      "validation_methods_raw": "AFM, FTIR, TEM"
+    }
+  },
+  {
+    "id": "self_assembly:pos:200",
+    "dataset": "self_assembly",
+    "sequence": "FFPLGLAGKK",
+    "n_terminal": null,
+    "c_terminal": null,
+    "labels": [
+      "self-assembly"
+    ],
+    "doi": "10.1021/acsnano.8b07401",
+    "pubmed_id": null,
+    "paper_url": null,
+    "pdf_url": null,
+    "metadata": {
+      "source_sheet": "Self-assembling sequences",
+      "validation_methods_raw": "AFM, FTIR, TEM"
+    }
+  },
+  {
+    "id": "self_assembly:pos:201",
+    "dataset": "self_assembly",
+    "sequence": "NNQQNY",
+    "n_terminal": null,
+    "c_terminal": null,
+    "labels": [
+      "self-assembly"
+    ],
+    "doi": "10.1021/jp4046287",
+    "pubmed_id": null,
+    "paper_url": null,
+    "pdf_url": null,
+    "metadata": {
+      "source_sheet": "Self-assembling sequences",
+      "validation_methods_raw": "In silico, TEM, SEM"
+    }
+  },
+  {
+    "id": "self_assembly:pos:202",
+    "dataset": "self_assembly",
+    "sequence": "NNVVNY",
+    "n_terminal": null,
+    "c_terminal": null,
+    "labels": [
+      "self-assembly"
+    ],
+    "doi": "10.1021/jp4046287",
+    "pubmed_id": null,
+    "paper_url": null,
+    "pdf_url": null,
+    "metadata": {
+      "source_sheet": "Self-assembling sequences",
+      "validation_methods_raw": "In silico, TEM, SEM"
+    }
+  },
+  {
+    "id": "self_assembly:pos:203",
+    "dataset": "self_assembly",
+    "sequence": "NVQVVY",
+    "n_terminal": null,
+    "c_terminal": null,
+    "labels": [
+      "self-assembly"
+    ],
+    "doi": "10.1021/jp4046287",
+    "pubmed_id": null,
+    "paper_url": null,
+    "pdf_url": null,
+    "metadata": {
+      "source_sheet": "Self-assembling sequences",
+      "validation_methods_raw": "In silico, TEM, SEM"
+    }
+  },
+  {
+    "id": "self_assembly:pos:204",
+    "dataset": "self_assembly",
+    "sequence": "NVVQIY",
+    "n_terminal": null,
+    "c_terminal": null,
+    "labels": [
+      "self-assembly"
+    ],
+    "doi": "10.1021/jp4046287",
+    "pubmed_id": null,
+    "paper_url": null,
+    "pdf_url": null,
+    "metadata": {
+      "source_sheet": "Self-assembling sequences",
+      "validation_methods_raw": "In silico, TEM, SEM"
+    }
+  },
+  {
+    "id": "self_assembly:pos:205",
+    "dataset": "self_assembly",
+    "sequence": "NVVVVY",
+    "n_terminal": null,
+    "c_terminal": null,
+    "labels": [
+      "self-assembly"
+    ],
+    "doi": "10.1021/jp4046287",
+    "pubmed_id": null,
+    "paper_url": null,
+    "pdf_url": null,
+    "metadata": {
+      "source_sheet": "Self-assembling sequences",
+      "validation_methods_raw": "In silico, TEM, SEM"
+    }
+  },
+  {
+    "id": "self_assembly:pos:206",
+    "dataset": "self_assembly",
+    "sequence": "YVIFL",
+    "n_terminal": null,
+    "c_terminal": null,
+    "labels": [
+      "self-assembly"
+    ],
+    "doi": "10.1021/jp502473s",
+    "pubmed_id": null,
+    "paper_url": null,
+    "pdf_url": null,
+    "metadata": {
+      "source_sheet": "Self-assembling sequences",
+      "validation_methods_raw": "TEM, x-ray cristalography"
+    }
+  },
+  {
+    "id": "self_assembly:pos:207",
+    "dataset": "self_assembly",
+    "sequence": "YVVFL",
+    "n_terminal": null,
+    "c_terminal": null,
+    "labels": [
+      "self-assembly"
+    ],
+    "doi": "10.1021/jp502473s",
+    "pubmed_id": null,
+    "paper_url": null,
+    "pdf_url": null,
+    "metadata": {
+      "source_sheet": "Self-assembling sequences",
+      "validation_methods_raw": "TEM, x-ray cristalography"
+    }
+  },
+  {
+    "id": "self_assembly:pos:208",
+    "dataset": "self_assembly",
+    "sequence": "YVVFV",
+    "n_terminal": null,
+    "c_terminal": null,
+    "labels": [
+      "self-assembly"
+    ],
+    "doi": "10.1021/jp502473s",
+    "pubmed_id": null,
+    "paper_url": null,
+    "pdf_url": null,
+    "metadata": {
+      "source_sheet": "Self-assembling sequences",
+      "validation_methods_raw": "TEM, x-ray cristalography"
+    }
+  },
+  {
+    "id": "self_assembly:pos:209",
+    "dataset": "self_assembly",
+    "sequence": "VVVVVVKK",
+    "n_terminal": null,
+    "c_terminal": null,
+    "labels": [
+      "self-assembly"
+    ],
+    "doi": "10.1021/la026526+",
+    "pubmed_id": null,
+    "paper_url": null,
+    "pdf_url": null,
+    "metadata": {
+      "source_sheet": "Self-assembling sequences",
+      "validation_methods_raw": "DLS, cryo-TEM"
+    }
+  },
+  {
+    "id": "self_assembly:pos:210",
+    "dataset": "self_assembly",
+    "sequence": "FKFEFKFE",
+    "n_terminal": null,
+    "c_terminal": null,
+    "labels": [
+      "self-assembly"
+    ],
+    "doi": "10.1021/la100623y",
+    "pubmed_id": null,
+    "paper_url": null,
+    "pdf_url": null,
+    "metadata": {
+      "source_sheet": "Self-assembling sequences",
+      "validation_methods_raw": "ATR-FTIR, TEM"
+    }
+  },
+  {
+    "id": "self_assembly:pos:211",
+    "dataset": "self_assembly",
+    "sequence": "FKFEFKFEFKFE",
+    "n_terminal": null,
+    "c_terminal": null,
+    "labels": [
+      "self-assembly"
+    ],
+    "doi": "10.1021/la100623y",
+    "pubmed_id": null,
+    "paper_url": null,
+    "pdf_url": null,
+    "metadata": {
+      "source_sheet": "Self-assembling sequences",
+      "validation_methods_raw": "ATR-FTIR, TEM"
+    }
+  },
+  {
+    "id": "self_assembly:pos:212",
+    "dataset": "self_assembly",
+    "sequence": "AAAAAAK",
+    "n_terminal": null,
+    "c_terminal": null,
+    "labels": [
+      "self-assembly"
+    ],
+    "doi": "10.1021/la802499n",
+    "pubmed_id": null,
+    "paper_url": null,
+    "pdf_url": null,
+    "metadata": {
+      "source_sheet": "Self-assembling sequences",
+      "validation_methods_raw": "Transmission Electron Microscopy, Atomic Force Microscopy, FTIR"
+    }
+  },
+  {
+    "id": "self_assembly:pos:213",
+    "dataset": "self_assembly",
+    "sequence": "IIIK",
+    "n_terminal": null,
+    "c_terminal": null,
+    "labels": [
+      "self-assembly"
+    ],
+    "doi": "10.1021/la804175h",
+    "pubmed_id": null,
+    "paper_url": null,
+    "pdf_url": null,
+    "metadata": {
+      "source_sheet": "Self-assembling sequences",
+      "validation_methods_raw": "cryo-TEM, small-angle X-ray scattering"
+    }
+  },
+  {
+    "id": "self_assembly:pos:214",
+    "dataset": "self_assembly",
+    "sequence": "VEVE",
+    "n_terminal": null,
+    "c_terminal": null,
+    "labels": [
+      "self-assembly"
+    ],
+    "doi": "10.1021/nl802813f",
+    "pubmed_id": null,
+    "paper_url": null,
+    "pdf_url": null,
+    "metadata": {
+      "source_sheet": "Self-assembling sequences",
+      "validation_methods_raw": "AFM, cryo-TEM and TEM, CD spectroscopy, Small-angle neutron scattering (SANS)"
+    }
+  },
+  {
+    "id": "self_assembly:pos:215",
+    "dataset": "self_assembly",
+    "sequence": "VVEE",
+    "n_terminal": null,
+    "c_terminal": null,
+    "labels": [
+      "self-assembly"
+    ],
+    "doi": "10.1021/nl802813f",
+    "pubmed_id": null,
+    "paper_url": null,
+    "pdf_url": null,
+    "metadata": {
+      "source_sheet": "Self-assembling sequences",
+      "validation_methods_raw": "AFM, cryo-TEM and TEM, CD spectroscopy, Small-angle neutron scattering (SANS)"
+    }
+  },
+  {
+    "id": "self_assembly:pos:216",
+    "dataset": "self_assembly",
+    "sequence": "PPPPPPPPPPRKKRRQRRR",
+    "n_terminal": null,
+    "c_terminal": null,
+    "labels": [
+      "self-assembly"
+    ],
+    "doi": "10.1039/B719868J",
+    "pubmed_id": null,
+    "paper_url": null,
+    "pdf_url": null,
+    "metadata": {
+      "source_sheet": "Self-assembling sequences",
+      "validation_methods_raw": "CD, TEM"
+    }
+  },
+  {
+    "id": "self_assembly:pos:217",
+    "dataset": "self_assembly",
+    "sequence": "PPPPPPPPPPRRR",
+    "n_terminal": null,
+    "c_terminal": null,
+    "labels": [
+      "self-assembly"
+    ],
+    "doi": "10.1039/B719868J",
+    "pubmed_id": null,
+    "paper_url": null,
+    "pdf_url": null,
+    "metadata": {
+      "source_sheet": "Self-assembling sequences",
+      "validation_methods_raw": "CD, TEM"
+    }
+  },
+  {
+    "id": "self_assembly:pos:218",
+    "dataset": "self_assembly",
+    "sequence": "LFF",
+    "n_terminal": null,
+    "c_terminal": null,
+    "labels": [
+      "self-assembly"
+    ],
+    "doi": "10.1039/C2NR32006A",
+    "pubmed_id": null,
+    "paper_url": null,
+    "pdf_url": null,
+    "metadata": {
+      "source_sheet": "Self-assembling sequences",
+      "validation_methods_raw": "Circular dichroism (CD) spectroscopy, Fourier Transform Infrared (FT-IR) spectroscopy, Rheometry, AFM, cryo-TEM, XRD"
+    }
+  },
+  {
+    "id": "self_assembly:pos:219",
+    "dataset": "self_assembly",
+    "sequence": "AAAAAAAAAAAARR",
+    "n_terminal": null,
+    "c_terminal": null,
+    "labels": [
+      "self-assembly"
+    ],
+    "doi": "10.1039/C3SM50303H",
+    "pubmed_id": null,
+    "paper_url": null,
+    "pdf_url": null,
+    "metadata": {
+      "source_sheet": "Self-assembling sequences",
+      "validation_methods_raw": "FTIR, Circular dichroism, X-ray diffraction (XRD), Cryo-transmission electron microscopy (cryo-TEM), Small-angle and wide-angle X-ray scattering"
+    }
+  },
+  {
+    "id": "self_assembly:pos:220",
+    "dataset": "self_assembly",
+    "sequence": "WRWRWR",
+    "n_terminal": null,
+    "c_terminal": null,
+    "labels": [
+      "self-assembly"
+    ],
+    "doi": "10.1039/C3SM50764E",
+    "pubmed_id": null,
+    "paper_url": null,
+    "pdf_url": null,
+    "metadata": {
+      "source_sheet": "Self-assembling sequences",
+      "validation_methods_raw": "Transmission Electron Microscopy (TEM), Scanning Electron Microscopy (SEM), Dynamic Light Scattering (DLS)"
+    }
+  },
+  {
+    "id": "self_assembly:pos:221",
+    "dataset": "self_assembly",
+    "sequence": "WRWRWRWR",
+    "n_terminal": null,
+    "c_terminal": null,
+    "labels": [
+      "self-assembly"
+    ],
+    "doi": "10.1039/C3SM50764E",
+    "pubmed_id": null,
+    "paper_url": null,
+    "pdf_url": null,
+    "metadata": {
+      "source_sheet": "Self-assembling sequences",
+      "validation_methods_raw": "Transmission Electron Microscopy (TEM), Scanning Electron Microscopy (SEM), Dynamic Light Scattering (DLS)"
+    }
+  },
+  {
+    "id": "self_assembly:pos:222",
+    "dataset": "self_assembly",
+    "sequence": "WRWRWRWRWR",
+    "n_terminal": null,
+    "c_terminal": null,
+    "labels": [
+      "self-assembly"
+    ],
+    "doi": "10.1039/C3SM50764E",
+    "pubmed_id": null,
+    "paper_url": null,
+    "pdf_url": null,
+    "metadata": {
+      "source_sheet": "Self-assembling sequences",
+      "validation_methods_raw": "Transmission Electron Microscopy (TEM), Scanning Electron Microscopy (SEM), Dynamic Light Scattering (DLS)"
+    }
+  },
+  {
+    "id": "self_assembly:pos:223",
+    "dataset": "self_assembly",
+    "sequence": "RATARAEFRATARAEA",
+    "n_terminal": null,
+    "c_terminal": null,
+    "labels": [
+      "self-assembly"
+    ],
+    "doi": "10.1039/C4RA04393F",
+    "pubmed_id": null,
+    "paper_url": null,
+    "pdf_url": null,
+    "metadata": {
+      "source_sheet": "Self-assembling sequences",
+      "validation_methods_raw": "TEM, CD spectroscopy, Oscillatory rheology"
+    }
+  },
+  {
+    "id": "self_assembly:pos:224",
+    "dataset": "self_assembly",
+    "sequence": "LLLLLLDD",
+    "n_terminal": null,
+    "c_terminal": null,
+    "labels": [
+      "self-assembly"
+    ],
+    "doi": "10.1073/pnas.072089599",
+    "pubmed_id": null,
+    "paper_url": null,
+    "pdf_url": null,
+    "metadata": {
+      "source_sheet": "Self-assembling sequences",
+      "validation_methods_raw": "DLS, cryo-TEM"
+    }
+  },
+  {
+    "id": "self_assembly:pos:225",
+    "dataset": "self_assembly",
+    "sequence": "VVVVVVD",
+    "n_terminal": null,
+    "c_terminal": null,
+    "labels": [
+      "self-assembly"
+    ],
+    "doi": "10.1073/pnas.072089599",
+    "pubmed_id": null,
+    "paper_url": null,
+    "pdf_url": null,
+    "metadata": {
+      "source_sheet": "Self-assembling sequences",
+      "validation_methods_raw": "DLS, cryo-TEM"
+    }
+  },
+  {
+    "id": "self_assembly:pos:226",
+    "dataset": "self_assembly",
+    "sequence": "VVVVVVDD",
+    "n_terminal": null,
+    "c_terminal": null,
+    "labels": [
+      "self-assembly"
+    ],
+    "doi": "10.1073/pnas.072089599",
+    "pubmed_id": null,
+    "paper_url": null,
+    "pdf_url": null,
+    "metadata": {
+      "source_sheet": "Self-assembling sequences",
+      "validation_methods_raw": "DLS, cryo-TEM"
+    }
+  },
+  {
+    "id": "self_assembly:pos:227",
+    "dataset": "self_assembly",
+    "sequence": "AAAAAAD",
+    "n_terminal": null,
+    "c_terminal": null,
+    "labels": [
+      "self-assembly"
+    ],
+    "doi": "10.1073/pnas.072089599",
+    "pubmed_id": null,
+    "paper_url": null,
+    "pdf_url": null,
+    "metadata": {
+      "source_sheet": "Self-assembling sequences",
+      "validation_methods_raw": "Dynamic Light Scattering (DLS), TEM, CD spectroscopy"
+    }
+  },
+  {
+    "id": "self_assembly:pos:228",
+    "dataset": "self_assembly",
+    "sequence": "AIVAGD",
+    "n_terminal": null,
+    "c_terminal": null,
+    "labels": [
+      "self-assembly"
+    ],
+    "doi": "10.1073/pnas.1014796108",
+    "pubmed_id": null,
+    "paper_url": null,
+    "pdf_url": null,
+    "metadata": {
+      "source_sheet": "Self-assembling sequences",
+      "validation_methods_raw": "CD Spectroscopy, X-ray Fiber Diffraction"
+    }
+  },
+  {
+    "id": "self_assembly:pos:229",
+    "dataset": "self_assembly",
+    "sequence": "AIVAGS",
+    "n_terminal": null,
+    "c_terminal": null,
+    "labels": [
+      "self-assembly"
+    ],
+    "doi": "10.1073/pnas.1014796108",
+    "pubmed_id": null,
+    "paper_url": null,
+    "pdf_url": null,
+    "metadata": {
+      "source_sheet": "Self-assembling sequences",
+      "validation_methods_raw": "CD Spectroscopy, X-ray Fiber Diffraction"
+    }
+  },
+  {
+    "id": "self_assembly:pos:230",
+    "dataset": "self_assembly",
+    "sequence": "AIVAGT",
+    "n_terminal": null,
+    "c_terminal": null,
+    "labels": [
+      "self-assembly"
+    ],
+    "doi": "10.1073/pnas.1014796108",
+    "pubmed_id": null,
+    "paper_url": null,
+    "pdf_url": null,
+    "metadata": {
+      "source_sheet": "Self-assembling sequences",
+      "validation_methods_raw": "CD Spectroscopy, X-ray Fiber Diffraction"
+    }
+  },
+  {
+    "id": "self_assembly:pos:231",
+    "dataset": "self_assembly",
+    "sequence": "IID",
+    "n_terminal": null,
+    "c_terminal": null,
+    "labels": [
+      "self-assembly"
+    ],
+    "doi": "10.1073/pnas.1014796108",
+    "pubmed_id": null,
+    "paper_url": null,
+    "pdf_url": null,
+    "metadata": {
+      "source_sheet": "Self-assembling sequences",
+      "validation_methods_raw": "CD Spectroscopy, X-ray Fiber Diffraction"
+    }
+  },
+  {
+    "id": "self_assembly:pos:232",
+    "dataset": "self_assembly",
+    "sequence": "ILVAGD",
+    "n_terminal": null,
+    "c_terminal": null,
+    "labels": [
+      "self-assembly"
+    ],
+    "doi": "10.1073/pnas.1014796108",
+    "pubmed_id": null,
+    "paper_url": null,
+    "pdf_url": null,
+    "metadata": {
+      "source_sheet": "Self-assembling sequences",
+      "validation_methods_raw": "CD Spectroscopy, X-ray Fiber Diffraction"
+    }
+  },
+  {
+    "id": "self_assembly:pos:233",
+    "dataset": "self_assembly",
+    "sequence": "ILVAGS",
+    "n_terminal": null,
+    "c_terminal": null,
+    "labels": [
+      "self-assembly"
+    ],
+    "doi": "10.1073/pnas.1014796108",
+    "pubmed_id": null,
+    "paper_url": null,
+    "pdf_url": null,
+    "metadata": {
+      "source_sheet": "Self-assembling sequences",
+      "validation_methods_raw": "CD Spectroscopy, X-ray Fiber Diffraction"
+    }
+  },
+  {
+    "id": "self_assembly:pos:234",
+    "dataset": "self_assembly",
+    "sequence": "IVAD",
+    "n_terminal": null,
+    "c_terminal": null,
+    "labels": [
+      "self-assembly"
+    ],
+    "doi": "10.1073/pnas.1014796108",
+    "pubmed_id": null,
+    "paper_url": null,
+    "pdf_url": null,
+    "metadata": {
+      "source_sheet": "Self-assembling sequences",
+      "validation_methods_raw": "CD Spectroscopy, X-ray Fiber Diffraction"
+    }
+  },
+  {
+    "id": "self_assembly:pos:235",
+    "dataset": "self_assembly",
+    "sequence": "IVD",
+    "n_terminal": null,
+    "c_terminal": null,
+    "labels": [
+      "self-assembly"
+    ],
+    "doi": "10.1073/pnas.1014796108",
+    "pubmed_id": null,
+    "paper_url": null,
+    "pdf_url": null,
+    "metadata": {
+      "source_sheet": "Self-assembling sequences",
+      "validation_methods_raw": "CD Spectroscopy, X-ray Fiber Diffraction"
+    }
+  },
+  {
+    "id": "self_assembly:pos:236",
+    "dataset": "self_assembly",
+    "sequence": "LAVAGD",
+    "n_terminal": null,
+    "c_terminal": null,
+    "labels": [
+      "self-assembly"
+    ],
+    "doi": "10.1073/pnas.1014796108",
+    "pubmed_id": null,
+    "paper_url": null,
+    "pdf_url": null,
+    "metadata": {
+      "source_sheet": "Self-assembling sequences",
+      "validation_methods_raw": "CD Spectroscopy, X-ray Fiber Diffraction"
+    }
+  },
+  {
+    "id": "self_assembly:pos:237",
+    "dataset": "self_assembly",
+    "sequence": "LIVAAD",
+    "n_terminal": null,
+    "c_terminal": null,
+    "labels": [
+      "self-assembly"
+    ],
+    "doi": "10.1073/pnas.1014796108",
+    "pubmed_id": null,
+    "paper_url": null,
+    "pdf_url": null,
+    "metadata": {
+      "source_sheet": "Self-assembling sequences",
+      "validation_methods_raw": "CD Spectroscopy, X-ray Fiber Diffraction"
+    }
+  },
+  {
+    "id": "self_assembly:pos:238",
+    "dataset": "self_assembly",
+    "sequence": "LIVAD",
+    "n_terminal": null,
+    "c_terminal": null,
+    "labels": [
+      "self-assembly"
+    ],
+    "doi": "10.1073/pnas.1014796108",
+    "pubmed_id": null,
+    "paper_url": null,
+    "pdf_url": null,
+    "metadata": {
+      "source_sheet": "Self-assembling sequences",
+      "validation_methods_raw": "CD Spectroscopy, X-ray Fiber Diffraction"
+    }
+  },
+  {
+    "id": "self_assembly:pos:239",
+    "dataset": "self_assembly",
+    "sequence": "LIVAGD",
+    "n_terminal": null,
+    "c_terminal": null,
+    "labels": [
+      "self-assembly"
+    ],
+    "doi": "10.1073/pnas.1014796108",
+    "pubmed_id": null,
+    "paper_url": null,
+    "pdf_url": null,
+    "metadata": {
+      "source_sheet": "Self-assembling sequences",
+      "validation_methods_raw": "CD Spectroscopy, X-ray Fiber Diffraction"
+    }
+  },
+  {
+    "id": "self_assembly:pos:240",
+    "dataset": "self_assembly",
+    "sequence": "LIVAGE",
+    "n_terminal": null,
+    "c_terminal": null,
+    "labels": [
+      "self-assembly"
+    ],
+    "doi": "10.1073/pnas.1014796108",
+    "pubmed_id": null,
+    "paper_url": null,
+    "pdf_url": null,
+    "metadata": {
+      "source_sheet": "Self-assembling sequences",
+      "validation_methods_raw": "CD Spectroscopy, X-ray Fiber Diffraction"
+    }
+  },
+  {
+    "id": "self_assembly:pos:241",
+    "dataset": "self_assembly",
+    "sequence": "LIVAGK",
+    "n_terminal": null,
+    "c_terminal": null,
+    "labels": [
+      "self-assembly"
+    ],
+    "doi": "10.1073/pnas.1014796108",
+    "pubmed_id": null,
+    "paper_url": null,
+    "pdf_url": null,
+    "metadata": {
+      "source_sheet": "Self-assembling sequences",
+      "validation_methods_raw": "CD Spectroscopy, X-ray Fiber Diffraction"
+    }
+  },
+  {
+    "id": "self_assembly:pos:242",
+    "dataset": "self_assembly",
+    "sequence": "LIVAGS",
+    "n_terminal": null,
+    "c_terminal": null,
+    "labels": [
+      "self-assembly"
+    ],
+    "doi": "10.1073/pnas.1014796108",
+    "pubmed_id": null,
+    "paper_url": null,
+    "pdf_url": null,
+    "metadata": {
+      "source_sheet": "Self-assembling sequences",
+      "validation_methods_raw": "CD Spectroscopy, X-ray Fiber Diffraction"
+    }
+  },
+  {
+    "id": "self_assembly:pos:243",
+    "dataset": "self_assembly",
+    "sequence": "LIVAGT",
+    "n_terminal": null,
+    "c_terminal": null,
+    "labels": [
+      "self-assembly"
+    ],
+    "doi": "10.1073/pnas.1014796108",
+    "pubmed_id": null,
+    "paper_url": null,
+    "pdf_url": null,
+    "metadata": {
+      "source_sheet": "Self-assembling sequences",
+      "validation_methods_raw": "CD Spectroscopy, X-ray Fiber Diffraction"
+    }
+  },
+  {
+    "id": "self_assembly:pos:244",
+    "dataset": "self_assembly",
+    "sequence": "FFKLVFF",
+    "n_terminal": null,
+    "c_terminal": null,
+    "labels": [
+      "self-assembly"
+    ],
+    "doi": "10.1074/jbc.271.15.8545",
+    "pubmed_id": null,
+    "paper_url": null,
+    "pdf_url": null,
+    "metadata": {
+      "source_sheet": "Self-assembling sequences",
+      "validation_methods_raw": "Surface Plasmon Resonance Spectroscopy, Electron Microscopy"
+    }
+  },
+  {
+    "id": "self_assembly:pos:245",
+    "dataset": "self_assembly",
+    "sequence": "YTIAALLSPYS",
+    "n_terminal": null,
+    "c_terminal": null,
+    "labels": [
+      "self-assembly"
+    ],
+    "doi": "10.1103/PhysRevLett.96.238301",
+    "pubmed_id": null,
+    "paper_url": null,
+    "pdf_url": null,
+    "metadata": {
+      "source_sheet": "Self-assembling sequences",
+      "validation_methods_raw": "AFM"
+    }
+  },
+  {
+    "id": "self_assembly:pos:246",
+    "dataset": "self_assembly",
+    "sequence": "KASAKAEAKAEAKASA",
+    "n_terminal": null,
+    "c_terminal": null,
+    "labels": [
+      "self-assembly"
+    ],
+    "doi": "10.1177/0885328210379927",
+    "pubmed_id": null,
+    "paper_url": null,
+    "pdf_url": null,
+    "metadata": {
+      "source_sheet": "Self-assembling sequences",
+      "validation_methods_raw": "SEM"
+    }
+  },
+  {
+    "id": "self_assembly:pos:247",
+    "dataset": "self_assembly",
+    "sequence": "SAEAKAEAKAEASAEA",
+    "n_terminal": null,
+    "c_terminal": null,
+    "labels": [
+      "self-assembly"
+    ],
+    "doi": "10.1177/0885328210379927",
+    "pubmed_id": null,
+    "paper_url": null,
+    "pdf_url": null,
+    "metadata": {
+      "source_sheet": "Self-assembling sequences",
+      "validation_methods_raw": "SEM"
+    }
+  },
+  {
+    "id": "self_assembly:pos:248",
+    "dataset": "self_assembly",
+    "sequence": "NFGAIL",
+    "n_terminal": null,
+    "c_terminal": null,
+    "labels": [
+      "self-assembly"
+    ],
+    "doi": "10.1006/jmbi.1999.3422",
+    "pubmed_id": null,
+    "paper_url": null,
+    "pdf_url": null,
+    "metadata": {
+      "source_sheet": "Self-assembling sequences",
+      "validation_methods_raw": "AFM"
+    }
+  },
+  {
+    "id": "self_assembly:pos:249",
+    "dataset": "self_assembly",
+    "sequence": "AILSS",
+    "n_terminal": null,
+    "c_terminal": null,
+    "labels": [
+      "self-assembly"
+    ],
+    "doi": "10.1021/jacs.3c11712",
+    "pubmed_id": null,
+    "paper_url": null,
+    "pdf_url": null,
+    "metadata": {
+      "source_sheet": "Self-assembling sequences",
+      "validation_methods_raw": "X-ray Diffraction"
+    }
+  },
+  {
+    "id": "self_assembly:neg:1",
+    "dataset": "self_assembly",
+    "sequence": "KIKQII",
+    "n_terminal": null,
+    "c_terminal": null,
+    "labels": [
+      "non-self-assembly"
+    ],
+    "doi": "10.1002/adfm.202009382",
+    "pubmed_id": null,
+    "paper_url": null,
+    "pdf_url": null,
+    "metadata": {
+      "source_sheet": "Non-assembling sequences"
+    }
+  },
+  {
+    "id": "self_assembly:neg:2",
+    "dataset": "self_assembly",
+    "sequence": "DPDPD",
+    "n_terminal": null,
+    "c_terminal": null,
+    "labels": [
+      "non-self-assembly"
+    ],
+    "doi": "10.1038/s41557-022-01055-3",
+    "pubmed_id": null,
+    "paper_url": null,
+    "pdf_url": null,
+    "metadata": {
+      "source_sheet": "Non-assembling sequences"
+    }
+  },
+  {
+    "id": "self_assembly:neg:3",
+    "dataset": "self_assembly",
+    "sequence": "EPYYK",
+    "n_terminal": null,
+    "c_terminal": null,
+    "labels": [
+      "non-self-assembly"
+    ],
+    "doi": "10.1038/s41557-022-01055-3",
+    "pubmed_id": null,
+    "paper_url": null,
+    "pdf_url": null,
+    "metadata": {
+      "source_sheet": "Non-assembling sequences"
+    }
+  },
+  {
+    "id": "self_assembly:neg:4",
+    "dataset": "self_assembly",
+    "sequence": "KDHFY",
+    "n_terminal": null,
+    "c_terminal": null,
+    "labels": [
+      "non-self-assembly"
+    ],
+    "doi": "10.1038/s41557-022-01055-3",
+    "pubmed_id": null,
+    "paper_url": null,
+    "pdf_url": null,
+    "metadata": {
+      "source_sheet": "Non-assembling sequences"
+    }
+  },
+  {
+    "id": "self_assembly:neg:5",
+    "dataset": "self_assembly",
+    "sequence": "KDPYY",
+    "n_terminal": null,
+    "c_terminal": null,
+    "labels": [
+      "non-self-assembly"
+    ],
+    "doi": "10.1038/s41557-022-01055-3",
+    "pubmed_id": null,
+    "paper_url": null,
+    "pdf_url": null,
+    "metadata": {
+      "source_sheet": "Non-assembling sequences"
+    }
+  },
+  {
+    "id": "self_assembly:neg:6",
+    "dataset": "self_assembly",
+    "sequence": "KKFDD",
+    "n_terminal": null,
+    "c_terminal": null,
+    "labels": [
+      "non-self-assembly"
+    ],
+    "doi": "10.1038/s41557-022-01055-3",
+    "pubmed_id": null,
+    "paper_url": null,
+    "pdf_url": null,
+    "metadata": {
+      "source_sheet": "Non-assembling sequences"
+    }
+  },
+  {
+    "id": "self_assembly:neg:7",
+    "dataset": "self_assembly",
+    "sequence": "KVKVK",
+    "n_terminal": null,
+    "c_terminal": null,
+    "labels": [
+      "non-self-assembly"
+    ],
+    "doi": "10.1038/s41557-022-01055-3",
+    "pubmed_id": null,
+    "paper_url": null,
+    "pdf_url": null,
+    "metadata": {
+      "source_sheet": "Non-assembling sequences"
+    }
+  },
+  {
+    "id": "self_assembly:neg:8",
+    "dataset": "self_assembly",
+    "sequence": "PPPHY",
+    "n_terminal": null,
+    "c_terminal": null,
+    "labels": [
+      "non-self-assembly"
+    ],
+    "doi": "10.1038/s41557-022-01055-3",
+    "pubmed_id": null,
+    "paper_url": null,
+    "pdf_url": null,
+    "metadata": {
+      "source_sheet": "Non-assembling sequences"
+    }
+  },
+  {
+    "id": "self_assembly:neg:9",
+    "dataset": "self_assembly",
+    "sequence": "PTPCY",
+    "n_terminal": null,
+    "c_terminal": null,
+    "labels": [
+      "non-self-assembly"
+    ],
+    "doi": "10.1038/s41557-022-01055-3",
+    "pubmed_id": null,
+    "paper_url": null,
+    "pdf_url": null,
+    "metadata": {
+      "source_sheet": "Non-assembling sequences"
+    }
+  },
+  {
+    "id": "self_assembly:neg:10",
+    "dataset": "self_assembly",
+    "sequence": "RVSVD",
+    "n_terminal": null,
+    "c_terminal": null,
+    "labels": [
+      "non-self-assembly"
+    ],
+    "doi": "10.1038/s41557-022-01055-3",
+    "pubmed_id": null,
+    "paper_url": null,
+    "pdf_url": null,
+    "metadata": {
+      "source_sheet": "Non-assembling sequences"
+    }
+  },
+  {
+    "id": "self_assembly:neg:11",
+    "dataset": "self_assembly",
+    "sequence": "VKVKV",
+    "n_terminal": null,
+    "c_terminal": null,
+    "labels": [
+      "non-self-assembly"
+    ],
+    "doi": "10.1038/s41557-022-01055-3",
+    "pubmed_id": null,
+    "paper_url": null,
+    "pdf_url": null,
+    "metadata": {
+      "source_sheet": "Non-assembling sequences"
+    }
+  },
+  {
+    "id": "self_assembly:neg:12",
+    "dataset": "self_assembly",
+    "sequence": "WKPYY",
+    "n_terminal": null,
+    "c_terminal": null,
+    "labels": [
+      "non-self-assembly"
+    ],
+    "doi": "10.1038/s41557-022-01055-3",
+    "pubmed_id": null,
+    "paper_url": null,
+    "pdf_url": null,
+    "metadata": {
+      "source_sheet": "Non-assembling sequences"
+    }
+  },
+  {
+    "id": "self_assembly:neg:13",
+    "dataset": "self_assembly",
+    "sequence": "YDPKY",
+    "n_terminal": null,
+    "c_terminal": null,
+    "labels": [
+      "non-self-assembly"
+    ],
+    "doi": "10.1038/s41557-022-01055-3",
+    "pubmed_id": null,
+    "paper_url": null,
+    "pdf_url": null,
+    "metadata": {
+      "source_sheet": "Non-assembling sequences"
+    }
+  },
+  {
+    "id": "self_assembly:neg:14",
+    "dataset": "self_assembly",
+    "sequence": "YEPYK",
+    "n_terminal": null,
+    "c_terminal": null,
+    "labels": [
+      "non-self-assembly"
+    ],
+    "doi": "10.1038/s41557-022-01055-3",
+    "pubmed_id": null,
+    "paper_url": null,
+    "pdf_url": null,
+    "metadata": {
+      "source_sheet": "Non-assembling sequences"
+    }
+  },
+  {
+    "id": "self_assembly:neg:15",
+    "dataset": "self_assembly",
+    "sequence": "YTEYK",
+    "n_terminal": null,
+    "c_terminal": null,
+    "labels": [
+      "non-self-assembly"
+    ],
+    "doi": "10.1038/s41557-022-01055-3",
+    "pubmed_id": null,
+    "paper_url": null,
+    "pdf_url": null,
+    "metadata": {
+      "source_sheet": "Non-assembling sequences"
+    }
+  },
+  {
+    "id": "self_assembly:neg:16",
+    "dataset": "self_assembly",
+    "sequence": "LIAGFN",
+    "n_terminal": null,
+    "c_terminal": null,
+    "labels": [
+      "non-self-assembly"
+    ],
+    "doi": "10.1006/jmbi.1999.3422",
+    "pubmed_id": null,
+    "paper_url": null,
+    "pdf_url": null,
+    "metadata": {
+      "source_sheet": "Non-assembling sequences"
+    }
+  },
+  {
+    "id": "self_assembly:neg:17",
+    "dataset": "self_assembly",
+    "sequence": "NLGPVL",
+    "n_terminal": null,
+    "c_terminal": null,
+    "labels": [
+      "non-self-assembly"
+    ],
+    "doi": "10.1006/jmbi.1999.3422",
+    "pubmed_id": null,
+    "paper_url": null,
+    "pdf_url": null,
+    "metadata": {
+      "source_sheet": "Non-assembling sequences"
+    }
+  },
+  {
+    "id": "self_assembly:neg:18",
+    "dataset": "self_assembly",
+    "sequence": "TGTHTSTDT",
+    "n_terminal": null,
+    "c_terminal": null,
+    "labels": [
+      "non-self-assembly"
+    ],
+    "doi": "10.1021/acs.biomac.6b01169",
+    "pubmed_id": null,
+    "paper_url": null,
+    "pdf_url": null,
+    "metadata": {
+      "source_sheet": "Non-assembling sequences"
+    }
+  },
+  {
+    "id": "self_assembly:neg:19",
+    "dataset": "self_assembly",
+    "sequence": "TTSGHTDTT",
+    "n_terminal": null,
+    "c_terminal": null,
+    "labels": [
+      "non-self-assembly"
+    ],
+    "doi": "10.1021/acs.biomac.6b01169",
+    "pubmed_id": null,
+    "paper_url": null,
+    "pdf_url": null,
+    "metadata": {
+      "source_sheet": "Non-assembling sequences"
+    }
+  },
+  {
+    "id": "self_assembly:neg:20",
+    "dataset": "self_assembly",
+    "sequence": "AASGHADAA",
+    "n_terminal": null,
+    "c_terminal": null,
+    "labels": [
+      "non-self-assembly"
+    ],
+    "doi": "10.1021/acs.biomac.6b01171",
+    "pubmed_id": null,
+    "paper_url": null,
+    "pdf_url": null,
+    "metadata": {
+      "source_sheet": "Non-assembling sequences"
+    }
+  },
+  {
+    "id": "self_assembly:neg:21",
+    "dataset": "self_assembly",
+    "sequence": "AGAHASADA",
+    "n_terminal": null,
+    "c_terminal": null,
+    "labels": [
+      "non-self-assembly"
+    ],
+    "doi": "10.1021/acs.biomac.6b01171",
+    "pubmed_id": null,
+    "paper_url": null,
+    "pdf_url": null,
+    "metadata": {
+      "source_sheet": "Non-assembling sequences"
+    }
+  },
+  {
+    "id": "self_assembly:neg:22",
+    "dataset": "self_assembly",
+    "sequence": "KTVIIE",
+    "n_terminal": null,
+    "c_terminal": null,
+    "labels": [
+      "non-self-assembly"
+    ],
+    "doi": "10.1073/pnas.2634884100",
+    "pubmed_id": null,
+    "paper_url": null,
+    "pdf_url": null,
+    "metadata": {
+      "source_sheet": "Non-assembling sequences"
+    }
+  },
+  {
+    "id": "self_assembly:neg:23",
+    "dataset": "self_assembly",
+    "sequence": "KTVIIT",
+    "n_terminal": null,
+    "c_terminal": null,
+    "labels": [
+      "non-self-assembly"
+    ],
+    "doi": "10.1073/pnas.2634884100",
+    "pubmed_id": null,
+    "paper_url": null,
+    "pdf_url": null,
+    "metadata": {
+      "source_sheet": "Non-assembling sequences"
+    }
+  },
+  {
+    "id": "self_assembly:neg:24",
+    "dataset": "self_assembly",
+    "sequence": "KTVIVE",
+    "n_terminal": null,
+    "c_terminal": null,
+    "labels": [
+      "non-self-assembly"
+    ],
+    "doi": "10.1073/pnas.2634884100",
+    "pubmed_id": null,
+    "paper_url": null,
+    "pdf_url": null,
+    "metadata": {
+      "source_sheet": "Non-assembling sequences"
+    }
+  },
+  {
+    "id": "self_assembly:neg:25",
+    "dataset": "self_assembly",
+    "sequence": "KTVIYE",
+    "n_terminal": null,
+    "c_terminal": null,
+    "labels": [
+      "non-self-assembly"
+    ],
+    "doi": "10.1073/pnas.2634884100",
+    "pubmed_id": null,
+    "paper_url": null,
+    "pdf_url": null,
+    "metadata": {
+      "source_sheet": "Non-assembling sequences"
+    }
+  },
+  {
+    "id": "self_assembly:neg:26",
+    "dataset": "self_assembly",
+    "sequence": "KTVLIE",
+    "n_terminal": null,
+    "c_terminal": null,
+    "labels": [
+      "non-self-assembly"
+    ],
+    "doi": "10.1073/pnas.2634884100",
+    "pubmed_id": null,
+    "paper_url": null,
+    "pdf_url": null,
+    "metadata": {
+      "source_sheet": "Non-assembling sequences"
+    }
+  },
+  {
+    "id": "self_assembly:neg:27",
+    "dataset": "self_assembly",
+    "sequence": "PTVIIE",
+    "n_terminal": null,
+    "c_terminal": null,
+    "labels": [
+      "non-self-assembly"
+    ],
+    "doi": "10.1073/pnas.2634884100",
+    "pubmed_id": null,
+    "paper_url": null,
+    "pdf_url": null,
+    "metadata": {
+      "source_sheet": "Non-assembling sequences"
+    }
+  },
+  {
+    "id": "self_assembly:neg:28",
+    "dataset": "self_assembly",
+    "sequence": "SPVIIE",
+    "n_terminal": null,
+    "c_terminal": null,
+    "labels": [
+      "non-self-assembly"
+    ],
+    "doi": "10.1073/pnas.2634884100",
+    "pubmed_id": null,
+    "paper_url": null,
+    "pdf_url": null,
+    "metadata": {
+      "source_sheet": "Non-assembling sequences"
+    }
+  },
+  {
+    "id": "self_assembly:neg:29",
+    "dataset": "self_assembly",
+    "sequence": "STAIIE",
+    "n_terminal": null,
+    "c_terminal": null,
+    "labels": [
+      "non-self-assembly"
+    ],
+    "doi": "10.1073/pnas.2634884100",
+    "pubmed_id": null,
+    "paper_url": null,
+    "pdf_url": null,
+    "metadata": {
+      "source_sheet": "Non-assembling sequences"
+    }
+  },
+  {
+    "id": "self_assembly:neg:30",
+    "dataset": "self_assembly",
+    "sequence": "STDIIE",
+    "n_terminal": null,
+    "c_terminal": null,
+    "labels": [
+      "non-self-assembly"
+    ],
+    "doi": "10.1073/pnas.2634884100",
+    "pubmed_id": null,
+    "paper_url": null,
+    "pdf_url": null,
+    "metadata": {
+      "source_sheet": "Non-assembling sequences"
+    }
+  },
+  {
+    "id": "self_assembly:neg:31",
+    "dataset": "self_assembly",
+    "sequence": "STGIIE",
+    "n_terminal": null,
+    "c_terminal": null,
+    "labels": [
+      "non-self-assembly"
+    ],
+    "doi": "10.1073/pnas.2634884100",
+    "pubmed_id": null,
+    "paper_url": null,
+    "pdf_url": null,
+    "metadata": {
+      "source_sheet": "Non-assembling sequences"
+    }
+  },
+  {
+    "id": "self_assembly:neg:32",
+    "dataset": "self_assembly",
+    "sequence": "STIIIE",
+    "n_terminal": null,
+    "c_terminal": null,
+    "labels": [
+      "non-self-assembly"
+    ],
+    "doi": "10.1073/pnas.2634884100",
+    "pubmed_id": null,
+    "paper_url": null,
+    "pdf_url": null,
+    "metadata": {
+      "source_sheet": "Non-assembling sequences"
+    }
+  },
+  {
+    "id": "self_assembly:neg:33",
+    "dataset": "self_assembly",
+    "sequence": "STMIIE",
+    "n_terminal": null,
+    "c_terminal": null,
+    "labels": [
+      "non-self-assembly"
+    ],
+    "doi": "10.1073/pnas.2634884100",
+    "pubmed_id": null,
+    "paper_url": null,
+    "pdf_url": null,
+    "metadata": {
+      "source_sheet": "Non-assembling sequences"
+    }
+  },
+  {
+    "id": "self_assembly:neg:34",
+    "dataset": "self_assembly",
+    "sequence": "STPIIE",
+    "n_terminal": null,
+    "c_terminal": null,
+    "labels": [
+      "non-self-assembly"
+    ],
+    "doi": "10.1073/pnas.2634884100",
+    "pubmed_id": null,
+    "paper_url": null,
+    "pdf_url": null,
+    "metadata": {
+      "source_sheet": "Non-assembling sequences"
+    }
+  },
+  {
+    "id": "self_assembly:neg:35",
+    "dataset": "self_assembly",
+    "sequence": "STTIIE",
+    "n_terminal": null,
+    "c_terminal": null,
+    "labels": [
+      "non-self-assembly"
+    ],
+    "doi": "10.1073/pnas.2634884100",
+    "pubmed_id": null,
+    "paper_url": null,
+    "pdf_url": null,
+    "metadata": {
+      "source_sheet": "Non-assembling sequences"
+    }
+  },
+  {
+    "id": "self_assembly:neg:36",
+    "dataset": "self_assembly",
+    "sequence": "STVAIE",
+    "n_terminal": null,
+    "c_terminal": null,
+    "labels": [
+      "non-self-assembly"
+    ],
+    "doi": "10.1073/pnas.2634884100",
+    "pubmed_id": null,
+    "paper_url": null,
+    "pdf_url": null,
+    "metadata": {
+      "source_sheet": "Non-assembling sequences"
+    }
+  },
+  {
+    "id": "self_assembly:neg:37",
+    "dataset": "self_assembly",
+    "sequence": "STVDIE",
+    "n_terminal": null,
+    "c_terminal": null,
+    "labels": [
+      "non-self-assembly"
+    ],
+    "doi": "10.1073/pnas.2634884100",
+    "pubmed_id": null,
+    "paper_url": null,
+    "pdf_url": null,
+    "metadata": {
+      "source_sheet": "Non-assembling sequences"
+    }
+  },
+  {
+    "id": "self_assembly:neg:38",
+    "dataset": "self_assembly",
+    "sequence": "STVGIE",
+    "n_terminal": null,
+    "c_terminal": null,
+    "labels": [
+      "non-self-assembly"
+    ],
+    "doi": "10.1073/pnas.2634884100",
+    "pubmed_id": null,
+    "paper_url": null,
+    "pdf_url": null,
+    "metadata": {
+      "source_sheet": "Non-assembling sequences"
+    }
+  },
+  {
+    "id": "self_assembly:neg:39",
+    "dataset": "self_assembly",
+    "sequence": "STVIAE",
+    "n_terminal": null,
+    "c_terminal": null,
+    "labels": [
+      "non-self-assembly"
+    ],
+    "doi": "10.1073/pnas.2634884100",
+    "pubmed_id": null,
+    "paper_url": null,
+    "pdf_url": null,
+    "metadata": {
+      "source_sheet": "Non-assembling sequences"
+    }
+  },
+  {
+    "id": "self_assembly:neg:40",
+    "dataset": "self_assembly",
+    "sequence": "STVIDE",
+    "n_terminal": null,
+    "c_terminal": null,
+    "labels": [
+      "non-self-assembly"
+    ],
+    "doi": "10.1073/pnas.2634884100",
+    "pubmed_id": null,
+    "paper_url": null,
+    "pdf_url": null,
+    "metadata": {
+      "source_sheet": "Non-assembling sequences"
+    }
+  },
+  {
+    "id": "self_assembly:neg:41",
+    "dataset": "self_assembly",
+    "sequence": "STVIEE",
+    "n_terminal": null,
+    "c_terminal": null,
+    "labels": [
+      "non-self-assembly"
+    ],
+    "doi": "10.1073/pnas.2634884100",
+    "pubmed_id": null,
+    "paper_url": null,
+    "pdf_url": null,
+    "metadata": {
+      "source_sheet": "Non-assembling sequences"
+    }
+  },
+  {
+    "id": "self_assembly:neg:42",
+    "dataset": "self_assembly",
+    "sequence": "STVIGE",
+    "n_terminal": null,
+    "c_terminal": null,
+    "labels": [
+      "non-self-assembly"
+    ],
+    "doi": "10.1073/pnas.2634884100",
+    "pubmed_id": null,
+    "paper_url": null,
+    "pdf_url": null,
+    "metadata": {
+      "source_sheet": "Non-assembling sequences"
+    }
+  },
+  {
+    "id": "self_assembly:neg:43",
+    "dataset": "self_assembly",
+    "sequence": "STVIIP",
+    "n_terminal": null,
+    "c_terminal": null,
+    "labels": [
+      "non-self-assembly"
+    ],
+    "doi": "10.1073/pnas.2634884100",
+    "pubmed_id": null,
+    "paper_url": null,
+    "pdf_url": null,
+    "metadata": {
+      "source_sheet": "Non-assembling sequences"
+    }
+  },
+  {
+    "id": "self_assembly:neg:44",
+    "dataset": "self_assembly",
+    "sequence": "STVILE",
+    "n_terminal": null,
+    "c_terminal": null,
+    "labels": [
+      "non-self-assembly"
+    ],
+    "doi": "10.1073/pnas.2634884100",
+    "pubmed_id": null,
+    "paper_url": null,
+    "pdf_url": null,
+    "metadata": {
+      "source_sheet": "Non-assembling sequences"
+    }
+  },
+  {
+    "id": "self_assembly:neg:45",
+    "dataset": "self_assembly",
+    "sequence": "STVIME",
+    "n_terminal": null,
+    "c_terminal": null,
+    "labels": [
+      "non-self-assembly"
+    ],
+    "doi": "10.1073/pnas.2634884100",
+    "pubmed_id": null,
+    "paper_url": null,
+    "pdf_url": null,
+    "metadata": {
+      "source_sheet": "Non-assembling sequences"
+    }
+  },
+  {
+    "id": "self_assembly:neg:46",
+    "dataset": "self_assembly",
+    "sequence": "STVINE",
+    "n_terminal": null,
+    "c_terminal": null,
+    "labels": [
+      "non-self-assembly"
+    ],
+    "doi": "10.1073/pnas.2634884100",
+    "pubmed_id": null,
+    "paper_url": null,
+    "pdf_url": null,
+    "metadata": {
+      "source_sheet": "Non-assembling sequences"
+    }
+  },
+  {
+    "id": "self_assembly:neg:47",
+    "dataset": "self_assembly",
+    "sequence": "STVIPE",
+    "n_terminal": null,
+    "c_terminal": null,
+    "labels": [
+      "non-self-assembly"
+    ],
+    "doi": "10.1073/pnas.2634884100",
+    "pubmed_id": null,
+    "paper_url": null,
+    "pdf_url": null,
+    "metadata": {
+      "source_sheet": "Non-assembling sequences"
+    }
+  },
+  {
+    "id": "self_assembly:neg:48",
+    "dataset": "self_assembly",
+    "sequence": "STVIQE",
+    "n_terminal": null,
+    "c_terminal": null,
+    "labels": [
+      "non-self-assembly"
+    ],
+    "doi": "10.1073/pnas.2634884100",
+    "pubmed_id": null,
+    "paper_url": null,
+    "pdf_url": null,
+    "metadata": {
+      "source_sheet": "Non-assembling sequences"
+    }
+  },
+  {
+    "id": "self_assembly:neg:49",
+    "dataset": "self_assembly",
+    "sequence": "STVISE",
+    "n_terminal": null,
+    "c_terminal": null,
+    "labels": [
+      "non-self-assembly"
+    ],
+    "doi": "10.1073/pnas.2634884100",
+    "pubmed_id": null,
+    "paper_url": null,
+    "pdf_url": null,
+    "metadata": {
+      "source_sheet": "Non-assembling sequences"
+    }
+  },
+  {
+    "id": "self_assembly:neg:50",
+    "dataset": "self_assembly",
+    "sequence": "STVITE",
+    "n_terminal": null,
+    "c_terminal": null,
+    "labels": [
+      "non-self-assembly"
+    ],
+    "doi": "10.1073/pnas.2634884100",
+    "pubmed_id": null,
+    "paper_url": null,
+    "pdf_url": null,
+    "metadata": {
+      "source_sheet": "Non-assembling sequences"
+    }
+  },
+  {
+    "id": "self_assembly:neg:51",
+    "dataset": "self_assembly",
+    "sequence": "STVIVE",
+    "n_terminal": null,
+    "c_terminal": null,
+    "labels": [
+      "non-self-assembly"
+    ],
+    "doi": "10.1073/pnas.2634884100",
+    "pubmed_id": null,
+    "paper_url": null,
+    "pdf_url": null,
+    "metadata": {
+      "source_sheet": "Non-assembling sequences"
+    }
+  },
+  {
+    "id": "self_assembly:neg:52",
+    "dataset": "self_assembly",
+    "sequence": "STVIWE",
+    "n_terminal": null,
+    "c_terminal": null,
+    "labels": [
+      "non-self-assembly"
+    ],
+    "doi": "10.1073/pnas.2634884100",
+    "pubmed_id": null,
+    "paper_url": null,
+    "pdf_url": null,
+    "metadata": {
+      "source_sheet": "Non-assembling sequences"
+    }
+  },
+  {
+    "id": "self_assembly:neg:53",
+    "dataset": "self_assembly",
+    "sequence": "STVMIE",
+    "n_terminal": null,
+    "c_terminal": null,
+    "labels": [
+      "non-self-assembly"
+    ],
+    "doi": "10.1073/pnas.2634884100",
+    "pubmed_id": null,
+    "paper_url": null,
+    "pdf_url": null,
+    "metadata": {
+      "source_sheet": "Non-assembling sequences"
+    }
+  },
+  {
+    "id": "self_assembly:neg:54",
+    "dataset": "self_assembly",
+    "sequence": "STVPIE",
+    "n_terminal": null,
+    "c_terminal": null,
+    "labels": [
+      "non-self-assembly"
+    ],
+    "doi": "10.1073/pnas.2634884100",
+    "pubmed_id": null,
+    "paper_url": null,
+    "pdf_url": null,
+    "metadata": {
+      "source_sheet": "Non-assembling sequences"
+    }
+  },
+  {
+    "id": "self_assembly:neg:55",
+    "dataset": "self_assembly",
+    "sequence": "STVQIE",
+    "n_terminal": null,
+    "c_terminal": null,
+    "labels": [
+      "non-self-assembly"
+    ],
+    "doi": "10.1073/pnas.2634884100",
+    "pubmed_id": null,
+    "paper_url": null,
+    "pdf_url": null,
+    "metadata": {
+      "source_sheet": "Non-assembling sequences"
+    }
+  },
+  {
+    "id": "self_assembly:neg:56",
+    "dataset": "self_assembly",
+    "sequence": "STVSIE",
+    "n_terminal": null,
+    "c_terminal": null,
+    "labels": [
+      "non-self-assembly"
+    ],
+    "doi": "10.1073/pnas.2634884100",
+    "pubmed_id": null,
+    "paper_url": null,
+    "pdf_url": null,
+    "metadata": {
+      "source_sheet": "Non-assembling sequences"
+    }
+  },
+  {
+    "id": "self_assembly:neg:57",
+    "dataset": "self_assembly",
+    "sequence": "STVVIE",
+    "n_terminal": null,
+    "c_terminal": null,
+    "labels": [
+      "non-self-assembly"
+    ],
+    "doi": "10.1073/pnas.2634884100",
+    "pubmed_id": null,
+    "paper_url": null,
+    "pdf_url": null,
+    "metadata": {
+      "source_sheet": "Non-assembling sequences"
+    }
+  },
+  {
+    "id": "self_assembly:neg:58",
+    "dataset": "self_assembly",
+    "sequence": "STYIIE",
+    "n_terminal": null,
+    "c_terminal": null,
+    "labels": [
+      "non-self-assembly"
+    ],
+    "doi": "10.1073/pnas.2634884100",
+    "pubmed_id": null,
+    "paper_url": null,
+    "pdf_url": null,
+    "metadata": {
+      "source_sheet": "Non-assembling sequences"
+    }
+  },
+  {
+    "id": "self_assembly:neg:59",
+    "dataset": "self_assembly",
+    "sequence": "SWVIIE",
+    "n_terminal": null,
+    "c_terminal": null,
+    "labels": [
+      "non-self-assembly"
+    ],
+    "doi": "10.1073/pnas.2634884100",
+    "pubmed_id": null,
+    "paper_url": null,
+    "pdf_url": null,
+    "metadata": {
+      "source_sheet": "Non-assembling sequences"
+    }
+  },
+  {
+    "id": "self_assembly:neg:60",
+    "dataset": "self_assembly",
+    "sequence": "KAAGG",
+    "n_terminal": null,
+    "c_terminal": null,
+    "labels": [
+      "non-self-assembly"
+    ],
+    "doi": "10.21203/rs.3.rs-109949/v10",
+    "pubmed_id": null,
+    "paper_url": null,
+    "pdf_url": null,
+    "metadata": {
+      "source_sheet": "Non-assembling sequences"
+    }
+  },
+  {
+    "id": "self_assembly:neg:61",
+    "dataset": "self_assembly",
+    "sequence": "PFTTR",
+    "n_terminal": null,
+    "c_terminal": null,
+    "labels": [
+      "non-self-assembly"
+    ],
+    "doi": "10.21203/rs.3.rs-109949/v13",
+    "pubmed_id": null,
+    "paper_url": null,
+    "pdf_url": null,
+    "metadata": {
+      "source_sheet": "Non-assembling sequences"
+    }
+  },
+  {
+    "id": "self_assembly:neg:62",
+    "dataset": "self_assembly",
+    "sequence": "PLVKA",
+    "n_terminal": null,
+    "c_terminal": null,
+    "labels": [
+      "non-self-assembly"
+    ],
+    "doi": "10.21203/rs.3.rs-109949/v13",
+    "pubmed_id": null,
+    "paper_url": null,
+    "pdf_url": null,
+    "metadata": {
+      "source_sheet": "Non-assembling sequences"
+    }
+  },
+  {
+    "id": "self_assembly:neg:63",
+    "dataset": "self_assembly",
+    "sequence": "QIMRW",
+    "n_terminal": null,
+    "c_terminal": null,
+    "labels": [
+      "non-self-assembly"
+    ],
+    "doi": "10.21203/rs.3.rs-109949/v13",
+    "pubmed_id": null,
+    "paper_url": null,
+    "pdf_url": null,
+    "metadata": {
+      "source_sheet": "Non-assembling sequences"
+    }
+  },
+  {
+    "id": "self_assembly:neg:64",
+    "dataset": "self_assembly",
+    "sequence": "KIKIQI",
+    "n_terminal": null,
+    "c_terminal": null,
+    "labels": [
+      "non-self-assembly"
+    ],
+    "doi": "10.1002/adfm.202009382",
+    "pubmed_id": null,
+    "paper_url": null,
+    "pdf_url": null,
+    "metadata": {
+      "source_sheet": "Non-assembling sequences"
+    }
+  },
+  {
+    "id": "self_assembly:neg:65",
+    "dataset": "self_assembly",
+    "sequence": "AENGKS",
+    "n_terminal": null,
+    "c_terminal": null,
+    "labels": [
+      "non-self-assembly"
+    ],
+    "doi": "10.1073/pnas.0511298103",
+    "pubmed_id": null,
+    "paper_url": null,
+    "pdf_url": null,
+    "metadata": {
+      "source_sheet": "Non-assembling sequences"
+    }
+  },
+  {
+    "id": "self_assembly:neg:66",
+    "dataset": "self_assembly",
+    "sequence": "DIEVDL",
+    "n_terminal": null,
+    "c_terminal": null,
+    "labels": [
+      "non-self-assembly"
+    ],
+    "doi": "10.1073/pnas.0511298103",
+    "pubmed_id": null,
+    "paper_url": null,
+    "pdf_url": null,
+    "metadata": {
+      "source_sheet": "Non-assembling sequences"
+    }
+  },
+  {
+    "id": "self_assembly:neg:67",
+    "dataset": "self_assembly",
+    "sequence": "DLLKNG",
+    "n_terminal": null,
+    "c_terminal": null,
+    "labels": [
+      "non-self-assembly"
+    ],
+    "doi": "10.1073/pnas.0511298103",
+    "pubmed_id": null,
+    "paper_url": null,
+    "pdf_url": null,
+    "metadata": {
+      "source_sheet": "Non-assembling sequences"
+    }
+  },
+  {
+    "id": "self_assembly:neg:68",
+    "dataset": "self_assembly",
+    "sequence": "EALYLV",
+    "n_terminal": null,
+    "c_terminal": null,
+    "labels": [
+      "non-self-assembly"
+    ],
+    "doi": "10.1073/pnas.0511298103",
+    "pubmed_id": null,
+    "paper_url": null,
+    "pdf_url": null,
+    "metadata": {
+      "source_sheet": "Non-assembling sequences"
+    }
+  },
+  {
+    "id": "self_assembly:neg:69",
+    "dataset": "self_assembly",
+    "sequence": "EHSDLS",
+    "n_terminal": null,
+    "c_terminal": null,
+    "labels": [
+      "non-self-assembly"
+    ],
+    "doi": "10.1073/pnas.0511298103",
+    "pubmed_id": null,
+    "paper_url": null,
+    "pdf_url": null,
+    "metadata": {
+      "source_sheet": "Non-assembling sequences"
+    }
+  },
+  {
+    "id": "self_assembly:neg:70",
+    "dataset": "self_assembly",
+    "sequence": "EKDEYA",
+    "n_terminal": null,
+    "c_terminal": null,
+    "labels": [
+      "non-self-assembly"
+    ],
+    "doi": "10.1073/pnas.0511298103",
+    "pubmed_id": null,
+    "paper_url": null,
+    "pdf_url": null,
+    "metadata": {
+      "source_sheet": "Non-assembling sequences"
+    }
+  },
+  {
+    "id": "self_assembly:neg:71",
+    "dataset": "self_assembly",
+    "sequence": "ERGFFY",
+    "n_terminal": null,
+    "c_terminal": null,
+    "labels": [
+      "non-self-assembly"
+    ],
+    "doi": "10.1073/pnas.0511298103",
+    "pubmed_id": null,
+    "paper_url": null,
+    "pdf_url": null,
+    "metadata": {
+      "source_sheet": "Non-assembling sequences"
+    }
+  },
+  {
+    "id": "self_assembly:neg:72",
+    "dataset": "self_assembly",
+    "sequence": "ERIEKV",
+    "n_terminal": null,
+    "c_terminal": null,
+    "labels": [
+      "non-self-assembly"
+    ],
+    "doi": "10.1073/pnas.0511298103",
+    "pubmed_id": null,
+    "paper_url": null,
+    "pdf_url": null,
+    "metadata": {
+      "source_sheet": "Non-assembling sequences"
+    }
+  },
+  {
+    "id": "self_assembly:neg:73",
+    "dataset": "self_assembly",
+    "sequence": "EVDLLK",
+    "n_terminal": null,
+    "c_terminal": null,
+    "labels": [
+      "non-self-assembly"
+    ],
+    "doi": "10.1073/pnas.0511298103",
+    "pubmed_id": null,
+    "paper_url": null,
+    "pdf_url": null,
+    "metadata": {
+      "source_sheet": "Non-assembling sequences"
+    }
+  },
+  {
+    "id": "self_assembly:neg:74",
+    "dataset": "self_assembly",
+    "sequence": "FFYTPK",
+    "n_terminal": null,
+    "c_terminal": null,
+    "labels": [
+      "non-self-assembly"
+    ],
+    "doi": "10.1073/pnas.0511298103",
+    "pubmed_id": null,
+    "paper_url": null,
+    "pdf_url": null,
+    "metadata": {
+      "source_sheet": "Non-assembling sequences"
+    }
+  },
+  {
+    "id": "self_assembly:neg:75",
+    "dataset": "self_assembly",
+    "sequence": "FHPSDI",
+    "n_terminal": null,
+    "c_terminal": null,
+    "labels": [
+      "non-self-assembly"
+    ],
+    "doi": "10.1073/pnas.0511298103",
+    "pubmed_id": null,
+    "paper_url": null,
+    "pdf_url": null,
+    "metadata": {
+      "source_sheet": "Non-assembling sequences"
+    }
+  },
+  {
+    "id": "self_assembly:neg:76",
+    "dataset": "self_assembly",
+    "sequence": "FSKDWS",
+    "n_terminal": null,
+    "c_terminal": null,
+    "labels": [
+      "non-self-assembly"
+    ],
+    "doi": "10.1073/pnas.0511298103",
+    "pubmed_id": null,
+    "paper_url": null,
+    "pdf_url": null,
+    "metadata": {
+      "source_sheet": "Non-assembling sequences"
+    }
+  },
+  {
+    "id": "self_assembly:neg:77",
+    "dataset": "self_assembly",
+    "sequence": "FTPTEK",
+    "n_terminal": null,
+    "c_terminal": null,
+    "labels": [
+      "non-self-assembly"
+    ],
+    "doi": "10.1073/pnas.0511298103",
+    "pubmed_id": null,
+    "paper_url": null,
+    "pdf_url": null,
+    "metadata": {
+      "source_sheet": "Non-assembling sequences"
+    }
+  },
+  {
+    "id": "self_assembly:neg:78",
+    "dataset": "self_assembly",
+    "sequence": "FVNQHL",
+    "n_terminal": null,
+    "c_terminal": null,
+    "labels": [
+      "non-self-assembly"
+    ],
+    "doi": "10.1073/pnas.0511298103",
+    "pubmed_id": null,
+    "paper_url": null,
+    "pdf_url": null,
+    "metadata": {
+      "source_sheet": "Non-assembling sequences"
+    }
+  },
+  {
+    "id": "self_assembly:neg:79",
+    "dataset": "self_assembly",
+    "sequence": "FYTPKT",
+    "n_terminal": null,
+    "c_terminal": null,
+    "labels": [
+      "non-self-assembly"
+    ],
+    "doi": "10.1073/pnas.0511298103",
+    "pubmed_id": null,
+    "paper_url": null,
+    "pdf_url": null,
+    "metadata": {
+      "source_sheet": "Non-assembling sequences"
+    }
+  },
+  {
+    "id": "self_assembly:neg:80",
+    "dataset": "self_assembly",
+    "sequence": "GERGFF",
+    "n_terminal": null,
+    "c_terminal": null,
+    "labels": [
+      "non-self-assembly"
+    ],
+    "doi": "10.1073/pnas.0511298103",
+    "pubmed_id": null,
+    "paper_url": null,
+    "pdf_url": null,
+    "metadata": {
+      "source_sheet": "Non-assembling sequences"
+    }
+  },
+  {
+    "id": "self_assembly:neg:81",
+    "dataset": "self_assembly",
+    "sequence": "GFFYTP",
+    "n_terminal": null,
+    "c_terminal": null,
+    "labels": [
+      "non-self-assembly"
+    ],
+    "doi": "10.1073/pnas.0511298103",
+    "pubmed_id": null,
+    "paper_url": null,
+    "pdf_url": null,
+    "metadata": {
+      "source_sheet": "Non-assembling sequences"
+    }
+  },
+  {
+    "id": "self_assembly:neg:82",
+    "dataset": "self_assembly",
+    "sequence": "GSHLVE",
+    "n_terminal": null,
+    "c_terminal": null,
+    "labels": [
+      "non-self-assembly"
+    ],
+    "doi": "10.1073/pnas.0511298103",
+    "pubmed_id": null,
+    "paper_url": null,
+    "pdf_url": null,
+    "metadata": {
+      "source_sheet": "Non-assembling sequences"
+    }
+  },
+  {
+    "id": "self_assembly:neg:83",
+    "dataset": "self_assembly",
+    "sequence": "HLVEAL",
+    "n_terminal": null,
+    "c_terminal": null,
+    "labels": [
+      "non-self-assembly"
+    ],
+    "doi": "10.1073/pnas.0511298103",
+    "pubmed_id": null,
+    "paper_url": null,
+    "pdf_url": null,
+    "metadata": {
+      "source_sheet": "Non-assembling sequences"
+    }
+  },
+  {
+    "id": "self_assembly:neg:84",
+    "dataset": "self_assembly",
+    "sequence": "HPAENG",
+    "n_terminal": null,
+    "c_terminal": null,
+    "labels": [
+      "non-self-assembly"
+    ],
+    "doi": "10.1073/pnas.0511298103",
+    "pubmed_id": null,
+    "paper_url": null,
+    "pdf_url": null,
+    "metadata": {
+      "source_sheet": "Non-assembling sequences"
+    }
+  },
+  {
+    "id": "self_assembly:neg:85",
+    "dataset": "self_assembly",
+    "sequence": "IEKVEH",
+    "n_terminal": null,
+    "c_terminal": null,
+    "labels": [
+      "non-self-assembly"
+    ],
+    "doi": "10.1073/pnas.0511298103",
+    "pubmed_id": null,
+    "paper_url": null,
+    "pdf_url": null,
+    "metadata": {
+      "source_sheet": "Non-assembling sequences"
+    }
+  },
+  {
+    "id": "self_assembly:neg:86",
+    "dataset": "self_assembly",
+    "sequence": "IQRTPK",
+    "n_terminal": null,
+    "c_terminal": null,
+    "labels": [
+      "non-self-assembly"
+    ],
+    "doi": "10.1073/pnas.0511298103",
+    "pubmed_id": null,
+    "paper_url": null,
+    "pdf_url": null,
+    "metadata": {
+      "source_sheet": "Non-assembling sequences"
+    }
+  },
+  {
+    "id": "self_assembly:neg:87",
+    "dataset": "self_assembly",
+    "sequence": "IQVYSR",
+    "n_terminal": null,
+    "c_terminal": null,
+    "labels": [
+      "non-self-assembly"
+    ],
+    "doi": "10.1073/pnas.0511298103",
+    "pubmed_id": null,
+    "paper_url": null,
+    "pdf_url": null,
+    "metadata": {
+      "source_sheet": "Non-assembling sequences"
+    }
+  },
+  {
+    "id": "self_assembly:neg:88",
+    "dataset": "self_assembly",
+    "sequence": "KSNFLN",
+    "n_terminal": null,
+    "c_terminal": null,
+    "labels": [
+      "non-self-assembly"
+    ],
+    "doi": "10.1073/pnas.0511298103",
+    "pubmed_id": null,
+    "paper_url": null,
+    "pdf_url": null,
+    "metadata": {
+      "source_sheet": "Non-assembling sequences"
+    }
+  },
+  {
+    "id": "self_assembly:neg:89",
+    "dataset": "self_assembly",
+    "sequence": "KVEHSD",
+    "n_terminal": null,
+    "c_terminal": null,
+    "labels": [
+      "non-self-assembly"
+    ],
+    "doi": "10.1073/pnas.0511298103",
+    "pubmed_id": null,
+    "paper_url": null,
+    "pdf_url": null,
+    "metadata": {
+      "source_sheet": "Non-assembling sequences"
+    }
+  },
+  {
+    "id": "self_assembly:neg:90",
+    "dataset": "self_assembly",
+    "sequence": "KWDRDM",
+    "n_terminal": null,
+    "c_terminal": null,
+    "labels": [
+      "non-self-assembly"
+    ],
+    "doi": "10.1073/pnas.0511298103",
+    "pubmed_id": null,
+    "paper_url": null,
+    "pdf_url": null,
+    "metadata": {
+      "source_sheet": "Non-assembling sequences"
+    }
+  },
+  {
+    "id": "self_assembly:neg:91",
+    "dataset": "self_assembly",
+    "sequence": "LKNGER",
+    "n_terminal": null,
+    "c_terminal": null,
+    "labels": [
+      "non-self-assembly"
+    ],
+    "doi": "10.1073/pnas.0511298103",
+    "pubmed_id": null,
+    "paper_url": null,
+    "pdf_url": null,
+    "metadata": {
+      "source_sheet": "Non-assembling sequences"
+    }
+  },
+  {
+    "id": "self_assembly:neg:92",
+    "dataset": "self_assembly",
+    "sequence": "LSFSKD",
+    "n_terminal": null,
+    "c_terminal": null,
+    "labels": [
+      "non-self-assembly"
+    ],
+    "doi": "10.1073/pnas.0511298103",
+    "pubmed_id": null,
+    "paper_url": null,
+    "pdf_url": null,
+    "metadata": {
+      "source_sheet": "Non-assembling sequences"
+    }
+  },
+  {
+    "id": "self_assembly:neg:93",
+    "dataset": "self_assembly",
+    "sequence": "LSQPKI",
+    "n_terminal": null,
+    "c_terminal": null,
+    "labels": [
+      "non-self-assembly"
+    ],
+    "doi": "10.1073/pnas.0511298103",
+    "pubmed_id": null,
+    "paper_url": null,
+    "pdf_url": null,
+    "metadata": {
+      "source_sheet": "Non-assembling sequences"
+    }
+  },
+  {
+    "id": "self_assembly:neg:94",
+    "dataset": "self_assembly",
+    "sequence": "NGERIE",
+    "n_terminal": null,
+    "c_terminal": null,
+    "labels": [
+      "non-self-assembly"
+    ],
+    "doi": "10.1073/pnas.0511298103",
+    "pubmed_id": null,
+    "paper_url": null,
+    "pdf_url": null,
+    "metadata": {
+      "source_sheet": "Non-assembling sequences"
+    }
+  },
+  {
+    "id": "self_assembly:neg:95",
+    "dataset": "self_assembly",
+    "sequence": "NGKSNF",
+    "n_terminal": null,
+    "c_terminal": null,
+    "labels": [
+      "non-self-assembly"
+    ],
+    "doi": "10.1073/pnas.0511298103",
+    "pubmed_id": null,
+    "paper_url": null,
+    "pdf_url": null,
+    "metadata": {
+      "source_sheet": "Non-assembling sequences"
+    }
+  },
+  {
+    "id": "self_assembly:neg:96",
+    "dataset": "self_assembly",
+    "sequence": "PKIQVY",
+    "n_terminal": null,
+    "c_terminal": null,
+    "labels": [
+      "non-self-assembly"
+    ],
+    "doi": "10.1073/pnas.0511298103",
+    "pubmed_id": null,
+    "paper_url": null,
+    "pdf_url": null,
+    "metadata": {
+      "source_sheet": "Non-assembling sequences"
+    }
+  },
+  {
+    "id": "self_assembly:neg:97",
+    "dataset": "self_assembly",
+    "sequence": "PSDIEV",
+    "n_terminal": null,
+    "c_terminal": null,
+    "labels": [
+      "non-self-assembly"
+    ],
+    "doi": "10.1073/pnas.0511298103",
+    "pubmed_id": null,
+    "paper_url": null,
+    "pdf_url": null,
+    "metadata": {
+      "source_sheet": "Non-assembling sequences"
+    }
+  },
+  {
+    "id": "self_assembly:neg:98",
+    "dataset": "self_assembly",
+    "sequence": "PTEKDE",
+    "n_terminal": null,
+    "c_terminal": null,
+    "labels": [
+      "non-self-assembly"
+    ],
+    "doi": "10.1073/pnas.0511298103",
+    "pubmed_id": null,
+    "paper_url": null,
+    "pdf_url": null,
+    "metadata": {
+      "source_sheet": "Non-assembling sequences"
+    }
+  },
+  {
+    "id": "self_assembly:neg:99",
+    "dataset": "self_assembly",
+    "sequence": "QPKIVK",
+    "n_terminal": null,
+    "c_terminal": null,
+    "labels": [
+      "non-self-assembly"
+    ],
+    "doi": "10.1073/pnas.0511298103",
+    "pubmed_id": null,
+    "paper_url": null,
+    "pdf_url": null,
+    "metadata": {
+      "source_sheet": "Non-assembling sequences"
+    }
+  },
+  {
+    "id": "self_assembly:neg:100",
+    "dataset": "self_assembly",
+    "sequence": "RGFFYT",
+    "n_terminal": null,
+    "c_terminal": null,
+    "labels": [
+      "non-self-assembly"
+    ],
+    "doi": "10.1073/pnas.0511298103",
+    "pubmed_id": null,
+    "paper_url": null,
+    "pdf_url": null,
+    "metadata": {
+      "source_sheet": "Non-assembling sequences"
+    }
+  },
+  {
+    "id": "self_assembly:neg:101",
+    "dataset": "self_assembly",
+    "sequence": "RTPKIQ",
+    "n_terminal": null,
+    "c_terminal": null,
+    "labels": [
+      "non-self-assembly"
+    ],
+    "doi": "10.1073/pnas.0511298103",
+    "pubmed_id": null,
+    "paper_url": null,
+    "pdf_url": null,
+    "metadata": {
+      "source_sheet": "Non-assembling sequences"
+    }
+  },
+  {
+    "id": "self_assembly:neg:102",
+    "dataset": "self_assembly",
+    "sequence": "RVNHVT",
+    "n_terminal": null,
+    "c_terminal": null,
+    "labels": [
+      "non-self-assembly"
+    ],
+    "doi": "10.1073/pnas.0511298103",
+    "pubmed_id": null,
+    "paper_url": null,
+    "pdf_url": null,
+    "metadata": {
+      "source_sheet": "Non-assembling sequences"
+    }
+  },
+  {
+    "id": "self_assembly:neg:103",
+    "dataset": "self_assembly",
+    "sequence": "SDLSFS",
+    "n_terminal": null,
+    "c_terminal": null,
+    "labels": [
+      "non-self-assembly"
+    ],
+    "doi": "10.1073/pnas.0511298103",
+    "pubmed_id": null,
+    "paper_url": null,
+    "pdf_url": null,
+    "metadata": {
+      "source_sheet": "Non-assembling sequences"
+    }
+  },
+  {
+    "id": "self_assembly:neg:104",
+    "dataset": "self_assembly",
+    "sequence": "SGFHPS",
+    "n_terminal": null,
+    "c_terminal": null,
+    "labels": [
+      "non-self-assembly"
+    ],
+    "doi": "10.1073/pnas.0511298103",
+    "pubmed_id": null,
+    "paper_url": null,
+    "pdf_url": null,
+    "metadata": {
+      "source_sheet": "Non-assembling sequences"
+    }
+  },
+  {
+    "id": "self_assembly:neg:105",
+    "dataset": "self_assembly",
+    "sequence": "SHLVEA",
+    "n_terminal": null,
+    "c_terminal": null,
+    "labels": [
+      "non-self-assembly"
+    ],
+    "doi": "10.1073/pnas.0511298103",
+    "pubmed_id": null,
+    "paper_url": null,
+    "pdf_url": null,
+    "metadata": {
+      "source_sheet": "Non-assembling sequences"
+    }
+  },
+  {
+    "id": "self_assembly:neg:106",
+    "dataset": "self_assembly",
+    "sequence": "SLYQLE",
+    "n_terminal": null,
+    "c_terminal": null,
+    "labels": [
+      "non-self-assembly"
+    ],
+    "doi": "10.1073/pnas.0511298103",
+    "pubmed_id": null,
+    "paper_url": null,
+    "pdf_url": null,
+    "metadata": {
+      "source_sheet": "Non-assembling sequences"
+    }
+  },
+  {
+    "id": "self_assembly:neg:107",
+    "dataset": "self_assembly",
+    "sequence": "SRHPAE",
+    "n_terminal": null,
+    "c_terminal": null,
+    "labels": [
+      "non-self-assembly"
+    ],
+    "doi": "10.1073/pnas.0511298103",
+    "pubmed_id": null,
+    "paper_url": null,
+    "pdf_url": null,
+    "metadata": {
+      "source_sheet": "Non-assembling sequences"
+    }
+  },
+  {
+    "id": "self_assembly:neg:108",
+    "dataset": "self_assembly",
+    "sequence": "TEFTPT",
+    "n_terminal": null,
+    "c_terminal": null,
+    "labels": [
+      "non-self-assembly"
+    ],
+    "doi": "10.1073/pnas.0511298103",
+    "pubmed_id": null,
+    "paper_url": null,
+    "pdf_url": null,
+    "metadata": {
+      "source_sheet": "Non-assembling sequences"
+    }
+  },
+  {
+    "id": "self_assembly:neg:109",
+    "dataset": "self_assembly",
+    "sequence": "VKWDRD",
+    "n_terminal": null,
+    "c_terminal": null,
+    "labels": [
+      "non-self-assembly"
+    ],
+    "doi": "10.1073/pnas.0511298103",
+    "pubmed_id": null,
+    "paper_url": null,
+    "pdf_url": null,
+    "metadata": {
+      "source_sheet": "Non-assembling sequences"
+    }
+  },
+  {
+    "id": "self_assembly:neg:110",
+    "dataset": "self_assembly",
+    "sequence": "VTLSQP",
+    "n_terminal": null,
+    "c_terminal": null,
+    "labels": [
+      "non-self-assembly"
+    ],
+    "doi": "10.1073/pnas.0511298103",
+    "pubmed_id": null,
+    "paper_url": null,
+    "pdf_url": null,
+    "metadata": {
+      "source_sheet": "Non-assembling sequences"
+    }
+  },
+  {
+    "id": "self_assembly:neg:111",
+    "dataset": "self_assembly",
+    "sequence": "VYSRHP",
+    "n_terminal": null,
+    "c_terminal": null,
+    "labels": [
+      "non-self-assembly"
+    ],
+    "doi": "10.1073/pnas.0511298103",
+    "pubmed_id": null,
+    "paper_url": null,
+    "pdf_url": null,
+    "metadata": {
+      "source_sheet": "Non-assembling sequences"
+    }
+  },
+  {
+    "id": "self_assembly:neg:112",
+    "dataset": "self_assembly",
+    "sequence": "WSFYLL",
+    "n_terminal": null,
+    "c_terminal": null,
+    "labels": [
+      "non-self-assembly"
+    ],
+    "doi": "10.1073/pnas.0511298103",
+    "pubmed_id": null,
+    "paper_url": null,
+    "pdf_url": null,
+    "metadata": {
+      "source_sheet": "Non-assembling sequences"
+    }
+  },
+  {
+    "id": "self_assembly:neg:113",
+    "dataset": "self_assembly",
+    "sequence": "YQLENY",
+    "n_terminal": null,
+    "c_terminal": null,
+    "labels": [
+      "non-self-assembly"
+    ],
+    "doi": "10.1073/pnas.0511298103",
+    "pubmed_id": null,
+    "paper_url": null,
+    "pdf_url": null,
+    "metadata": {
+      "source_sheet": "Non-assembling sequences"
+    }
+  },
+  {
+    "id": "self_assembly:neg:114",
+    "dataset": "self_assembly",
+    "sequence": "YVSGFH",
+    "n_terminal": null,
+    "c_terminal": null,
+    "labels": [
+      "non-self-assembly"
+    ],
+    "doi": "10.1073/pnas.0511298103",
+    "pubmed_id": null,
+    "paper_url": null,
+    "pdf_url": null,
+    "metadata": {
+      "source_sheet": "Non-assembling sequences"
+    }
+  },
+  {
+    "id": "self_assembly:neg:115",
+    "dataset": "self_assembly",
+    "sequence": "YYTEFT",
+    "n_terminal": null,
+    "c_terminal": null,
+    "labels": [
+      "non-self-assembly"
+    ],
+    "doi": "10.1073/pnas.0511298103",
+    "pubmed_id": null,
+    "paper_url": null,
+    "pdf_url": null,
+    "metadata": {
+      "source_sheet": "Non-assembling sequences"
+    }
+  },
+  {
+    "id": "self_assembly:neg:116",
+    "dataset": "self_assembly",
+    "sequence": "RITTR",
+    "n_terminal": null,
+    "c_terminal": null,
+    "labels": [
+      "non-self-assembly"
+    ],
+    "doi": "10.1038/s41467-021-24597-5",
+    "pubmed_id": null,
+    "paper_url": null,
+    "pdf_url": null,
+    "metadata": {
+      "source_sheet": "Non-assembling sequences"
+    }
+  },
+  {
+    "id": "self_assembly:neg:117",
+    "dataset": "self_assembly",
+    "sequence": "RITWI",
+    "n_terminal": null,
+    "c_terminal": null,
+    "labels": [
+      "non-self-assembly"
+    ],
+    "doi": "10.1038/s41467-021-24597-5",
+    "pubmed_id": null,
+    "paper_url": null,
+    "pdf_url": null,
+    "metadata": {
+      "source_sheet": "Non-assembling sequences"
+    }
+  },
+  {
+    "id": "self_assembly:neg:118",
+    "dataset": "self_assembly",
+    "sequence": "VKVKVKVK",
+    "n_terminal": null,
+    "c_terminal": null,
+    "labels": [
+      "non-self-assembly"
+    ],
+    "doi": "10.1021/ja027993g",
+    "pubmed_id": null,
+    "paper_url": null,
+    "pdf_url": null,
+    "metadata": {
+      "source_sheet": "Non-assembling sequences"
+    }
+  },
+  {
+    "id": "self_assembly:neg:119",
+    "dataset": "self_assembly",
+    "sequence": "VKVKVKVKVPPTKVEVKVKV",
+    "n_terminal": null,
+    "c_terminal": null,
+    "labels": [
+      "non-self-assembly"
+    ],
+    "doi": "10.1021/ja054719o",
+    "pubmed_id": null,
+    "paper_url": null,
+    "pdf_url": null,
+    "metadata": {
+      "source_sheet": "Non-assembling sequences"
+    }
+  }
+]

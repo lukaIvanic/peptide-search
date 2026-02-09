@@ -1,0 +1,2312 @@
+[
+  {
+    "id": "catalytic_prot:1",
+    "dataset": "catalytic_prot",
+    "sequence": "IHVHLQI",
+    "n_terminal": "Acetylated",
+    "c_terminal": "Amidated",
+    "labels": [
+      "catalytic"
+    ],
+    "doi": "10.1016/j.jcis.2022.04.122",
+    "pubmed_id": null,
+    "paper_url": null,
+    "pdf_url": null,
+    "metadata": {
+      "smiles": "CC[C@H](C)[C@H](N)C(=O)N[C@@H](Cc1c[nH]cn1)C(=O)N[C@H](C(=O)N[C@@H](Cc1c[nH]cn1)C(=O)N[C@@H](CC(C)C)C(=O)N[C@@H](CCC(N)=O)C(=O)N[C@H](C(=O)O)[C@@H](C)CC)C(C)C",
+      "substrate": "p-NPA",
+      "kcat_km": "127.7",
+      "secondary_structure": "Beta-sheet/Nanofibers",
+      "mechanism": "Zn2+ dependent"
+    }
+  },
+  {
+    "id": "catalytic_prot:2",
+    "dataset": "catalytic_prot",
+    "sequence": "IHVHLQI",
+    "n_terminal": "Acetylated",
+    "c_terminal": "Amidated",
+    "labels": [
+      "catalytic"
+    ],
+    "doi": "10.1016/j.jcis.2022.04.122",
+    "pubmed_id": null,
+    "paper_url": null,
+    "pdf_url": null,
+    "metadata": {
+      "smiles": "CC[C@H](C)[C@H](N)C(=O)N[C@@H](Cc1c[nH]cn1)C(=O)N[C@H](C(=O)N[C@@H](Cc1c[nH]cn1)C(=O)N[C@@H](CC(C)C)C(=O)N[C@@H](CCC(N)=O)C(=O)N[C@H](C(=O)O)[C@@H](C)CC)C(C)C",
+      "substrate": "p-NPB",
+      "kcat_km": "127.71",
+      "secondary_structure": "Beta-sheet/Nanofibers",
+      "mechanism": "Zn2+ dependent"
+    }
+  },
+  {
+    "id": "catalytic_prot:3",
+    "dataset": "catalytic_prot",
+    "sequence": "IHVHLQI",
+    "n_terminal": "Acetylated",
+    "c_terminal": "Amidated",
+    "labels": [
+      "catalytic"
+    ],
+    "doi": "10.1016/j.jcis.2022.04.122",
+    "pubmed_id": null,
+    "paper_url": null,
+    "pdf_url": null,
+    "metadata": {
+      "smiles": "CC[C@H](C)[C@H](N)C(=O)N[C@@H](Cc1c[nH]cn1)C(=O)N[C@H](C(=O)N[C@@H](Cc1c[nH]cn1)C(=O)N[C@@H](CC(C)C)C(=O)N[C@@H](CCC(N)=O)C(=O)N[C@H](C(=O)O)[C@@H](C)CC)C(C)C",
+      "substrate": "p-NPH",
+      "kcat_km": null,
+      "secondary_structure": "Beta-sheet/Nanofibers",
+      "mechanism": "Zn2+ dependent"
+    }
+  },
+  {
+    "id": "catalytic_prot:4",
+    "dataset": "catalytic_prot",
+    "sequence": "IHVHLQI",
+    "n_terminal": "Acetylated",
+    "c_terminal": "Amidated",
+    "labels": [
+      "catalytic"
+    ],
+    "doi": "10.1016/j.jcis.2022.04.122",
+    "pubmed_id": null,
+    "paper_url": null,
+    "pdf_url": null,
+    "metadata": {
+      "smiles": "CC[C@H](C)[C@H](N)C(=O)N[C@@H](Cc1c[nH]cn1)C(=O)N[C@H](C(=O)N[C@@H](Cc1c[nH]cn1)C(=O)N[C@@H](CC(C)C)C(=O)N[C@@H](CCC(N)=O)C(=O)N[C@H](C(=O)O)[C@@H](C)CC)C(C)C",
+      "substrate": "p-NPO",
+      "kcat_km": null,
+      "secondary_structure": "Beta-sheet/Nanofibers",
+      "mechanism": "Zn2+ dependent"
+    }
+  },
+  {
+    "id": "catalytic_prot:5",
+    "dataset": "catalytic_prot",
+    "sequence": "IHVHLQI",
+    "n_terminal": "Acetylated",
+    "c_terminal": "Amidated",
+    "labels": [
+      "catalytic"
+    ],
+    "doi": "10.1016/j.jcis.2022.04.122",
+    "pubmed_id": null,
+    "paper_url": null,
+    "pdf_url": null,
+    "metadata": {
+      "smiles": "CC[C@H](C)[C@H](N)C(=O)N[C@@H](Cc1c[nH]cn1)C(=O)N[C@H](C(=O)N[C@@H](Cc1c[nH]cn1)C(=O)N[C@@H](CC(C)C)C(=O)N[C@@H](CCC(N)=O)C(=O)N[C@H](C(=O)O)[C@@H](C)CC)C(C)C",
+      "substrate": "p-NPS",
+      "kcat_km": null,
+      "secondary_structure": "Beta-sheet/Nanofibers",
+      "mechanism": "Zn2+ dependent"
+    }
+  },
+  {
+    "id": "catalytic_prot:6",
+    "dataset": "catalytic_prot",
+    "sequence": "PPWPPHPPPPPGY",
+    "n_terminal": "Acetylated",
+    "c_terminal": "Amidated",
+    "labels": [
+      "catalytic"
+    ],
+    "doi": "10.1021/acsomega.7b00928",
+    "pubmed_id": null,
+    "paper_url": null,
+    "pdf_url": null,
+    "metadata": {
+      "smiles": "O=C(CNC(=O)[C@@H]1CCCN1C(=O)[C@@H]1CCCN1C(=O)[C@@H]1CCCN1C(=O)[C@@H]1CCCN1C(=O)[C@@H]1CCCN1C(=O)[C@H](Cc1c[nH]cn1)NC(=O)[C@@H]1CCCN1C(=O)[C@@H]1CCCN1C(=O)[C@H](Cc1c[nH]c2ccccc12)NC(=O)[C@@H]1CCCN1C(=O)[C@@H]1CCCN1)N[C@@H](Cc1ccc(O)cc1)C(=O)O",
+      "substrate": "p-NPA",
+      "kcat_km": "0.6",
+      "secondary_structure": "left-handed helix",
+      "mechanism": "Catalytic triad residues"
+    }
+  },
+  {
+    "id": "catalytic_prot:7",
+    "dataset": "catalytic_prot",
+    "sequence": "PPHPPHPPPPPGY",
+    "n_terminal": "Acetylated",
+    "c_terminal": "Amidated",
+    "labels": [
+      "catalytic"
+    ],
+    "doi": "10.1021/acsomega.7b00928",
+    "pubmed_id": null,
+    "paper_url": null,
+    "pdf_url": null,
+    "metadata": {
+      "smiles": "O=C(CNC(=O)[C@@H]1CCCN1C(=O)[C@@H]1CCCN1C(=O)[C@@H]1CCCN1C(=O)[C@@H]1CCCN1C(=O)[C@@H]1CCCN1C(=O)[C@H](Cc1c[nH]cn1)NC(=O)[C@@H]1CCCN1C(=O)[C@@H]1CCCN1C(=O)[C@H](Cc1c[nH]cn1)NC(=O)[C@@H]1CCCN1C(=O)[C@@H]1CCCN1)N[C@@H](Cc1ccc(O)cc1)C(=O)O",
+      "substrate": "p-NPA",
+      "kcat_km": "0.56",
+      "secondary_structure": "left-handed helix",
+      "mechanism": "Catalytic triad residues"
+    }
+  },
+  {
+    "id": "catalytic_prot:8",
+    "dataset": "catalytic_prot",
+    "sequence": "PPSPPHPPPPPGY",
+    "n_terminal": "Acetylated",
+    "c_terminal": "Amidated",
+    "labels": [
+      "catalytic"
+    ],
+    "doi": "10.1021/acsomega.7b00928",
+    "pubmed_id": null,
+    "paper_url": null,
+    "pdf_url": null,
+    "metadata": {
+      "smiles": "O=C(CNC(=O)[C@@H]1CCCN1C(=O)[C@@H]1CCCN1C(=O)[C@@H]1CCCN1C(=O)[C@@H]1CCCN1C(=O)[C@@H]1CCCN1C(=O)[C@H](Cc1c[nH]cn1)NC(=O)[C@@H]1CCCN1C(=O)[C@@H]1CCCN1C(=O)[C@H](CO)NC(=O)[C@@H]1CCCN1C(=O)[C@@H]1CCCN1)N[C@@H](Cc1ccc(O)cc1)C(=O)O",
+      "substrate": "p-NPA",
+      "kcat_km": "0.56",
+      "secondary_structure": "left-handed helix",
+      "mechanism": "Catalytic triad residues"
+    }
+  },
+  {
+    "id": "catalytic_prot:9",
+    "dataset": "catalytic_prot",
+    "sequence": "PPSPPHPPDPPGY",
+    "n_terminal": "Acetylated",
+    "c_terminal": "Amidated",
+    "labels": [
+      "catalytic"
+    ],
+    "doi": "10.1021/acsomega.7b00928",
+    "pubmed_id": null,
+    "paper_url": null,
+    "pdf_url": null,
+    "metadata": {
+      "smiles": "O=C(O)C[C@H](NC(=O)[C@@H]1CCCN1C(=O)[C@@H]1CCCN1C(=O)[C@H](Cc1c[nH]cn1)NC(=O)[C@@H]1CCCN1C(=O)[C@@H]1CCCN1C(=O)[C@H](CO)NC(=O)[C@@H]1CCCN1C(=O)[C@@H]1CCCN1)C(=O)N1CCC[C@H]1C(=O)N1CCC[C@H]1C(=O)NCC(=O)N[C@@H](Cc1ccc(O)cc1)C(=O)O",
+      "substrate": "p-NPA",
+      "kcat_km": "0.46",
+      "secondary_structure": "left-handed helix",
+      "mechanism": "Catalytic triad residues"
+    }
+  },
+  {
+    "id": "catalytic_prot:10",
+    "dataset": "catalytic_prot",
+    "sequence": "PPCPPHPPDPPGY",
+    "n_terminal": "Acetylated",
+    "c_terminal": "Amidated",
+    "labels": [
+      "catalytic"
+    ],
+    "doi": "10.1021/acsomega.7b00928",
+    "pubmed_id": null,
+    "paper_url": null,
+    "pdf_url": null,
+    "metadata": {
+      "smiles": "O=C(O)C[C@H](NC(=O)[C@@H]1CCCN1C(=O)[C@@H]1CCCN1C(=O)[C@H](Cc1c[nH]cn1)NC(=O)[C@@H]1CCCN1C(=O)[C@@H]1CCCN1C(=O)[C@H](CS)NC(=O)[C@@H]1CCCN1C(=O)[C@@H]1CCCN1)C(=O)N1CCC[C@H]1C(=O)N1CCC[C@H]1C(=O)NCC(=O)N[C@@H](Cc1ccc(O)cc1)C(=O)O",
+      "substrate": "p-NPA",
+      "kcat_km": "0.43",
+      "secondary_structure": "left-handed helix",
+      "mechanism": "Catalytic triad residues"
+    }
+  },
+  {
+    "id": "catalytic_prot:11",
+    "dataset": "catalytic_prot",
+    "sequence": "PPPPPHPPPPPGY",
+    "n_terminal": "Acetylated",
+    "c_terminal": "Amidated",
+    "labels": [
+      "catalytic"
+    ],
+    "doi": "10.1021/acsomega.7b00928",
+    "pubmed_id": null,
+    "paper_url": null,
+    "pdf_url": null,
+    "metadata": {
+      "smiles": "O=C(CNC(=O)[C@@H]1CCCN1C(=O)[C@@H]1CCCN1C(=O)[C@@H]1CCCN1C(=O)[C@@H]1CCCN1C(=O)[C@@H]1CCCN1C(=O)[C@H](Cc1c[nH]cn1)NC(=O)[C@@H]1CCCN1C(=O)[C@@H]1CCCN1C(=O)[C@@H]1CCCN1C(=O)[C@@H]1CCCN1C(=O)[C@@H]1CCCN1)N[C@@H](Cc1ccc(O)cc1)C(=O)O",
+      "substrate": "p-NPA",
+      "kcat_km": "0.39",
+      "secondary_structure": "left-handed helix",
+      "mechanism": "Catalytic triad residues"
+    }
+  },
+  {
+    "id": "catalytic_prot:12",
+    "dataset": "catalytic_prot",
+    "sequence": "GSPLAQQIKNIHSFIHQAKAAGRMDEVRTLQENLHQLMHEYFQQSD",
+    "n_terminal": "Free",
+    "c_terminal": "Free",
+    "labels": [
+      "catalytic"
+    ],
+    "doi": "10.1021/bi201881p",
+    "pubmed_id": null,
+    "paper_url": null,
+    "pdf_url": null,
+    "metadata": {
+      "smiles": "CC[C@H](C)[C@H](NC(=O)[C@H](CCC(N)=O)NC(=O)[C@H](CCC(N)=O)NC(=O)[C@H](C)NC(=O)[C@H](CC(C)C)NC(=O)[C@@H]1CCCN1C(=O)[C@H](CO)NC(=O)CN)C(=O)N[C@@H](CCCCN)C(=O)N[C@@H](CC(N)=O)C(=O)N[C@H](C(=O)N[C@@H](Cc1c[nH]cn1)C(=O)N[C@@H](CO)C(=O)N[C@@H](Cc1ccccc1)C(=O)N[C@H](C(=O)N[C@@H](Cc1c[nH]cn1)C(=O)N[C@@H](CCC(N)=O)C(=O)N[C@@H](C)C(=O)N[C@@H](CCCCN)C(=O)N[C@@H](C)C(=O)N[C@@H](C)C(=O)NCC(=O)N[C@@H](CCCNC(=N)N)C(=O)N[C@@H](CCSC)C(=O)N[C@@H](CC(=O)O)C(=O)N[C@@H](CCC(=O)O)C(=O)N[C@H](C(=O)N[C@@H](CCCNC(=N)N)C(=O)N[C@H](C(=O)N[C@@H](CC(C)C)C(=O)N[C@@H](CCC(N)=O)C(=O)N[C@@H](CCC(=O)O)C(=O)N[C@@H](CC(N)=O)C(=O)N[C@@H](CC(C)C)C(=O)N[C@@H](Cc1c[nH]cn1)C(=O)N[C@@H](CCC(N)=O)C(=O)N[C@@H](CC(C)C)C(=O)N[C@@H](CCSC)C(=O)N[C@@H](Cc1c[nH]cn1)C(=O)N[C@@H](CCC(=O)O)C(=O)N[C@@H](Cc1ccc(O)cc1)C(=O)N[C@@H](Cc1ccccc1)C(=O)N[C@@H](CCC(N)=O)C(=O)N[C@@H](CCC(N)=O)C(=O)N[C@@H](CO)C(=O)N[C@@H](CC(=O)O)C(=O)O)[C@@H](C)O)C(C)C)[C@@H](C)CC)[C@@H](C)CC",
+      "substrate": "p-NPA",
+      "kcat_km": "660",
+      "secondary_structure": "Helix-turn-helix",
+      "mechanism": "Zn2+ dependent"
+    }
+  },
+  {
+    "id": "catalytic_prot:13",
+    "dataset": "catalytic_prot",
+    "sequence": "DDAHVHWE",
+    "n_terminal": "Free",
+    "c_terminal": "Free",
+    "labels": [
+      "catalytic"
+    ],
+    "doi": "10.1021/ja506346f",
+    "pubmed_id": null,
+    "paper_url": null,
+    "pdf_url": null,
+    "metadata": {
+      "smiles": "CC(C)[C@H](NC(=O)[C@H](Cc1c[nH]cn1)NC(=O)[C@H](C)NC(=O)[C@H](CC(=O)O)NC(=O)[C@@H](N)CC(=O)O)C(=O)N[C@@H](Cc1c[nH]cn1)C(=O)N[C@@H](Cc1c[nH]c2ccccc12)C(=O)N[C@@H](CCC(=O)O)C(=O)O",
+      "substrate": "p-NPA",
+      "kcat_km": "535",
+      "secondary_structure": "Alfa-helix",
+      "mechanism": "Zn2+ dependent"
+    }
+  },
+  {
+    "id": "catalytic_prot:14",
+    "dataset": "catalytic_prot",
+    "sequence": "DDAHVHWE",
+    "n_terminal": "Free",
+    "c_terminal": "Free",
+    "labels": [
+      "catalytic"
+    ],
+    "doi": "10.1021/ja506346f",
+    "pubmed_id": null,
+    "paper_url": null,
+    "pdf_url": null,
+    "metadata": {
+      "smiles": "CC(C)[C@H](NC(=O)[C@H](Cc1c[nH]cn1)NC(=O)[C@H](C)NC(=O)[C@H](CC(=O)O)NC(=O)[C@@H](N)CC(=O)O)C(=O)N[C@@H](Cc1c[nH]cn1)C(=O)N[C@@H](Cc1c[nH]c2ccccc12)C(=O)N[C@@H](CCC(=O)O)C(=O)O",
+      "substrate": "p-NPB",
+      "kcat_km": "282",
+      "secondary_structure": "Alfa-helix",
+      "mechanism": "Zn2+ dependent"
+    }
+  },
+  {
+    "id": "catalytic_prot:15",
+    "dataset": "catalytic_prot",
+    "sequence": "DDAHVHWE",
+    "n_terminal": "Free",
+    "c_terminal": "Free",
+    "labels": [
+      "catalytic"
+    ],
+    "doi": "10.1021/ja506346f",
+    "pubmed_id": null,
+    "paper_url": null,
+    "pdf_url": null,
+    "metadata": {
+      "smiles": "CC(C)[C@H](NC(=O)[C@H](Cc1c[nH]cn1)NC(=O)[C@H](C)NC(=O)[C@H](CC(=O)O)NC(=O)[C@@H](N)CC(=O)O)C(=O)N[C@@H](Cc1c[nH]cn1)C(=O)N[C@@H](Cc1c[nH]c2ccccc12)C(=O)N[C@@H](CCC(=O)O)C(=O)O",
+      "substrate": "p-NPPropionate",
+      "kcat_km": "8.92",
+      "secondary_structure": "Alfa-helix",
+      "mechanism": "Zn2+ dependent"
+    }
+  },
+  {
+    "id": "catalytic_prot:16",
+    "dataset": "catalytic_prot",
+    "sequence": "DDAHVHWE",
+    "n_terminal": "Free",
+    "c_terminal": "Free",
+    "labels": [
+      "catalytic"
+    ],
+    "doi": "10.1021/ja506346f",
+    "pubmed_id": null,
+    "paper_url": null,
+    "pdf_url": null,
+    "metadata": {
+      "smiles": "CC(C)[C@H](NC(=O)[C@H](Cc1c[nH]cn1)NC(=O)[C@H](C)NC(=O)[C@H](CC(=O)O)NC(=O)[C@@H](N)CC(=O)O)C(=O)N[C@@H](Cc1c[nH]cn1)C(=O)N[C@@H](Cc1c[nH]c2ccccc12)C(=O)N[C@@H](CCC(=O)O)C(=O)O",
+      "substrate": "p-NPPalmitate",
+      "kcat_km": "5.89",
+      "secondary_structure": "Alfa-helix",
+      "mechanism": "Zn2+ dependent"
+    }
+  },
+  {
+    "id": "catalytic_prot:17",
+    "dataset": "catalytic_prot",
+    "sequence": "DDAHVHWE",
+    "n_terminal": "Free",
+    "c_terminal": "Free",
+    "labels": [
+      "catalytic"
+    ],
+    "doi": "10.1021/ja506346f",
+    "pubmed_id": null,
+    "paper_url": null,
+    "pdf_url": null,
+    "metadata": {
+      "smiles": "CC(C)[C@H](NC(=O)[C@H](Cc1c[nH]cn1)NC(=O)[C@H](C)NC(=O)[C@H](CC(=O)O)NC(=O)[C@@H](N)CC(=O)O)C(=O)N[C@@H](Cc1c[nH]cn1)C(=O)N[C@@H](Cc1c[nH]c2ccccc12)C(=O)N[C@@H](CCC(=O)O)C(=O)O",
+      "substrate": "Indoxyl Acetate",
+      "kcat_km": "3.13",
+      "secondary_structure": "Alfa-helix",
+      "mechanism": "Zn2+ dependent"
+    }
+  },
+  {
+    "id": "catalytic_prot:18",
+    "dataset": "catalytic_prot",
+    "sequence": "HSGQQKFQFQFEQQ",
+    "n_terminal": "Free",
+    "c_terminal": "Amidated",
+    "labels": [
+      "catalytic"
+    ],
+    "doi": "10.1021/nn5051344",
+    "pubmed_id": null,
+    "paper_url": null,
+    "pdf_url": null,
+    "metadata": {
+      "smiles": "NCCCC[C@H](NC(=O)[C@H](CCC(N)=O)NC(=O)[C@H](CCC(N)=O)NC(=O)CNC(=O)[C@H](CO)NC(=O)[C@@H](N)Cc1c[nH]cn1)C(=O)N[C@@H](Cc1ccccc1)C(=O)N[C@@H](CCC(N)=O)C(=O)N[C@@H](Cc1ccccc1)C(=O)N[C@@H](CCC(N)=O)C(=O)N[C@@H](Cc1ccccc1)C(=O)N[C@@H](CCC(=O)O)C(=O)N[C@@H](CCC(N)=O)C(=O)N[C@@H](CCC(N)=O)C(=O)O",
+      "substrate": "p-NPA",
+      "kcat_km": "0.15",
+      "secondary_structure": "Beta-sheet/Nanofibers",
+      "mechanism": "Catalytic triad residues"
+    }
+  },
+  {
+    "id": "catalytic_prot:19",
+    "dataset": "catalytic_prot",
+    "sequence": "RSGQQKFQFQFEQQ",
+    "n_terminal": "Free",
+    "c_terminal": "Amidated",
+    "labels": [
+      "catalytic"
+    ],
+    "doi": "10.1021/nn5051344",
+    "pubmed_id": null,
+    "paper_url": null,
+    "pdf_url": null,
+    "metadata": {
+      "smiles": "N=C(N)NCCC[C@H](N)C(=O)N[C@@H](CO)C(=O)NCC(=O)N[C@@H](CCC(N)=O)C(=O)N[C@@H](CCC(N)=O)C(=O)N[C@@H](CCCCN)C(=O)N[C@@H](Cc1ccccc1)C(=O)N[C@@H](CCC(N)=O)C(=O)N[C@@H](Cc1ccccc1)C(=O)N[C@@H](CCC(N)=O)C(=O)N[C@@H](Cc1ccccc1)C(=O)N[C@@H](CCC(=O)O)C(=O)N[C@@H](CCC(N)=O)C(=O)N[C@@H](CCC(N)=O)C(=O)O",
+      "substrate": "p-NPA",
+      "kcat_km": "0.15",
+      "secondary_structure": "Beta-sheet/Nanofibers",
+      "mechanism": "Catalytic triad residues"
+    }
+  },
+  {
+    "id": "catalytic_prot:20",
+    "dataset": "catalytic_prot",
+    "sequence": "HSGQQKFQFQFEQQ",
+    "n_terminal": "Free",
+    "c_terminal": "Amidated",
+    "labels": [
+      "catalytic"
+    ],
+    "doi": "10.1021/nn5051344",
+    "pubmed_id": null,
+    "paper_url": null,
+    "pdf_url": null,
+    "metadata": {
+      "smiles": "NCCCC[C@H](NC(=O)[C@H](CCC(N)=O)NC(=O)[C@H](CCC(N)=O)NC(=O)CNC(=O)[C@H](CO)NC(=O)[C@@H](N)Cc1c[nH]cn1)C(=O)N[C@@H](Cc1ccccc1)C(=O)N[C@@H](CCC(N)=O)C(=O)N[C@@H](Cc1ccccc1)C(=O)N[C@@H](CCC(N)=O)C(=O)N[C@@H](Cc1ccccc1)C(=O)N[C@@H](CCC(=O)O)C(=O)N[C@@H](CCC(N)=O)C(=O)N[C@@H](CCC(N)=O)C(=O)O",
+      "substrate": "p-NPA",
+      "kcat_km": "0.09",
+      "secondary_structure": "Beta-sheet/Nanofibers",
+      "mechanism": "Catalytic triad residues"
+    }
+  },
+  {
+    "id": "catalytic_prot:21",
+    "dataset": "catalytic_prot",
+    "sequence": "GLKALEEKCKALEEKLKALEEKHKALEEKG",
+    "n_terminal": "Acetylated",
+    "c_terminal": "Amidated",
+    "labels": [
+      "catalytic"
+    ],
+    "doi": "10.1038/NCHEM.1201",
+    "pubmed_id": null,
+    "paper_url": null,
+    "pdf_url": null,
+    "metadata": {
+      "smiles": "CC(C)C[C@H](NC(=O)CN)C(=O)N[C@@H](CCCCN)C(=O)N[C@@H](C)C(=O)N[C@@H](CC(C)C)C(=O)N[C@@H](CCC(=O)O)C(=O)N[C@@H](CCC(=O)O)C(=O)N[C@@H](CCCCN)C(=O)N[C@@H](CS)C(=O)N[C@@H](CCCCN)C(=O)N[C@@H](C)C(=O)N[C@@H](CC(C)C)C(=O)N[C@@H](CCC(=O)O)C(=O)N[C@@H](CCC(=O)O)C(=O)N[C@@H](CCCCN)C(=O)N[C@@H](CC(C)C)C(=O)N[C@@H](CCCCN)C(=O)N[C@@H](C)C(=O)N[C@@H](CC(C)C)C(=O)N[C@@H](CCC(=O)O)C(=O)N[C@@H](CCC(=O)O)C(=O)N[C@@H](CCCCN)C(=O)N[C@@H](Cc1c[nH]cn1)C(=O)N[C@@H](CCCCN)C(=O)N[C@@H](C)C(=O)N[C@@H](CC(C)C)C(=O)N[C@@H](CCC(=O)O)C(=O)N[C@@H](CCC(=O)O)C(=O)N[C@@H](CCCCN)C(=O)NCC(=O)O",
+      "substrate": "p-NPA",
+      "kcat_km": "23.3",
+      "secondary_structure": "Three-helix bundles",
+      "mechanism": "Zn2+ dependent"
+    }
+  },
+  {
+    "id": "catalytic_prot:22",
+    "dataset": "catalytic_prot",
+    "sequence": "IHIHIQI",
+    "n_terminal": "Acetylated",
+    "c_terminal": "Amidated",
+    "labels": [
+      "catalytic"
+    ],
+    "doi": "10.1038/nchem.1894",
+    "pubmed_id": null,
+    "paper_url": null,
+    "pdf_url": null,
+    "metadata": {
+      "smiles": "CC[C@H](C)[C@H](N)C(=O)N[C@@H](Cc1c[nH]cn1)C(=O)N[C@H](C(=O)N[C@@H](Cc1c[nH]cn1)C(=O)N[C@H](C(=O)N[C@@H](CCC(N)=O)C(=O)N[C@H](C(=O)O)[C@@H](C)CC)[C@@H](C)CC)[C@@H](C)CC",
+      "substrate": "p-NPA",
+      "kcat_km": "62",
+      "secondary_structure": "Beta-sheet/Amiloid-like structures",
+      "mechanism": "Zn2+ dependent"
+    }
+  },
+  {
+    "id": "catalytic_prot:23",
+    "dataset": "catalytic_prot",
+    "sequence": "IHIHIQI",
+    "n_terminal": "Acetylated",
+    "c_terminal": "Amidated",
+    "labels": [
+      "catalytic"
+    ],
+    "doi": "10.1016/j.jcis.2022.04.122",
+    "pubmed_id": null,
+    "paper_url": null,
+    "pdf_url": null,
+    "metadata": {
+      "smiles": "CC[C@H](C)[C@H](N)C(=O)N[C@@H](Cc1c[nH]cn1)C(=O)N[C@H](C(=O)N[C@@H](Cc1c[nH]cn1)C(=O)N[C@H](C(=O)N[C@@H](CCC(N)=O)C(=O)N[C@H](C(=O)O)[C@@H](C)CC)[C@@H](C)CC)[C@@H](C)CC",
+      "substrate": "p-NPB",
+      "kcat_km": "70.99",
+      "secondary_structure": "Beta-sheet/Amiloid-like structures",
+      "mechanism": "Zn2+ dependent"
+    }
+  },
+  {
+    "id": "catalytic_prot:24",
+    "dataset": "catalytic_prot",
+    "sequence": "IHIHIQI",
+    "n_terminal": "Acetylated",
+    "c_terminal": "Amidated",
+    "labels": [
+      "catalytic"
+    ],
+    "doi": "10.1016/j.jcis.2022.04.122",
+    "pubmed_id": null,
+    "paper_url": null,
+    "pdf_url": null,
+    "metadata": {
+      "smiles": "CC[C@H](C)[C@H](N)C(=O)N[C@@H](Cc1c[nH]cn1)C(=O)N[C@H](C(=O)N[C@@H](Cc1c[nH]cn1)C(=O)N[C@H](C(=O)N[C@@H](CCC(N)=O)C(=O)N[C@H](C(=O)O)[C@@H](C)CC)[C@@H](C)CC)[C@@H](C)CC",
+      "substrate": "p-NPH",
+      "kcat_km": null,
+      "secondary_structure": "Beta-sheet/Amiloid-like structures",
+      "mechanism": "Zn2+ dependent"
+    }
+  },
+  {
+    "id": "catalytic_prot:25",
+    "dataset": "catalytic_prot",
+    "sequence": "IHIHIQI",
+    "n_terminal": "Acetylated",
+    "c_terminal": "Amidated",
+    "labels": [
+      "catalytic"
+    ],
+    "doi": "10.1016/j.jcis.2022.04.122",
+    "pubmed_id": null,
+    "paper_url": null,
+    "pdf_url": null,
+    "metadata": {
+      "smiles": "CC[C@H](C)[C@H](N)C(=O)N[C@@H](Cc1c[nH]cn1)C(=O)N[C@H](C(=O)N[C@@H](Cc1c[nH]cn1)C(=O)N[C@H](C(=O)N[C@@H](CCC(N)=O)C(=O)N[C@H](C(=O)O)[C@@H](C)CC)[C@@H](C)CC)[C@@H](C)CC",
+      "substrate": "p-NPO",
+      "kcat_km": null,
+      "secondary_structure": "Beta-sheet/Amiloid-like structures",
+      "mechanism": "Zn2+ dependent"
+    }
+  },
+  {
+    "id": "catalytic_prot:26",
+    "dataset": "catalytic_prot",
+    "sequence": "IHIHIQI",
+    "n_terminal": "Acetylated",
+    "c_terminal": "Amidated",
+    "labels": [
+      "catalytic"
+    ],
+    "doi": "10.1016/j.jcis.2022.04.122",
+    "pubmed_id": null,
+    "paper_url": null,
+    "pdf_url": null,
+    "metadata": {
+      "smiles": "CC[C@H](C)[C@H](N)C(=O)N[C@@H](Cc1c[nH]cn1)C(=O)N[C@H](C(=O)N[C@@H](Cc1c[nH]cn1)C(=O)N[C@H](C(=O)N[C@@H](CCC(N)=O)C(=O)N[C@H](C(=O)O)[C@@H](C)CC)[C@@H](C)CC)[C@@H](C)CC",
+      "substrate": "p-NPS",
+      "kcat_km": null,
+      "secondary_structure": "Beta-sheet/Amiloid-like structures",
+      "mechanism": "Zn2+ dependent"
+    }
+  },
+  {
+    "id": "catalytic_prot:27",
+    "dataset": "catalytic_prot",
+    "sequence": "VHVHVQV",
+    "n_terminal": "Acetylated",
+    "c_terminal": "Amidated",
+    "labels": [
+      "catalytic"
+    ],
+    "doi": "10.1038/nchem.1894",
+    "pubmed_id": null,
+    "paper_url": null,
+    "pdf_url": null,
+    "metadata": {
+      "smiles": "CC(C)[C@H](N)C(=O)N[C@@H](Cc1c[nH]cn1)C(=O)N[C@H](C(=O)N[C@@H](Cc1c[nH]cn1)C(=O)N[C@H](C(=O)N[C@@H](CCC(N)=O)C(=O)N[C@H](C(=O)O)C(C)C)C(C)C)C(C)C",
+      "substrate": "p-NPA",
+      "kcat_km": "32",
+      "secondary_structure": "Beta-sheet/Amiloid-like structures",
+      "mechanism": "Zn2+ dependent"
+    }
+  },
+  {
+    "id": "catalytic_prot:28",
+    "dataset": "catalytic_prot",
+    "sequence": "LHLHLQL",
+    "n_terminal": "Acetylated",
+    "c_terminal": "Amidated",
+    "labels": [
+      "catalytic"
+    ],
+    "doi": "10.1038/nchem.1894",
+    "pubmed_id": null,
+    "paper_url": null,
+    "pdf_url": null,
+    "metadata": {
+      "smiles": "CC(C)C[C@H](NC(=O)[C@H](CCC(N)=O)NC(=O)[C@H](CC(C)C)NC(=O)[C@H](Cc1c[nH]cn1)NC(=O)[C@H](CC(C)C)NC(=O)[C@H](Cc1c[nH]cn1)NC(=O)[C@@H](N)CC(C)C)C(=O)O",
+      "substrate": "p-NPA",
+      "kcat_km": "30",
+      "secondary_structure": "Beta-sheet/Amiloid-like structures",
+      "mechanism": "Zn2+ dependent"
+    }
+  },
+  {
+    "id": "catalytic_prot:29",
+    "dataset": "catalytic_prot",
+    "sequence": "VHVHVRV",
+    "n_terminal": "Acetylated",
+    "c_terminal": "Amidated",
+    "labels": [
+      "catalytic"
+    ],
+    "doi": "10.1038/nchem.1894",
+    "pubmed_id": null,
+    "paper_url": null,
+    "pdf_url": null,
+    "metadata": {
+      "smiles": "CC(C)[C@H](N)C(=O)N[C@@H](Cc1c[nH]cn1)C(=O)N[C@H](C(=O)N[C@@H](Cc1c[nH]cn1)C(=O)N[C@H](C(=O)N[C@@H](CCCNC(=N)N)C(=O)N[C@H](C(=O)O)C(C)C)C(C)C)C(C)C",
+      "substrate": "p-NPA",
+      "kcat_km": "26",
+      "secondary_structure": "Beta-sheet/Amiloid-like structures",
+      "mechanism": "Zn2+ dependent"
+    }
+  },
+  {
+    "id": "catalytic_prot:30",
+    "dataset": "catalytic_prot",
+    "sequence": "IHIHIRI",
+    "n_terminal": "Acetylated",
+    "c_terminal": "Amidated",
+    "labels": [
+      "catalytic"
+    ],
+    "doi": "10.1038/nchem.1894",
+    "pubmed_id": null,
+    "paper_url": null,
+    "pdf_url": null,
+    "metadata": {
+      "smiles": "CC[C@H](C)[C@H](N)C(=O)N[C@@H](Cc1c[nH]cn1)C(=O)N[C@H](C(=O)N[C@@H](Cc1c[nH]cn1)C(=O)N[C@H](C(=O)N[C@@H](CCCNC(=N)N)C(=O)N[C@H](C(=O)O)[C@@H](C)CC)[C@@H](C)CC)[C@@H](C)CC",
+      "substrate": "p-NPA",
+      "kcat_km": "22",
+      "secondary_structure": "Beta-sheet/Amiloid-like structures",
+      "mechanism": "Zn2+ dependent"
+    }
+  },
+  {
+    "id": "catalytic_prot:31",
+    "dataset": "catalytic_prot",
+    "sequence": "LHLHLRL",
+    "n_terminal": "Acetylated",
+    "c_terminal": "Amidated",
+    "labels": [
+      "catalytic"
+    ],
+    "doi": "10.1038/nchem.1894",
+    "pubmed_id": null,
+    "paper_url": null,
+    "pdf_url": null,
+    "metadata": {
+      "smiles": "CC(C)C[C@H](NC(=O)[C@H](CCCNC(=N)N)NC(=O)[C@H](CC(C)C)NC(=O)[C@H](Cc1c[nH]cn1)NC(=O)[C@H](CC(C)C)NC(=O)[C@H](Cc1c[nH]cn1)NC(=O)[C@@H](N)CC(C)C)C(=O)O",
+      "substrate": "p-NPA",
+      "kcat_km": "18",
+      "secondary_structure": "Beta-sheet/Amiloid-like structures",
+      "mechanism": "Zn2+ dependent"
+    }
+  },
+  {
+    "id": "catalytic_prot:32",
+    "dataset": "catalytic_prot",
+    "sequence": "LHLHLYL",
+    "n_terminal": "Acetylated",
+    "c_terminal": "Amidated",
+    "labels": [
+      "catalytic"
+    ],
+    "doi": "10.1038/nchem.1894",
+    "pubmed_id": null,
+    "paper_url": null,
+    "pdf_url": null,
+    "metadata": {
+      "smiles": "CC(C)C[C@H](NC(=O)[C@H](Cc1ccc(O)cc1)NC(=O)[C@H](CC(C)C)NC(=O)[C@H](Cc1c[nH]cn1)NC(=O)[C@H](CC(C)C)NC(=O)[C@H](Cc1c[nH]cn1)NC(=O)[C@@H](N)CC(C)C)C(=O)O",
+      "substrate": "p-NPA",
+      "kcat_km": "13",
+      "secondary_structure": "Beta-sheet/Amiloid-like structures",
+      "mechanism": "Zn2+ dependent"
+    }
+  },
+  {
+    "id": "catalytic_prot:33",
+    "dataset": "catalytic_prot",
+    "sequence": "LHLHLKL",
+    "n_terminal": "Acetylated",
+    "c_terminal": "Amidated",
+    "labels": [
+      "catalytic"
+    ],
+    "doi": "10.1038/nchem.1894",
+    "pubmed_id": null,
+    "paper_url": null,
+    "pdf_url": null,
+    "metadata": {
+      "smiles": "CC(C)C[C@H](NC(=O)[C@H](CCCCN)NC(=O)[C@H](CC(C)C)NC(=O)[C@H](Cc1c[nH]cn1)NC(=O)[C@H](CC(C)C)NC(=O)[C@H](Cc1c[nH]cn1)NC(=O)[C@@H](N)CC(C)C)C(=O)O",
+      "substrate": "p-NPA",
+      "kcat_km": "12",
+      "secondary_structure": "Beta-sheet/Amiloid-like structures",
+      "mechanism": "Zn2+ dependent"
+    }
+  },
+  {
+    "id": "catalytic_prot:34",
+    "dataset": "catalytic_prot",
+    "sequence": "IHIHIQI",
+    "n_terminal": "Free",
+    "c_terminal": "Free",
+    "labels": [
+      "catalytic"
+    ],
+    "doi": "10.1038/nchem.1894",
+    "pubmed_id": null,
+    "paper_url": null,
+    "pdf_url": null,
+    "metadata": {
+      "smiles": "CC[C@H](C)[C@H](N)C(=O)N[C@@H](Cc1c[nH]cn1)C(=O)N[C@H](C(=O)N[C@@H](Cc1c[nH]cn1)C(=O)N[C@H](C(=O)N[C@@H](CCC(N)=O)C(=O)N[C@H](C(=O)O)[C@@H](C)CC)[C@@H](C)CC)[C@@H](C)CC",
+      "substrate": "p-NPA",
+      "kcat_km": "1",
+      "secondary_structure": "Beta-sheet/Amiloid-like structures",
+      "mechanism": "Zn2+ dependent"
+    }
+  },
+  {
+    "id": "catalytic_prot:35",
+    "dataset": "catalytic_prot",
+    "sequence": "LHLHLHL",
+    "n_terminal": "Acetylated",
+    "c_terminal": "Amidated",
+    "labels": [
+      "catalytic"
+    ],
+    "doi": "10.1038/nchem.1894",
+    "pubmed_id": null,
+    "paper_url": null,
+    "pdf_url": null,
+    "metadata": {
+      "smiles": "CC(C)C[C@H](NC(=O)[C@H](Cc1c[nH]cn1)NC(=O)[C@H](CC(C)C)NC(=O)[C@H](Cc1c[nH]cn1)NC(=O)[C@H](CC(C)C)NC(=O)[C@H](Cc1c[nH]cn1)NC(=O)[C@@H](N)CC(C)C)C(=O)O",
+      "substrate": "p-NPA",
+      "kcat_km": "0.6",
+      "secondary_structure": "Beta-sheet/Amiloid-like structures",
+      "mechanism": "Zn2+ dependent"
+    }
+  },
+  {
+    "id": "catalytic_prot:36",
+    "dataset": "catalytic_prot",
+    "sequence": "IAIHIRI",
+    "n_terminal": "Acetylated",
+    "c_terminal": "Amidated",
+    "labels": [
+      "catalytic"
+    ],
+    "doi": "10.1038/nchem.1894",
+    "pubmed_id": null,
+    "paper_url": null,
+    "pdf_url": null,
+    "metadata": {
+      "smiles": "CC[C@H](C)[C@H](N)C(=O)N[C@@H](C)C(=O)N[C@H](C(=O)N[C@@H](Cc1c[nH]cn1)C(=O)N[C@H](C(=O)N[C@@H](CCCNC(=N)N)C(=O)N[C@H](C(=O)O)[C@@H](C)CC)[C@@H](C)CC)[C@@H](C)CC",
+      "substrate": "p-NPA",
+      "kcat_km": "0.36",
+      "secondary_structure": "Beta-sheet/Amiloid-like structures",
+      "mechanism": "Zn2+ dependent"
+    }
+  },
+  {
+    "id": "catalytic_prot:37",
+    "dataset": "catalytic_prot",
+    "sequence": "LHLHLDL",
+    "n_terminal": "Acetylated",
+    "c_terminal": "Amidated",
+    "labels": [
+      "catalytic"
+    ],
+    "doi": "10.1038/nchem.1894",
+    "pubmed_id": null,
+    "paper_url": null,
+    "pdf_url": null,
+    "metadata": {
+      "smiles": "CC(C)C[C@H](NC(=O)[C@H](CC(=O)O)NC(=O)[C@H](CC(C)C)NC(=O)[C@H](Cc1c[nH]cn1)NC(=O)[C@H](CC(C)C)NC(=O)[C@H](Cc1c[nH]cn1)NC(=O)[C@@H](N)CC(C)C)C(=O)O",
+      "substrate": "p-NPA",
+      "kcat_km": "0.2",
+      "secondary_structure": "Beta-sheet/Amiloid-like structures",
+      "mechanism": "Zn2+ dependent"
+    }
+  },
+  {
+    "id": "catalytic_prot:38",
+    "dataset": "catalytic_prot",
+    "sequence": "LHLHLEL",
+    "n_terminal": "Acetylated",
+    "c_terminal": "Amidated",
+    "labels": [
+      "catalytic"
+    ],
+    "doi": "10.1038/nchem.1894",
+    "pubmed_id": null,
+    "paper_url": null,
+    "pdf_url": null,
+    "metadata": {
+      "smiles": "CC(C)C[C@H](NC(=O)[C@H](CCC(=O)O)NC(=O)[C@H](CC(C)C)NC(=O)[C@H](Cc1c[nH]cn1)NC(=O)[C@H](CC(C)C)NC(=O)[C@H](Cc1c[nH]cn1)NC(=O)[C@@H](N)CC(C)C)C(=O)O",
+      "substrate": "p-NPA",
+      "kcat_km": "< 0.2",
+      "secondary_structure": "Beta-sheet/Amiloid-like structures",
+      "mechanism": "Zn2+ dependent"
+    }
+  },
+  {
+    "id": "catalytic_prot:39",
+    "dataset": "catalytic_prot",
+    "sequence": "IHIAIRI",
+    "n_terminal": "Acetylated",
+    "c_terminal": "Amidated",
+    "labels": [
+      "catalytic"
+    ],
+    "doi": "10.1038/nchem.1894",
+    "pubmed_id": null,
+    "paper_url": null,
+    "pdf_url": null,
+    "metadata": {
+      "smiles": "CC[C@H](C)[C@H](N)C(=O)N[C@@H](Cc1c[nH]cn1)C(=O)N[C@H](C(=O)N[C@@H](C)C(=O)N[C@H](C(=O)N[C@@H](CCCNC(=N)N)C(=O)N[C@H](C(=O)O)[C@@H](C)CC)[C@@H](C)CC)[C@@H](C)CC",
+      "substrate": "p-NPA",
+      "kcat_km": "0.2",
+      "secondary_structure": "Beta-sheet/Amiloid-like structures",
+      "mechanism": "Zn2+ dependent"
+    }
+  },
+  {
+    "id": "catalytic_prot:40",
+    "dataset": "catalytic_prot",
+    "sequence": "AHAHARA",
+    "n_terminal": "Acetylated",
+    "c_terminal": "Amidated",
+    "labels": [
+      "catalytic"
+    ],
+    "doi": "10.1038/nchem.1894",
+    "pubmed_id": null,
+    "paper_url": null,
+    "pdf_url": null,
+    "metadata": {
+      "smiles": "C[C@H](N)C(=O)N[C@@H](Cc1c[nH]cn1)C(=O)N[C@@H](C)C(=O)N[C@@H](Cc1c[nH]cn1)C(=O)N[C@@H](C)C(=O)N[C@@H](CCCNC(=N)N)C(=O)N[C@@H](C)C(=O)O",
+      "substrate": "p-NPA",
+      "kcat_km": "0.12",
+      "secondary_structure": "Beta-sheet/Amiloid-like structures",
+      "mechanism": "Zn2+ dependent"
+    }
+  },
+  {
+    "id": "catalytic_prot:41",
+    "dataset": "catalytic_prot",
+    "sequence": "APLEPEYPGDNATPEQMHQHQLRRYINML",
+    "n_terminal": "Acetylated",
+    "c_terminal": "Amidated",
+    "labels": [
+      "catalytic"
+    ],
+    "doi": "10.1039/b404730c",
+    "pubmed_id": null,
+    "paper_url": null,
+    "pdf_url": null,
+    "metadata": {
+      "smiles": "CC[C@H](C)[C@H](NC(=O)[C@H](Cc1ccc(O)cc1)NC(=O)[C@H](CCCNC(=N)N)NC(=O)[C@H](CCCNC(=N)N)NC(=O)[C@H](CC(C)C)NC(=O)[C@H](CCC(N)=O)NC(=O)[C@H](Cc1c[nH]cn1)NC(=O)[C@H](CCC(N)=O)NC(=O)[C@H](Cc1c[nH]cn1)NC(=O)[C@H](CCSC)NC(=O)[C@H](CCC(N)=O)NC(=O)[C@H](CCC(=O)O)NC(=O)[C@@H]1CCCN1C(=O)[C@@H](NC(=O)[C@H](C)NC(=O)[C@H](CC(N)=O)NC(=O)[C@H](CC(=O)O)NC(=O)CNC(=O)[C@@H]1CCCN1C(=O)[C@H](Cc1ccc(O)cc1)NC(=O)[C@H](CCC(=O)O)NC(=O)[C@@H]1CCCN1C(=O)[C@H](CCC(=O)O)NC(=O)[C@H](CC(C)C)NC(=O)[C@@H]1CCCN1C(=O)[C@H](C)N)[C@@H](C)O)C(=O)N[C@@H](CC(N)=O)C(=O)N[C@@H](CCSC)C(=O)N[C@@H](CC(C)C)C(=O)O",
+      "substrate": "p-NPA",
+      "kcat_km": "14",
+      "secondary_structure": "Alfa-helix",
+      "mechanism": "Histidine"
+    }
+  },
+  {
+    "id": "catalytic_prot:42",
+    "dataset": "catalytic_prot",
+    "sequence": "APLEPEYPGDNATPEQMHQHQLRRYINML",
+    "n_terminal": "Acetylated",
+    "c_terminal": "Amidated",
+    "labels": [
+      "catalytic"
+    ],
+    "doi": "10.1039/b404730c",
+    "pubmed_id": null,
+    "paper_url": null,
+    "pdf_url": null,
+    "metadata": {
+      "smiles": "CC[C@H](C)[C@H](NC(=O)[C@H](Cc1ccc(O)cc1)NC(=O)[C@H](CCCNC(=N)N)NC(=O)[C@H](CCCNC(=N)N)NC(=O)[C@H](CC(C)C)NC(=O)[C@H](CCC(N)=O)NC(=O)[C@H](Cc1c[nH]cn1)NC(=O)[C@H](CCC(N)=O)NC(=O)[C@H](Cc1c[nH]cn1)NC(=O)[C@H](CCSC)NC(=O)[C@H](CCC(N)=O)NC(=O)[C@H](CCC(=O)O)NC(=O)[C@@H]1CCCN1C(=O)[C@@H](NC(=O)[C@H](C)NC(=O)[C@H](CC(N)=O)NC(=O)[C@H](CC(=O)O)NC(=O)CNC(=O)[C@@H]1CCCN1C(=O)[C@H](Cc1ccc(O)cc1)NC(=O)[C@H](CCC(=O)O)NC(=O)[C@@H]1CCCN1C(=O)[C@H](CCC(=O)O)NC(=O)[C@H](CC(C)C)NC(=O)[C@@H]1CCCN1C(=O)[C@H](C)N)[C@@H](C)O)C(=O)N[C@@H](CC(N)=O)C(=O)N[C@@H](CCSC)C(=O)N[C@@H](CC(C)C)C(=O)O",
+      "substrate": "p-NPF",
+      "kcat_km": "17",
+      "secondary_structure": "Alfa-helix",
+      "mechanism": "Histidine"
+    }
+  },
+  {
+    "id": "catalytic_prot:43",
+    "dataset": "catalytic_prot",
+    "sequence": "IHIHIYI",
+    "n_terminal": "Acetylated",
+    "c_terminal": "Amidated",
+    "labels": [
+      "catalytic"
+    ],
+    "doi": "10.1016/j.jcis.2022.04.122",
+    "pubmed_id": null,
+    "paper_url": null,
+    "pdf_url": null,
+    "metadata": {
+      "smiles": "CC[C@H](C)[C@H](N)C(=O)N[C@@H](Cc1c[nH]cn1)C(=O)N[C@H](C(=O)N[C@@H](Cc1c[nH]cn1)C(=O)N[C@H](C(=O)N[C@@H](Cc1ccc(O)cc1)C(=O)N[C@H](C(=O)O)[C@@H](C)CC)[C@@H](C)CC)[C@@H](C)CC",
+      "substrate": "p-NPA",
+      "kcat_km": "355",
+      "secondary_structure": "Beta-sheet/Amiloid-like structures",
+      "mechanism": "Zn2+ dependent"
+    }
+  },
+  {
+    "id": "catalytic_prot:44",
+    "dataset": "catalytic_prot",
+    "sequence": "IHIHIYI",
+    "n_terminal": "Acetylated",
+    "c_terminal": "Amidated",
+    "labels": [
+      "catalytic"
+    ],
+    "doi": "10.1016/j.jcis.2022.04.122",
+    "pubmed_id": null,
+    "paper_url": null,
+    "pdf_url": null,
+    "metadata": {
+      "smiles": "CC[C@H](C)[C@H](N)C(=O)N[C@@H](Cc1c[nH]cn1)C(=O)N[C@H](C(=O)N[C@@H](Cc1c[nH]cn1)C(=O)N[C@H](C(=O)N[C@@H](Cc1ccc(O)cc1)C(=O)N[C@H](C(=O)O)[C@@H](C)CC)[C@@H](C)CC)[C@@H](C)CC",
+      "substrate": "p-NPB",
+      "kcat_km": "47.42",
+      "secondary_structure": "Beta-sheet/Amiloid-like structures",
+      "mechanism": "Zn2+ dependent"
+    }
+  },
+  {
+    "id": "catalytic_prot:45",
+    "dataset": "catalytic_prot",
+    "sequence": "IHIHIYI",
+    "n_terminal": "Acetylated",
+    "c_terminal": "Amidated",
+    "labels": [
+      "catalytic"
+    ],
+    "doi": "10.1016/j.jcis.2022.04.122",
+    "pubmed_id": null,
+    "paper_url": null,
+    "pdf_url": null,
+    "metadata": {
+      "smiles": "CC[C@H](C)[C@H](N)C(=O)N[C@@H](Cc1c[nH]cn1)C(=O)N[C@H](C(=O)N[C@@H](Cc1c[nH]cn1)C(=O)N[C@H](C(=O)N[C@@H](Cc1ccc(O)cc1)C(=O)N[C@H](C(=O)O)[C@@H](C)CC)[C@@H](C)CC)[C@@H](C)CC",
+      "substrate": "p-NPH",
+      "kcat_km": null,
+      "secondary_structure": "Beta-sheet/Amiloid-like structures",
+      "mechanism": "Zn2+ dependent"
+    }
+  },
+  {
+    "id": "catalytic_prot:46",
+    "dataset": "catalytic_prot",
+    "sequence": "IHIHIYI",
+    "n_terminal": "Acetylated",
+    "c_terminal": "Amidated",
+    "labels": [
+      "catalytic"
+    ],
+    "doi": "10.1016/j.jcis.2022.04.122",
+    "pubmed_id": null,
+    "paper_url": null,
+    "pdf_url": null,
+    "metadata": {
+      "smiles": "CC[C@H](C)[C@H](N)C(=O)N[C@@H](Cc1c[nH]cn1)C(=O)N[C@H](C(=O)N[C@@H](Cc1c[nH]cn1)C(=O)N[C@H](C(=O)N[C@@H](Cc1ccc(O)cc1)C(=O)N[C@H](C(=O)O)[C@@H](C)CC)[C@@H](C)CC)[C@@H](C)CC",
+      "substrate": "p-NPO",
+      "kcat_km": null,
+      "secondary_structure": "Beta-sheet/Amiloid-like structures",
+      "mechanism": "Zn2+ dependent"
+    }
+  },
+  {
+    "id": "catalytic_prot:47",
+    "dataset": "catalytic_prot",
+    "sequence": "IHIHIYI",
+    "n_terminal": "Acetylated",
+    "c_terminal": "Amidated",
+    "labels": [
+      "catalytic"
+    ],
+    "doi": "10.1016/j.jcis.2022.04.122",
+    "pubmed_id": null,
+    "paper_url": null,
+    "pdf_url": null,
+    "metadata": {
+      "smiles": "CC[C@H](C)[C@H](N)C(=O)N[C@@H](Cc1c[nH]cn1)C(=O)N[C@H](C(=O)N[C@@H](Cc1c[nH]cn1)C(=O)N[C@H](C(=O)N[C@@H](Cc1ccc(O)cc1)C(=O)N[C@H](C(=O)O)[C@@H](C)CC)[C@@H](C)CC)[C@@H](C)CC",
+      "substrate": "p-NPS",
+      "kcat_km": null,
+      "secondary_structure": "Beta-sheet/Amiloid-like structures",
+      "mechanism": "Zn2+ dependent"
+    }
+  },
+  {
+    "id": "catalytic_prot:48",
+    "dataset": "catalytic_prot",
+    "sequence": "IHIHIYIHIHI",
+    "n_terminal": "Acetylated",
+    "c_terminal": "Amidated",
+    "labels": [
+      "catalytic"
+    ],
+    "doi": "10.1039/C7NR02675G",
+    "pubmed_id": null,
+    "paper_url": null,
+    "pdf_url": null,
+    "metadata": {
+      "smiles": "CC[C@H](C)[C@H](N)C(=O)N[C@@H](Cc1c[nH]cn1)C(=O)N[C@H](C(=O)N[C@@H](Cc1c[nH]cn1)C(=O)N[C@H](C(=O)N[C@@H](Cc1ccc(O)cc1)C(=O)N[C@H](C(=O)N[C@@H](Cc1c[nH]cn1)C(=O)N[C@H](C(=O)N[C@@H](Cc1c[nH]cn1)C(=O)N[C@H](C(=O)O)[C@@H](C)CC)[C@@H](C)CC)[C@@H](C)CC)[C@@H](C)CC)[C@@H](C)CC",
+      "substrate": "p-NPA",
+      "kcat_km": "89",
+      "secondary_structure": "Beta-sheet/Amiloid-like structures",
+      "mechanism": "Zn2+ dependent"
+    }
+  },
+  {
+    "id": "catalytic_prot:49",
+    "dataset": "catalytic_prot",
+    "sequence": "IHIHGYGHIHI",
+    "n_terminal": "Acetylated",
+    "c_terminal": "Amidated",
+    "labels": [
+      "catalytic"
+    ],
+    "doi": "10.1039/C7NR02675G",
+    "pubmed_id": null,
+    "paper_url": null,
+    "pdf_url": null,
+    "metadata": {
+      "smiles": "CC[C@H](C)[C@H](N)C(=O)N[C@@H](Cc1c[nH]cn1)C(=O)N[C@H](C(=O)N[C@@H](Cc1c[nH]cn1)C(=O)NCC(=O)N[C@@H](Cc1ccc(O)cc1)C(=O)NCC(=O)N[C@@H](Cc1c[nH]cn1)C(=O)N[C@H](C(=O)N[C@@H](Cc1c[nH]cn1)C(=O)N[C@H](C(=O)O)[C@@H](C)CC)[C@@H](C)CC)[C@@H](C)CC",
+      "substrate": "p-NPA",
+      "kcat_km": "62",
+      "secondary_structure": "Beta-sheet/Amiloid-like structures",
+      "mechanism": "Zn2+ dependent"
+    }
+  },
+  {
+    "id": "catalytic_prot:50",
+    "dataset": "catalytic_prot",
+    "sequence": "IHIHIYI",
+    "n_terminal": "Free",
+    "c_terminal": "Free",
+    "labels": [
+      "catalytic"
+    ],
+    "doi": "10.1039/C7NR02675G",
+    "pubmed_id": null,
+    "paper_url": null,
+    "pdf_url": null,
+    "metadata": {
+      "smiles": "CC[C@H](C)[C@H](N)C(=O)N[C@@H](Cc1c[nH]cn1)C(=O)N[C@H](C(=O)N[C@@H](Cc1c[nH]cn1)C(=O)N[C@H](C(=O)N[C@@H](Cc1ccc(O)cc1)C(=O)N[C@H](C(=O)O)[C@@H](C)CC)[C@@H](C)CC)[C@@H](C)CC",
+      "substrate": "p-NPA",
+      "kcat_km": "0",
+      "secondary_structure": "Beta-sheet/Amiloid-like structures",
+      "mechanism": "/"
+    }
+  },
+  {
+    "id": "catalytic_prot:51",
+    "dataset": "catalytic_prot",
+    "sequence": "IHIHIYIHIHI",
+    "n_terminal": "Free",
+    "c_terminal": "Free",
+    "labels": [
+      "catalytic"
+    ],
+    "doi": "10.1039/C7NR02675G",
+    "pubmed_id": null,
+    "paper_url": null,
+    "pdf_url": null,
+    "metadata": {
+      "smiles": "CC[C@H](C)[C@H](N)C(=O)N[C@@H](Cc1c[nH]cn1)C(=O)N[C@H](C(=O)N[C@@H](Cc1c[nH]cn1)C(=O)N[C@H](C(=O)N[C@@H](Cc1ccc(O)cc1)C(=O)N[C@H](C(=O)N[C@@H](Cc1c[nH]cn1)C(=O)N[C@H](C(=O)N[C@@H](Cc1c[nH]cn1)C(=O)N[C@H](C(=O)O)[C@@H](C)CC)[C@@H](C)CC)[C@@H](C)CC)[C@@H](C)CC)[C@@H](C)CC",
+      "substrate": "p-NPA",
+      "kcat_km": "0",
+      "secondary_structure": "Beta-sheet/Amiloid-like structures",
+      "mechanism": "/"
+    }
+  },
+  {
+    "id": "catalytic_prot:52",
+    "dataset": "catalytic_prot",
+    "sequence": "IHIHDYI",
+    "n_terminal": "Acetylated",
+    "c_terminal": "Amidated",
+    "labels": [
+      "catalytic"
+    ],
+    "doi": "10.1039/C7NR02675G",
+    "pubmed_id": null,
+    "paper_url": null,
+    "pdf_url": null,
+    "metadata": {
+      "smiles": "CC[C@H](C)[C@H](N)C(=O)N[C@@H](Cc1c[nH]cn1)C(=O)N[C@H](C(=O)N[C@@H](Cc1c[nH]cn1)C(=O)N[C@@H](CC(=O)O)C(=O)N[C@@H](Cc1ccc(O)cc1)C(=O)N[C@H](C(=O)O)[C@@H](C)CC)[C@@H](C)CC",
+      "substrate": "p-NPA",
+      "kcat_km": "0",
+      "secondary_structure": "Beta-sheet/Amiloid-like structures",
+      "mechanism": "/"
+    }
+  },
+  {
+    "id": "catalytic_prot:53",
+    "dataset": "catalytic_prot",
+    "sequence": "YVHVHVAV",
+    "n_terminal": "Acetylated",
+    "c_terminal": "Amidated",
+    "labels": [
+      "catalytic"
+    ],
+    "doi": "10.1371/journal.pone.0143948",
+    "pubmed_id": null,
+    "paper_url": null,
+    "pdf_url": null,
+    "metadata": {
+      "smiles": "CC(C)[C@H](NC(=O)[C@H](C)NC(=O)[C@@H](NC(=O)[C@H](Cc1c[nH]cn1)NC(=O)[C@@H](NC(=O)[C@H](Cc1c[nH]cn1)NC(=O)[C@@H](NC(=O)[C@@H](N)Cc1ccc(O)cc1)C(C)C)C(C)C)C(C)C)C(=O)O",
+      "substrate": "p-NPA",
+      "kcat_km": "7.38",
+      "secondary_structure": "Beta-sheet/Amiloid-like structures",
+      "mechanism": "Zn2+ dependent"
+    }
+  },
+  {
+    "id": "catalytic_prot:54",
+    "dataset": "catalytic_prot",
+    "sequence": "YVHVHVSV",
+    "n_terminal": "Acetylated",
+    "c_terminal": "Amidated",
+    "labels": [
+      "catalytic"
+    ],
+    "doi": "10.1371/journal.pone.0143948",
+    "pubmed_id": null,
+    "paper_url": null,
+    "pdf_url": null,
+    "metadata": {
+      "smiles": "CC(C)[C@H](NC(=O)[C@H](CO)NC(=O)[C@@H](NC(=O)[C@H](Cc1c[nH]cn1)NC(=O)[C@@H](NC(=O)[C@H](Cc1c[nH]cn1)NC(=O)[C@@H](NC(=O)[C@@H](N)Cc1ccc(O)cc1)C(C)C)C(C)C)C(C)C)C(=O)O",
+      "substrate": "p-NPA",
+      "kcat_km": "6.29",
+      "secondary_structure": "Beta-sheet/Amiloid-like structures",
+      "mechanism": "Zn2+ dependent"
+    }
+  },
+  {
+    "id": "catalytic_prot:55",
+    "dataset": "catalytic_prot",
+    "sequence": "YVAVHVHV",
+    "n_terminal": "Acetylated",
+    "c_terminal": "Amidated",
+    "labels": [
+      "catalytic"
+    ],
+    "doi": "10.1371/journal.pone.0143948",
+    "pubmed_id": null,
+    "paper_url": null,
+    "pdf_url": null,
+    "metadata": {
+      "smiles": "CC(C)[C@H](NC(=O)[C@H](Cc1c[nH]cn1)NC(=O)[C@@H](NC(=O)[C@H](Cc1c[nH]cn1)NC(=O)[C@@H](NC(=O)[C@H](C)NC(=O)[C@@H](NC(=O)[C@@H](N)Cc1ccc(O)cc1)C(C)C)C(C)C)C(C)C)C(=O)O",
+      "substrate": "p-NPA",
+      "kcat_km": "4.26",
+      "secondary_structure": "Beta-sheet/Amiloid-like structures",
+      "mechanism": "Zn2+ dependent"
+    }
+  },
+  {
+    "id": "catalytic_prot:56",
+    "dataset": "catalytic_prot",
+    "sequence": "YVHVHVHV",
+    "n_terminal": "Acetylated",
+    "c_terminal": "Amidated",
+    "labels": [
+      "catalytic"
+    ],
+    "doi": "10.1371/journal.pone.0143948",
+    "pubmed_id": null,
+    "paper_url": null,
+    "pdf_url": null,
+    "metadata": {
+      "smiles": "CC(C)[C@H](NC(=O)[C@H](Cc1c[nH]cn1)NC(=O)[C@@H](NC(=O)[C@H](Cc1c[nH]cn1)NC(=O)[C@@H](NC(=O)[C@H](Cc1c[nH]cn1)NC(=O)[C@@H](NC(=O)[C@@H](N)Cc1ccc(O)cc1)C(C)C)C(C)C)C(C)C)C(=O)O",
+      "substrate": "p-NPA",
+      "kcat_km": "2288",
+      "secondary_structure": "Beta-sheet/Amiloid-like structures",
+      "mechanism": "Zn2+ dependent"
+    }
+  },
+  {
+    "id": "catalytic_prot:57",
+    "dataset": "catalytic_prot",
+    "sequence": "YVSVHVHV",
+    "n_terminal": "Acetylated",
+    "c_terminal": "Amidated",
+    "labels": [
+      "catalytic"
+    ],
+    "doi": "10.1371/journal.pone.0143948",
+    "pubmed_id": null,
+    "paper_url": null,
+    "pdf_url": null,
+    "metadata": {
+      "smiles": "CC(C)[C@H](NC(=O)[C@H](Cc1c[nH]cn1)NC(=O)[C@@H](NC(=O)[C@H](Cc1c[nH]cn1)NC(=O)[C@@H](NC(=O)[C@H](CO)NC(=O)[C@@H](NC(=O)[C@@H](N)Cc1ccc(O)cc1)C(C)C)C(C)C)C(C)C)C(=O)O",
+      "substrate": "p-NPA",
+      "kcat_km": "1461",
+      "secondary_structure": "Beta-sheet/Amiloid-like structures",
+      "mechanism": "Zn2+ dependent"
+    }
+  },
+  {
+    "id": "catalytic_prot:58",
+    "dataset": "catalytic_prot",
+    "sequence": "YVHVSVHV",
+    "n_terminal": "Acetylated",
+    "c_terminal": "Amidated",
+    "labels": [
+      "catalytic"
+    ],
+    "doi": "10.1371/journal.pone.0143948",
+    "pubmed_id": null,
+    "paper_url": null,
+    "pdf_url": null,
+    "metadata": {
+      "smiles": "CC(C)[C@H](NC(=O)[C@H](Cc1c[nH]cn1)NC(=O)[C@@H](NC(=O)[C@H](CO)NC(=O)[C@@H](NC(=O)[C@H](Cc1c[nH]cn1)NC(=O)[C@@H](NC(=O)[C@@H](N)Cc1ccc(O)cc1)C(C)C)C(C)C)C(C)C)C(=O)O",
+      "substrate": "p-NPA",
+      "kcat_km": "172",
+      "secondary_structure": "Beta-sheet/Amiloid-like structures",
+      "mechanism": "Zn2+ dependent"
+    }
+  },
+  {
+    "id": "catalytic_prot:59",
+    "dataset": "catalytic_prot",
+    "sequence": "HGH",
+    "n_terminal": "Acetylated",
+    "c_terminal": "Amidated",
+    "labels": [
+      "catalytic"
+    ],
+    "doi": "10.1371/journal.pone.0143948",
+    "pubmed_id": null,
+    "paper_url": null,
+    "pdf_url": null,
+    "metadata": {
+      "smiles": "N[C@@H](Cc1c[nH]cn1)C(=O)NCC(=O)N[C@@H](Cc1c[nH]cn1)C(=O)O",
+      "substrate": "p-NPA",
+      "kcat_km": "41",
+      "secondary_structure": "Beta-sheet/Amiloid-like structures",
+      "mechanism": "Histidine"
+    }
+  },
+  {
+    "id": "catalytic_prot:60",
+    "dataset": "catalytic_prot",
+    "sequence": "YVDVHVHV",
+    "n_terminal": "Acetylated",
+    "c_terminal": "Amidated",
+    "labels": [
+      "catalytic"
+    ],
+    "doi": "10.1371/journal.pone.0143948",
+    "pubmed_id": null,
+    "paper_url": null,
+    "pdf_url": null,
+    "metadata": {
+      "smiles": "CC(C)[C@H](NC(=O)[C@H](Cc1c[nH]cn1)NC(=O)[C@@H](NC(=O)[C@H](Cc1c[nH]cn1)NC(=O)[C@@H](NC(=O)[C@H](CC(=O)O)NC(=O)[C@@H](NC(=O)[C@@H](N)Cc1ccc(O)cc1)C(C)C)C(C)C)C(C)C)C(=O)O",
+      "substrate": "p-NPA",
+      "kcat_km": "0.0061456",
+      "secondary_structure": "Beta-sheet/Amiloid-like structures",
+      "mechanism": "Histidine"
+    }
+  },
+  {
+    "id": "catalytic_prot:61",
+    "dataset": "catalytic_prot",
+    "sequence": "YVHVHVDV",
+    "n_terminal": "Acetylated",
+    "c_terminal": "Amidated",
+    "labels": [
+      "catalytic"
+    ],
+    "doi": "10.1371/journal.pone.0143948",
+    "pubmed_id": null,
+    "paper_url": null,
+    "pdf_url": null,
+    "metadata": {
+      "smiles": "CC(C)[C@H](NC(=O)[C@H](CC(=O)O)NC(=O)[C@@H](NC(=O)[C@H](Cc1c[nH]cn1)NC(=O)[C@@H](NC(=O)[C@H](Cc1c[nH]cn1)NC(=O)[C@@H](NC(=O)[C@@H](N)Cc1ccc(O)cc1)C(C)C)C(C)C)C(C)C)C(=O)O",
+      "substrate": "p-NPA",
+      "kcat_km": "473",
+      "secondary_structure": "Beta-sheet/Amiloid-like structures",
+      "mechanism": "Zn2+ dependent"
+    }
+  },
+  {
+    "id": "catalytic_prot:62",
+    "dataset": "catalytic_prot",
+    "sequence": "YVHVAVHV",
+    "n_terminal": "Acetylated",
+    "c_terminal": "Amidated",
+    "labels": [
+      "catalytic"
+    ],
+    "doi": "10.1371/journal.pone.0143948",
+    "pubmed_id": null,
+    "paper_url": null,
+    "pdf_url": null,
+    "metadata": {
+      "smiles": "CC(C)[C@H](NC(=O)[C@H](Cc1c[nH]cn1)NC(=O)[C@@H](NC(=O)[C@H](C)NC(=O)[C@@H](NC(=O)[C@H](Cc1c[nH]cn1)NC(=O)[C@@H](NC(=O)[C@@H](N)Cc1ccc(O)cc1)C(C)C)C(C)C)C(C)C)C(=O)O",
+      "substrate": "p-NPA",
+      "kcat_km": "215",
+      "secondary_structure": "Beta-sheet/Amiloid-like structures",
+      "mechanism": "Zn2+ dependent"
+    }
+  },
+  {
+    "id": "catalytic_prot:63",
+    "dataset": "catalytic_prot",
+    "sequence": "YVDVDVDV",
+    "n_terminal": "Acetylated",
+    "c_terminal": "Amidated",
+    "labels": [
+      "catalytic"
+    ],
+    "doi": "10.1371/journal.pone.0143948",
+    "pubmed_id": null,
+    "paper_url": null,
+    "pdf_url": null,
+    "metadata": {
+      "smiles": "CC(C)[C@H](NC(=O)[C@H](CC(=O)O)NC(=O)[C@@H](NC(=O)[C@H](CC(=O)O)NC(=O)[C@@H](NC(=O)[C@H](CC(=O)O)NC(=O)[C@@H](NC(=O)[C@@H](N)Cc1ccc(O)cc1)C(C)C)C(C)C)C(C)C)C(=O)O",
+      "substrate": "p-NPA",
+      "kcat_km": "0",
+      "secondary_structure": "Beta-sheet/Amiloid-like structures",
+      "mechanism": "/"
+    }
+  },
+  {
+    "id": "catalytic_prot:64",
+    "dataset": "catalytic_prot",
+    "sequence": "YVSVDVDV",
+    "n_terminal": "Acetylated",
+    "c_terminal": "Amidated",
+    "labels": [
+      "catalytic"
+    ],
+    "doi": "10.1371/journal.pone.0143948",
+    "pubmed_id": null,
+    "paper_url": null,
+    "pdf_url": null,
+    "metadata": {
+      "smiles": "CC(C)[C@H](NC(=O)[C@H](CC(=O)O)NC(=O)[C@@H](NC(=O)[C@H](CC(=O)O)NC(=O)[C@@H](NC(=O)[C@H](CO)NC(=O)[C@@H](NC(=O)[C@@H](N)Cc1ccc(O)cc1)C(C)C)C(C)C)C(C)C)C(=O)O",
+      "substrate": "p-NPA",
+      "kcat_km": "0",
+      "secondary_structure": "Beta-sheet/Amiloid-like structures",
+      "mechanism": "/"
+    }
+  },
+  {
+    "id": "catalytic_prot:65",
+    "dataset": "catalytic_prot",
+    "sequence": "YVDVSVDV",
+    "n_terminal": "Acetylated",
+    "c_terminal": "Amidated",
+    "labels": [
+      "catalytic"
+    ],
+    "doi": "10.1371/journal.pone.0143948",
+    "pubmed_id": null,
+    "paper_url": null,
+    "pdf_url": null,
+    "metadata": {
+      "smiles": "CC(C)[C@H](NC(=O)[C@H](CC(=O)O)NC(=O)[C@@H](NC(=O)[C@H](CO)NC(=O)[C@@H](NC(=O)[C@H](CC(=O)O)NC(=O)[C@@H](NC(=O)[C@@H](N)Cc1ccc(O)cc1)C(C)C)C(C)C)C(C)C)C(=O)O",
+      "substrate": "p-NPA",
+      "kcat_km": "0",
+      "secondary_structure": "Beta-sheet/Amiloid-like structures",
+      "mechanism": "/"
+    }
+  },
+  {
+    "id": "catalytic_prot:66",
+    "dataset": "catalytic_prot",
+    "sequence": "YVDVDVSV",
+    "n_terminal": "Acetylated",
+    "c_terminal": "Amidated",
+    "labels": [
+      "catalytic"
+    ],
+    "doi": "10.1371/journal.pone.0143948",
+    "pubmed_id": null,
+    "paper_url": null,
+    "pdf_url": null,
+    "metadata": {
+      "smiles": "CC(C)[C@H](NC(=O)[C@H](CO)NC(=O)[C@@H](NC(=O)[C@H](CC(=O)O)NC(=O)[C@@H](NC(=O)[C@H](CC(=O)O)NC(=O)[C@@H](NC(=O)[C@@H](N)Cc1ccc(O)cc1)C(C)C)C(C)C)C(C)C)C(=O)O",
+      "substrate": "p-NPA",
+      "kcat_km": "0",
+      "secondary_structure": "Beta-sheet/Amiloid-like structures",
+      "mechanism": "/"
+    }
+  },
+  {
+    "id": "catalytic_prot:67",
+    "dataset": "catalytic_prot",
+    "sequence": "YVSVSVDV",
+    "n_terminal": "Acetylated",
+    "c_terminal": "Amidated",
+    "labels": [
+      "catalytic"
+    ],
+    "doi": "10.1371/journal.pone.0143948",
+    "pubmed_id": null,
+    "paper_url": null,
+    "pdf_url": null,
+    "metadata": {
+      "smiles": "CC(C)[C@H](NC(=O)[C@H](CC(=O)O)NC(=O)[C@@H](NC(=O)[C@H](CO)NC(=O)[C@@H](NC(=O)[C@H](CO)NC(=O)[C@@H](NC(=O)[C@@H](N)Cc1ccc(O)cc1)C(C)C)C(C)C)C(C)C)C(=O)O",
+      "substrate": "p-NPA",
+      "kcat_km": "0",
+      "secondary_structure": "Beta-sheet/Amiloid-like structures",
+      "mechanism": "/"
+    }
+  },
+  {
+    "id": "catalytic_prot:68",
+    "dataset": "catalytic_prot",
+    "sequence": "YVSVDVSV",
+    "n_terminal": "Acetylated",
+    "c_terminal": "Amidated",
+    "labels": [
+      "catalytic"
+    ],
+    "doi": "10.1371/journal.pone.0143948",
+    "pubmed_id": null,
+    "paper_url": null,
+    "pdf_url": null,
+    "metadata": {
+      "smiles": "CC(C)[C@H](NC(=O)[C@H](CO)NC(=O)[C@@H](NC(=O)[C@H](CC(=O)O)NC(=O)[C@@H](NC(=O)[C@H](CO)NC(=O)[C@@H](NC(=O)[C@@H](N)Cc1ccc(O)cc1)C(C)C)C(C)C)C(C)C)C(=O)O",
+      "substrate": "p-NPA",
+      "kcat_km": "0",
+      "secondary_structure": "Beta-sheet/Amiloid-like structures",
+      "mechanism": "/"
+    }
+  },
+  {
+    "id": "catalytic_prot:69",
+    "dataset": "catalytic_prot",
+    "sequence": "YVDVSVSV",
+    "n_terminal": "Acetylated",
+    "c_terminal": "Amidated",
+    "labels": [
+      "catalytic"
+    ],
+    "doi": "10.1371/journal.pone.0143948",
+    "pubmed_id": null,
+    "paper_url": null,
+    "pdf_url": null,
+    "metadata": {
+      "smiles": "CC(C)[C@H](NC(=O)[C@H](CO)NC(=O)[C@@H](NC(=O)[C@H](CO)NC(=O)[C@@H](NC(=O)[C@H](CC(=O)O)NC(=O)[C@@H](NC(=O)[C@@H](N)Cc1ccc(O)cc1)C(C)C)C(C)C)C(C)C)C(=O)O",
+      "substrate": "p-NPA",
+      "kcat_km": "0",
+      "secondary_structure": "Beta-sheet/Amiloid-like structures",
+      "mechanism": "/"
+    }
+  },
+  {
+    "id": "catalytic_prot:70",
+    "dataset": "catalytic_prot",
+    "sequence": "YVSVHVSV",
+    "n_terminal": "Acetylated",
+    "c_terminal": "Amidated",
+    "labels": [
+      "catalytic"
+    ],
+    "doi": "10.1371/journal.pone.0143948",
+    "pubmed_id": null,
+    "paper_url": null,
+    "pdf_url": null,
+    "metadata": {
+      "smiles": "CC(C)[C@H](NC(=O)[C@H](CO)NC(=O)[C@@H](NC(=O)[C@H](Cc1c[nH]cn1)NC(=O)[C@@H](NC(=O)[C@H](CO)NC(=O)[C@@H](NC(=O)[C@@H](N)Cc1ccc(O)cc1)C(C)C)C(C)C)C(C)C)C(=O)O",
+      "substrate": "p-NPA",
+      "kcat_km": "0",
+      "secondary_structure": "Beta-sheet/Amiloid-like structures",
+      "mechanism": "/"
+    }
+  },
+  {
+    "id": "catalytic_prot:71",
+    "dataset": "catalytic_prot",
+    "sequence": "YVHVSVSV",
+    "n_terminal": "Acetylated",
+    "c_terminal": "Amidated",
+    "labels": [
+      "catalytic"
+    ],
+    "doi": "10.1371/journal.pone.0143948",
+    "pubmed_id": null,
+    "paper_url": null,
+    "pdf_url": null,
+    "metadata": {
+      "smiles": "CC(C)[C@H](NC(=O)[C@H](CO)NC(=O)[C@@H](NC(=O)[C@H](CO)NC(=O)[C@@H](NC(=O)[C@H](Cc1c[nH]cn1)NC(=O)[C@@H](NC(=O)[C@@H](N)Cc1ccc(O)cc1)C(C)C)C(C)C)C(C)C)C(=O)O",
+      "substrate": "p-NPA",
+      "kcat_km": "0",
+      "secondary_structure": "Beta-sheet/Amiloid-like structures",
+      "mechanism": "/"
+    }
+  },
+  {
+    "id": "catalytic_prot:72",
+    "dataset": "catalytic_prot",
+    "sequence": "YVDVHVSV",
+    "n_terminal": "Acetylated",
+    "c_terminal": "Amidated",
+    "labels": [
+      "catalytic"
+    ],
+    "doi": "10.1371/journal.pone.0143948",
+    "pubmed_id": null,
+    "paper_url": null,
+    "pdf_url": null,
+    "metadata": {
+      "smiles": "CC(C)[C@H](NC(=O)[C@H](CO)NC(=O)[C@@H](NC(=O)[C@H](Cc1c[nH]cn1)NC(=O)[C@@H](NC(=O)[C@H](CC(=O)O)NC(=O)[C@@H](NC(=O)[C@@H](N)Cc1ccc(O)cc1)C(C)C)C(C)C)C(C)C)C(=O)O",
+      "substrate": "p-NPA",
+      "kcat_km": "0",
+      "secondary_structure": "Beta-sheet/Amiloid-like structures",
+      "mechanism": "/"
+    }
+  },
+  {
+    "id": "catalytic_prot:73",
+    "dataset": "catalytic_prot",
+    "sequence": "YVDVSVHV",
+    "n_terminal": "Acetylated",
+    "c_terminal": "Amidated",
+    "labels": [
+      "catalytic"
+    ],
+    "doi": "10.1371/journal.pone.0143948",
+    "pubmed_id": null,
+    "paper_url": null,
+    "pdf_url": null,
+    "metadata": {
+      "smiles": "CC(C)[C@H](NC(=O)[C@H](Cc1c[nH]cn1)NC(=O)[C@@H](NC(=O)[C@H](CO)NC(=O)[C@@H](NC(=O)[C@H](CC(=O)O)NC(=O)[C@@H](NC(=O)[C@@H](N)Cc1ccc(O)cc1)C(C)C)C(C)C)C(C)C)C(=O)O",
+      "substrate": "p-NPA",
+      "kcat_km": "0",
+      "secondary_structure": "Beta-sheet/Amiloid-like structures",
+      "mechanism": "/"
+    }
+  },
+  {
+    "id": "catalytic_prot:74",
+    "dataset": "catalytic_prot",
+    "sequence": "YVHVDVSV",
+    "n_terminal": "Acetylated",
+    "c_terminal": "Amidated",
+    "labels": [
+      "catalytic"
+    ],
+    "doi": "10.1371/journal.pone.0143948",
+    "pubmed_id": null,
+    "paper_url": null,
+    "pdf_url": null,
+    "metadata": {
+      "smiles": "CC(C)[C@H](NC(=O)[C@H](CO)NC(=O)[C@@H](NC(=O)[C@H](CC(=O)O)NC(=O)[C@@H](NC(=O)[C@H](Cc1c[nH]cn1)NC(=O)[C@@H](NC(=O)[C@@H](N)Cc1ccc(O)cc1)C(C)C)C(C)C)C(C)C)C(=O)O",
+      "substrate": "p-NPA",
+      "kcat_km": "0",
+      "secondary_structure": "Beta-sheet/Amiloid-like structures",
+      "mechanism": "/"
+    }
+  },
+  {
+    "id": "catalytic_prot:75",
+    "dataset": "catalytic_prot",
+    "sequence": "YVSVDVHV",
+    "n_terminal": "Acetylated",
+    "c_terminal": "Amidated",
+    "labels": [
+      "catalytic"
+    ],
+    "doi": "10.1371/journal.pone.0143948",
+    "pubmed_id": null,
+    "paper_url": null,
+    "pdf_url": null,
+    "metadata": {
+      "smiles": "CC(C)[C@H](NC(=O)[C@H](Cc1c[nH]cn1)NC(=O)[C@@H](NC(=O)[C@H](CC(=O)O)NC(=O)[C@@H](NC(=O)[C@H](CO)NC(=O)[C@@H](NC(=O)[C@@H](N)Cc1ccc(O)cc1)C(C)C)C(C)C)C(C)C)C(=O)O",
+      "substrate": "p-NPA",
+      "kcat_km": "0",
+      "secondary_structure": "Beta-sheet/Amiloid-like structures",
+      "mechanism": "/"
+    }
+  },
+  {
+    "id": "catalytic_prot:76",
+    "dataset": "catalytic_prot",
+    "sequence": "YVSVHVDV",
+    "n_terminal": "Acetylated",
+    "c_terminal": "Amidated",
+    "labels": [
+      "catalytic"
+    ],
+    "doi": "10.1371/journal.pone.0143948",
+    "pubmed_id": null,
+    "paper_url": null,
+    "pdf_url": null,
+    "metadata": {
+      "smiles": "CC(C)[C@H](NC(=O)[C@H](CC(=O)O)NC(=O)[C@@H](NC(=O)[C@H](Cc1c[nH]cn1)NC(=O)[C@@H](NC(=O)[C@H](CO)NC(=O)[C@@H](NC(=O)[C@@H](N)Cc1ccc(O)cc1)C(C)C)C(C)C)C(C)C)C(=O)O",
+      "substrate": "p-NPA",
+      "kcat_km": "0",
+      "secondary_structure": "Beta-sheet/Amiloid-like structures",
+      "mechanism": "/"
+    }
+  },
+  {
+    "id": "catalytic_prot:77",
+    "dataset": "catalytic_prot",
+    "sequence": "YVHVSVDV",
+    "n_terminal": "Acetylated",
+    "c_terminal": "Amidated",
+    "labels": [
+      "catalytic"
+    ],
+    "doi": "10.1371/journal.pone.0143948",
+    "pubmed_id": null,
+    "paper_url": null,
+    "pdf_url": null,
+    "metadata": {
+      "smiles": "CC(C)[C@H](NC(=O)[C@H](CC(=O)O)NC(=O)[C@@H](NC(=O)[C@H](CO)NC(=O)[C@@H](NC(=O)[C@H](Cc1c[nH]cn1)NC(=O)[C@@H](NC(=O)[C@@H](N)Cc1ccc(O)cc1)C(C)C)C(C)C)C(C)C)C(=O)O",
+      "substrate": "p-NPA",
+      "kcat_km": "0",
+      "secondary_structure": "Beta-sheet/Amiloid-like structures",
+      "mechanism": "/"
+    }
+  },
+  {
+    "id": "catalytic_prot:78",
+    "dataset": "catalytic_prot",
+    "sequence": "YVHVDVHV",
+    "n_terminal": "Acetylated",
+    "c_terminal": "Amidated",
+    "labels": [
+      "catalytic"
+    ],
+    "doi": "10.1371/journal.pone.0143948",
+    "pubmed_id": null,
+    "paper_url": null,
+    "pdf_url": null,
+    "metadata": {
+      "smiles": "CC(C)[C@H](NC(=O)[C@H](Cc1c[nH]cn1)NC(=O)[C@@H](NC(=O)[C@H](CC(=O)O)NC(=O)[C@@H](NC(=O)[C@H](Cc1c[nH]cn1)NC(=O)[C@@H](NC(=O)[C@@H](N)Cc1ccc(O)cc1)C(C)C)C(C)C)C(C)C)C(=O)O",
+      "substrate": "p-NPA",
+      "kcat_km": "0",
+      "secondary_structure": "Beta-sheet/Amiloid-like structures",
+      "mechanism": "/"
+    }
+  },
+  {
+    "id": "catalytic_prot:79",
+    "dataset": "catalytic_prot",
+    "sequence": "YVDVDVHV",
+    "n_terminal": "Acetylated",
+    "c_terminal": "Amidated",
+    "labels": [
+      "catalytic"
+    ],
+    "doi": "10.1371/journal.pone.0143948",
+    "pubmed_id": null,
+    "paper_url": null,
+    "pdf_url": null,
+    "metadata": {
+      "smiles": "CC(C)[C@H](NC(=O)[C@H](Cc1c[nH]cn1)NC(=O)[C@@H](NC(=O)[C@H](CC(=O)O)NC(=O)[C@@H](NC(=O)[C@H](CC(=O)O)NC(=O)[C@@H](NC(=O)[C@@H](N)Cc1ccc(O)cc1)C(C)C)C(C)C)C(C)C)C(=O)O",
+      "substrate": "p-NPA",
+      "kcat_km": "0",
+      "secondary_structure": "Beta-sheet/Amiloid-like structures",
+      "mechanism": "/"
+    }
+  },
+  {
+    "id": "catalytic_prot:80",
+    "dataset": "catalytic_prot",
+    "sequence": "YVDVHVDV",
+    "n_terminal": "Acetylated",
+    "c_terminal": "Amidated",
+    "labels": [
+      "catalytic"
+    ],
+    "doi": "10.1371/journal.pone.0143948",
+    "pubmed_id": null,
+    "paper_url": null,
+    "pdf_url": null,
+    "metadata": {
+      "smiles": "CC(C)[C@H](NC(=O)[C@H](CC(=O)O)NC(=O)[C@@H](NC(=O)[C@H](Cc1c[nH]cn1)NC(=O)[C@@H](NC(=O)[C@H](CC(=O)O)NC(=O)[C@@H](NC(=O)[C@@H](N)Cc1ccc(O)cc1)C(C)C)C(C)C)C(C)C)C(=O)O",
+      "substrate": "p-NPA",
+      "kcat_km": "0",
+      "secondary_structure": "Beta-sheet/Amiloid-like structures",
+      "mechanism": "/"
+    }
+  },
+  {
+    "id": "catalytic_prot:81",
+    "dataset": "catalytic_prot",
+    "sequence": "YVHVDVDV",
+    "n_terminal": "Acetylated",
+    "c_terminal": "Amidated",
+    "labels": [
+      "catalytic"
+    ],
+    "doi": "10.1371/journal.pone.0143948",
+    "pubmed_id": null,
+    "paper_url": null,
+    "pdf_url": null,
+    "metadata": {
+      "smiles": "CC(C)[C@H](NC(=O)[C@H](CC(=O)O)NC(=O)[C@@H](NC(=O)[C@H](CC(=O)O)NC(=O)[C@@H](NC(=O)[C@H](Cc1c[nH]cn1)NC(=O)[C@@H](NC(=O)[C@@H](N)Cc1ccc(O)cc1)C(C)C)C(C)C)C(C)C)C(=O)O",
+      "substrate": "p-NPA",
+      "kcat_km": "0",
+      "secondary_structure": "Beta-sheet/Amiloid-like structures",
+      "mechanism": "/"
+    }
+  },
+  {
+    "id": "catalytic_prot:82",
+    "dataset": "catalytic_prot",
+    "sequence": "YVDVHVAV",
+    "n_terminal": "Acetylated",
+    "c_terminal": "Amidated",
+    "labels": [
+      "catalytic"
+    ],
+    "doi": "10.1371/journal.pone.0143948",
+    "pubmed_id": null,
+    "paper_url": null,
+    "pdf_url": null,
+    "metadata": {
+      "smiles": "CC(C)[C@H](NC(=O)[C@H](C)NC(=O)[C@@H](NC(=O)[C@H](Cc1c[nH]cn1)NC(=O)[C@@H](NC(=O)[C@H](CC(=O)O)NC(=O)[C@@H](NC(=O)[C@@H](N)Cc1ccc(O)cc1)C(C)C)C(C)C)C(C)C)C(=O)O",
+      "substrate": "p-NPA",
+      "kcat_km": "0",
+      "secondary_structure": "Beta-sheet/Amiloid-like structures",
+      "mechanism": "/"
+    }
+  },
+  {
+    "id": "catalytic_prot:83",
+    "dataset": "catalytic_prot",
+    "sequence": "YVAVDVHV",
+    "n_terminal": "Acetylated",
+    "c_terminal": "Amidated",
+    "labels": [
+      "catalytic"
+    ],
+    "doi": "10.1371/journal.pone.0143948",
+    "pubmed_id": null,
+    "paper_url": null,
+    "pdf_url": null,
+    "metadata": {
+      "smiles": "CC(C)[C@H](NC(=O)[C@H](Cc1c[nH]cn1)NC(=O)[C@@H](NC(=O)[C@H](CC(=O)O)NC(=O)[C@@H](NC(=O)[C@H](C)NC(=O)[C@@H](NC(=O)[C@@H](N)Cc1ccc(O)cc1)C(C)C)C(C)C)C(C)C)C(=O)O",
+      "substrate": "p-NPA",
+      "kcat_km": "0",
+      "secondary_structure": "Beta-sheet/Amiloid-like structures",
+      "mechanism": "/"
+    }
+  },
+  {
+    "id": "catalytic_prot:84",
+    "dataset": "catalytic_prot",
+    "sequence": "YVHVDVAV",
+    "n_terminal": "Acetylated",
+    "c_terminal": "Amidated",
+    "labels": [
+      "catalytic"
+    ],
+    "doi": "10.1371/journal.pone.0143948",
+    "pubmed_id": null,
+    "paper_url": null,
+    "pdf_url": null,
+    "metadata": {
+      "smiles": "CC(C)[C@H](NC(=O)[C@H](C)NC(=O)[C@@H](NC(=O)[C@H](CC(=O)O)NC(=O)[C@@H](NC(=O)[C@H](Cc1c[nH]cn1)NC(=O)[C@@H](NC(=O)[C@@H](N)Cc1ccc(O)cc1)C(C)C)C(C)C)C(C)C)C(=O)O",
+      "substrate": "p-NPA",
+      "kcat_km": "0",
+      "secondary_structure": "Beta-sheet/Amiloid-like structures",
+      "mechanism": "/"
+    }
+  },
+  {
+    "id": "catalytic_prot:85",
+    "dataset": "catalytic_prot",
+    "sequence": "YVHVAVDV",
+    "n_terminal": "Acetylated",
+    "c_terminal": "Amidated",
+    "labels": [
+      "catalytic"
+    ],
+    "doi": "10.1371/journal.pone.0143948",
+    "pubmed_id": null,
+    "paper_url": null,
+    "pdf_url": null,
+    "metadata": {
+      "smiles": "CC(C)[C@H](NC(=O)[C@H](CC(=O)O)NC(=O)[C@@H](NC(=O)[C@H](C)NC(=O)[C@@H](NC(=O)[C@H](Cc1c[nH]cn1)NC(=O)[C@@H](NC(=O)[C@@H](N)Cc1ccc(O)cc1)C(C)C)C(C)C)C(C)C)C(=O)O",
+      "substrate": "p-NPA",
+      "kcat_km": "0",
+      "secondary_structure": "Beta-sheet/Amiloid-like structures",
+      "mechanism": "/"
+    }
+  },
+  {
+    "id": "catalytic_prot:86",
+    "dataset": "catalytic_prot",
+    "sequence": "YVAVHVDV",
+    "n_terminal": "Acetylated",
+    "c_terminal": "Amidated",
+    "labels": [
+      "catalytic"
+    ],
+    "doi": "10.1371/journal.pone.0143948",
+    "pubmed_id": null,
+    "paper_url": null,
+    "pdf_url": null,
+    "metadata": {
+      "smiles": "CC(C)[C@H](NC(=O)[C@H](CC(=O)O)NC(=O)[C@@H](NC(=O)[C@H](Cc1c[nH]cn1)NC(=O)[C@@H](NC(=O)[C@H](C)NC(=O)[C@@H](NC(=O)[C@@H](N)Cc1ccc(O)cc1)C(C)C)C(C)C)C(C)C)C(=O)O",
+      "substrate": "p-NPA",
+      "kcat_km": "0",
+      "secondary_structure": "Beta-sheet/Amiloid-like structures",
+      "mechanism": "/"
+    }
+  },
+  {
+    "id": "catalytic_prot:87",
+    "dataset": "catalytic_prot",
+    "sequence": "GGAACASAD",
+    "n_terminal": "Free",
+    "c_terminal": "Free",
+    "labels": [
+      "catalytic"
+    ],
+    "doi": "https://doi.org/10.1016/j.catcom.2014.10.024",
+    "pubmed_id": null,
+    "paper_url": null,
+    "pdf_url": null,
+    "metadata": {
+      "smiles": "C[C@H](NC(=O)CNC(=O)CN)C(=O)N[C@@H](C)C(=O)N[C@@H](CS)C(=O)N[C@@H](C)C(=O)N[C@@H](CO)C(=O)N[C@@H](C)C(=O)N[C@@H](CC(=O)O)C(=O)O",
+      "substrate": "p-NPA",
+      "kcat_km": "2.5",
+      "secondary_structure": "Not analyzed",
+      "mechanism": "Catalytic triad residues"
+    }
+  },
+  {
+    "id": "catalytic_prot:88",
+    "dataset": "catalytic_prot",
+    "sequence": "GGAACAHAD",
+    "n_terminal": "Free",
+    "c_terminal": "Free",
+    "labels": [
+      "catalytic"
+    ],
+    "doi": "https://doi.org/10.1016/j.catcom.2014.10.024",
+    "pubmed_id": null,
+    "paper_url": null,
+    "pdf_url": null,
+    "metadata": {
+      "smiles": "C[C@H](NC(=O)CNC(=O)CN)C(=O)N[C@@H](C)C(=O)N[C@@H](CS)C(=O)N[C@@H](C)C(=O)N[C@@H](Cc1c[nH]cn1)C(=O)N[C@@H](C)C(=O)N[C@@H](CC(=O)O)C(=O)O",
+      "substrate": "p-NPA",
+      "kcat_km": "3.75",
+      "secondary_structure": "Not analyzed",
+      "mechanism": "Catalytic triad residues"
+    }
+  },
+  {
+    "id": "catalytic_prot:89",
+    "dataset": "catalytic_prot",
+    "sequence": "RGAACASAD",
+    "n_terminal": "Free",
+    "c_terminal": "Free",
+    "labels": [
+      "catalytic"
+    ],
+    "doi": "https://doi.org/10.1016/j.catcom.2014.10.024",
+    "pubmed_id": null,
+    "paper_url": null,
+    "pdf_url": null,
+    "metadata": {
+      "smiles": "C[C@H](NC(=O)CNC(=O)[C@@H](N)CCCNC(=N)N)C(=O)N[C@@H](C)C(=O)N[C@@H](CS)C(=O)N[C@@H](C)C(=O)N[C@@H](CO)C(=O)N[C@@H](C)C(=O)N[C@@H](CC(=O)O)C(=O)O",
+      "substrate": "p-NPA",
+      "kcat_km": "3.33",
+      "secondary_structure": "Not analyzed",
+      "mechanism": "Catalytic triad residues"
+    }
+  },
+  {
+    "id": "catalytic_prot:90",
+    "dataset": "catalytic_prot",
+    "sequence": "RGAACAHAD",
+    "n_terminal": "Free",
+    "c_terminal": "Free",
+    "labels": [
+      "catalytic"
+    ],
+    "doi": "https://doi.org/10.1016/j.catcom.2014.10.024",
+    "pubmed_id": null,
+    "paper_url": null,
+    "pdf_url": null,
+    "metadata": {
+      "smiles": "C[C@H](NC(=O)CNC(=O)[C@@H](N)CCCNC(=N)N)C(=O)N[C@@H](C)C(=O)N[C@@H](CS)C(=O)N[C@@H](C)C(=O)N[C@@H](Cc1c[nH]cn1)C(=O)N[C@@H](C)C(=O)N[C@@H](CC(=O)O)C(=O)O",
+      "substrate": "p-NPA",
+      "kcat_km": "2.92",
+      "secondary_structure": "Not analyzed",
+      "mechanism": "Catalytic triad residues"
+    }
+  },
+  {
+    "id": "catalytic_prot:91",
+    "dataset": "catalytic_prot",
+    "sequence": "RGAFCFHAD",
+    "n_terminal": "Free",
+    "c_terminal": "Free",
+    "labels": [
+      "catalytic"
+    ],
+    "doi": "https://doi.org/10.1016/j.catcom.2014.10.024",
+    "pubmed_id": null,
+    "paper_url": null,
+    "pdf_url": null,
+    "metadata": {
+      "smiles": "C[C@H](NC(=O)CNC(=O)[C@@H](N)CCCNC(=N)N)C(=O)N[C@@H](Cc1ccccc1)C(=O)N[C@@H](CS)C(=O)N[C@@H](Cc1ccccc1)C(=O)N[C@@H](Cc1c[nH]cn1)C(=O)N[C@@H](C)C(=O)N[C@@H](CC(=O)O)C(=O)O",
+      "substrate": "p-NPA",
+      "kcat_km": "4.17",
+      "secondary_structure": "Not analyzed",
+      "mechanism": "Catalytic triad residues"
+    }
+  },
+  {
+    "id": "catalytic_prot:92",
+    "dataset": "catalytic_prot",
+    "sequence": "KGAFCFHAD",
+    "n_terminal": "Free",
+    "c_terminal": "Free",
+    "labels": [
+      "catalytic"
+    ],
+    "doi": "https://doi.org/10.1016/j.catcom.2014.10.024",
+    "pubmed_id": null,
+    "paper_url": null,
+    "pdf_url": null,
+    "metadata": {
+      "smiles": "C[C@H](NC(=O)CNC(=O)[C@@H](N)CCCCN)C(=O)N[C@@H](Cc1ccccc1)C(=O)N[C@@H](CS)C(=O)N[C@@H](Cc1ccccc1)C(=O)N[C@@H](Cc1c[nH]cn1)C(=O)N[C@@H](C)C(=O)N[C@@H](CC(=O)O)C(=O)O",
+      "substrate": "p-NPA",
+      "kcat_km": "4",
+      "secondary_structure": "Not analyzed",
+      "mechanism": "Catalytic triad residues"
+    }
+  },
+  {
+    "id": "catalytic_prot:93",
+    "dataset": "catalytic_prot",
+    "sequence": "RDFHFCAGD",
+    "n_terminal": "Free",
+    "c_terminal": "Free",
+    "labels": [
+      "catalytic"
+    ],
+    "doi": "https://doi.org/10.1016/j.catcom.2014.10.024",
+    "pubmed_id": null,
+    "paper_url": null,
+    "pdf_url": null,
+    "metadata": {
+      "smiles": "C[C@H](NC(=O)[C@H](CS)NC(=O)[C@H](Cc1ccccc1)NC(=O)[C@H](Cc1c[nH]cn1)NC(=O)[C@H](Cc1ccccc1)NC(=O)[C@H](CC(=O)O)NC(=O)[C@@H](N)CCCNC(=N)N)C(=O)NCC(=O)N[C@@H](CC(=O)O)C(=O)O",
+      "substrate": "p-NPA",
+      "kcat_km": "2.83",
+      "secondary_structure": "Not analyzed",
+      "mechanism": "Catalytic triad residues"
+    }
+  },
+  {
+    "id": "catalytic_prot:94",
+    "dataset": "catalytic_prot",
+    "sequence": "RDFNFCAGD",
+    "n_terminal": "Free",
+    "c_terminal": "Free",
+    "labels": [
+      "catalytic"
+    ],
+    "doi": "https://doi.org/10.1016/j.catcom.2014.10.024",
+    "pubmed_id": null,
+    "paper_url": null,
+    "pdf_url": null,
+    "metadata": {
+      "smiles": "C[C@H](NC(=O)[C@H](CS)NC(=O)[C@H](Cc1ccccc1)NC(=O)[C@H](CC(N)=O)NC(=O)[C@H](Cc1ccccc1)NC(=O)[C@H](CC(=O)O)NC(=O)[C@@H](N)CCCNC(=N)N)C(=O)NCC(=O)N[C@@H](CC(=O)O)C(=O)O",
+      "substrate": "p-NPA",
+      "kcat_km": "2.08",
+      "secondary_structure": "Not analyzed",
+      "mechanism": "Catalytic triad residues"
+    }
+  },
+  {
+    "id": "catalytic_prot:95",
+    "dataset": "catalytic_prot",
+    "sequence": "RGGHFCGPGPGHGHGD",
+    "n_terminal": "Free",
+    "c_terminal": "Free",
+    "labels": [
+      "catalytic"
+    ],
+    "doi": "https://doi.org/10.1016/j.catcom.2014.10.024",
+    "pubmed_id": null,
+    "paper_url": null,
+    "pdf_url": null,
+    "metadata": {
+      "smiles": "N=C(N)NCCC[C@H](N)C(=O)NCC(=O)NCC(=O)N[C@@H](Cc1c[nH]cn1)C(=O)N[C@@H](Cc1ccccc1)C(=O)N[C@@H](CS)C(=O)NCC(=O)N1CCC[C@H]1C(=O)NCC(=O)N1CCC[C@H]1C(=O)NCC(=O)N[C@@H](Cc1c[nH]cn1)C(=O)NCC(=O)N[C@@H](Cc1c[nH]cn1)C(=O)NCC(=O)N[C@@H](CC(=O)O)C(=O)O",
+      "substrate": "p-NPA",
+      "kcat_km": "4.58",
+      "secondary_structure": "Not analyzed",
+      "mechanism": "Catalytic triad residues"
+    }
+  },
+  {
+    "id": "catalytic_prot:96",
+    "dataset": "catalytic_prot",
+    "sequence": "RPFMCTWSYCGKRFTRSDELQRHKRTHTGEK",
+    "n_terminal": "Free",
+    "c_terminal": "Amidated",
+    "labels": [
+      "catalytic"
+    ],
+    "doi": "10.1039/c9cy01364d",
+    "pubmed_id": null,
+    "paper_url": null,
+    "pdf_url": null,
+    "metadata": {
+      "smiles": "CSCC[C@H](NC(=O)[C@H](Cc1ccccc1)NC(=O)[C@@H]1CCCN1C(=O)[C@@H](N)CCCNC(=N)N)C(=O)N[C@@H](CS)C(=O)N[C@H](C(=O)N[C@@H](Cc1c[nH]c2ccccc12)C(=O)N[C@@H](CO)C(=O)N[C@@H](Cc1ccc(O)cc1)C(=O)N[C@@H](CS)C(=O)NCC(=O)N[C@@H](CCCCN)C(=O)N[C@@H](CCCNC(=N)N)C(=O)N[C@@H](Cc1ccccc1)C(=O)N[C@H](C(=O)N[C@@H](CCCNC(=N)N)C(=O)N[C@@H](CO)C(=O)N[C@@H](CC(=O)O)C(=O)N[C@@H](CCC(=O)O)C(=O)N[C@@H](CC(C)C)C(=O)N[C@@H](CCC(N)=O)C(=O)N[C@@H](CCCNC(=N)N)C(=O)N[C@@H](Cc1c[nH]cn1)C(=O)N[C@@H](CCCCN)C(=O)N[C@@H](CCCNC(=N)N)C(=O)N[C@H](C(=O)N[C@@H](Cc1c[nH]cn1)C(=O)N[C@H](C(=O)NCC(=O)N[C@@H](CCC(=O)O)C(=O)N[C@@H](CCCCN)C(=O)O)[C@@H](C)O)[C@@H](C)O)[C@@H](C)O)[C@@H](C)O",
+      "substrate": "p-NPA",
+      "kcat_km": "0.1",
+      "secondary_structure": "Alfa-helix",
+      "mechanism": "Catalytic triad residues"
+    }
+  },
+  {
+    "id": "catalytic_prot:97",
+    "dataset": "catalytic_prot",
+    "sequence": "CFEFSFHFP",
+    "n_terminal": "Acetylated",
+    "c_terminal": "Amidated",
+    "labels": [
+      "catalytic"
+    ],
+    "doi": "https://doi.org/10.1016/j.colsurfb.2021.111751",
+    "pubmed_id": null,
+    "paper_url": null,
+    "pdf_url": null,
+    "metadata": {
+      "smiles": "N[C@@H](CS)C(=O)N[C@@H](Cc1ccccc1)C(=O)N[C@@H](CCC(=O)O)C(=O)N[C@@H](Cc1ccccc1)C(=O)N[C@@H](CO)C(=O)N[C@@H](Cc1ccccc1)C(=O)N[C@@H](Cc1c[nH]cn1)C(=O)N[C@@H](Cc1ccccc1)C(=O)N1CCC[C@H]1C(=O)O",
+      "substrate": "p-NPA",
+      "kcat_km": "0.19",
+      "secondary_structure": "Beta-sheet/Fibrils",
+      "mechanism": "Catalytic triad residues"
+    }
+  },
+  {
+    "id": "catalytic_prot:98",
+    "dataset": "catalytic_prot",
+    "sequence": "CFHFEFSFP",
+    "n_terminal": "Acetylated",
+    "c_terminal": "Amidated",
+    "labels": [
+      "catalytic"
+    ],
+    "doi": "https://doi.org/10.1016/j.colsurfb.2021.111751",
+    "pubmed_id": null,
+    "paper_url": null,
+    "pdf_url": null,
+    "metadata": {
+      "smiles": "N[C@@H](CS)C(=O)N[C@@H](Cc1ccccc1)C(=O)N[C@@H](Cc1c[nH]cn1)C(=O)N[C@@H](Cc1ccccc1)C(=O)N[C@@H](CCC(=O)O)C(=O)N[C@@H](Cc1ccccc1)C(=O)N[C@@H](CO)C(=O)N[C@@H](Cc1ccccc1)C(=O)N1CCC[C@H]1C(=O)O",
+      "substrate": "p-NPA",
+      "kcat_km": "0.0759",
+      "secondary_structure": "Beta-sheet/Fibrils",
+      "mechanism": "Catalytic triad residues"
+    }
+  },
+  {
+    "id": "catalytic_prot:99",
+    "dataset": "catalytic_prot",
+    "sequence": "CFEFHFSFP",
+    "n_terminal": "Acetylated",
+    "c_terminal": "Amidated",
+    "labels": [
+      "catalytic"
+    ],
+    "doi": "https://doi.org/10.1016/j.colsurfb.2021.111751",
+    "pubmed_id": null,
+    "paper_url": null,
+    "pdf_url": null,
+    "metadata": {
+      "smiles": "N[C@@H](CS)C(=O)N[C@@H](Cc1ccccc1)C(=O)N[C@@H](CCC(=O)O)C(=O)N[C@@H](Cc1ccccc1)C(=O)N[C@@H](Cc1c[nH]cn1)C(=O)N[C@@H](Cc1ccccc1)C(=O)N[C@@H](CO)C(=O)N[C@@H](Cc1ccccc1)C(=O)N1CCC[C@H]1C(=O)O",
+      "substrate": "p-NPA",
+      "kcat_km": "0.0408",
+      "secondary_structure": "Beta-sheet/Fibrils",
+      "mechanism": "Catalytic triad residues"
+    }
+  },
+  {
+    "id": "catalytic_prot:100",
+    "dataset": "catalytic_prot",
+    "sequence": "HYHYHYH",
+    "n_terminal": "Acetylated",
+    "c_terminal": "Amidated",
+    "labels": [
+      "catalytic"
+    ],
+    "doi": "https://doi.org/10.1021/acscatal.0c03093",
+    "pubmed_id": null,
+    "paper_url": null,
+    "pdf_url": null,
+    "metadata": {
+      "smiles": "N[C@@H](Cc1c[nH]cn1)C(=O)N[C@@H](Cc1ccc(O)cc1)C(=O)N[C@@H](Cc1c[nH]cn1)C(=O)N[C@@H](Cc1ccc(O)cc1)C(=O)N[C@@H](Cc1c[nH]cn1)C(=O)N[C@@H](Cc1ccc(O)cc1)C(=O)N[C@@H](Cc1c[nH]cn1)C(=O)O",
+      "substrate": "p-NPA",
+      "kcat_km": "1.26",
+      "secondary_structure": "Beta-sheet/Amiloid-like structures",
+      "mechanism": "Histidine"
+    }
+  },
+  {
+    "id": "catalytic_prot:101",
+    "dataset": "catalytic_prot",
+    "sequence": "YHYHYHYH",
+    "n_terminal": "Acetylated",
+    "c_terminal": "Amidated",
+    "labels": [
+      "catalytic"
+    ],
+    "doi": "https://doi.org/10.1021/acscatal.0c03093",
+    "pubmed_id": null,
+    "paper_url": null,
+    "pdf_url": null,
+    "metadata": {
+      "smiles": "N[C@@H](Cc1ccc(O)cc1)C(=O)N[C@@H](Cc1c[nH]cn1)C(=O)N[C@@H](Cc1ccc(O)cc1)C(=O)N[C@@H](Cc1c[nH]cn1)C(=O)N[C@@H](Cc1ccc(O)cc1)C(=O)N[C@@H](Cc1c[nH]cn1)C(=O)N[C@@H](Cc1ccc(O)cc1)C(=O)N[C@@H](Cc1c[nH]cn1)C(=O)O",
+      "substrate": "p-NPA",
+      "kcat_km": "1.36",
+      "secondary_structure": "Beta-sheet/Amiloid-like structures",
+      "mechanism": "Histidine"
+    }
+  },
+  {
+    "id": "catalytic_prot:102",
+    "dataset": "catalytic_prot",
+    "sequence": "HYHYHYHYH",
+    "n_terminal": "Acetylated",
+    "c_terminal": "Amidated",
+    "labels": [
+      "catalytic"
+    ],
+    "doi": "https://doi.org/10.1021/acscatal.0c03093",
+    "pubmed_id": null,
+    "paper_url": null,
+    "pdf_url": null,
+    "metadata": {
+      "smiles": "N[C@@H](Cc1c[nH]cn1)C(=O)N[C@@H](Cc1ccc(O)cc1)C(=O)N[C@@H](Cc1c[nH]cn1)C(=O)N[C@@H](Cc1ccc(O)cc1)C(=O)N[C@@H](Cc1c[nH]cn1)C(=O)N[C@@H](Cc1ccc(O)cc1)C(=O)N[C@@H](Cc1c[nH]cn1)C(=O)N[C@@H](Cc1ccc(O)cc1)C(=O)N[C@@H](Cc1c[nH]cn1)C(=O)O",
+      "substrate": "p-NPA",
+      "kcat_km": "1.64",
+      "secondary_structure": "Beta-sheet/Amiloid-like structures",
+      "mechanism": "Histidine"
+    }
+  },
+  {
+    "id": "catalytic_prot:103",
+    "dataset": "catalytic_prot",
+    "sequence": "DLRSCTACAVNA",
+    "n_terminal": "Free",
+    "c_terminal": "Free",
+    "labels": [
+      "catalytic"
+    ],
+    "doi": "https://doi.org/10.1021/ja509393p",
+    "pubmed_id": null,
+    "paper_url": null,
+    "pdf_url": null,
+    "metadata": {
+      "smiles": "CC(C)C[C@H](NC(=O)[C@@H](N)CC(=O)O)C(=O)N[C@@H](CCCNC(=N)N)C(=O)N[C@@H](CO)C(=O)N[C@@H](CS)C(=O)N[C@H](C(=O)N[C@@H](C)C(=O)N[C@@H](CS)C(=O)N[C@@H](C)C(=O)N[C@H](C(=O)N[C@@H](CC(N)=O)C(=O)N[C@@H](C)C(=O)O)C(C)C)[C@@H](C)O",
+      "substrate": "p-NPA",
+      "kcat_km": null,
+      "secondary_structure": "Not analyzed",
+      "mechanism": "Catalytic triad residues"
+    }
+  },
+  {
+    "id": "catalytic_prot:104",
+    "dataset": "catalytic_prot",
+    "sequence": "KVYFSIPWRVPM",
+    "n_terminal": "Free",
+    "c_terminal": "Amidated",
+    "labels": [
+      "catalytic"
+    ],
+    "doi": "10.1039/D1SC04420F",
+    "pubmed_id": null,
+    "paper_url": null,
+    "pdf_url": null,
+    "metadata": {
+      "smiles": "CC[C@H](C)[C@H](NC(=O)[C@H](CO)NC(=O)[C@H](Cc1ccccc1)NC(=O)[C@H](Cc1ccc(O)cc1)NC(=O)[C@@H](NC(=O)[C@@H](N)CCCCN)C(C)C)C(=O)N1CCC[C@H]1C(=O)N[C@@H](Cc1c[nH]c2ccccc12)C(=O)N[C@@H](CCCNC(=N)N)C(=O)N[C@H](C(=O)N1CCC[C@H]1C(=O)N[C@@H](CCSC)C(=O)O)C(C)C",
+      "substrate": "p-NPP",
+      "kcat_km": "4",
+      "secondary_structure": "Beta-hairpin-like structure/PP-II",
+      "mechanism": null
+    }
+  },
+  {
+    "id": "catalytic_prot:105",
+    "dataset": "catalytic_prot",
+    "sequence": "GSPLAQQIKNIHSFIHQAKAAGRMDEVRTLQENLHQLMHEYFQQSD",
+    "n_terminal": "Free",
+    "c_terminal": "Free",
+    "labels": [
+      "catalytic"
+    ],
+    "doi": "https://doi.org/10.1021/bi201881p",
+    "pubmed_id": null,
+    "paper_url": null,
+    "pdf_url": null,
+    "metadata": {
+      "smiles": "CC[C@H](C)[C@H](NC(=O)[C@H](CCC(N)=O)NC(=O)[C@H](CCC(N)=O)NC(=O)[C@H](C)NC(=O)[C@H](CC(C)C)NC(=O)[C@@H]1CCCN1C(=O)[C@H](CO)NC(=O)CN)C(=O)N[C@@H](CCCCN)C(=O)N[C@@H](CC(N)=O)C(=O)N[C@H](C(=O)N[C@@H](Cc1c[nH]cn1)C(=O)N[C@@H](CO)C(=O)N[C@@H](Cc1ccccc1)C(=O)N[C@H](C(=O)N[C@@H](Cc1c[nH]cn1)C(=O)N[C@@H](CCC(N)=O)C(=O)N[C@@H](C)C(=O)N[C@@H](CCCCN)C(=O)N[C@@H](C)C(=O)N[C@@H](C)C(=O)NCC(=O)N[C@@H](CCCNC(=N)N)C(=O)N[C@@H](CCSC)C(=O)N[C@@H](CC(=O)O)C(=O)N[C@@H](CCC(=O)O)C(=O)N[C@H](C(=O)N[C@@H](CCCNC(=N)N)C(=O)N[C@H](C(=O)N[C@@H](CC(C)C)C(=O)N[C@@H](CCC(N)=O)C(=O)N[C@@H](CCC(=O)O)C(=O)N[C@@H](CC(N)=O)C(=O)N[C@@H](CC(C)C)C(=O)N[C@@H](Cc1c[nH]cn1)C(=O)N[C@@H](CCC(N)=O)C(=O)N[C@@H](CC(C)C)C(=O)N[C@@H](CCSC)C(=O)N[C@@H](Cc1c[nH]cn1)C(=O)N[C@@H](CCC(=O)O)C(=O)N[C@@H](Cc1ccc(O)cc1)C(=O)N[C@@H](Cc1ccccc1)C(=O)N[C@@H](CCC(N)=O)C(=O)N[C@@H](CCC(N)=O)C(=O)N[C@@H](CO)C(=O)N[C@@H](CC(=O)O)C(=O)O)[C@@H](C)O)C(C)C)[C@@H](C)CC)[C@@H](C)CC",
+      "substrate": "p-NPP",
+      "kcat_km": "15",
+      "secondary_structure": "Alfa-helix",
+      "mechanism": "Zn2+ dependent"
+    }
+  },
+  {
+    "id": "catalytic_prot:106",
+    "dataset": "catalytic_prot",
+    "sequence": "RLVFFAH",
+    "n_terminal": "Acetylated",
+    "c_terminal": "Amidated",
+    "labels": [
+      "catalytic"
+    ],
+    "doi": "https://doi.org/10.1039/D2SC03205H",
+    "pubmed_id": null,
+    "paper_url": null,
+    "pdf_url": null,
+    "metadata": {
+      "smiles": "CC(C)C[C@H](NC(=O)[C@@H](N)CCCNC(=N)N)C(=O)N[C@H](C(=O)N[C@@H](Cc1ccccc1)C(=O)N[C@@H](Cc1ccccc1)C(=O)N[C@@H](C)C(=O)N[C@@H](Cc1c[nH]cn1)C(=O)O)C(C)C",
+      "substrate": "p-NPP",
+      "kcat_km": "1.58",
+      "secondary_structure": "Beta-sheet/Nanotubes",
+      "mechanism": "Histidine"
+    }
+  },
+  {
+    "id": "catalytic_prot:107",
+    "dataset": "catalytic_prot",
+    "sequence": "RLVFFAH",
+    "n_terminal": "Acetylated",
+    "c_terminal": "Amidated",
+    "labels": [
+      "catalytic"
+    ],
+    "doi": "https://doi.org/10.1039/D2SC03205H",
+    "pubmed_id": null,
+    "paper_url": null,
+    "pdf_url": null,
+    "metadata": {
+      "smiles": "CC(C)C[C@H](NC(=O)[C@@H](N)CCCNC(=N)N)C(=O)N[C@H](C(=O)N[C@@H](Cc1ccccc1)C(=O)N[C@@H](Cc1ccccc1)C(=O)N[C@@H](C)C(=O)N[C@@H](Cc1c[nH]cn1)C(=O)O)C(C)C",
+      "substrate": "HPNPP",
+      "kcat_km": "63",
+      "secondary_structure": "Beta-sheet/Nanotubes",
+      "mechanism": "Histidine"
+    }
+  },
+  {
+    "id": "catalytic_prot:108",
+    "dataset": "catalytic_prot",
+    "sequence": "RLVFFAH",
+    "n_terminal": "Acetylated",
+    "c_terminal": "Amidated",
+    "labels": [
+      "catalytic"
+    ],
+    "doi": "https://doi.org/10.1039/D2SC03205H",
+    "pubmed_id": null,
+    "paper_url": null,
+    "pdf_url": null,
+    "metadata": {
+      "smiles": "CC(C)C[C@H](NC(=O)[C@@H](N)CCCNC(=N)N)C(=O)N[C@H](C(=O)N[C@@H](Cc1ccccc1)C(=O)N[C@@H](Cc1ccccc1)C(=O)N[C@@H](C)C(=O)N[C@@H](Cc1c[nH]cn1)C(=O)O)C(C)C",
+      "substrate": "BNPP",
+      "kcat_km": "0.57",
+      "secondary_structure": "Beta-sheet/Nanotubes",
+      "mechanism": "Histidine"
+    }
+  },
+  {
+    "id": "catalytic_prot:109",
+    "dataset": "catalytic_prot",
+    "sequence": "RLVFFAL",
+    "n_terminal": "Acetylated",
+    "c_terminal": "Free",
+    "labels": [
+      "catalytic"
+    ],
+    "doi": "https://doi.org/10.1039/D2SC03205H",
+    "pubmed_id": null,
+    "paper_url": null,
+    "pdf_url": null,
+    "metadata": {
+      "smiles": "CC(C)C[C@H](NC(=O)[C@H](C)NC(=O)[C@H](Cc1ccccc1)NC(=O)[C@H](Cc1ccccc1)NC(=O)[C@@H](NC(=O)[C@H](CC(C)C)NC(=O)[C@@H](N)CCCNC(=N)N)C(C)C)C(=O)O",
+      "substrate": "p-NPP",
+      "kcat_km": "0",
+      "secondary_structure": "Beta-sheet",
+      "mechanism": "/"
+    }
+  },
+  {
+    "id": "catalytic_prot:110",
+    "dataset": "catalytic_prot",
+    "sequence": "HLVFFAL",
+    "n_terminal": "Acetylated",
+    "c_terminal": "Free",
+    "labels": [
+      "catalytic"
+    ],
+    "doi": "https://doi.org/10.1039/D2SC03205H",
+    "pubmed_id": null,
+    "paper_url": null,
+    "pdf_url": null,
+    "metadata": {
+      "smiles": "CC(C)C[C@H](NC(=O)[C@H](C)NC(=O)[C@H](Cc1ccccc1)NC(=O)[C@H](Cc1ccccc1)NC(=O)[C@@H](NC(=O)[C@H](CC(C)C)NC(=O)[C@@H](N)Cc1c[nH]cn1)C(C)C)C(=O)O",
+      "substrate": "p-NPP",
+      "kcat_km": "0",
+      "secondary_structure": "Beta-sheet",
+      "mechanism": "/"
+    }
+  }
+]

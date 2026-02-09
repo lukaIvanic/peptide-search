@@ -26,6 +26,23 @@ const SOURCE_BADGES = {
     upload: 'sw-badge sw-badge--source',
 };
 
+const SOURCE_LABELS_SHORT = {
+    pmc: 'PMC',
+    arxiv: 'ARXIV',
+    europepmc: 'EPMC',
+    semanticscholar: 'SEM SCH',
+    upload: 'UPLOAD',
+};
+
+function getSourceLabel(source, { short = false } = {}) {
+    if (!source) return 'N/A';
+    const key = source.toLowerCase();
+    if (short && SOURCE_LABELS_SHORT[key]) {
+        return SOURCE_LABELS_SHORT[key];
+    }
+    return source.toUpperCase();
+}
+
 // Status display config (no emojis, subtle colors)
 const STATUS_CONFIG = {
     queued: { label: 'Queued', badge: 'sw-badge--queued', dot: 'sw-dot sw-dot--queued' },
@@ -34,8 +51,39 @@ const STATUS_CONFIG = {
     validating: { label: 'Validating', badge: 'sw-badge--processing', dot: 'sw-dot sw-dot--processing' },
     stored: { label: 'Done', badge: 'sw-badge--done', dot: 'sw-dot sw-dot--done' },
     failed: { label: 'Failed', badge: 'sw-badge--failed', dot: 'sw-dot sw-dot--failed' },
-    cancelled: { label: 'Cancelled', badge: 'sw-badge--warn', dot: 'sw-dot sw-dot--muted' },
+    cancelled: { label: 'Cancelled', badge: 'sw-badge--warn', dot: 'sw-dot sw-dot--neutral' },
 };
+
+function formatFailureReason(reason) {
+    if (!reason) return null;
+    const text = String(reason);
+    const lower = text.toLowerCase();
+    if (lower.includes('http 403')) {
+        return {
+            title: 'Access blocked (HTTP 403)',
+            detail: 'Publisher blocked this URL. Try open-access search or upload a PDF.',
+        };
+    }
+    if (lower.includes('no source url resolved') || lower.includes('no pdf url resolved')) {
+        return {
+            title: 'No source URL found',
+            detail: 'We could not find a usable PDF/HTML source. Try open-access search or upload a PDF.',
+        };
+    }
+    if (lower.includes('openai returned empty response') || lower.includes('stream has ended unexpectedly')) {
+        return {
+            title: 'Provider response was empty',
+            detail: 'Retry or upload a PDF for better reliability.',
+        };
+    }
+    if (lower.startsWith('provider error')) {
+        return {
+            title: 'Provider error',
+            detail: text.replace(/^provider error:\s*/i, '') || 'The provider failed. Retry or upload a PDF.',
+        };
+    }
+    return { title: text, detail: null };
+}
 
 /**
  * Render provider badge in header.
@@ -63,16 +111,16 @@ export function renderConnectionBadge(status) {
     if (!badge) return;
 
     const config = {
-        connected: { label: 'Connected', text: 'text-emerald-700', dot: 'bg-emerald-500' },
-        connecting: { label: 'Connecting', text: 'text-amber-700', dot: 'bg-amber-500' },
-        reconnecting: { label: 'Reconnecting', text: 'text-amber-700', dot: 'bg-amber-500' },
-        disconnected: { label: 'Disconnected', text: 'text-red-700', dot: 'bg-red-500' },
+        connected: { label: 'Connected', dot: 'sw-dot sw-dot--done' },
+        connecting: { label: 'Connecting', dot: 'sw-dot sw-dot--processing' },
+        reconnecting: { label: 'Reconnecting', dot: 'sw-dot sw-dot--processing' },
+        disconnected: { label: 'Disconnected', dot: 'sw-dot sw-dot--failed' },
     };
     const entry = config[status] || config.connecting;
     badge.innerHTML = `
-        <span class="inline-flex items-center gap-1 text-xs ${entry.text}">
-            <span class="w-2 h-2 rounded-full ${entry.dot}"></span>
-            ${entry.label}
+        <span class="inline-flex items-center gap-2 text-xs">
+            <span class="${entry.dot}"></span>
+            <span class="sw-kicker text-[10px] text-slate-500">${entry.label}</span>
         </span>
     `;
 }
@@ -113,10 +161,10 @@ export function renderSearchResults(items, selectedMap, onToggle, isSearching = 
         const key = it.pdf_url || it.url;
         const isSelected = selectedMap.has(key);
         
-        const row = el('div', `py-4 flex items-start gap-3 sw-row ${isSelected ? 'sw-row--selected' : ''}`);
+        const row = el('div', `sw-row list-row py-4 flex items-start gap-3 ${isSelected ? 'sw-row--selected' : ''}`);
         
         // Checkbox
-        const checkbox = el('input', 'mt-1 h-4 w-4 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500');
+        const checkbox = el('input', 'mt-1 h-4 w-4');
         checkbox.type = 'checkbox';
         checkbox.checked = isSelected;
         checkbox.disabled = !it.pdf_url;
@@ -128,7 +176,7 @@ export function renderSearchResults(items, selectedMap, onToggle, isSearching = 
         
         // Title + badges row
         const titleRow = el('div', 'flex items-start gap-2');
-        titleRow.appendChild(el('div', 'text-sm font-medium text-slate-900 flex-1', it.title));
+        titleRow.appendChild(el('div', 'list-title flex-1', it.title));
         
         // Status badges (queued/processing/failed/seen/processed)
         const processingStatuses = new Set(['fetching', 'provider', 'validating']);
@@ -160,13 +208,13 @@ export function renderSearchResults(items, selectedMap, onToggle, isSearching = 
         // Links
         const links = el('div', 'mt-2 flex gap-3');
         if (it.url) {
-            const a = el('a', 'sw-chip text-[10px] text-indigo-600 hover:bg-indigo-50', 'View');
+            const a = el('a', 'sw-chip sw-chip--info text-[10px]', 'View');
             a.href = it.url;
             a.target = '_blank';
             links.appendChild(a);
         }
         if (it.pdf_url) {
-            const a = el('a', 'sw-chip text-[10px] text-emerald-600 hover:bg-emerald-50', 'PDF');
+            const a = el('a', 'sw-chip sw-chip--success text-[10px]', 'PDF');
             a.href = it.pdf_url;
             a.target = '_blank';
             links.appendChild(a);
@@ -204,7 +252,6 @@ export function renderPapersTable(papers, onRowClick, options = {}) {
     const table = $('#papersTable');
     const empty = $('#papersEmpty');
     const emptyMessage = options.emptyMessage || 'No papers yet. Search and extract papers to see them here.';
-    
     table.innerHTML = '';
     
     if (!papers || papers.length === 0) {
@@ -218,7 +265,7 @@ export function renderPapersTable(papers, onRowClick, options = {}) {
     empty.classList.add('hidden');
     
     for (const p of papers) {
-        const row = el('div', 'sw-row px-6 py-4 hover:bg-slate-50 cursor-pointer transition-colors flex items-center gap-4');
+        const row = el('div', 'sw-row list-row sw-row--table px-6 py-4 cursor-pointer');
         row.setAttribute('role', 'button');
         row.setAttribute('tabindex', '0');
         row.setAttribute('aria-label', `Open details for ${p.title}`);
@@ -232,21 +279,26 @@ export function renderPapersTable(papers, onRowClick, options = {}) {
         
         // Status indicator
         const statusConfig = STATUS_CONFIG[p.status] || STATUS_CONFIG.queued;
-        const statusBadge = el('div', 'flex items-center gap-2 w-28 flex-shrink-0');
-        const dot = el('span', `w-2 h-2 rounded-full ${statusConfig.dot}`);
-        statusBadge.appendChild(dot);
-        statusBadge.appendChild(el('span', 'sw-status', statusConfig.label));
+        const statusBadge = el(
+            'span',
+            `sw-badge ${statusConfig.badge} w-28 text-center flex-shrink-0`,
+            statusConfig.label,
+        );
         row.appendChild(statusBadge);
         
         // Source badge
         const sourceBadge = SOURCE_BADGES[p.source] || 'sw-badge sw-badge--source';
-        row.appendChild(el('span', `${sourceBadge} w-20 text-center flex-shrink-0`, p.source?.toUpperCase() || 'N/A'));
+        row.appendChild(el('span', `${sourceBadge} w-20 text-center flex-shrink-0`, getSourceLabel(p.source, { short: true })));
         
         // Title
         const titleWrap = el('div', 'flex-1 min-w-0');
-        titleWrap.appendChild(el('div', 'text-sm font-medium text-slate-900 truncate', p.title));
+        titleWrap.appendChild(el('div', 'list-title truncate', p.title));
         if (p.failure_reason) {
-            titleWrap.appendChild(el('div', 'text-xs text-red-600 truncate', p.failure_reason));
+            const friendly = formatFailureReason(p.failure_reason);
+            const message = friendly?.title || p.failure_reason;
+            const reason = el('div', 'text-xs text-red-600 truncate', message);
+            reason.title = friendly?.detail || p.failure_reason;
+            titleWrap.appendChild(reason);
         }
         row.appendChild(titleWrap);
         
@@ -257,6 +309,8 @@ export function renderPapersTable(papers, onRowClick, options = {}) {
         // Last run time
         const timeStr = p.last_run_at ? new Date(p.last_run_at).toLocaleString() : '—';
         row.appendChild(el('div', 'text-xs text-slate-400 w-36 text-right flex-shrink-0', timeStr));
+
+        // Actions for failed runs are shown in the details drawer only.
         
         table.appendChild(row);
     }
@@ -282,6 +336,9 @@ export function renderQueueStats(stats) {
 let drawerCallbacks = {
     onRetry: null,
     onForceReextract: null,
+    onResolveSource: null,
+    onUpload: null,
+    onRetryWithSource: null,
 };
 
 /**
@@ -294,15 +351,16 @@ export function setDrawerCallbacks(callbacks) {
 /**
  * Render paper detail drawer.
  */
-export function renderDrawer(paper, runs) {
+export function renderDrawer(paper, runs, options = {}) {
     const content = $('#drawerContent');
     content.innerHTML = '';
+    const resolvedSources = options.resolvedSources || {};
     
     if (!paper) return;
     
     // Paper header
     const header = el('div', 'mb-6');
-    header.appendChild(el('h4', 'text-lg font-semibold text-slate-900 leading-snug', paper.title));
+    header.appendChild(el('h4', 'list-title leading-snug', paper.title));
     
     const meta = el('div', 'text-xs text-slate-500 mt-2 space-y-1');
     if (paper.authors?.length) {
@@ -311,7 +369,7 @@ export function renderDrawer(paper, runs) {
     const metaLine = [paper.source?.toUpperCase(), paper.year, paper.doi].filter(Boolean).join(' · ');
     if (metaLine) meta.appendChild(el('div', '', metaLine));
     if (paper.url) {
-        const link = el('a', 'sw-chip text-indigo-600 hover:bg-indigo-50', 'View Article');
+        const link = el('a', 'sw-chip sw-chip--info text-[10px]', 'View Article');
         link.href = paper.url;
         link.target = '_blank';
         meta.appendChild(link);
@@ -321,7 +379,7 @@ export function renderDrawer(paper, runs) {
     // Force Re-extract button (show if paper has stored status)
     if (paper.status === 'stored' && paper.id && drawerCallbacks.onForceReextract) {
         const actionsRow = el('div', 'mt-4 flex gap-2');
-        const forceBtn = el('button', 'px-3 py-1.5 rounded-lg text-xs font-medium bg-indigo-100 text-indigo-700 hover:bg-indigo-200 transition-colors', 'Force Re-extract');
+        const forceBtn = el('button', 'sw-btn sw-btn--sm sw-btn--primary', 'Force Re-extract');
         forceBtn.addEventListener('click', () => drawerCallbacks.onForceReextract(paper.id));
         actionsRow.appendChild(forceBtn);
         header.appendChild(actionsRow);
@@ -351,51 +409,94 @@ export function renderDrawer(paper, runs) {
         runHeader.appendChild(time);
         card.appendChild(runHeader);
         
+        const runBody = el('div', '');
+
         // View run details button
         if (run.id) {
             const detailRow = el('div', 'mb-2');
-            const link = el('a', 'inline-flex items-center px-3 py-1.5 rounded-md bg-indigo-600 text-white text-xs font-medium hover:bg-indigo-700 transition-colors', 'Details / Follow-up Chat');
+            const link = el('a', 'sw-btn sw-btn--sm sw-btn--primary', 'Details / Follow-up Chat');
             link.href = `/runs/${run.id}`;
             link.target = '_blank';
             detailRow.appendChild(link);
-            card.appendChild(detailRow);
+            runBody.appendChild(detailRow);
         }
-
+        
         // Model info
         if (run.model_provider || run.model_name) {
-            card.appendChild(el('div', 'text-xs text-slate-500 mb-2', `${run.model_provider || ''} ${run.model_name || ''}`.trim()));
+            runBody.appendChild(el('div', 'text-xs text-slate-500 mb-2', `${run.model_provider || ''} ${run.model_name || ''}`.trim()));
         }
-        
-        // Failure reason with Retry button
+
+        // Failure reason with fix actions
         if (run.failure_reason) {
             const errorBox = el('div', 'mt-2 p-2 sw-card sw-card--error text-xs');
-            errorBox.textContent = run.failure_reason;
-            card.appendChild(errorBox);
+            const friendly = formatFailureReason(run.failure_reason);
+            if (friendly) {
+                errorBox.appendChild(el('div', 'text-slate-700 font-medium', friendly.title));
+                if (friendly.detail) {
+                    errorBox.appendChild(el('div', 'mt-1 text-[11px] text-slate-500', friendly.detail));
+                }
+            } else {
+                errorBox.textContent = run.failure_reason;
+            }
+            runBody.appendChild(errorBox);
         }
         
-        // Retry button for failed runs
-        if (run.status === 'failed' && run.id && drawerCallbacks.onRetry) {
-            const retryBtn = el('button', 'mt-2 px-3 py-1.5 rounded-lg text-xs font-medium bg-red-600 text-white hover:bg-red-700 transition-colors', 'Retry');
-            retryBtn.addEventListener('click', () => drawerCallbacks.onRetry(run.id));
-            card.appendChild(retryBtn);
+        if (run.status === 'failed' && run.id) {
+            const actionRow = el('div', 'mt-2 flex flex-wrap items-center gap-2');
+            if (drawerCallbacks.onRetry) {
+                const retryBtn = el('button', 'sw-btn sw-btn--sm sw-btn--danger', 'Retry');
+                retryBtn.addEventListener('click', () => drawerCallbacks.onRetry(run.id));
+                actionRow.appendChild(retryBtn);
+            }
+            if (drawerCallbacks.onResolveSource) {
+                const resolveBtn = el('button', 'sw-btn sw-btn--sm sw-btn--ghost', 'Find OA PDF');
+                resolveBtn.addEventListener('click', () => drawerCallbacks.onResolveSource(run.id));
+                actionRow.appendChild(resolveBtn);
+            }
+            if (drawerCallbacks.onUpload) {
+                const uploadBtn = el('button', 'sw-btn sw-btn--sm sw-btn--ghost', 'Upload PDF');
+                const fileInput = el('input', 'hidden');
+                fileInput.type = 'file';
+                fileInput.accept = '.pdf';
+                fileInput.multiple = true;
+                uploadBtn.addEventListener('click', () => fileInput.click());
+                fileInput.addEventListener('change', () => {
+                    const files = fileInput.files;
+                    if (!files || files.length === 0) return;
+                    drawerCallbacks.onUpload(run.id, files);
+                });
+                actionRow.appendChild(uploadBtn);
+                actionRow.appendChild(fileInput);
+            }
+            if (resolvedSources[run.id] && drawerCallbacks.onRetryWithSource) {
+                const resolved = resolvedSources[run.id];
+                const resolvedLabel = el('div', 'text-[10px] text-slate-500', `Resolved ${resolved.label}: ${resolved.url}`);
+                actionRow.appendChild(resolvedLabel);
+                const runNowBtn = el('button', 'sw-btn sw-btn--sm sw-btn--primary', 'Run now');
+                runNowBtn.addEventListener('click', () => drawerCallbacks.onRetryWithSource(run.id, resolved.url));
+                actionRow.appendChild(runNowBtn);
+            }
+            if (actionRow.childNodes.length) {
+                runBody.appendChild(actionRow);
+            }
         }
         
         // Extracted entities summary
         if (run.entity_count !== undefined && run.entity_count > 0) {
-            card.appendChild(el('div', 'mt-2 text-xs text-emerald-700', `${run.entity_count} entities extracted`));
+            runBody.appendChild(el('div', 'mt-2 text-xs text-emerald-700', `${run.entity_count} entities extracted`));
         }
         
         // Comment
         if (run.comment) {
             const commentBox = el('div', 'mt-2 p-2 sw-card sw-card--note text-xs');
             commentBox.textContent = run.comment;
-            card.appendChild(commentBox);
+            runBody.appendChild(commentBox);
         }
 
         // Entities summary (from raw_json/payload)
         const entities = getRunEntities(run);
         if (entities.length > 0) {
-            card.appendChild(renderEntitiesSummary(entities));
+            runBody.appendChild(renderEntitiesSummary(entities));
         }
         
         // Collapsible section container
@@ -417,8 +518,15 @@ export function renderDrawer(paper, runs) {
         }
         
         if (collapsibles.children.length > 0) {
-            card.appendChild(collapsibles);
+            runBody.appendChild(collapsibles);
         }
+
+        const runDetails = createElementCollapsible('Run details', runBody, {
+            defaultOpen: true,
+            toggleClass: 'mt-2',
+            contentClass: 'mt-2'
+        });
+        card.appendChild(runDetails);
         
         runsList.appendChild(card);
     }
@@ -444,6 +552,31 @@ function getRunEntities(run) {
     return entities;
 }
 
+function createElementCollapsible(label, contentEl, { defaultOpen = true, toggleClass = '', contentClass = '' } = {}) {
+    const container = el('div', '');
+    const toggle = el('button', ['sw-toggle', 'text-xs', 'flex', 'items-center', 'gap-1', toggleClass].filter(Boolean).join(' '));
+    toggle.type = 'button';
+    const arrow = el('span', 'sw-toggle__arrow transition-transform', '▶');
+    if (defaultOpen) {
+        arrow.style.transform = 'rotate(90deg)';
+    }
+    toggle.appendChild(arrow);
+    toggle.appendChild(document.createTextNode(` ${label}`));
+
+    const contentWrap = el('div', [defaultOpen ? '' : 'hidden', contentClass].filter(Boolean).join(' '));
+    if (!defaultOpen) contentWrap.classList.add('hidden');
+    contentWrap.appendChild(contentEl);
+
+    toggle.addEventListener('click', () => {
+        contentWrap.classList.toggle('hidden');
+        arrow.style.transform = contentWrap.classList.contains('hidden') ? '' : 'rotate(90deg)';
+    });
+
+    container.appendChild(toggle);
+    container.appendChild(contentWrap);
+    return container;
+}
+
 function renderEntitiesSummary(entities) {
     const section = el('div', 'mt-3');
     section.appendChild(el('div', 'sw-kicker text-xs text-slate-500 mb-2', `Entities (${entities.length})`));
@@ -454,18 +587,19 @@ function renderEntitiesSummary(entities) {
         const typeLabel = (entity?.type || 'entity').toUpperCase();
         card.appendChild(el('div', 'text-xs font-medium text-slate-700', `#${idx + 1} ${typeLabel}`));
 
+        const detailBody = el('div', '');
         if (entity?.type === 'peptide' && entity.peptide) {
             const peptide = entity.peptide;
             const seq = peptide.sequence_one_letter || peptide.sequence_three_letter;
             if (seq) {
-                card.appendChild(el('div', 'text-sm text-slate-900 mt-1', seq));
+                card.appendChild(el('div', 'text-sm text-slate-900 mt-1 sw-entity-seq', seq));
             }
             const mods = [peptide.n_terminal_mod, peptide.c_terminal_mod].filter(Boolean).join(' ');
             if (mods) {
-                card.appendChild(el('div', 'text-xs text-slate-500 mt-1', mods));
+                detailBody.appendChild(el('div', 'text-xs text-slate-500 mt-1', mods));
             }
             if (peptide.is_hydrogel !== undefined && peptide.is_hydrogel !== null) {
-                card.appendChild(el('div', 'text-xs text-slate-500 mt-1', peptide.is_hydrogel ? 'Hydrogel: yes' : 'Hydrogel: no'));
+                detailBody.appendChild(el('div', 'text-xs text-slate-500 mt-1', peptide.is_hydrogel ? 'Hydrogel: yes' : 'Hydrogel: no'));
             }
         }
 
@@ -473,9 +607,9 @@ function renderEntitiesSummary(entities) {
             const molecule = entity.molecule;
             const identifiers = [molecule.chemical_formula, molecule.smiles, molecule.inchi].filter(Boolean);
             if (identifiers.length > 0) {
-                card.appendChild(el('div', 'text-sm text-slate-900 mt-1', identifiers[0]));
+                card.appendChild(el('div', 'text-sm text-slate-900 mt-1 sw-entity-seq', identifiers[0]));
                 if (identifiers.length > 1) {
-                    card.appendChild(el('div', 'text-xs text-slate-500 mt-1', identifiers.slice(1).join(' | ')));
+                    detailBody.appendChild(el('div', 'text-xs text-slate-500 mt-1', identifiers.slice(1).join(' | ')));
                 }
             }
         }
@@ -493,7 +627,7 @@ function renderEntitiesSummary(entities) {
             conditionParts.push(`${conditions.temperature_c} C`);
         }
         if (conditionParts.length > 0) {
-            card.appendChild(el('div', 'text-xs text-slate-500 mt-2', conditionParts.join(' · ')));
+            detailBody.appendChild(el('div', 'text-xs text-slate-500 mt-2', conditionParts.join(' · ')));
         }
 
         const labels = Array.isArray(entity?.labels) ? entity.labels : [];
@@ -506,11 +640,20 @@ function renderEntitiesSummary(entities) {
         if (methods.length > 0) listParts.push(`Methods: ${methods.join(', ')}`);
         if (traits.length > 0) listParts.push(`Traits: ${traits.join(', ')}`);
         if (listParts.length > 0) {
-            card.appendChild(el('div', 'text-xs text-slate-500 mt-2', listParts.join(' | ')));
+            detailBody.appendChild(el('div', 'text-xs text-slate-500 mt-2', listParts.join(' | ')));
         }
 
         if (entity?.process_protocol) {
-            card.appendChild(el('div', 'text-xs text-slate-500 mt-2', `Protocol: ${entity.process_protocol}`));
+            detailBody.appendChild(el('div', 'text-xs text-slate-500 mt-2', `Protocol: ${entity.process_protocol}`));
+        }
+
+        if (detailBody.childNodes.length > 0) {
+            const details = createElementCollapsible('Details', detailBody, {
+                defaultOpen: true,
+                toggleClass: 'mt-2',
+                contentClass: 'mt-2'
+            });
+            card.appendChild(details);
         }
 
         list.appendChild(card);
@@ -526,12 +669,12 @@ function renderEntitiesSummary(entities) {
 function createCollapsibleSection(label, data) {
     const container = el('div', '');
     
-    const toggle = el('button', 'text-xs text-indigo-600 hover:underline flex items-center gap-1');
-    const arrow = el('span', 'transition-transform', '▶');
+    const toggle = el('button', 'sw-toggle flex items-center gap-1');
+    const arrow = el('span', 'sw-toggle__arrow transition-transform', '▶');
     toggle.appendChild(arrow);
     toggle.appendChild(document.createTextNode(` ${label}`));
     
-    const content = el('pre', 'mt-2 p-3 bg-slate-900 text-slate-100 rounded text-[10px] leading-relaxed max-h-64 overflow-auto hidden');
+    const content = el('pre', 'sw-terminal mt-2 p-3 text-[10px] leading-relaxed max-h-64 overflow-auto hidden');
     try {
         content.textContent = JSON.stringify(data, null, 2);
     } catch {

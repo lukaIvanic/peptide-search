@@ -47,6 +47,8 @@ class ExtractionRun(SQLModel, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
     paper_id: Optional[int] = Field(default=None, foreign_key="paper.id", index=True)
     parent_run_id: Optional[int] = Field(default=None, foreign_key="extraction_run.id", index=True)
+    baseline_case_id: Optional[str] = Field(default=None, index=True)
+    baseline_dataset: Optional[str] = Field(default=None, index=True)
     
     # Run status for queue tracking
     status: str = Field(default=RunStatus.QUEUED.value, index=True)
@@ -54,6 +56,8 @@ class ExtractionRun(SQLModel, table=True):
     
     # Prompts sent to LLM (for traceability and follow-up)
     prompts_json: Optional[str] = Field(default=None)  # JSON: {system_prompt, user_prompt, messages}
+    prompt_id: Optional[int] = Field(default=None, foreign_key="base_prompt.id", index=True)
+    prompt_version_id: Optional[int] = Field(default=None, foreign_key="prompt_version.id", index=True)
     
     # Raw model output for traceability
     raw_json: Optional[str] = Field(default=None)  # Full JSON payload
@@ -62,6 +66,12 @@ class ExtractionRun(SQLModel, table=True):
     # Model info
     model_provider: Optional[str] = Field(default=None)
     model_name: Optional[str] = Field(default=None)
+
+    # Token usage (nullable for backward compatibility)
+    input_tokens: Optional[int] = Field(default=None)
+    output_tokens: Optional[int] = Field(default=None)
+    reasoning_tokens: Optional[int] = Field(default=None)
+    total_tokens: Optional[int] = Field(default=None)
     
     # Provenance
     source_text_hash: Optional[str] = Field(default=None, index=True)  # SHA256 of input text
@@ -69,6 +79,16 @@ class ExtractionRun(SQLModel, table=True):
     pdf_url: Optional[str] = Field(default=None)  # Original PDF URL for reference
     
     # Timing
+    created_at: datetime = Field(default_factory=datetime.utcnow, nullable=False)
+
+
+class BaselineCaseRun(SQLModel, table=True):
+    """Links baseline cases to shared extraction runs."""
+    __tablename__ = "baseline_case_run"
+
+    id: Optional[int] = Field(default=None, primary_key=True)
+    baseline_case_id: str = Field(index=True)
+    run_id: int = Field(foreign_key="extraction_run.id", index=True)
     created_at: datetime = Field(default_factory=datetime.utcnow, nullable=False)
 
 
@@ -127,6 +147,31 @@ class QualityRuleConfig(SQLModel, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
     rules_json: str = Field(default="{}")
     updated_at: datetime = Field(default_factory=datetime.utcnow, nullable=False)
+
+
+class BasePrompt(SQLModel, table=True):
+    """Base prompt registry for system prompts."""
+    __tablename__ = "base_prompt"
+
+    id: Optional[int] = Field(default=None, primary_key=True)
+    name: str = Field(index=True)
+    description: Optional[str] = Field(default=None)
+    is_active: bool = Field(default=False, index=True)
+    created_at: datetime = Field(default_factory=datetime.utcnow, nullable=False)
+    updated_at: datetime = Field(default_factory=datetime.utcnow, nullable=False)
+
+
+class PromptVersion(SQLModel, table=True):
+    """Versioned content for a base prompt."""
+    __tablename__ = "prompt_version"
+
+    id: Optional[int] = Field(default=None, primary_key=True)
+    prompt_id: int = Field(foreign_key="base_prompt.id", index=True)
+    version_index: int = Field(default=1)
+    content: str
+    notes: Optional[str] = Field(default=None)
+    created_by: Optional[str] = Field(default=None)
+    created_at: datetime = Field(default_factory=datetime.utcnow, nullable=False)
 
 
 # Keep the old Extraction model for backward compatibility during migration

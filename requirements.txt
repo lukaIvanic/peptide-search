@@ -10,4 +10,6 @@ beautifulsoup4
 lxml
 alembic
 typer
+python-multipart
+openai
 

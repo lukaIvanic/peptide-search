@@ -1,4 +1,4 @@
-import { getRun, getRunHistory } from './js/api.js?v=dev45';
+import { getRun, getRunHistory, retryRun, resolveRunSource, retryRunWithSource, uploadRunPdf } from './js/api.js?v=dev48';
 
 const $ = (sel) => document.querySelector(sel);
 
@@ -20,7 +20,7 @@ function renderPaper(paper) {
 	const line = [paper.source?.toUpperCase(), paper.year, paper.doi].filter(Boolean).join(' · ');
 	if (line) container.appendChild(el('div', 'text-xs text-slate-500', line));
 	if (paper.url) {
-		const link = el('a', 'text-xs text-indigo-600 hover:underline', paper.url);
+		const link = el('a', 'sw-chip sw-chip--info text-[10px]', paper.url);
 		link.href = paper.url;
 		link.target = '_blank';
 		container.appendChild(link);
@@ -46,7 +46,7 @@ function renderRun(run) {
 	meta.forEach((item) => container.appendChild(el('div', '', item)));
 
 	if (run.pdf_url) {
-		const link = el('a', 'text-xs text-indigo-600 hover:underline', run.pdf_url);
+		const link = el('a', 'sw-chip sw-chip--info text-[10px]', run.pdf_url);
 		link.href = run.pdf_url;
 		link.target = '_blank';
 		container.appendChild(link);
@@ -68,7 +68,7 @@ function renderEntities(rawJson) {
 	}
 
 	rawJson.entities.forEach((entity, index) => {
-		const card = el('div', 'sw-card rounded-lg border border-slate-200 bg-slate-50 p-4');
+		const card = el('div', 'sw-card p-4');
 		card.appendChild(el('div', 'sw-kicker text-xs text-slate-500', `Entity ${index + 1}`));
 		card.appendChild(el('div', 'text-sm font-medium text-slate-900 mt-1', entity.type || 'entity'));
 
@@ -201,7 +201,7 @@ function renderPrompts(prompts) {
 function renderPromptBlock(label, text) {
 	const block = el('div', 'space-y-1');
 	block.appendChild(el('div', 'sw-kicker text-xs text-slate-500', label));
-	const pre = el('pre', 'p-3 bg-slate-900 text-slate-100 rounded text-[11px] leading-relaxed max-h-64 overflow-auto');
+	const pre = el('pre', 'sw-terminal p-3 text-[11px] leading-relaxed max-h-64 overflow-auto');
 	pre.textContent = text;
 	block.appendChild(pre);
 	return block;
@@ -232,7 +232,7 @@ function renderDiff(beforeJson, afterJson) {
 	}
 
 	if (afterJson.comment) {
-		const commentBox = el('div', 'sw-card sw-card--warning p-3 rounded-md border border-amber-200 bg-amber-50 text-xs text-amber-800');
+		const commentBox = el('div', 'sw-card sw-card--warning p-3 text-xs text-slate-500');
 		commentBox.textContent = afterJson.comment;
 		container.appendChild(commentBox);
 	}
@@ -243,14 +243,14 @@ function renderDiff(beforeJson, afterJson) {
 	}
 
 	changes.forEach((change) => {
-		const card = el('div', 'sw-card rounded-md border border-slate-200 bg-slate-50 p-3 space-y-3');
+		const card = el('div', 'sw-card p-3 space-y-3');
 		card.appendChild(el('div', 'text-xs font-semibold text-slate-700', humanizePath(change.path)));
 
 		const grid = el('div', 'grid grid-cols-1 md:grid-cols-2 gap-3 text-xs');
-		const beforeBox = el('div', 'sw-card sw-card--danger rounded-md border border-red-200 bg-red-50 p-2 text-red-700');
+		const beforeBox = el('div', 'sw-card sw-card--error p-2 text-red-500');
 		beforeBox.appendChild(el('div', 'sw-kicker text-[10px] text-red-500', 'Before'));
 		beforeBox.appendChild(el('div', 'mt-1 break-words', formatValue(change.before)));
-		const afterBox = el('div', 'sw-card sw-card--success rounded-md border border-emerald-200 bg-emerald-50 p-2 text-emerald-700');
+		const afterBox = el('div', 'sw-card sw-card--success p-2 text-emerald-600');
 		afterBox.appendChild(el('div', 'sw-kicker text-[10px] text-emerald-600', 'After'));
 		afterBox.appendChild(el('div', 'mt-1 break-words', formatValue(change.after)));
 		grid.appendChild(beforeBox);
@@ -467,12 +467,14 @@ function el(tag, cls, text) {
 let currentRunId = null;
 let currentRawJson = null;
 let followupHasToken = false;
+let resolvedSource = null;
 
 async function loadRun(runId, options = {}) {
 	const { resetDiff: shouldResetDiff = true } = options;
 	const data = await getRun(runId);
 	renderPaper(data.paper);
 	renderRun(data.run);
+	renderRunFixPanel(data.run);
 	renderEntities(data.run?.raw_json);
 	renderPrompts(data.run?.prompts);
 	renderRawJson(data.run?.raw_json);
@@ -480,9 +482,137 @@ async function loadRun(runId, options = {}) {
 		resetDiff();
 	}
 	currentRawJson = data.run?.raw_json || null;
-	currentRunId = data.run?.id || runId;
+	const nextRunId = data.run?.id || runId;
+	if (currentRunId && currentRunId !== nextRunId) {
+		resolvedSource = null;
+	}
+	currentRunId = nextRunId;
 	setEditLink(currentRunId);
 	await loadHistory(runId);
+}
+
+function formatFailureReason(reason) {
+	if (!reason) return null;
+	const text = String(reason);
+	const lower = text.toLowerCase();
+	if (lower.includes('http 403')) {
+		return {
+			title: 'Access blocked (HTTP 403)',
+			detail: 'Publisher blocked this URL. Try open-access search or upload a PDF.',
+		};
+	}
+	if (lower.includes('no source url resolved') || lower.includes('no pdf url resolved')) {
+		return {
+			title: 'No source URL found',
+			detail: 'We could not find a usable PDF/HTML source. Try open-access search or upload a PDF.',
+		};
+	}
+	if (lower.includes('openai returned empty response') || lower.includes('stream has ended unexpectedly')) {
+		return {
+			title: 'Provider response was empty',
+			detail: 'Retry or upload a PDF for better reliability.',
+		};
+	}
+	if (lower.startsWith('provider error')) {
+		return {
+			title: 'Provider error',
+			detail: text.replace(/^provider error:\s*/i, '') || 'The provider failed. Retry or upload a PDF.',
+		};
+	}
+	return { title: text, detail: null };
+}
+
+function renderRunFixPanel(run) {
+	const panel = $('#runFixPanel');
+	if (!panel) return;
+	panel.innerHTML = '';
+	if (!run) return;
+
+	if (run.status !== 'failed') {
+		panel.appendChild(el('div', 'sw-empty text-xs text-slate-500 p-3', 'No failure detected for this run.'));
+		return;
+	}
+
+	const friendly = formatFailureReason(run.failure_reason);
+	const errorBox = el('div', 'sw-card sw-card--error p-3 text-xs text-slate-600');
+	if (friendly) {
+		errorBox.appendChild(el('div', 'text-slate-700 font-medium', friendly.title));
+		if (friendly.detail) {
+			errorBox.appendChild(el('div', 'mt-1 text-[11px] text-slate-500', friendly.detail));
+		}
+	} else {
+		errorBox.textContent = run.failure_reason || 'Unknown failure';
+	}
+	panel.appendChild(errorBox);
+
+	const actions = el('div', 'flex flex-wrap items-center gap-2');
+	const retryBtn = el('button', 'sw-btn sw-btn--sm sw-btn--danger', 'Retry same source');
+	retryBtn.addEventListener('click', async () => {
+		try {
+			await retryRun(run.id);
+			await loadRun(run.id, { resetDiff: false });
+		} catch (err) {
+			alert(err.message || 'Failed to retry run');
+		}
+	});
+	actions.appendChild(retryBtn);
+
+	const resolveBtn = el('button', 'sw-btn sw-btn--sm sw-btn--ghost', 'Find open-access PDF');
+	resolveBtn.addEventListener('click', async () => {
+		try {
+			const result = await resolveRunSource(run.id);
+			if (!result.found) {
+				alert('No open-access source found.');
+				return;
+			}
+			resolvedSource = {
+				url: result.pdf_url || result.url,
+				label: result.pdf_url ? 'PDF URL' : 'Source URL',
+			};
+			renderRunFixPanel(run);
+		} catch (err) {
+			alert(err.message || 'Failed to resolve source');
+		}
+	});
+	actions.appendChild(resolveBtn);
+
+	const fileInput = el('input', 'hidden');
+	fileInput.type = 'file';
+	fileInput.accept = '.pdf';
+	fileInput.multiple = true;
+	const uploadBtn = el('button', 'sw-btn sw-btn--sm sw-btn--ghost', 'Upload PDF');
+	uploadBtn.addEventListener('click', () => fileInput.click());
+	fileInput.addEventListener('change', async () => {
+		const files = fileInput.files;
+		if (!files || files.length === 0) return;
+		try {
+			await uploadRunPdf(run.id, files, run.model_provider);
+			await loadRun(run.id, { resetDiff: false });
+		} catch (err) {
+			alert(err.message || 'Failed to upload PDF');
+		}
+	});
+	actions.appendChild(uploadBtn);
+	actions.appendChild(fileInput);
+
+	panel.appendChild(actions);
+
+	if (resolvedSource?.url) {
+		const resolvedRow = el('div', 'text-[11px] text-slate-500');
+		resolvedRow.textContent = `Resolved ${resolvedSource.label}: ${resolvedSource.url}`;
+		panel.appendChild(resolvedRow);
+		const runNowBtn = el('button', 'sw-btn sw-btn--sm sw-btn--primary', 'Run now');
+		runNowBtn.addEventListener('click', async () => {
+			try {
+				await retryRunWithSource(run.id, { source_url: resolvedSource.url, provider: run.model_provider });
+				resolvedSource = null;
+				await loadRun(run.id, { resetDiff: false });
+			} catch (err) {
+				alert(err.message || 'Failed to run with resolved source');
+			}
+		});
+		panel.appendChild(runNowBtn);
+	}
 }
 
 function showSpinner(show) {

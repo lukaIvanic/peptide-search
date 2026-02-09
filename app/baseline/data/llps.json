@@ -1,0 +1,1674 @@
+[
+  {
+    "id": "llps:1",
+    "dataset": "llps",
+    "sequence": "FGGGRGGFGGDRGG",
+    "n_terminal": null,
+    "c_terminal": null,
+    "labels": [
+      "llps"
+    ],
+    "doi": null,
+    "pubmed_id": null,
+    "paper_url": "https://www.biorxiv.org/content/10.1101/2024.12.19.629394v1.full",
+    "pdf_url": null,
+    "metadata": {
+      "peptide_name": "PJ1",
+      "concentration": "5mg/ml",
+      "temperature_c": 37,
+      "buffer": "Phosphate-buffered saline (PBS)",
+      "additives": null,
+      "llps_flag": "Y"
+    }
+  },
+  {
+    "id": "llps:2",
+    "dataset": "llps",
+    "sequence": "FGGGRGGFGGDRGG",
+    "n_terminal": null,
+    "c_terminal": null,
+    "labels": [
+      "llps"
+    ],
+    "doi": null,
+    "pubmed_id": null,
+    "paper_url": "https://www.biorxiv.org/content/10.1101/2024.12.19.629394v1.full",
+    "pdf_url": null,
+    "metadata": {
+      "peptide_name": "PJ1",
+      "concentration": "10mg/ml",
+      "temperature_c": 37,
+      "buffer": "Phosphate-buffered saline (PBS)",
+      "additives": null,
+      "llps_flag": "Y"
+    }
+  },
+  {
+    "id": "llps:3",
+    "dataset": "llps",
+    "sequence": "GRGGYGGDRGGYGG",
+    "n_terminal": null,
+    "c_terminal": null,
+    "labels": [
+      "llps"
+    ],
+    "doi": null,
+    "pubmed_id": null,
+    "paper_url": "https://www.biorxiv.org/content/10.1101/2024.12.19.629394v1.full",
+    "pdf_url": null,
+    "metadata": {
+      "peptide_name": "PJ2",
+      "concentration": "5mg/ml",
+      "temperature_c": 37,
+      "buffer": "Phosphate-buffered saline (PBS)",
+      "additives": null,
+      "llps_flag": "Y"
+    }
+  },
+  {
+    "id": "llps:4",
+    "dataset": "llps",
+    "sequence": "GRGGYGGDRGGYGG",
+    "n_terminal": null,
+    "c_terminal": null,
+    "labels": [
+      "llps"
+    ],
+    "doi": null,
+    "pubmed_id": null,
+    "paper_url": "https://www.biorxiv.org/content/10.1101/2024.12.19.629394v1.full",
+    "pdf_url": null,
+    "metadata": {
+      "peptide_name": "PJ2",
+      "concentration": "10mg/ml",
+      "temperature_c": 37,
+      "buffer": "Phosphate-buffered saline (PBS)",
+      "additives": null,
+      "llps_flag": "Y"
+    }
+  },
+  {
+    "id": "llps:5",
+    "dataset": "llps",
+    "sequence": "GYGGGFGGDRG",
+    "n_terminal": null,
+    "c_terminal": null,
+    "labels": [
+      "llps"
+    ],
+    "doi": null,
+    "pubmed_id": null,
+    "paper_url": "https://www.biorxiv.org/content/10.1101/2024.12.19.629394v1.full",
+    "pdf_url": null,
+    "metadata": {
+      "peptide_name": "PJ3",
+      "concentration": "5mg/ml",
+      "temperature_c": 37,
+      "buffer": "Phosphate-buffered saline (PBS)",
+      "additives": null,
+      "llps_flag": "Y"
+    }
+  },
+  {
+    "id": "llps:6",
+    "dataset": "llps",
+    "sequence": "GYGGGFGGDRG",
+    "n_terminal": null,
+    "c_terminal": null,
+    "labels": [
+      "llps"
+    ],
+    "doi": null,
+    "pubmed_id": null,
+    "paper_url": "https://www.biorxiv.org/content/10.1101/2024.12.19.629394v1.full",
+    "pdf_url": null,
+    "metadata": {
+      "peptide_name": "PJ3",
+      "concentration": "10mg/ml",
+      "temperature_c": 37,
+      "buffer": "Phosphate-buffered saline (PBS)",
+      "additives": null,
+      "llps_flag": "Y"
+    }
+  },
+  {
+    "id": "llps:7",
+    "dataset": "llps",
+    "sequence": "GYGNDRGGSGGGG",
+    "n_terminal": null,
+    "c_terminal": null,
+    "labels": [
+      "llps"
+    ],
+    "doi": null,
+    "pubmed_id": null,
+    "paper_url": "https://www.biorxiv.org/content/10.1101/2024.12.19.629394v1.full",
+    "pdf_url": null,
+    "metadata": {
+      "peptide_name": "PJ4",
+      "concentration": "5mg/ml",
+      "temperature_c": 37,
+      "buffer": "Phosphate-buffered saline (PBS)",
+      "additives": null,
+      "llps_flag": "Y"
+    }
+  },
+  {
+    "id": "llps:8",
+    "dataset": "llps",
+    "sequence": "GYGNDRGGSGGGG",
+    "n_terminal": null,
+    "c_terminal": null,
+    "labels": [
+      "llps"
+    ],
+    "doi": null,
+    "pubmed_id": null,
+    "paper_url": "https://www.biorxiv.org/content/10.1101/2024.12.19.629394v1.full",
+    "pdf_url": null,
+    "metadata": {
+      "peptide_name": "PJ4",
+      "concentration": "10mg/ml",
+      "temperature_c": 37,
+      "buffer": "Phosphate-buffered saline (PBS)",
+      "additives": null,
+      "llps_flag": "Y"
+    }
+  },
+  {
+    "id": "llps:9",
+    "dataset": "llps",
+    "sequence": "GPYGDRGGFG",
+    "n_terminal": null,
+    "c_terminal": null,
+    "labels": [
+      "llps"
+    ],
+    "doi": null,
+    "pubmed_id": null,
+    "paper_url": "https://www.biorxiv.org/content/10.1101/2024.12.19.629394v1.full",
+    "pdf_url": null,
+    "metadata": {
+      "peptide_name": "PJ5",
+      "concentration": "5mg/ml",
+      "temperature_c": 37,
+      "buffer": "Phosphate-buffered saline (PBS)",
+      "additives": null,
+      "llps_flag": "Y"
+    }
+  },
+  {
+    "id": "llps:10",
+    "dataset": "llps",
+    "sequence": "GPYGDRGGFG",
+    "n_terminal": null,
+    "c_terminal": null,
+    "labels": [
+      "llps"
+    ],
+    "doi": null,
+    "pubmed_id": null,
+    "paper_url": "https://www.biorxiv.org/content/10.1101/2024.12.19.629394v1.full",
+    "pdf_url": null,
+    "metadata": {
+      "peptide_name": "PJ5",
+      "concentration": "10mg/ml",
+      "temperature_c": 37,
+      "buffer": "Phosphate-buffered saline (PBS)",
+      "additives": null,
+      "llps_flag": "Y"
+    }
+  },
+  {
+    "id": "llps:11",
+    "dataset": "llps",
+    "sequence": "PGVGGYGDRGG",
+    "n_terminal": null,
+    "c_terminal": null,
+    "labels": [
+      "llps"
+    ],
+    "doi": null,
+    "pubmed_id": null,
+    "paper_url": "https://www.biorxiv.org/content/10.1101/2024.12.19.629394v1.full",
+    "pdf_url": null,
+    "metadata": {
+      "peptide_name": "PJ6",
+      "concentration": "5mg/ml",
+      "temperature_c": 37,
+      "buffer": "Phosphate-buffered saline (PBS)",
+      "additives": null,
+      "llps_flag": "Y"
+    }
+  },
+  {
+    "id": "llps:12",
+    "dataset": "llps",
+    "sequence": "PGVGGYGDRGG",
+    "n_terminal": null,
+    "c_terminal": null,
+    "labels": [
+      "llps"
+    ],
+    "doi": null,
+    "pubmed_id": null,
+    "paper_url": "https://www.biorxiv.org/content/10.1101/2024.12.19.629394v1.full",
+    "pdf_url": null,
+    "metadata": {
+      "peptide_name": "PJ6",
+      "concentration": "10mg/ml",
+      "temperature_c": 37,
+      "buffer": "Phosphate-buffered saline (PBS)",
+      "additives": null,
+      "llps_flag": "Y"
+    }
+  },
+  {
+    "id": "llps:13",
+    "dataset": "llps",
+    "sequence": "RGGFVPPPRGGD",
+    "n_terminal": null,
+    "c_terminal": null,
+    "labels": [
+      "llps"
+    ],
+    "doi": null,
+    "pubmed_id": null,
+    "paper_url": "https://www.biorxiv.org/content/10.1101/2024.12.19.629394v1.full",
+    "pdf_url": null,
+    "metadata": {
+      "peptide_name": "PJ7",
+      "concentration": "5mg/ml",
+      "temperature_c": 37,
+      "buffer": "Phosphate-buffered saline (PBS)",
+      "additives": null,
+      "llps_flag": "Y"
+    }
+  },
+  {
+    "id": "llps:14",
+    "dataset": "llps",
+    "sequence": "RGGFVPPPRGGD",
+    "n_terminal": null,
+    "c_terminal": null,
+    "labels": [
+      "llps"
+    ],
+    "doi": null,
+    "pubmed_id": null,
+    "paper_url": "https://www.biorxiv.org/content/10.1101/2024.12.19.629394v1.full",
+    "pdf_url": null,
+    "metadata": {
+      "peptide_name": "PJ7",
+      "concentration": "10mg/ml",
+      "temperature_c": 37,
+      "buffer": "Phosphate-buffered saline (PBS)",
+      "additives": null,
+      "llps_flag": "Y"
+    }
+  },
+  {
+    "id": "llps:15",
+    "dataset": "llps",
+    "sequence": "YSPTSPGGDRGGFG",
+    "n_terminal": null,
+    "c_terminal": null,
+    "labels": [
+      "llps"
+    ],
+    "doi": null,
+    "pubmed_id": null,
+    "paper_url": "https://www.biorxiv.org/content/10.1101/2024.12.19.629394v1.full",
+    "pdf_url": null,
+    "metadata": {
+      "peptide_name": "PJ8",
+      "concentration": "5mg/ml",
+      "temperature_c": 37,
+      "buffer": "Phosphate-buffered saline (PBS)",
+      "additives": null,
+      "llps_flag": "Y"
+    }
+  },
+  {
+    "id": "llps:16",
+    "dataset": "llps",
+    "sequence": "YSPTSPGGDRGGFG",
+    "n_terminal": null,
+    "c_terminal": null,
+    "labels": [
+      "llps"
+    ],
+    "doi": null,
+    "pubmed_id": null,
+    "paper_url": "https://www.biorxiv.org/content/10.1101/2024.12.19.629394v1.full",
+    "pdf_url": null,
+    "metadata": {
+      "peptide_name": "PJ8",
+      "concentration": "10mg/ml",
+      "temperature_c": 37,
+      "buffer": "Phosphate-buffered saline (PBS)",
+      "additives": null,
+      "llps_flag": "Y"
+    }
+  },
+  {
+    "id": "llps:17",
+    "dataset": "llps",
+    "sequence": "KVYFSIPWRVPM",
+    "n_terminal": null,
+    "c_terminal": null,
+    "labels": [
+      "llps"
+    ],
+    "doi": null,
+    "pubmed_id": null,
+    "paper_url": "https://www.nature.com/articles/s41467-024-53699-z",
+    "pdf_url": null,
+    "metadata": {
+      "peptide_name": "P7",
+      "concentration": "1mg/ml",
+      "temperature_c": 27,
+      "buffer": "100mM sodium phosphate buffer, 1M NaCl",
+      "additives": null,
+      "llps_flag": "Y"
+    }
+  },
+  {
+    "id": "llps:18",
+    "dataset": "llps",
+    "sequence": "KVYFSIPWRVPM",
+    "n_terminal": null,
+    "c_terminal": null,
+    "labels": [
+      "llps"
+    ],
+    "doi": null,
+    "pubmed_id": null,
+    "paper_url": "https://www.nature.com/articles/s41467-024-53699-z",
+    "pdf_url": null,
+    "metadata": {
+      "peptide_name": "P7",
+      "concentration": "5mg/ml",
+      "temperature_c": 27,
+      "buffer": "100mM sodium phosphate buffer, 1M NaCl",
+      "additives": null,
+      "llps_flag": "Y"
+    }
+  },
+  {
+    "id": "llps:19",
+    "dataset": "llps",
+    "sequence": "LVFFARRRRRRRRR",
+    "n_terminal": null,
+    "c_terminal": null,
+    "labels": [
+      "llps"
+    ],
+    "doi": null,
+    "pubmed_id": null,
+    "paper_url": "https://pubmed.ncbi.nlm.nih.gov/35946870/",
+    "pdf_url": null,
+    "metadata": {
+      "peptide_name": "LVFFAR9",
+      "concentration": "5mM",
+      "temperature_c": "NA",
+      "buffer": "10 mM Tris\u00b7HCl, 15 mM KCl,\n0.5 mM MgCl2, 0.2% w/v NaN3",
+      "additives": "R9 and ATP",
+      "llps_flag": "Y"
+    }
+  },
+  {
+    "id": "llps:20",
+    "dataset": "llps",
+    "sequence": "KKKKKKKGGG",
+    "n_terminal": null,
+    "c_terminal": null,
+    "labels": [
+      "llps"
+    ],
+    "doi": null,
+    "pubmed_id": null,
+    "paper_url": "https://pubs.acs.org/doi/10.1021/acs.biomac.2c01148",
+    "pdf_url": null,
+    "metadata": {
+      "peptide_name": "K7G3",
+      "concentration": "143 \u03bcM",
+      "temperature_c": "RT",
+      "buffer": "10% PEG, and 50 mM HEPES buffer (pH = 7.0)",
+      "additives": "ssDNA",
+      "llps_flag": "Y"
+    }
+  },
+  {
+    "id": "llps:21",
+    "dataset": "llps",
+    "sequence": "KKKKKKKSSS",
+    "n_terminal": null,
+    "c_terminal": null,
+    "labels": [
+      "llps"
+    ],
+    "doi": null,
+    "pubmed_id": null,
+    "paper_url": "https://pubs.acs.org/doi/10.1021/acs.biomac.2c01149",
+    "pdf_url": null,
+    "metadata": {
+      "peptide_name": "K7S3",
+      "concentration": "143 \u03bcM",
+      "temperature_c": "RT",
+      "buffer": "10% PEG, and 50 mM HEPES buffer (pH = 7.0)",
+      "additives": "ssDNA",
+      "llps_flag": "Y"
+    }
+  },
+  {
+    "id": "llps:22",
+    "dataset": "llps",
+    "sequence": "KKKKKKKTTT",
+    "n_terminal": null,
+    "c_terminal": null,
+    "labels": [
+      "llps"
+    ],
+    "doi": null,
+    "pubmed_id": null,
+    "paper_url": "https://pubs.acs.org/doi/10.1021/acs.biomac.2c01150",
+    "pdf_url": null,
+    "metadata": {
+      "peptide_name": "K7T3",
+      "concentration": "143 \u03bcM",
+      "temperature_c": "RT",
+      "buffer": "10% PEG, and 50 mM HEPES buffer (pH = 7.0)",
+      "additives": "ssDNA",
+      "llps_flag": "Y"
+    }
+  },
+  {
+    "id": "llps:23",
+    "dataset": "llps",
+    "sequence": "KKKKKKKNNN",
+    "n_terminal": null,
+    "c_terminal": null,
+    "labels": [
+      "llps"
+    ],
+    "doi": null,
+    "pubmed_id": null,
+    "paper_url": "https://pubs.acs.org/doi/10.1021/acs.biomac.2c01151",
+    "pdf_url": null,
+    "metadata": {
+      "peptide_name": "K7N3",
+      "concentration": "143 \u03bcM",
+      "temperature_c": "RT",
+      "buffer": "10% PEG, and 50 mM HEPES buffer (pH = 7.0)",
+      "additives": "ssDNA",
+      "llps_flag": "Y"
+    }
+  },
+  {
+    "id": "llps:24",
+    "dataset": "llps",
+    "sequence": "KKKKKKKQQQ",
+    "n_terminal": null,
+    "c_terminal": null,
+    "labels": [
+      "llps"
+    ],
+    "doi": null,
+    "pubmed_id": null,
+    "paper_url": "https://pubs.acs.org/doi/10.1021/acs.biomac.2c01152",
+    "pdf_url": null,
+    "metadata": {
+      "peptide_name": "K7Q3",
+      "concentration": "143 \u03bcM",
+      "temperature_c": "RT",
+      "buffer": "10% PEG, and 50 mM HEPES buffer (pH = 7.0)",
+      "additives": "ssDNA",
+      "llps_flag": "Y"
+    }
+  },
+  {
+    "id": "llps:25",
+    "dataset": "llps",
+    "sequence": "KKKKKKKAAA",
+    "n_terminal": null,
+    "c_terminal": null,
+    "labels": [
+      "llps"
+    ],
+    "doi": null,
+    "pubmed_id": null,
+    "paper_url": "https://pubs.acs.org/doi/10.1021/acs.biomac.2c01153",
+    "pdf_url": null,
+    "metadata": {
+      "peptide_name": "K7A3",
+      "concentration": "143 \u03bcM",
+      "temperature_c": "RT",
+      "buffer": "10% PEG, and 50 mM HEPES buffer (pH = 7.0)",
+      "additives": "ssDNA",
+      "llps_flag": "Y"
+    }
+  },
+  {
+    "id": "llps:26",
+    "dataset": "llps",
+    "sequence": "KKKKKKKVVV",
+    "n_terminal": null,
+    "c_terminal": null,
+    "labels": [
+      "llps"
+    ],
+    "doi": null,
+    "pubmed_id": null,
+    "paper_url": "https://pubs.acs.org/doi/10.1021/acs.biomac.2c01154",
+    "pdf_url": null,
+    "metadata": {
+      "peptide_name": "K7V3",
+      "concentration": "143 \u03bcM",
+      "temperature_c": "RT",
+      "buffer": "10% PEG, and 50 mM HEPES buffer (pH = 7.0)",
+      "additives": "ssDNA",
+      "llps_flag": "Y"
+    }
+  },
+  {
+    "id": "llps:27",
+    "dataset": "llps",
+    "sequence": "KKKKKKKLLL",
+    "n_terminal": null,
+    "c_terminal": null,
+    "labels": [
+      "llps"
+    ],
+    "doi": null,
+    "pubmed_id": null,
+    "paper_url": "https://pubs.acs.org/doi/10.1021/acs.biomac.2c01155",
+    "pdf_url": null,
+    "metadata": {
+      "peptide_name": "K7L3",
+      "concentration": "143 \u03bcM",
+      "temperature_c": "RT",
+      "buffer": "10% PEG, and 50 mM HEPES buffer (pH = 7.0)",
+      "additives": "ssDNA",
+      "llps_flag": "Y"
+    }
+  },
+  {
+    "id": "llps:28",
+    "dataset": "llps",
+    "sequence": "KKKKKKKIII",
+    "n_terminal": null,
+    "c_terminal": null,
+    "labels": [
+      "llps"
+    ],
+    "doi": null,
+    "pubmed_id": null,
+    "paper_url": "https://pubs.acs.org/doi/10.1021/acs.biomac.2c01156",
+    "pdf_url": null,
+    "metadata": {
+      "peptide_name": "K7I3",
+      "concentration": "143 \u03bcM",
+      "temperature_c": "RT",
+      "buffer": "10% PEG, and 50 mM HEPES buffer (pH = 7.0)",
+      "additives": "ssDNA",
+      "llps_flag": "Y"
+    }
+  },
+  {
+    "id": "llps:29",
+    "dataset": "llps",
+    "sequence": "KKKKKKKFFF",
+    "n_terminal": null,
+    "c_terminal": null,
+    "labels": [
+      "llps"
+    ],
+    "doi": null,
+    "pubmed_id": null,
+    "paper_url": "https://pubs.acs.org/doi/10.1021/acs.biomac.2c01157",
+    "pdf_url": null,
+    "metadata": {
+      "peptide_name": "K7F3",
+      "concentration": "143 \u03bcM",
+      "temperature_c": "RT",
+      "buffer": "10% PEG, and 50 mM HEPES buffer (pH = 7.0)",
+      "additives": "ssDNA",
+      "llps_flag": "Y"
+    }
+  },
+  {
+    "id": "llps:30",
+    "dataset": "llps",
+    "sequence": "KKKKKKKYYY",
+    "n_terminal": null,
+    "c_terminal": null,
+    "labels": [
+      "llps"
+    ],
+    "doi": null,
+    "pubmed_id": null,
+    "paper_url": "https://pubs.acs.org/doi/10.1021/acs.biomac.2c01158",
+    "pdf_url": null,
+    "metadata": {
+      "peptide_name": "K7Y3",
+      "concentration": "143 \u03bcM",
+      "temperature_c": "RT",
+      "buffer": "10% PEG, and 50 mM HEPES buffer (pH = 7.0)",
+      "additives": "ssDNA",
+      "llps_flag": "Y"
+    }
+  },
+  {
+    "id": "llps:31",
+    "dataset": "llps",
+    "sequence": "KKKKKKKWWW",
+    "n_terminal": null,
+    "c_terminal": null,
+    "labels": [
+      "llps"
+    ],
+    "doi": null,
+    "pubmed_id": null,
+    "paper_url": "https://pubs.acs.org/doi/10.1021/acs.biomac.2c01159",
+    "pdf_url": null,
+    "metadata": {
+      "peptide_name": "K7W3",
+      "concentration": "143 \u03bcM",
+      "temperature_c": "RT",
+      "buffer": "10% PEG, and 50 mM HEPES buffer (pH = 7.0)",
+      "additives": "ssDNA",
+      "llps_flag": "Y"
+    }
+  },
+  {
+    "id": "llps:32",
+    "dataset": "llps",
+    "sequence": "GHGVYGHGVYGHGPYGHGPYGHGLYW",
+    "n_terminal": null,
+    "c_terminal": null,
+    "labels": [
+      "llps"
+    ],
+    "doi": null,
+    "pubmed_id": null,
+    "paper_url": "https://www.sciencedirect.com/science/article/pii/S174270612030221X?via%3Dihub",
+    "pdf_url": null,
+    "metadata": {
+      "peptide_name": "DgHBP-2",
+      "concentration": "10mg/ml",
+      "temperature_c": "NA",
+      "buffer": "0.1M Phosphate buffer pH 9.5",
+      "additives": null,
+      "llps_flag": "Y"
+    }
+  },
+  {
+    "id": "llps:33",
+    "dataset": "llps",
+    "sequence": "GRGRGD",
+    "n_terminal": null,
+    "c_terminal": null,
+    "labels": [
+      "llps"
+    ],
+    "doi": null,
+    "pubmed_id": null,
+    "paper_url": "https://pubs.acs.org/doi/10.1021/jacs.1c01148",
+    "pdf_url": null,
+    "metadata": {
+      "peptide_name": "Peptide 2",
+      "concentration": "16mM",
+      "temperature_c": "RT",
+      "buffer": "200mM MES pH 5.3",
+      "additives": "50 mM of EDC",
+      "llps_flag": "Y"
+    }
+  },
+  {
+    "id": "llps:34",
+    "dataset": "llps",
+    "sequence": "GRGRGRGD",
+    "n_terminal": null,
+    "c_terminal": null,
+    "labels": [
+      "llps"
+    ],
+    "doi": null,
+    "pubmed_id": null,
+    "paper_url": "https://pubs.acs.org/doi/10.1021/jacs.1c01148",
+    "pdf_url": null,
+    "metadata": {
+      "peptide_name": "Peptide 3",
+      "concentration": "16mM",
+      "temperature_c": "RT",
+      "buffer": "200mM MES pH 5.3",
+      "additives": "50 mM of EDC",
+      "llps_flag": "Y"
+    }
+  },
+  {
+    "id": "llps:35",
+    "dataset": "llps",
+    "sequence": "GRGRGRGRGD",
+    "n_terminal": null,
+    "c_terminal": null,
+    "labels": [
+      "llps"
+    ],
+    "doi": null,
+    "pubmed_id": null,
+    "paper_url": "https://pubs.acs.org/doi/10.1021/jacs.1c01148",
+    "pdf_url": null,
+    "metadata": {
+      "peptide_name": "Peptide 4",
+      "concentration": "16mM",
+      "temperature_c": "RT",
+      "buffer": "200mM MES pH 5.3",
+      "additives": null,
+      "llps_flag": "Y"
+    }
+  },
+  {
+    "id": "llps:36",
+    "dataset": "llps",
+    "sequence": "RGLGYGLGRGLGYGLGRGLGYGLGRGLGYGLGRGLGYGLGRGLGYG",
+    "n_terminal": null,
+    "c_terminal": null,
+    "labels": [
+      "llps"
+    ],
+    "doi": null,
+    "pubmed_id": null,
+    "paper_url": "https://onlinelibrary.wiley.com/doi/full/10.1002/anie.202311479",
+    "pdf_url": null,
+    "metadata": {
+      "peptide_name": "R(GLG)Y",
+      "concentration": "1mM",
+      "temperature_c": "RT",
+      "buffer": "20mM Phosphate Buffer, 150mM NaCl, pH7.4",
+      "additives": null,
+      "llps_flag": "Y"
+    }
+  },
+  {
+    "id": "llps:37",
+    "dataset": "llps",
+    "sequence": "HGLGYGLGHGLGYGLGHGLGYGLGHGLGYGLGHGLGYGLGHGLGYG",
+    "n_terminal": null,
+    "c_terminal": null,
+    "labels": [
+      "llps"
+    ],
+    "doi": null,
+    "pubmed_id": null,
+    "paper_url": "https://onlinelibrary.wiley.com/doi/full/10.1002/anie.202311479",
+    "pdf_url": null,
+    "metadata": {
+      "peptide_name": "H(GLG)Y",
+      "concentration": "1mM",
+      "temperature_c": "RT",
+      "buffer": "20mM Phosphate Buffer, 150mM NaCl, pH7.4",
+      "additives": null,
+      "llps_flag": "Y"
+    }
+  },
+  {
+    "id": "llps:38",
+    "dataset": "llps",
+    "sequence": "KKKKKKKKKK",
+    "n_terminal": null,
+    "c_terminal": null,
+    "labels": [
+      "llps"
+    ],
+    "doi": null,
+    "pubmed_id": null,
+    "paper_url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC7492283/",
+    "pdf_url": null,
+    "metadata": {
+      "peptide_name": "polyK10",
+      "concentration": "6mM",
+      "temperature_c": "NA",
+      "buffer": "10mM Tris, pH 7.4",
+      "additives": "UTP",
+      "llps_flag": "Y"
+    }
+  },
+  {
+    "id": "llps:39",
+    "dataset": "llps",
+    "sequence": "KKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKK",
+    "n_terminal": null,
+    "c_terminal": null,
+    "labels": [
+      "llps"
+    ],
+    "doi": null,
+    "pubmed_id": null,
+    "paper_url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC7492283/",
+    "pdf_url": null,
+    "metadata": {
+      "peptide_name": "polyK50",
+      "concentration": "6mM",
+      "temperature_c": "NA",
+      "buffer": "10mM Tris, pH 7.4",
+      "additives": "UTP",
+      "llps_flag": "Y"
+    }
+  },
+  {
+    "id": "llps:40",
+    "dataset": "llps",
+    "sequence": "KKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKK",
+    "n_terminal": null,
+    "c_terminal": null,
+    "labels": [
+      "llps"
+    ],
+    "doi": null,
+    "pubmed_id": null,
+    "paper_url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC7492283/",
+    "pdf_url": null,
+    "metadata": {
+      "peptide_name": "polyK100",
+      "concentration": "6mM",
+      "temperature_c": "NA",
+      "buffer": "10mM Tris, pH 7.4",
+      "additives": "UTP",
+      "llps_flag": "Y"
+    }
+  },
+  {
+    "id": "llps:41",
+    "dataset": "llps",
+    "sequence": "RRRRRRRRRR",
+    "n_terminal": null,
+    "c_terminal": null,
+    "labels": [
+      "llps"
+    ],
+    "doi": null,
+    "pubmed_id": null,
+    "paper_url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC7492283/",
+    "pdf_url": null,
+    "metadata": {
+      "peptide_name": "polyR10",
+      "concentration": "6mM",
+      "temperature_c": "NA",
+      "buffer": "10mM Tris, pH 7.4",
+      "additives": "UTP",
+      "llps_flag": "Y"
+    }
+  },
+  {
+    "id": "llps:42",
+    "dataset": "llps",
+    "sequence": "RRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRR",
+    "n_terminal": null,
+    "c_terminal": null,
+    "labels": [
+      "llps"
+    ],
+    "doi": null,
+    "pubmed_id": null,
+    "paper_url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC7492283/",
+    "pdf_url": null,
+    "metadata": {
+      "peptide_name": "polyR50",
+      "concentration": "6mM",
+      "temperature_c": "NA",
+      "buffer": "10mM Tris, pH 7.4",
+      "additives": "UTP",
+      "llps_flag": "Y"
+    }
+  },
+  {
+    "id": "llps:43",
+    "dataset": "llps",
+    "sequence": "RRRRRRRRRR",
+    "n_terminal": null,
+    "c_terminal": null,
+    "labels": [
+      "llps"
+    ],
+    "doi": null,
+    "pubmed_id": null,
+    "paper_url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC7492283/",
+    "pdf_url": null,
+    "metadata": {
+      "peptide_name": "polyR10",
+      "concentration": "6mM",
+      "temperature_c": "NA",
+      "buffer": "10mM Tris, pH 7.4",
+      "additives": "UDP",
+      "llps_flag": "Y"
+    }
+  },
+  {
+    "id": "llps:44",
+    "dataset": "llps",
+    "sequence": "RRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRR",
+    "n_terminal": null,
+    "c_terminal": null,
+    "labels": [
+      "llps"
+    ],
+    "doi": null,
+    "pubmed_id": null,
+    "paper_url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC7492283/",
+    "pdf_url": null,
+    "metadata": {
+      "peptide_name": "polyR50",
+      "concentration": "6mM",
+      "temperature_c": "NA",
+      "buffer": "10mM Tris, pH 7.4",
+      "additives": "UDP",
+      "llps_flag": "Y"
+    }
+  },
+  {
+    "id": "llps:45",
+    "dataset": "llps",
+    "sequence": "RRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRR",
+    "n_terminal": null,
+    "c_terminal": null,
+    "labels": [
+      "llps"
+    ],
+    "doi": null,
+    "pubmed_id": null,
+    "paper_url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC7492283/",
+    "pdf_url": null,
+    "metadata": {
+      "peptide_name": "polyR100",
+      "concentration": "6mM",
+      "temperature_c": "NA",
+      "buffer": "10mM Tris, pH 7.4",
+      "additives": "UDP",
+      "llps_flag": "Y"
+    }
+  },
+  {
+    "id": "llps:46",
+    "dataset": "llps",
+    "sequence": "GGGGGGGGGG",
+    "n_terminal": null,
+    "c_terminal": null,
+    "labels": [
+      "llps"
+    ],
+    "doi": null,
+    "pubmed_id": null,
+    "paper_url": "https://www.nature.com/articles/s41467-020-18224-y",
+    "pdf_url": null,
+    "metadata": {
+      "peptide_name": "(Gly)10",
+      "concentration": "2mM",
+      "temperature_c": 37,
+      "buffer": "20mM sodium phosphate, pH 7.4, 10% PEG-8000",
+      "additives": null,
+      "llps_flag": "Y"
+    }
+  },
+  {
+    "id": "llps:47",
+    "dataset": "llps",
+    "sequence": "VVVVVVVVVV",
+    "n_terminal": null,
+    "c_terminal": null,
+    "labels": [
+      "llps"
+    ],
+    "doi": null,
+    "pubmed_id": null,
+    "paper_url": "https://www.nature.com/articles/s41467-020-18224-y",
+    "pdf_url": null,
+    "metadata": {
+      "peptide_name": "(Val)10",
+      "concentration": "1mM",
+      "temperature_c": 37,
+      "buffer": "20mM sodium phosphate, pH 7.4, 10% PEG-8000",
+      "additives": null,
+      "llps_flag": "Y"
+    }
+  },
+  {
+    "id": "llps:48",
+    "dataset": "llps",
+    "sequence": "RRRRRRRRRR",
+    "n_terminal": null,
+    "c_terminal": null,
+    "labels": [
+      "llps"
+    ],
+    "doi": null,
+    "pubmed_id": null,
+    "paper_url": "https://www.nature.com/articles/s41467-020-18224-y",
+    "pdf_url": null,
+    "metadata": {
+      "peptide_name": "(Arg)10",
+      "concentration": "2mM",
+      "temperature_c": 37,
+      "buffer": "20mM sodium phosphate, pH 7.4, 10% PEG-8000, 4M NaCl",
+      "additives": null,
+      "llps_flag": "Y"
+    }
+  },
+  {
+    "id": "llps:49",
+    "dataset": "llps",
+    "sequence": "DDDDDDDDDD",
+    "n_terminal": null,
+    "c_terminal": null,
+    "labels": [
+      "llps"
+    ],
+    "doi": null,
+    "pubmed_id": null,
+    "paper_url": "https://www.nature.com/articles/s41467-020-18224-y",
+    "pdf_url": null,
+    "metadata": {
+      "peptide_name": "(Asp)10",
+      "concentration": "8mM",
+      "temperature_c": 37,
+      "buffer": "20mM sodium phosphate, pH 7.4, 10% PEG-8000, 4M NaCl",
+      "additives": null,
+      "llps_flag": "Y"
+    }
+  },
+  {
+    "id": "llps:50",
+    "dataset": "llps",
+    "sequence": "GGGGG",
+    "n_terminal": null,
+    "c_terminal": null,
+    "labels": [
+      "llps"
+    ],
+    "doi": null,
+    "pubmed_id": null,
+    "paper_url": "https://www.nature.com/articles/s41467-020-18224-y",
+    "pdf_url": null,
+    "metadata": {
+      "peptide_name": "(Gly)5",
+      "concentration": "40mM",
+      "temperature_c": 37,
+      "buffer": "20mM sodium phosphate, pH 7.4, 10% PEG-8000",
+      "additives": null,
+      "llps_flag": "Y"
+    }
+  },
+  {
+    "id": "llps:51",
+    "dataset": "llps",
+    "sequence": "GGGGGG",
+    "n_terminal": null,
+    "c_terminal": null,
+    "labels": [
+      "llps"
+    ],
+    "doi": null,
+    "pubmed_id": null,
+    "paper_url": "https://www.nature.com/articles/s41467-020-18224-y",
+    "pdf_url": null,
+    "metadata": {
+      "peptide_name": "(Gly)6",
+      "concentration": "25mM",
+      "temperature_c": 37,
+      "buffer": "20mM sodium phosphate, pH 7.4, 10% PEG-8000",
+      "additives": null,
+      "llps_flag": "Y"
+    }
+  },
+  {
+    "id": "llps:52",
+    "dataset": "llps",
+    "sequence": "GGGGGGG",
+    "n_terminal": null,
+    "c_terminal": null,
+    "labels": [
+      "llps"
+    ],
+    "doi": null,
+    "pubmed_id": null,
+    "paper_url": "https://www.nature.com/articles/s41467-020-18224-y",
+    "pdf_url": null,
+    "metadata": {
+      "peptide_name": "(Gly)7",
+      "concentration": "20mM",
+      "temperature_c": 37,
+      "buffer": "20mM sodium phosphate, pH 7.4, 10% PEG-8000",
+      "additives": null,
+      "llps_flag": "Y"
+    }
+  },
+  {
+    "id": "llps:53",
+    "dataset": "llps",
+    "sequence": "GGGGGGGG",
+    "n_terminal": null,
+    "c_terminal": null,
+    "labels": [
+      "llps"
+    ],
+    "doi": null,
+    "pubmed_id": null,
+    "paper_url": "https://www.nature.com/articles/s41467-020-18224-y",
+    "pdf_url": null,
+    "metadata": {
+      "peptide_name": "(Gly)8",
+      "concentration": "12mM",
+      "temperature_c": 37,
+      "buffer": "20mM sodium phosphate, pH 7.4, 10% PEG-8000",
+      "additives": null,
+      "llps_flag": "Y"
+    }
+  },
+  {
+    "id": "llps:54",
+    "dataset": "llps",
+    "sequence": "GGGGGGGGG",
+    "n_terminal": null,
+    "c_terminal": null,
+    "labels": [
+      "llps"
+    ],
+    "doi": null,
+    "pubmed_id": null,
+    "paper_url": "https://www.nature.com/articles/s41467-020-18224-y",
+    "pdf_url": null,
+    "metadata": {
+      "peptide_name": "(Gly)9",
+      "concentration": "8mM",
+      "temperature_c": 37,
+      "buffer": "20mM sodium phosphate, pH 7.4, 10% PEG-8000",
+      "additives": null,
+      "llps_flag": "Y"
+    }
+  },
+  {
+    "id": "llps:55",
+    "dataset": "llps",
+    "sequence": "RRRRRRRRRR",
+    "n_terminal": null,
+    "c_terminal": null,
+    "labels": [
+      "llps"
+    ],
+    "doi": null,
+    "pubmed_id": null,
+    "paper_url": "https://www.nature.com/articles/s41467-020-18224-y",
+    "pdf_url": null,
+    "metadata": {
+      "peptide_name": "(Arg)10",
+      "concentration": "0.75mM",
+      "temperature_c": 37,
+      "buffer": "20mM sodium phosphate, pH 7.4, 10% PEG-8000",
+      "additives": "(Asp)10",
+      "llps_flag": "Y"
+    }
+  },
+  {
+    "id": "llps:56",
+    "dataset": "llps",
+    "sequence": "DDDDDDDDDD",
+    "n_terminal": null,
+    "c_terminal": null,
+    "labels": [
+      "llps"
+    ],
+    "doi": null,
+    "pubmed_id": null,
+    "paper_url": "https://www.nature.com/articles/s41467-020-18224-y",
+    "pdf_url": null,
+    "metadata": {
+      "peptide_name": "(Asp)10",
+      "concentration": "0.75mM",
+      "temperature_c": 37,
+      "buffer": "20mM sodium phosphate, pH 7.4, 10% PEG-8000",
+      "additives": "(Arg)10",
+      "llps_flag": "Y"
+    }
+  },
+  {
+    "id": "llps:57",
+    "dataset": "llps",
+    "sequence": "GHGLYGAGFAGHGLHGFAGHGLY",
+    "n_terminal": null,
+    "c_terminal": null,
+    "labels": [
+      "llps"
+    ],
+    "doi": null,
+    "pubmed_id": null,
+    "paper_url": "https://www.nature.com/articles/s42004-023-01094-y",
+    "pdf_url": null,
+    "metadata": {
+      "peptide_name": "GY23",
+      "concentration": "0.4mg/ml",
+      "temperature_c": "NA",
+      "buffer": "50 mM sodium dihydrogen phosphate, pH8, 1M NaCl",
+      "additives": null,
+      "llps_flag": "Y"
+    }
+  },
+  {
+    "id": "llps:58",
+    "dataset": "llps",
+    "sequence": "GHGLYGAGLAGHGLHGFAGHGLY",
+    "n_terminal": null,
+    "c_terminal": null,
+    "labels": [
+      "llps"
+    ],
+    "doi": null,
+    "pubmed_id": null,
+    "paper_url": "https://www.nature.com/articles/s42004-023-01094-y",
+    "pdf_url": null,
+    "metadata": {
+      "peptide_name": "GY23-9F/L",
+      "concentration": "0.9mg/ml",
+      "temperature_c": "NA",
+      "buffer": "50 mM sodium dihydrogen phosphate, pH8, 1M NaCl",
+      "additives": null,
+      "llps_flag": "Y"
+    }
+  },
+  {
+    "id": "llps:59",
+    "dataset": "llps",
+    "sequence": "GHGLYGAGAAGHGLHGFAGHGLY",
+    "n_terminal": null,
+    "c_terminal": null,
+    "labels": [
+      "llps"
+    ],
+    "doi": null,
+    "pubmed_id": null,
+    "paper_url": "https://www.nature.com/articles/s42004-023-01094-y",
+    "pdf_url": null,
+    "metadata": {
+      "peptide_name": "GY23-9F/A",
+      "concentration": "2mg/ml",
+      "temperature_c": "NA",
+      "buffer": "50 mM sodium dihydrogen phosphate, pH8, 1M NaCl",
+      "additives": null,
+      "llps_flag": "Y"
+    }
+  },
+  {
+    "id": "llps:60",
+    "dataset": "llps",
+    "sequence": "GHGLYGFGFAGHGLHGFAGHGLY",
+    "n_terminal": null,
+    "c_terminal": null,
+    "labels": [
+      "llps"
+    ],
+    "doi": null,
+    "pubmed_id": null,
+    "paper_url": "https://www.nature.com/articles/s42004-023-01094-y",
+    "pdf_url": null,
+    "metadata": {
+      "peptide_name": "GY23-7A/F",
+      "concentration": "0.1mg/ml",
+      "temperature_c": "NA",
+      "buffer": "50 mM sodium dihydrogen phosphate, pH8, 1M NaCl",
+      "additives": null,
+      "llps_flag": "Y"
+    }
+  },
+  {
+    "id": "llps:61",
+    "dataset": "llps",
+    "sequence": "GHGLYGFGFFGHGLHGFAGHGLY",
+    "n_terminal": null,
+    "c_terminal": null,
+    "labels": [
+      "llps"
+    ],
+    "doi": null,
+    "pubmed_id": null,
+    "paper_url": "https://www.nature.com/articles/s42004-023-01094-y",
+    "pdf_url": null,
+    "metadata": {
+      "peptide_name": "GY23-7A/F-10A/F",
+      "concentration": "0.008mg/ml",
+      "temperature_c": "NA",
+      "buffer": "50 mM sodium dihydrogen phosphate, pH8, 1M NaCl",
+      "additives": null,
+      "llps_flag": "Y"
+    }
+  },
+  {
+    "id": "llps:62",
+    "dataset": "llps",
+    "sequence": "GHGLYGFGFFGHGLHGFFGHGLY",
+    "n_terminal": null,
+    "c_terminal": null,
+    "labels": [
+      "llps"
+    ],
+    "doi": null,
+    "pubmed_id": null,
+    "paper_url": "https://www.nature.com/articles/s42004-023-01094-y",
+    "pdf_url": null,
+    "metadata": {
+      "peptide_name": "GY23-7A/F-10A/F-18A/F",
+      "concentration": "0.004mg/ml",
+      "temperature_c": "NA",
+      "buffer": "50 mM sodium dihydrogen phosphate, pH8, 1M NaCl",
+      "additives": null,
+      "llps_flag": "Y"
+    }
+  },
+  {
+    "id": "llps:63",
+    "dataset": "llps",
+    "sequence": "PRPRPRPRPRPRPRPRPRPRPRPRPRPRPRPRPRPRPRPR",
+    "n_terminal": null,
+    "c_terminal": null,
+    "labels": [
+      "llps"
+    ],
+    "doi": null,
+    "pubmed_id": null,
+    "paper_url": "https://pubs.rsc.org/en/content/articlelanding/2021/sc/d0sc04993j",
+    "pdf_url": null,
+    "metadata": {
+      "peptide_name": "PR20",
+      "concentration": "250uM",
+      "temperature_c": 0,
+      "buffer": "100 mM pH 7 potassium phosphate buffer with 30% v/v PEG 300",
+      "additives": null,
+      "llps_flag": "Y"
+    }
+  },
+  {
+    "id": "llps:64",
+    "dataset": "llps",
+    "sequence": "WGRGRGRGWPGVGY",
+    "n_terminal": null,
+    "c_terminal": null,
+    "labels": [
+      "llps"
+    ],
+    "doi": null,
+    "pubmed_id": null,
+    "paper_url": "https://www.nature.com/articles/s41467-023-36060-8",
+    "pdf_url": null,
+    "metadata": {
+      "peptide_name": "WGR-1",
+      "concentration": "10mM",
+      "temperature_c": "RT",
+      "buffer": "Tris, 0.2M NaCl, pH8",
+      "additives": null,
+      "llps_flag": "Y"
+    }
+  },
+  {
+    "id": "llps:65",
+    "dataset": "llps",
+    "sequence": "WGRGRGRGWPGVGF",
+    "n_terminal": null,
+    "c_terminal": null,
+    "labels": [
+      "llps"
+    ],
+    "doi": null,
+    "pubmed_id": null,
+    "paper_url": "https://www.nature.com/articles/s41467-023-36060-8",
+    "pdf_url": null,
+    "metadata": {
+      "peptide_name": "WGR-3",
+      "concentration": "10mM",
+      "temperature_c": "RT",
+      "buffer": "Tris, 0.2M NaCl, pH8",
+      "additives": null,
+      "llps_flag": "Y"
+    }
+  },
+  {
+    "id": "llps:66",
+    "dataset": "llps",
+    "sequence": "WGRGRGRGWY",
+    "n_terminal": null,
+    "c_terminal": null,
+    "labels": [
+      "llps"
+    ],
+    "doi": null,
+    "pubmed_id": null,
+    "paper_url": "https://www.nature.com/articles/s41467-023-36060-8",
+    "pdf_url": null,
+    "metadata": {
+      "peptide_name": "WGR-4",
+      "concentration": "10mM",
+      "temperature_c": "RT",
+      "buffer": "Tris, 0.2M NaCl, pH8",
+      "additives": null,
+      "llps_flag": "Y"
+    }
+  },
+  {
+    "id": "llps:67",
+    "dataset": "llps",
+    "sequence": "WGRGRGWPGVGY",
+    "n_terminal": null,
+    "c_terminal": null,
+    "labels": [
+      "llps"
+    ],
+    "doi": null,
+    "pubmed_id": null,
+    "paper_url": "https://www.nature.com/articles/s41467-023-36060-8",
+    "pdf_url": null,
+    "metadata": {
+      "peptide_name": "WGR-5",
+      "concentration": "5mM",
+      "temperature_c": "RT",
+      "buffer": "Tris, 0.2M NaCl, pH8",
+      "additives": null,
+      "llps_flag": "Y"
+    }
+  },
+  {
+    "id": "llps:68",
+    "dataset": "llps",
+    "sequence": "WGRGRGRGWPGVGY",
+    "n_terminal": null,
+    "c_terminal": null,
+    "labels": [
+      "llps"
+    ],
+    "doi": null,
+    "pubmed_id": null,
+    "paper_url": "https://onlinelibrary.wiley.com/doi/full/10.1002/smll.202401665",
+    "pdf_url": null,
+    "metadata": {
+      "peptide_name": "WGR-1(2)",
+      "concentration": "0.5mM",
+      "temperature_c": "NA",
+      "buffer": "10mmTris-HCl buffer pH7.5",
+      "additives": "0.01mg/ml poly-U",
+      "llps_flag": "Y"
+    }
+  },
+  {
+    "id": "llps:69",
+    "dataset": "llps",
+    "sequence": "WGRGRGRGWPGVGF",
+    "n_terminal": null,
+    "c_terminal": null,
+    "labels": [
+      "llps"
+    ],
+    "doi": null,
+    "pubmed_id": null,
+    "paper_url": "https://onlinelibrary.wiley.com/doi/full/10.1002/smll.202401665",
+    "pdf_url": null,
+    "metadata": {
+      "peptide_name": "WGR-2",
+      "concentration": "0.5mM",
+      "temperature_c": "NA",
+      "buffer": "10mmTris-HCl buffer pH7.5",
+      "additives": "0.01mg/ml poly-U",
+      "llps_flag": "Y"
+    }
+  },
+  {
+    "id": "llps:70",
+    "dataset": "llps",
+    "sequence": "WGRGRGRGWY",
+    "n_terminal": null,
+    "c_terminal": null,
+    "labels": [
+      "llps"
+    ],
+    "doi": null,
+    "pubmed_id": null,
+    "paper_url": "https://onlinelibrary.wiley.com/doi/full/10.1002/smll.202401665",
+    "pdf_url": null,
+    "metadata": {
+      "peptide_name": "WGR-3(2)",
+      "concentration": "0.5mM",
+      "temperature_c": "NA",
+      "buffer": "10mmTris-HCl buffer pH7.5",
+      "additives": "0.01mg/ml poly-U",
+      "llps_flag": "Y"
+    }
+  },
+  {
+    "id": "llps:71",
+    "dataset": "llps",
+    "sequence": "WGRGRGRGWPGVG",
+    "n_terminal": null,
+    "c_terminal": null,
+    "labels": [
+      "llps"
+    ],
+    "doi": null,
+    "pubmed_id": null,
+    "paper_url": "https://onlinelibrary.wiley.com/doi/full/10.1002/smll.202401665",
+    "pdf_url": null,
+    "metadata": {
+      "peptide_name": "WGR-4(2)",
+      "concentration": "0.5mM",
+      "temperature_c": "NA",
+      "buffer": "10mmTris-HCl buffer pH7.5",
+      "additives": "0.01mg/ml poly-U",
+      "llps_flag": "Y"
+    }
+  },
+  {
+    "id": "llps:72",
+    "dataset": "llps",
+    "sequence": "GRGRGRGWPGVGY",
+    "n_terminal": null,
+    "c_terminal": null,
+    "labels": [
+      "llps"
+    ],
+    "doi": null,
+    "pubmed_id": null,
+    "paper_url": "https://onlinelibrary.wiley.com/doi/full/10.1002/smll.202401665",
+    "pdf_url": null,
+    "metadata": {
+      "peptide_name": "WGR-5(2)",
+      "concentration": "0.5mM",
+      "temperature_c": "NA",
+      "buffer": "10mmTris-HCl buffer pH7.5",
+      "additives": "0.01mg/ml poly-U",
+      "llps_flag": "Y"
+    }
+  },
+  {
+    "id": "llps:73",
+    "dataset": "llps",
+    "sequence": "WGRGRGRGPGVGY",
+    "n_terminal": null,
+    "c_terminal": null,
+    "labels": [
+      "llps"
+    ],
+    "doi": null,
+    "pubmed_id": null,
+    "paper_url": "https://onlinelibrary.wiley.com/doi/full/10.1002/smll.202401665",
+    "pdf_url": null,
+    "metadata": {
+      "peptide_name": "WGR-6",
+      "concentration": "0.5mM",
+      "temperature_c": "NA",
+      "buffer": "10mmTris-HCl buffer pH7.5",
+      "additives": "0.1mg/ml poly-U",
+      "llps_flag": "Y"
+    }
+  },
+  {
+    "id": "llps:74",
+    "dataset": "llps",
+    "sequence": "WGRGRGRGAPGVGY",
+    "n_terminal": null,
+    "c_terminal": null,
+    "labels": [
+      "llps"
+    ],
+    "doi": null,
+    "pubmed_id": null,
+    "paper_url": "https://onlinelibrary.wiley.com/doi/full/10.1002/smll.202401665",
+    "pdf_url": null,
+    "metadata": {
+      "peptide_name": "WGR-7",
+      "concentration": "0.5mM",
+      "temperature_c": "NA",
+      "buffer": "10mmTris-HCl buffer pH7.5",
+      "additives": "0.01mg/ml poly-U",
+      "llps_flag": "Y"
+    }
+  },
+  {
+    "id": "llps:75",
+    "dataset": "llps",
+    "sequence": "GRGRGRGAPGVGY",
+    "n_terminal": null,
+    "c_terminal": null,
+    "labels": [
+      "llps"
+    ],
+    "doi": null,
+    "pubmed_id": null,
+    "paper_url": "https://onlinelibrary.wiley.com/doi/full/10.1002/smll.202401665",
+    "pdf_url": null,
+    "metadata": {
+      "peptide_name": "WGR-8",
+      "concentration": "0.5mM",
+      "temperature_c": "NA",
+      "buffer": "10mmTris-HCl buffer pH7.5",
+      "additives": "0.1mg/ml poly-U",
+      "llps_flag": "Y"
+    }
+  },
+  {
+    "id": "llps:76",
+    "dataset": "llps",
+    "sequence": "GRGRGRAPGVG",
+    "n_terminal": null,
+    "c_terminal": null,
+    "labels": [
+      "llps"
+    ],
+    "doi": null,
+    "pubmed_id": null,
+    "paper_url": "https://onlinelibrary.wiley.com/doi/full/10.1002/smll.202401665",
+    "pdf_url": null,
+    "metadata": {
+      "peptide_name": "WGR-9",
+      "concentration": "2mM",
+      "temperature_c": "NA",
+      "buffer": "10mmTris-HCl buffer pH7.5",
+      "additives": "0.1mg/ml poly-U",
+      "llps_flag": "Y"
+    }
+  }
+]

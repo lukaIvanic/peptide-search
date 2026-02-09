@@ -40,12 +40,16 @@ pip install -r requirements.txt
 
 4) Configure environment
 - Copy `.env.example` to `.env` and adjust values as needed:
-  - `LLM_PROVIDER` defaults to `mock` so you can demo without keys.
+  - `LLM_PROVIDER` is required (one of `openai`, `openai-full`, `openai-mini`, `openai-nano`, `deepseek`, `mock`).
   - To use DeepSeek, set `LLM_PROVIDER=deepseek` and `DEEPSEEK_API_KEY=...`.
 
 5) Run the server:
 ```powershell
-uvicorn app.main:app --reload
+.\scripts\dev_server.ps1
+```
+If you need maximum stability (no hot reloads), use:
+```powershell
+.\scripts\dev_server_no_reload.ps1
 ```
 
 6) Open the UI:

@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 from enum import Enum, auto
-from typing import Optional, Protocol, runtime_checkable
+from typing import Optional, Protocol, runtime_checkable, List, Tuple, Dict
 
 
 class InputType(Enum):
@@ -11,6 +11,7 @@ class InputType(Enum):
     TEXT = auto()      # Plain text content
     URL = auto()       # URL to fetch (PDF or HTML)
     FILE = auto()      # Raw file bytes
+    MULTI_FILE = auto()  # Multiple raw files
 
 
 @dataclass
@@ -26,6 +27,7 @@ class DocumentInput:
     url: Optional[str] = None
     file_content: Optional[bytes] = None
     filename: Optional[str] = None
+    files: Optional[List[Tuple[bytes, str]]] = None
     metadata_hint: str = ""
     
     @classmethod
@@ -53,6 +55,15 @@ class DocumentInput:
             input_type=InputType.FILE,
             file_content=content,
             filename=filename,
+            metadata_hint=metadata_hint,
+        )
+
+    @classmethod
+    def from_files(cls, files: List[Tuple[bytes, str]], metadata_hint: str = "") -> "DocumentInput":
+        """Create input from multiple file bytes."""
+        return cls(
+            input_type=InputType.MULTI_FILE,
+            files=files,
             metadata_hint=metadata_hint,
         )
 
@@ -86,6 +97,10 @@ class LLMProvider(Protocol):
     
     def capabilities(self) -> LLMCapabilities:
         """Return provider capabilities."""
+        ...
+
+    def get_last_usage(self) -> Optional[Dict[str, Optional[int]]]:
+        """Return token usage from the most recent call, if available."""
         ...
     
     async def generate(

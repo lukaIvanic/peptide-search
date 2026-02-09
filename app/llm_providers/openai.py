@@ -20,6 +20,14 @@ RESPONSES_ENDPOINT = "https://api.openai.com/v1/responses"
 # Files API (for uploading files)
 FILES_ENDPOINT = "https://api.openai.com/v1/files"
 
+OPENAI_TIMEOUTS = {
+    "chat": 600,
+    "responses_url": 1200,
+    "responses_file": 1200,
+    "upload": 600,
+    "delete": 60,
+}
+
 
 class OpenAIProvider:
     """OpenAI provider that can process PDFs directly via URL using the Responses API."""
@@ -116,7 +124,7 @@ class OpenAIProvider:
             "purpose": (None, "user_data"),
         }
 
-        async with httpx.AsyncClient(timeout=120) as client:
+        async with httpx.AsyncClient(timeout=OPENAI_TIMEOUTS["upload"]) as client:
             logger.info(f"Uploading file to OpenAI: {filename}")
             resp = await client.post(FILES_ENDPOINT, headers=headers, files=files)
             if resp.status_code != 200:
@@ -141,7 +149,7 @@ class OpenAIProvider:
         }
 
         try:
-            async with httpx.AsyncClient(timeout=30) as client:
+            async with httpx.AsyncClient(timeout=OPENAI_TIMEOUTS["delete"]) as client:
                 await client.delete(f"{FILES_ENDPOINT}/{file_id}", headers=headers)
                 logger.info(f"File deleted: {file_id}")
         except Exception as e:
@@ -201,7 +209,7 @@ class OpenAIProvider:
         if max_tokens:
             payload["max_output_tokens"] = max_tokens
 
-        async with httpx.AsyncClient(timeout=300) as client:
+        async with httpx.AsyncClient(timeout=OPENAI_TIMEOUTS["responses_file"]) as client:
             logger.info(f"Calling OpenAI Responses API with file_id: {file_id}")
             resp = await client.post(RESPONSES_ENDPOINT, headers=headers, json=payload)
             if resp.status_code != 200:
@@ -307,7 +315,7 @@ class OpenAIProvider:
         if max_tokens:
             payload["max_output_tokens"] = max_tokens
 
-        async with httpx.AsyncClient(timeout=300) as client:
+        async with httpx.AsyncClient(timeout=OPENAI_TIMEOUTS["responses_url"]) as client:
             logger.info(f"Calling OpenAI Responses API with PDF: {pdf_url}")
             resp = await client.post(RESPONSES_ENDPOINT, headers=headers, json=payload)
             if resp.status_code != 200:
@@ -399,7 +407,7 @@ class OpenAIProvider:
         if supports_temperature:
             payload["temperature"] = temperature
 
-        async with httpx.AsyncClient(timeout=180) as client:
+        async with httpx.AsyncClient(timeout=OPENAI_TIMEOUTS["chat"]) as client:
             resp = await client.post(CHAT_COMPLETIONS_ENDPOINT, headers=headers, json=payload)
             if resp.status_code != 200:
                 error_text = resp.text

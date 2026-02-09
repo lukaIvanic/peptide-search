@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 import json
-from typing import Optional
+from typing import Optional, Dict
 
 from .base import DocumentInput, LLMCapabilities, LLMProvider
 
@@ -22,6 +22,9 @@ class MockProvider:
             supports_pdf_file=True,
             supports_json_mode=True,
         )
+
+    def get_last_usage(self) -> Optional[Dict[str, Optional[int]]]:
+        return None
 
     async def generate(
         self,

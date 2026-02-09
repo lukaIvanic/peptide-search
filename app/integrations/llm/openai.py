@@ -17,6 +17,15 @@ CHAT_COMPLETIONS_ENDPOINT = "https://api.openai.com/v1/chat/completions"
 RESPONSES_ENDPOINT = "https://api.openai.com/v1/responses"
 FILES_ENDPOINT = "https://api.openai.com/v1/files"
 
+OPENAI_TIMEOUTS = {
+    "stream": 1200,
+    "chat": 600,
+    "responses_url": 1200,
+    "responses_file": 1200,
+    "upload": 600,
+    "delete": 60,
+}
+
 
 class OpenAIProvider:
     """OpenAI provider with support for direct PDF processing via Responses API."""
@@ -25,12 +34,15 @@ class OpenAIProvider:
         self,
         api_key: Optional[str] = None,
         model: Optional[str] = None,
+        provider_name: Optional[str] = None,
     ) -> None:
         self._api_key = api_key or settings.OPENAI_API_KEY
         self._model = model or settings.OPENAI_MODEL
+        self._provider_name = (provider_name or "openai").lower()
+        self._last_usage: Optional[Dict[str, Optional[int]]] = None
 
     def name(self) -> str:
-        return "openai"
+        return self._provider_name
     
     def model_name(self) -> str:
         return self._model
@@ -42,6 +54,12 @@ class OpenAIProvider:
             supports_json_mode=True,
         )
 
+    def get_last_usage(self) -> Optional[Dict[str, Optional[int]]]:
+        """Return token usage from the most recent successful call."""
+        if not self._last_usage:
+            return None
+        return dict(self._last_usage)
+
     async def generate(
         self,
         system_prompt: str,
@@ -51,6 +69,7 @@ class OpenAIProvider:
         max_tokens: int = 4000,
     ) -> str:
         """Generate JSON response, handling different input types."""
+        self._last_usage = None
         if document is None or document.input_type == InputType.TEXT:
             # Text-only: use Chat Completions API
             full_prompt = user_prompt
@@ -84,6 +103,19 @@ class OpenAIProvider:
                 max_tokens=max_tokens,
             )
         
+        elif document.input_type == InputType.MULTI_FILE:
+            # Multiple files: upload then use Responses API with file_ids
+            files = document.files or []
+            if not files:
+                raise ValueError("No files provided for MULTI_FILE input")
+            return await self._call_responses_api_with_files(
+                system_prompt=system_prompt,
+                user_prompt=user_prompt,
+                files=files,
+                temperature=temperature,
+                max_tokens=max_tokens,
+            )
+        
         raise ValueError(f"Unsupported input type: {document.input_type}")
 
     async def generate_stream(
@@ -94,6 +126,7 @@ class OpenAIProvider:
         max_tokens: int = 4000,
     ):
         """Stream JSON response tokens for text-only follow-ups."""
+        self._last_usage = None
         if not self._api_key:
             raise RuntimeError("OPENAI_API_KEY is not set")
 
@@ -122,7 +155,7 @@ class OpenAIProvider:
         if supports_temperature:
             payload["temperature"] = temperature
 
-        async with httpx.AsyncClient(timeout=300) as client:
+        async with httpx.AsyncClient(timeout=OPENAI_TIMEOUTS["stream"]) as client:
             async with client.stream(
                 "POST",
                 CHAT_COMPLETIONS_ENDPOINT,
@@ -187,11 +220,12 @@ class OpenAIProvider:
         if supports_temperature:
             payload["temperature"] = temperature
 
-        async with httpx.AsyncClient(timeout=180) as client:
+        async with httpx.AsyncClient(timeout=OPENAI_TIMEOUTS["chat"]) as client:
             resp = await client.post(CHAT_COMPLETIONS_ENDPOINT, headers=headers, json=payload)
             if resp.status_code != 200:
                 raise RuntimeError(f"OpenAI API error ({resp.status_code}): {resp.text}")
             data = resp.json()
+            self._last_usage = self._normalize_usage(data)
 
         content = data["choices"][0]["message"]["content"]
         text = self._clean_json_response(content)
@@ -244,12 +278,13 @@ class OpenAIProvider:
         if max_tokens:
             payload["max_output_tokens"] = max_tokens
 
-        async with httpx.AsyncClient(timeout=300) as client:
+        async with httpx.AsyncClient(timeout=OPENAI_TIMEOUTS["responses_url"]) as client:
             logger.info(f"Calling OpenAI Responses API with PDF: {pdf_url}")
             resp = await client.post(RESPONSES_ENDPOINT, headers=headers, json=payload)
             if resp.status_code != 200:
                 raise RuntimeError(f"OpenAI API error ({resp.status_code}): {resp.text}")
             data = resp.json()
+            self._last_usage = self._normalize_usage(data)
 
         return self._extract_response_text(data)
 
@@ -275,6 +310,30 @@ class OpenAIProvider:
         finally:
             await self._delete_file(file_id)
 
+    async def _call_responses_api_with_files(
+        self,
+        system_prompt: str,
+        user_prompt: str,
+        files: List[tuple[bytes, str]],
+        temperature: float,
+        max_tokens: int,
+    ) -> str:
+        """Upload files and call Responses API with file_ids."""
+        file_ids: List[str] = []
+        try:
+            for content, filename in files:
+                file_ids.append(await self._upload_file(content, filename))
+            return await self._call_responses_api_with_file_ids(
+                system_prompt=system_prompt,
+                user_prompt=user_prompt,
+                file_ids=file_ids,
+                temperature=temperature,
+                max_tokens=max_tokens,
+            )
+        finally:
+            for file_id in file_ids:
+                await self._delete_file(file_id)
+
     async def _upload_file(self, file_content: bytes, filename: str) -> str:
         """Upload a file to OpenAI Files API and return the file ID."""
         if not self._api_key:
@@ -286,7 +345,7 @@ class OpenAIProvider:
             "purpose": (None, "user_data"),
         }
 
-        async with httpx.AsyncClient(timeout=120) as client:
+        async with httpx.AsyncClient(timeout=OPENAI_TIMEOUTS["upload"]) as client:
             logger.info(f"Uploading file to OpenAI: {filename}")
             resp = await client.post(FILES_ENDPOINT, headers=headers, files=files)
             if resp.status_code != 200:
@@ -307,7 +366,7 @@ class OpenAIProvider:
 
         headers = {"Authorization": f"Bearer {self._api_key}"}
         try:
-            async with httpx.AsyncClient(timeout=30) as client:
+            async with httpx.AsyncClient(timeout=OPENAI_TIMEOUTS["delete"]) as client:
                 await client.delete(f"{FILES_ENDPOINT}/{file_id}", headers=headers)
                 logger.info(f"File deleted: {file_id}")
         except Exception as e:
@@ -359,12 +418,67 @@ class OpenAIProvider:
         if max_tokens:
             payload["max_output_tokens"] = max_tokens
 
-        async with httpx.AsyncClient(timeout=300) as client:
+        async with httpx.AsyncClient(timeout=OPENAI_TIMEOUTS["responses_file"]) as client:
             logger.info(f"Calling OpenAI Responses API with file_id: {file_id}")
             resp = await client.post(RESPONSES_ENDPOINT, headers=headers, json=payload)
             if resp.status_code != 200:
                 raise RuntimeError(f"OpenAI API error ({resp.status_code}): {resp.text}")
             data = resp.json()
+            self._last_usage = self._normalize_usage(data)
+
+        return self._extract_response_text(data)
+
+    async def _call_responses_api_with_file_ids(
+        self,
+        system_prompt: str,
+        user_prompt: str,
+        file_ids: List[str],
+        temperature: float,
+        max_tokens: int,
+    ) -> str:
+        """Call the Responses API with multiple file IDs."""
+        if not self._api_key:
+            raise RuntimeError("OPENAI_API_KEY is not set")
+
+        headers = {
+            "Authorization": f"Bearer {self._api_key}",
+            "Content-Type": "application/json",
+        }
+
+        file_parts = [{"type": "input_file", "file_id": file_id} for file_id in file_ids]
+        input_content: List[Dict[str, Any]] = [
+            {
+                "role": "developer",
+                "content": [{"type": "input_text", "text": system_prompt}],
+            },
+            {
+                "role": "user",
+                "content": [{"type": "input_text", "text": user_prompt}, *file_parts],
+            },
+        ]
+
+        supports_temperature = not any(
+            self._model.startswith(prefix) for prefix in ("o1", "o3", "gpt-5")
+        )
+
+        payload: Dict[str, Any] = {
+            "model": self._model,
+            "input": input_content,
+            "text": {"format": {"type": "json_object"}},
+        }
+
+        if supports_temperature:
+            payload["temperature"] = temperature
+        if max_tokens:
+            payload["max_output_tokens"] = max_tokens
+
+        async with httpx.AsyncClient(timeout=OPENAI_TIMEOUTS["responses_file"]) as client:
+            logger.info("Calling OpenAI Responses API with multiple file_ids")
+            resp = await client.post(RESPONSES_ENDPOINT, headers=headers, json=payload)
+            if resp.status_code != 200:
+                raise RuntimeError(f"OpenAI API error ({resp.status_code}): {resp.text}")
+            data = resp.json()
+            self._last_usage = self._normalize_usage(data)
 
         return self._extract_response_text(data)
 
@@ -423,3 +537,52 @@ class OpenAIProvider:
                     remainder = remainder[:-3]
                 text = remainder.strip()
         return text
+
+    def _normalize_usage(self, data: dict) -> Optional[Dict[str, Optional[int]]]:
+        usage = data.get("usage")
+        if not isinstance(usage, dict):
+            return None
+
+        input_tokens = usage.get("input_tokens", usage.get("prompt_tokens"))
+        output_tokens = usage.get("output_tokens", usage.get("completion_tokens"))
+        total_tokens = usage.get("total_tokens")
+
+        details = None
+        output_details = usage.get("output_tokens_details")
+        completion_details = usage.get("completion_tokens_details")
+        if isinstance(output_details, dict):
+            details = output_details
+        elif isinstance(completion_details, dict):
+            details = completion_details
+
+        reasoning_tokens = None
+        if details:
+            reasoning_tokens = details.get("reasoning_tokens")
+        if reasoning_tokens is None:
+            reasoning_tokens = usage.get("reasoning_tokens")
+
+        def _coerce(value: Any) -> Optional[int]:
+            if value is None:
+                return None
+            try:
+                return int(value)
+            except (TypeError, ValueError):
+                return None
+
+        input_tokens = _coerce(input_tokens)
+        output_tokens = _coerce(output_tokens)
+        reasoning_tokens = _coerce(reasoning_tokens)
+        total_tokens = _coerce(total_tokens)
+
+        if total_tokens is None and input_tokens is not None and output_tokens is not None:
+            total_tokens = input_tokens + output_tokens
+
+        if all(value is None for value in (input_tokens, output_tokens, reasoning_tokens, total_tokens)):
+            return None
+
+        return {
+            "input_tokens": input_tokens,
+            "output_tokens": output_tokens,
+            "reasoning_tokens": reasoning_tokens,
+            "total_tokens": total_tokens,
+        }

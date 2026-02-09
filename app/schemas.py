@@ -39,7 +39,8 @@ class EnqueueItem(BaseModel):
 class EnqueueRequest(BaseModel):
 	"""Request to enqueue papers for extraction."""
 	papers: List[EnqueueItem]
-	provider: str = "openai"  # openai | mock
+	provider: str = "openai"  # openai | openai-mini | openai-nano | mock | deepseek
+	prompt_id: Optional[int] = None
 
 
 class EnqueuedRun(BaseModel):
@@ -57,6 +58,119 @@ class EnqueueResponse(BaseModel):
 	runs: List[EnqueuedRun]
 	total: int
 	enqueued: int
+	skipped: int
+
+
+class UploadEnqueueResponse(BaseModel):
+	"""Response from upload enqueue endpoint."""
+	run_id: int
+	paper_id: Optional[int] = None
+	status: str
+	message: str
+
+
+# --- Baseline models ---
+
+class BaselineDatasetInfo(BaseModel):
+	id: str
+	label: Optional[str] = None
+	description: Optional[str] = None
+	count: int = 0
+
+
+class BaselineRunSummary(BaseModel):
+	run_id: int
+	paper_id: Optional[int] = None
+	status: str
+	failure_reason: Optional[str] = None
+	created_at: Optional[str] = None
+	model_provider: Optional[str] = None
+	model_name: Optional[str] = None
+
+
+class BaselineCase(BaseModel):
+	id: str
+	dataset: str
+	sequence: Optional[str] = None
+	n_terminal: Optional[str] = None
+	c_terminal: Optional[str] = None
+	labels: List[str] = Field(default_factory=list)
+	doi: Optional[str] = None
+	pubmed_id: Optional[str] = None
+	paper_url: Optional[str] = None
+	pdf_url: Optional[str] = None
+	metadata: Dict[str, Any] = Field(default_factory=dict)
+
+
+class BaselineCaseSummary(BaselineCase):
+	latest_run: Optional[BaselineRunSummary] = None
+
+
+class BaselineCasesResponse(BaseModel):
+	cases: List[BaselineCaseSummary]
+	datasets: List[BaselineDatasetInfo]
+	total_cases: int
+
+
+class BaselineEnqueuedRun(BaseModel):
+	baseline_case_id: str
+	run_id: Optional[int] = None
+	status: Optional[str] = None
+	skipped: bool = False
+	skip_reason: Optional[str] = None
+
+
+class BaselineEnqueueRequest(BaseModel):
+	provider: str = "openai"  # openai | openai-mini | openai-nano | mock | deepseek
+	prompt_id: Optional[int] = None
+	force: bool = False
+	dataset: Optional[str] = None
+
+
+class BaselineEnqueueResponse(BaseModel):
+	runs: List[BaselineEnqueuedRun]
+	total: int
+	enqueued: int
+	skipped: int
+
+
+class ResolvedSourceResponse(BaseModel):
+	found: bool
+	title: Optional[str] = None
+	doi: Optional[str] = None
+	url: Optional[str] = None
+	pdf_url: Optional[str] = None
+	source: Optional[str] = None
+	year: Optional[int] = None
+	authors: List[str] = Field(default_factory=list)
+
+
+class LocalPdfInfoResponse(BaseModel):
+	found: bool
+	filename: Optional[str] = None
+
+
+class BaselineRetryRequest(BaseModel):
+	source_url: Optional[str] = None
+	provider: Optional[str] = None  # openai | openai-mini | openai-nano | mock | deepseek
+	prompt_id: Optional[int] = None
+
+
+class RunRetryWithSourceRequest(BaseModel):
+	source_url: Optional[str] = None
+	provider: Optional[str] = None  # openai | openai-mini | openai-nano | mock | deepseek
+	prompt_id: Optional[int] = None
+
+
+class BaselineShadowSeedRequest(BaseModel):
+	dataset: Optional[str] = None
+	limit: Optional[int] = None
+	force: bool = False
+
+
+class BaselineShadowSeedResponse(BaseModel):
+	total: int
+	seeded: int
 	skipped: int
 
 
@@ -166,11 +280,12 @@ class ExtractRequest(BaseModel):
 	source: Optional[str] = None
 	year: Optional[int] = None
 	authors: List[str] = Field(default_factory=list)
+	prompt_id: Optional[int] = None
 
 
 class FollowupRequest(BaseModel):
 	instruction: str
-	provider: Optional[str] = None
+	provider: Optional[str] = None  # openai | openai-mini | openai-nano | mock | deepseek
 
 
 class EditRunRequest(BaseModel):
@@ -266,6 +381,47 @@ class QualityRulesResponse(BaseModel):
 	rules: Dict[str, Any]
 
 
+class PromptVersionInfo(BaseModel):
+	id: int
+	prompt_id: int
+	version_index: int
+	content: str
+	notes: Optional[str] = None
+	created_by: Optional[str] = None
+	created_at: Optional[str] = None
+
+
+class PromptInfo(BaseModel):
+	id: int
+	name: str
+	description: Optional[str] = None
+	is_active: bool
+	created_at: Optional[str] = None
+	updated_at: Optional[str] = None
+	latest_version: Optional[PromptVersionInfo] = None
+	versions: List[PromptVersionInfo] = Field(default_factory=list)
+
+
+class PromptListResponse(BaseModel):
+	prompts: List[PromptInfo]
+	active_prompt_id: Optional[int] = None
+
+
+class PromptCreateRequest(BaseModel):
+	name: str
+	description: Optional[str] = None
+	content: str
+	notes: Optional[str] = None
+	activate: bool = False
+	created_by: Optional[str] = None
+
+
+class PromptVersionCreateRequest(BaseModel):
+	content: str
+	notes: Optional[str] = None
+	created_by: Optional[str] = None
+
+
 class PaperRow(BaseModel):
 	id: int
 	title: str
@@ -330,7 +486,7 @@ class BulkRetryRequest(BaseModel):
 	limit: int = 25
 	max_runs: int = 1000
 	bucket: Optional[str] = None
-	provider: Optional[str] = None
+	provider: Optional[str] = None  # openai | openai-mini | openai-nano | mock | deepseek
 	source: Optional[str] = None
 	reason: Optional[str] = None
 

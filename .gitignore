@@ -22,5 +22,8 @@ papers/
 *.pdf
 *.gz
 
+# Keep baseline downloaded PDFs
+!Peptide\ LLM/Datasets/downloaded_papers/**/*.pdf
+
 .DS_Store
 Thumbs.db
