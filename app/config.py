@@ -71,4 +71,3 @@ class Settings:
 
 settings = Settings()
 
-

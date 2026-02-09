@@ -70,22 +70,9 @@ def load_local_pdf_mapping() -> Dict[str, Dict]:
     return normalized
 
 
-def resolve_local_pdf_path(doi: Optional[str]) -> Optional[Path]:
-    normalized_doi = normalize_doi(doi)
-    if not normalized_doi:
-        return None
-    mapping = load_local_pdf_mapping()
-    entry = mapping.get(normalized_doi)
-    if not entry:
-        base_doi = re.sub(r"/v\\d+$", "", normalized_doi)
-        if base_doi != normalized_doi:
-            entry = mapping.get(base_doi)
-    if not entry:
-        return None
-    main_files = entry.get("main") or []
-    if not main_files:
-        return None
-    raw_path = str(main_files[0]).strip()
+def _resolve_single_pdf_path(raw_path: str) -> Optional[Path]:
+    """Resolve a single PDF path from local_pdfs.json to an actual file path."""
+    raw_path = str(raw_path).strip()
     if not raw_path:
         return None
 
@@ -122,6 +109,62 @@ def resolve_local_pdf_path(doi: Optional[str]) -> Optional[Path]:
         if candidate.exists():
             return candidate
     return None
+
+
+def resolve_local_pdf_path(doi: Optional[str]) -> Optional[Path]:
+    """Resolve the main PDF path for a DOI."""
+    normalized_doi = normalize_doi(doi)
+    if not normalized_doi:
+        return None
+    mapping = load_local_pdf_mapping()
+    entry = mapping.get(normalized_doi)
+    if not entry:
+        base_doi = re.sub(r"/v\d+$", "", normalized_doi)
+        if base_doi != normalized_doi:
+            entry = mapping.get(base_doi)
+    if not entry:
+        return None
+    main_files = entry.get("main") or []
+    if not main_files:
+        return None
+    return _resolve_single_pdf_path(main_files[0])
+
+
+def resolve_all_local_pdf_paths(doi: Optional[str]) -> List[Path]:
+    """Resolve all local PDF paths (main + supplementary) for a DOI.
+
+    Returns a list of resolved paths, with main PDFs first, then supplementary.
+    Only includes paths that actually exist on disk.
+    """
+    normalized_doi = normalize_doi(doi)
+    if not normalized_doi:
+        return []
+    mapping = load_local_pdf_mapping()
+    entry = mapping.get(normalized_doi)
+    if not entry:
+        base_doi = re.sub(r"/v\d+$", "", normalized_doi)
+        if base_doi != normalized_doi:
+            entry = mapping.get(base_doi)
+    if not entry:
+        return []
+
+    resolved_paths: List[Path] = []
+
+    # Add main PDFs first
+    main_files = entry.get("main") or []
+    for raw_path in main_files:
+        resolved = _resolve_single_pdf_path(raw_path)
+        if resolved and resolved not in resolved_paths:
+            resolved_paths.append(resolved)
+
+    # Add supplementary PDFs
+    supplementary_files = entry.get("supplementary") or []
+    for raw_path in supplementary_files:
+        resolved = _resolve_single_pdf_path(raw_path)
+        if resolved and resolved not in resolved_paths:
+            resolved_paths.append(resolved)
+
+    return resolved_paths
 
 
 @lru_cache(maxsize=1)

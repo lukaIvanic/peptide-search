@@ -150,6 +150,10 @@ Summary: extracted N, skipped M, failed K
 ### `app/services/` — Business Logic
 - **Search** (`search_service.py`): orchestrates multi-source search, dedupe, sort, and logs errors
 - **Extraction** (`extraction_service.py`): coordinates document input → LLM → validation → persistence
+- **Failure reason** (`failure_reason.py`): normalizes and buckets run failures for analytics/drilldown
+- **View builders** (`view_builders.py`): shared response payload shaping for prompts/runs
+- **Runtime maintenance** (`runtime_maintenance.py`): startup hygiene (backfill + stale-run cancellation)
+- **Baseline helpers** (`baseline_helpers.py`): source/keying/grouping utilities for baseline workflows
 
 ### `app/persistence/` — Data Layer
 - SQLModel table definitions

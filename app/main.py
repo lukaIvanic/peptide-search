@@ -6,7 +6,7 @@ import logging
 import re
 from datetime import datetime, timedelta
 from pathlib import Path
-from typing import Dict, List, Optional
+from typing import Any, Dict, List, Optional
 
 from fastapi import Depends, FastAPI, File, Form, HTTPException, Query, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
@@ -16,9 +16,9 @@ from sqlmodel import Session, select, func, or_
 from sqlalchemy import delete
 
 from .config import settings
-from .db import init_db, get_session, session_scope
-from .persistence.models import Paper, Extraction, ExtractionRun, ExtractionEntity, RunStatus, BaselineCaseRun
-from .baseline.loader import load_index, list_cases, get_case, normalize_doi, resolve_local_pdf_path
+from .db import init_db, get_session
+from .persistence.models import Paper, Extraction, ExtractionRun, ExtractionEntity, RunStatus, BaselineCaseRun, BatchRun, BatchStatus
+from .baseline.loader import list_cases, get_case, resolve_local_pdf_path, resolve_all_local_pdf_paths
 from .integrations.document import DocumentExtractor
 from .persistence.repository import (
 	PromptRepository,
@@ -71,8 +71,15 @@ from .schemas import (
 	RunRetryWithSourceRequest,
 	ResolvedSourceResponse,
 	LocalPdfInfoResponse,
+	LocalPdfSiInfoResponse,
 	PaperMeta,
 	ExtractionPayload,
+	BatchEnqueueRequest,
+	BatchEnqueueResponse,
+	BatchInfo,
+	BatchListResponse,
+	BatchRetryRequest,
+	BatchRetryResponse,
 )
 from .services.search_service import search_all_free_sources
 from .prompts import build_system_prompt
@@ -84,7 +91,7 @@ from .services.extraction_service import (
 	run_followup_stream,
 	run_edit,
 )
-from .services.upload_store import store_upload
+from .services.upload_store import store_upload, is_upload_url
 from .services.quality_service import (
 	get_quality_rules,
 	update_quality_rules,
@@ -98,92 +105,40 @@ from .services.queue_service import (
 	stop_queue,
 	QueueItem,
 )
+from .services.failure_reason import (
+	FAILURE_BUCKET_LABELS,
+	bucket_failure_reason,
+	normalize_failure_reason,
+)
+from .services.view_builders import (
+	parse_json_list,
+	build_prompt_info,
+	build_run_payload,
+)
+from .services.runtime_maintenance import (
+	backfill_failed_runs,
+	cancel_stale_runs,
+)
+from .services.baseline_helpers import (
+	baseline_title,
+	baseline_dataset_infos,
+	build_baseline_run_summary,
+	select_baseline_result,
+	resolve_local_pdf_source,
+	resolve_baseline_source,
+	normalize_case_doi,
+	get_source_key,
+	get_source_keys,
+	get_latest_baseline_run,
+	get_latest_baseline_runs,
+	link_cases_to_run,
+	get_latest_run_for_cases,
+	load_shadow_entries,
+)
 
 logger = logging.getLogger(__name__)
-
-
-FAILURE_BUCKET_LABELS = {
-	"pdf_download": "PDF download (provider)",
-	"pdf_processing": "PDF processing failed",
-	"text_extraction": "Text extraction empty",
-	"fetch_error": "Fetch error",
-	"unsupported_doc": "Unsupported document",
-	"legacy_bug": "Legacy extraction bug",
-	"validation": "Parse/validation",
-	"provider": "Provider error",
-	"followup": "Follow-up error",
-	"missing_raw_json": "Missing parent raw JSON",
-	"not_found": "Missing record",
-	"queue": "Queue/worker error",
-	"other": "Other",
-	"unknown": "Unknown",
-}
-
-
-def _bucket_failure_reason(reason: Optional[str]) -> str:
-	if not reason:
-		return "unknown"
-	lower = reason.lower()
-	if "unknown failure" in lower:
-		return "unknown"
-	if "extractionrepository._entity_to_row" in lower or "entity_index" in lower:
-		return "legacy_bug"
-	if "timeout while downloading" in lower or "error while downloading" in lower:
-		return "pdf_download"
-	if "empty response" in lower or "couldn't be processed" in lower:
-		return "pdf_download"
-	if "failed to fetch the provided url" in lower:
-		return "fetch_error"
-	if "does not look like a pdf or html document" in lower:
-		return "unsupported_doc"
-	if "pdf processing failed" in lower:
-		return "pdf_processing"
-	if "no textual content could be extracted" in lower or "text extraction" in lower:
-		return "text_extraction"
-	if "parse/validation error" in lower or "failed to parse model output" in lower:
-		return "validation"
-	if "provider error" in lower:
-		return "provider"
-	if "failed to run followup" in lower or "followup" in lower:
-		return "followup"
-	if "prior run has no raw_json" in lower:
-		return "missing_raw_json"
-	if "not found" in lower:
-		return "not_found"
-	if "queue" in lower or "worker" in lower:
-		return "queue"
-	return "other"
-
-
-def _normalize_failure_reason(reason: Optional[str]) -> str:
-	if not reason:
-		return "Unknown failure"
-	lower = reason.lower()
-	if "unknown failure" in lower:
-		return "Unknown failure"
-	if "extractionrepository._entity_to_row" in lower or "entity_index" in lower:
-		return "Legacy entity index bug"
-	if "parse/validation error" in lower or "failed to parse model output" in lower:
-		return "Parse/validation error"
-	if "provider error" in lower:
-		return "Provider error"
-	if "failed to fetch the provided url" in lower:
-		return "Fetch error"
-	if "does not look like a pdf or html document" in lower:
-		return "Unsupported document"
-	if "timeout while downloading" in lower or "error while downloading" in lower:
-		return "PDF download error"
-	if "empty response" in lower or "couldn't be processed" in lower:
-		return "PDF processing error"
-	if "pdf processing failed" in lower:
-		return "PDF processing failed"
-	if "no textual content could be extracted" in lower or "text extraction" in lower:
-		return "Text extraction empty"
-	if "prior run has no raw_json" in lower:
-		return "Parent run missing raw JSON"
-	if "not found" in lower:
-		return "Record not found"
-	return reason[:120]
+_bucket_failure_reason = bucket_failure_reason
+_normalize_failure_reason = normalize_failure_reason
 
 
 def create_app() -> FastAPI:
@@ -198,357 +153,25 @@ def create_app() -> FastAPI:
 			allow_headers=["*"],
 		)
 
-	def _parse_json_list(value: Optional[str]) -> List[str]:
-		if not value:
-			return []
-		try:
-			parsed = json.loads(value)
-			return parsed if isinstance(parsed, list) else []
-		except Exception:
-			return []
-
-	def _build_prompt_info(prompt, versions) -> PromptInfo:
-		version_entries = []
-		for version in versions:
-			version_entries.append({
-				"id": version.id,
-				"prompt_id": version.prompt_id,
-				"version_index": version.version_index,
-				"content": version.content,
-				"notes": version.notes,
-				"created_by": version.created_by,
-				"created_at": version.created_at.isoformat() + "Z" if version.created_at else None,
-			})
-		latest_version = version_entries[0] if version_entries else None
-		return PromptInfo(
-			id=prompt.id,
-			name=prompt.name,
-			description=prompt.description,
-			is_active=prompt.is_active,
-			created_at=prompt.created_at.isoformat() + "Z" if prompt.created_at else None,
-			updated_at=prompt.updated_at.isoformat() + "Z" if prompt.updated_at else None,
-			latest_version=latest_version,
-			versions=version_entries,
-		)
-
-	def _baseline_title(case: BaselineCase) -> str:
-		sequence = case.sequence or "Unknown sequence"
-		return f"Baseline {case.dataset}: {sequence}"
-
-	def _baseline_dataset_infos(dataset_filter: Optional[str] = None) -> List[BaselineDatasetInfo]:
-		index = load_index()
-		datasets: List[BaselineDatasetInfo] = []
-		for entry in index.get("datasets", []):
-			if dataset_filter and entry.get("id") != dataset_filter:
-				continue
-			datasets.append(BaselineDatasetInfo(
-				id=entry.get("id"),
-				label=entry.get("label"),
-				description=entry.get("description"),
-				count=entry.get("count", 0),
-			))
-		return datasets
-
-	def _build_baseline_run_summary(run: ExtractionRun) -> BaselineRunSummary:
-		normalized_failure = None
-		if run.status == RunStatus.FAILED.value:
-			normalized_failure = _normalize_failure_reason(run.failure_reason)
-		return BaselineRunSummary(
-			run_id=run.id,
-			paper_id=run.paper_id,
-			status=run.status,
-			failure_reason=normalized_failure,
-			created_at=run.created_at.isoformat() + "Z" if run.created_at else None,
-			model_provider=run.model_provider,
-			model_name=run.model_name,
-		)
-
-	def _select_baseline_result(results: List[SearchItem], doi: Optional[str]) -> Optional[SearchItem]:
-		if not results:
-			return None
-		if doi:
-			needle = doi.strip().lower()
-			for item in results:
-				if item.doi and item.doi.strip().lower() == needle:
-					return item
-			return None
-		return results[0]
-
-	def _resolve_local_pdf_source(
-		case: BaselineCase,
-		local_upload_cache: Optional[Dict[str, str]] = None,
-	) -> Optional[SearchItem]:
-		normalized_doi = normalize_doi(case.doi)
-		if not normalized_doi:
-			return None
-		if local_upload_cache is not None and normalized_doi in local_upload_cache:
-			upload_url = local_upload_cache[normalized_doi]
-			return SearchItem(
-				title=_baseline_title(case),
-				doi=case.doi,
-				url=case.paper_url,
-				pdf_url=upload_url,
-				source="local",
-				year=None,
-				authors=[],
-			)
-
-		local_path = resolve_local_pdf_path(case.doi)
-		if not local_path:
-			return None
-		try:
-			content = local_path.read_bytes()
-		except Exception as exc:
-			logger.warning("Failed to read local PDF for DOI %s: %s", case.doi, exc)
-			return None
-
-		upload_url = store_upload(content, local_path.name)
-		if local_upload_cache is not None:
-			local_upload_cache[normalized_doi] = upload_url
-		return SearchItem(
-			title=_baseline_title(case),
-			doi=case.doi,
-			url=case.paper_url,
-			pdf_url=upload_url,
-			source="local",
-			year=None,
-			authors=[],
-		)
-
-	async def _resolve_baseline_source(
-		case: BaselineCase,
-		local_upload_cache: Optional[Dict[str, str]] = None,
-		local_only: bool = False,
-	) -> Optional[SearchItem]:
-		local_source = _resolve_local_pdf_source(case, local_upload_cache)
-		if local_source:
-			return local_source
-		if local_only:
-			return None
-		if case.pdf_url and DocumentExtractor.looks_like_pdf_url(case.pdf_url):
-			return SearchItem(
-				title=_baseline_title(case),
-				doi=case.doi,
-				url=case.paper_url or case.pdf_url,
-				pdf_url=case.pdf_url,
-				source="baseline",
-				year=None,
-				authors=[],
-			)
-		if case.paper_url:
-			return SearchItem(
-				title=_baseline_title(case),
-				doi=case.doi,
-				url=case.paper_url,
-				pdf_url=case.paper_url if DocumentExtractor.looks_like_pdf_url(case.paper_url) else None,
-				source="baseline",
-				year=None,
-				authors=[],
-			)
-		query = case.doi or case.pubmed_id
-		if not query:
-			return None
-		results = await search_all_free_sources(query, per_source=3)
-		return _select_baseline_result(results, case.doi)
-
-	def _normalize_case_doi(value: Optional[str]) -> Optional[str]:
-		normalized = normalize_doi(value)
-		if not normalized:
-			return None
-		return re.sub(r"/v\\d+$", "", normalized)
-
-	def _get_source_key(case: BaselineCase, resolved_url: Optional[str]) -> Optional[str]:
-		"""Canonical key for sharing extractions across baseline cases."""
-		source_url = resolved_url or case.pdf_url or case.paper_url
-		if source_url:
-			return f"url:{source_url.strip()}"
-		normalized_doi = _normalize_case_doi(case.doi)
-		if normalized_doi:
-			return f"doi:{normalized_doi}"
-		if case.pubmed_id:
-			return f"pubmed:{case.pubmed_id.strip()}"
-		return None
-
-	def _get_source_keys(case: BaselineCase, resolved_url: Optional[str]) -> List[str]:
-		keys: List[str] = []
-		source_url = resolved_url or case.pdf_url or case.paper_url
-		if source_url:
-			keys.append(f"url:{source_url.strip()}")
-		normalized_doi = _normalize_case_doi(case.doi)
-		if normalized_doi:
-			keys.append(f"doi:{normalized_doi}")
-		if case.pubmed_id:
-			keys.append(f"pubmed:{case.pubmed_id.strip()}")
-		return keys
-
-	def _get_latest_baseline_run(session: Session, case_id: str) -> Optional[ExtractionRun]:
-		stmt = (
-			select(ExtractionRun)
-			.join(BaselineCaseRun, BaselineCaseRun.run_id == ExtractionRun.id)
-			.where(BaselineCaseRun.baseline_case_id == case_id)
-			.order_by(ExtractionRun.created_at.desc())
-			.limit(1)
-		)
-		run = session.exec(stmt).first()
-		if run:
-			return run
-		stmt = (
-			select(ExtractionRun)
-			.where(ExtractionRun.baseline_case_id == case_id)
-			.order_by(ExtractionRun.created_at.desc())
-			.limit(1)
-		)
-		return session.exec(stmt).first()
-
-	def _get_latest_baseline_runs(
-		session: Session,
-		case_ids: List[str],
-	) -> dict[str, BaselineRunSummary]:
-		latest_by_case: dict[str, BaselineRunSummary] = {}
-		if not case_ids:
-			return latest_by_case
-		stmt = (
-			select(BaselineCaseRun.baseline_case_id, ExtractionRun)
-			.join(ExtractionRun, BaselineCaseRun.run_id == ExtractionRun.id)
-			.where(BaselineCaseRun.baseline_case_id.in_(case_ids))
-			.order_by(ExtractionRun.created_at.desc())
-		)
-		for case_id, run in session.exec(stmt).all():
-			if case_id not in latest_by_case:
-				latest_by_case[case_id] = _build_baseline_run_summary(run)
-		missing = [case_id for case_id in case_ids if case_id not in latest_by_case]
-		if missing:
-			stmt = (
-				select(ExtractionRun)
-				.where(ExtractionRun.baseline_case_id.in_(missing))
-				.order_by(ExtractionRun.created_at.desc())
-			)
-			for run in session.exec(stmt).all():
-				case_id = run.baseline_case_id
-				if case_id and case_id not in latest_by_case:
-					latest_by_case[case_id] = _build_baseline_run_summary(run)
-		return latest_by_case
-
-	def _link_cases_to_run(session: Session, case_ids: List[str], run_id: int) -> None:
-		BaselineCaseRunRepository(session).link_cases_to_run(case_ids, run_id)
-
-	def _get_latest_run_for_cases(session: Session, case_ids: List[str]) -> Optional[ExtractionRun]:
-		if not case_ids:
-			return None
-		stmt = (
-			select(ExtractionRun)
-			.join(BaselineCaseRun, BaselineCaseRun.run_id == ExtractionRun.id)
-			.where(BaselineCaseRun.baseline_case_id.in_(case_ids))
-			.order_by(ExtractionRun.created_at.desc())
-			.limit(1)
-		)
-		run = session.exec(stmt).first()
-		if run:
-			return run
-		stmt = (
-			select(ExtractionRun)
-			.where(ExtractionRun.baseline_case_id.in_(case_ids))
-			.order_by(ExtractionRun.created_at.desc())
-			.limit(1)
-		)
-		return session.exec(stmt).first()
-
-	def _load_shadow_entries(dataset: Optional[str] = None) -> List[dict]:
-		shadow_path = Path(__file__).parent / "baseline" / "data_shadow" / "shadow_extractions.json"
-		if not shadow_path.exists():
-			return []
-		entries = json.loads(shadow_path.read_text(encoding="utf-8"))
-		if dataset:
-			entries = [entry for entry in entries if entry.get("dataset") == dataset]
-		return entries
-
-	def _build_run_payload(run: ExtractionRun, paper: Optional[Paper]) -> dict:
-		authors = []
-		if paper and paper.authors_json:
-			try:
-				authors = json.loads(paper.authors_json)
-			except Exception:
-				authors = []
-
-		prompts = None
-		if run.prompts_json:
-			try:
-				prompts = json.loads(run.prompts_json)
-			except Exception:
-				prompts = {"raw": run.prompts_json}
-
-		raw_json = None
-		if run.raw_json:
-			try:
-				raw_json = json.loads(run.raw_json)
-			except Exception:
-				raw_json = {"raw": run.raw_json}
-
-		return {
-			"paper": {
-				"id": paper.id if paper else None,
-				"title": paper.title if paper else None,
-				"doi": paper.doi if paper else None,
-				"url": paper.url if paper else None,
-				"source": paper.source if paper else None,
-				"year": paper.year if paper else None,
-				"authors": authors,
-			},
-			"run": {
-				"id": run.id,
-				"paper_id": run.paper_id,
-				"parent_run_id": run.parent_run_id,
-				"baseline_case_id": run.baseline_case_id,
-				"baseline_dataset": run.baseline_dataset,
-				"status": run.status,
-				"failure_reason": run.failure_reason,
-				"prompts": prompts,
-				"raw_json": raw_json,
-				"comment": run.comment,
-				"model_provider": run.model_provider,
-				"model_name": run.model_name,
-				"pdf_url": run.pdf_url,
-				"created_at": run.created_at.isoformat() + "Z" if run.created_at else None,
-			},
-		}
-
-	def _backfill_failed_runs() -> None:
-		with session_scope() as session:
-			stmt = select(ExtractionRun).where(ExtractionRun.status == RunStatus.FAILED.value)
-			updated = 0
-			for run in session.exec(stmt).all():
-				changed = False
-				if not run.failure_reason:
-					run.failure_reason = "Unknown failure (missing reason)"
-					changed = True
-				if not run.raw_json:
-					run.raw_json = json.dumps({"error": run.failure_reason or "Unknown failure"})
-					changed = True
-				if changed:
-					session.add(run)
-					updated += 1
-			if updated:
-				logger.info(f"Backfilled {updated} failed runs missing metadata")
-
-	def _cancel_stale_runs() -> None:
-		stale_statuses = {
-			RunStatus.QUEUED.value,
-			RunStatus.FETCHING.value,
-			RunStatus.PROVIDER.value,
-			RunStatus.VALIDATING.value,
-		}
-		with session_scope() as session:
-			stmt = select(ExtractionRun).where(ExtractionRun.status.in_(stale_statuses))
-			runs = session.exec(stmt).all()
-			if not runs:
-				return
-			for run in runs:
-				run.status = RunStatus.CANCELLED.value
-				if not run.failure_reason:
-					run.failure_reason = "Cancelled after server restart"
-				session.add(run)
-			session.commit()
-			logger.info(f"Cancelled {len(runs)} stale runs after restart")
+		_parse_json_list = parse_json_list
+		_build_prompt_info = build_prompt_info
+		_baseline_title = baseline_title
+		_baseline_dataset_infos = baseline_dataset_infos
+		_build_baseline_run_summary = build_baseline_run_summary
+		_select_baseline_result = select_baseline_result
+		_resolve_local_pdf_source = resolve_local_pdf_source
+		_resolve_baseline_source = resolve_baseline_source
+		_normalize_case_doi = normalize_case_doi
+		_get_source_key = get_source_key
+		_get_source_keys = get_source_keys
+		_get_latest_baseline_run = get_latest_baseline_run
+		_get_latest_baseline_runs = get_latest_baseline_runs
+		_link_cases_to_run = link_cases_to_run
+		_get_latest_run_for_cases = get_latest_run_for_cases
+		_load_shadow_entries = load_shadow_entries
+		_build_run_payload = build_run_payload
+		_backfill_failed_runs = backfill_failed_runs
+		_cancel_stale_runs = cancel_stale_runs
 
 	# Initialize DB and queue at startup
 	@app.on_event("startup")
@@ -595,7 +218,11 @@ def create_app() -> FastAPI:
 			return FileResponse(static_dir / "help.html")
 
 		@app.get("/baseline", include_in_schema=False)
-		async def baseline_page() -> FileResponse:
+		async def baseline_overview_page() -> FileResponse:
+			return FileResponse(static_dir / "batch-overview.html")
+
+		@app.get("/baseline/{batch_id}", include_in_schema=False)
+		async def baseline_detail_page(batch_id: str) -> FileResponse:
 			return FileResponse(static_dir / "baseline.html")
 
 		@app.get("/topbar_animations.html", include_in_schema=False)
@@ -909,6 +536,48 @@ def create_app() -> FastAPI:
 		local_path = resolve_local_pdf_path(case.doi)
 		if not local_path or not local_path.exists():
 			raise HTTPException(status_code=404, detail="Local PDF not found for baseline case")
+		return FileResponse(
+			local_path,
+			media_type="application/pdf",
+			filename=local_path.name,
+			headers={"Content-Disposition": f'inline; filename="{local_path.name}"'},
+		)
+
+	@app.get("/api/baseline/cases/{case_id}/local-pdf-si-info", response_model=LocalPdfSiInfoResponse)
+	async def get_baseline_case_local_pdf_si_info(case_id: str) -> LocalPdfSiInfoResponse:
+		"""Get info about supplementary PDF availability for a baseline case."""
+		case_data = get_case(case_id)
+		if not case_data:
+			raise HTTPException(status_code=404, detail="Baseline case not found")
+		case = BaselineCase(**case_data)
+		all_paths = resolve_all_local_pdf_paths(case.doi)
+		# Skip main PDFs - only return SI PDFs
+		main_path = resolve_local_pdf_path(case.doi)
+		si_paths = [p for p in all_paths if p != main_path]
+		if not si_paths:
+			return LocalPdfSiInfoResponse(found=False, filenames=[], count=0)
+		return LocalPdfSiInfoResponse(
+			found=True,
+			filenames=[p.name for p in si_paths],
+			count=len(si_paths),
+		)
+
+	@app.get("/api/baseline/cases/{case_id}/local-pdf-si")
+	async def get_baseline_case_local_pdf_si(case_id: str, index: int = 0) -> FileResponse:
+		"""Serve SI PDF by index (default 0 for first SI)."""
+		case_data = get_case(case_id)
+		if not case_data:
+			raise HTTPException(status_code=404, detail="Baseline case not found")
+		case = BaselineCase(**case_data)
+		all_paths = resolve_all_local_pdf_paths(case.doi)
+		# Skip main PDFs - only return SI PDFs
+		main_path = resolve_local_pdf_path(case.doi)
+		si_paths = [p for p in all_paths if p != main_path]
+		if not si_paths:
+			raise HTTPException(status_code=404, detail="No SI PDFs found for baseline case")
+		if index < 0 or index >= len(si_paths):
+			raise HTTPException(status_code=404, detail=f"SI PDF index {index} out of range (0-{len(si_paths)-1})")
+		local_path = si_paths[index]
 		return FileResponse(
 			local_path,
 			media_type="application/pdf",
@@ -1347,6 +1016,364 @@ def create_app() -> FastAPI:
 			seeded=seeded,
 			skipped=skipped,
 		)
+
+	# --- Batch extraction endpoints ---
+
+	def _generate_batch_id(model_name: str) -> str:
+		"""Generate a unique batch ID with timestamp and model name."""
+		timestamp = datetime.utcnow().strftime("%Y%m%d_%H%M%S")
+		# Sanitize model name for batch_id
+		safe_model = re.sub(r'[^a-zA-Z0-9-]', '', model_name.replace(' ', '-'))
+		return f"{timestamp}_{safe_model}"
+
+	def _get_model_name_for_provider(provider: str) -> str:
+		"""Get the model name for a given provider."""
+		provider_models = {
+			"openai": settings.OPENAI_MODEL,
+			"openai-mini": settings.OPENAI_MODEL_MINI,
+			"openai-nano": settings.OPENAI_MODEL_NANO,
+			"deepseek": settings.DEEPSEEK_MODEL,
+			"mock": "mock-model",
+		}
+		return provider_models.get(provider, provider)
+
+	# Model pricing per 1M tokens (approximate)
+	MODEL_PRICING = {
+		settings.OPENAI_MODEL: {"input": 2.50, "output": 10.00},
+		settings.OPENAI_MODEL_MINI: {"input": 0.15, "output": 0.60},
+		settings.OPENAI_MODEL_NANO: {"input": 0.10, "output": 0.40},
+		"mock-model": {"input": 0, "output": 0},
+	}
+
+	def _compute_batch_cost(batch: BatchRun) -> Optional[float]:
+		"""Compute estimated cost based on token counts and model pricing."""
+		pricing = MODEL_PRICING.get(batch.model_name, MODEL_PRICING.get(settings.OPENAI_MODEL_NANO))
+		if not pricing:
+			return None
+		input_cost = (batch.total_input_tokens / 1_000_000) * pricing["input"]
+		output_cost = (batch.total_output_tokens / 1_000_000) * pricing["output"]
+		return input_cost + output_cost
+
+	def _compute_match_rate(batch: BatchRun) -> Optional[float]:
+		"""Compute match rate from matched/expected entity counts."""
+		if not batch.total_expected_entities:
+			return None
+		return batch.matched_entities / batch.total_expected_entities
+
+	def _compute_wall_clock_time_ms(batch: BatchRun) -> int:
+		"""Compute wall-clock time in ms from created_at to completed_at (or now if still running)."""
+		if not batch.created_at:
+			return 0
+		end_time = batch.completed_at if batch.completed_at else datetime.utcnow()
+		delta = end_time - batch.created_at
+		return int(delta.total_seconds() * 1000)
+
+	@app.get("/api/baseline/batches", response_model=BatchListResponse)
+	async def list_batches(
+		dataset: Optional[str] = None,
+		session: Session = Depends(get_session),
+	) -> BatchListResponse:
+		"""List all batch runs, optionally filtered by dataset."""
+		stmt = select(BatchRun).order_by(BatchRun.created_at.desc())
+		if dataset:
+			stmt = stmt.where(BatchRun.dataset == dataset)
+		batches = session.exec(stmt).all()
+		return BatchListResponse(
+			batches=[
+				BatchInfo(
+					id=b.id,
+					batch_id=b.batch_id,
+					label=b.label,
+					dataset=b.dataset,
+					model_provider=b.model_provider,
+					model_name=b.model_name,
+					status=b.status,
+					total_papers=b.total_papers,
+					completed=b.completed,
+					failed=b.failed,
+					total_input_tokens=b.total_input_tokens,
+					total_output_tokens=b.total_output_tokens,
+					total_time_ms=_compute_wall_clock_time_ms(b),
+					matched_entities=b.matched_entities,
+					total_expected_entities=b.total_expected_entities,
+					match_rate=_compute_match_rate(b),
+					estimated_cost_usd=_compute_batch_cost(b),
+					created_at=b.created_at.isoformat() if b.created_at else "",
+				)
+				for b in batches
+			]
+		)
+
+	@app.post("/api/baseline/batch-enqueue", response_model=BatchEnqueueResponse)
+	async def batch_enqueue(
+		req: BatchEnqueueRequest,
+		session: Session = Depends(get_session),
+	) -> BatchEnqueueResponse:
+		"""Create a batch and enqueue all papers from a dataset."""
+		queue = get_queue()
+		paper_repo = PaperRepository(session)
+
+		model_name = _get_model_name_for_provider(req.provider)
+		batch_id = _generate_batch_id(model_name)
+
+		# Create batch record
+		batch = BatchRun(
+			batch_id=batch_id,
+			label=req.label,
+			dataset=req.dataset,
+			model_provider=req.provider,
+			model_name=model_name,
+			status=BatchStatus.RUNNING.value,
+			total_papers=0,
+			completed=0,
+			failed=0,
+		)
+		session.add(batch)
+		session.commit()
+		session.refresh(batch)
+
+		cases_raw = list_cases(req.dataset)
+		cases = [BaselineCase(**case_data) for case_data in cases_raw]
+
+		runs_enqueued = 0  # Count of unique runs created
+		cases_enqueued = 0  # Count of cases covered by runs
+		skipped = 0
+		local_upload_cache: Dict[str, str] = {}
+
+		# Group cases by source (like existing enqueue)
+		entries: List[dict] = []
+		for case in cases:
+			source = await _resolve_baseline_source(case, local_upload_cache)
+			resolved_url = source.pdf_url if source and source.pdf_url else (source.url if source else None)
+			source_key = _get_source_key(case, resolved_url)
+			entries.append({
+				"case": case,
+				"source": source,
+				"resolved_url": resolved_url,
+				"source_key": source_key,
+			})
+
+		grouped: dict[str, List[dict]] = {}
+		for entry in entries:
+			group_key = entry["source_key"] or f"case:{entry['case'].id}"
+			grouped.setdefault(group_key, []).append(entry)
+
+		for group_entries in grouped.values():
+			case_ids = [entry["case"].id for entry in group_entries]
+			resolved_url = next(
+				(entry["resolved_url"] for entry in group_entries if entry["resolved_url"]),
+				None,
+			)
+			source = next((entry["source"] for entry in group_entries if entry["source"]), None)
+			case = group_entries[0]["case"]
+
+			# Skip only if no PDF URL available - batches always create fresh runs
+			if not resolved_url:
+				skipped += len(case_ids)
+				continue
+
+			# Create run and enqueue
+			meta = PaperMeta(
+				title=(source.title if source else None) or _baseline_title(case),
+				doi=(source.doi if source else None) or case.doi,
+				url=(source.url if source else None) or case.paper_url,
+				source=source.source if source else "baseline",
+				year=source.year if source else None,
+				authors=source.authors if source and source.authors else [],
+			)
+			paper_id = paper_repo.upsert(meta)
+			run = ExtractionRun(
+				paper_id=paper_id,
+				status=RunStatus.QUEUED.value,
+				model_provider=req.provider,
+				pdf_url=resolved_url,
+				prompt_id=req.prompt_id,
+				batch_id=batch_id,  # Link to batch
+			)
+			session.add(run)
+			session.commit()
+			session.refresh(run)
+			_link_cases_to_run(session, case_ids, run.id)
+
+			runs_enqueued += 1  # One run per group
+			cases_enqueued += len(case_ids)
+			# Get all PDF URLs (including supplementary) from source
+			all_pdf_urls = source.pdf_urls if source and source.pdf_urls else None
+			await queue.enqueue(QueueItem(
+				run_id=run.id,
+				paper_id=paper_id,
+				pdf_url=resolved_url,
+				pdf_urls=all_pdf_urls,
+				title=meta.title or _baseline_title(case),
+				provider=req.provider,
+				force=req.force,
+				prompt_id=req.prompt_id,
+			))
+
+		# Update batch with total count (runs, not cases)
+		batch.total_papers = runs_enqueued
+		session.add(batch)
+		session.commit()
+
+		return BatchEnqueueResponse(
+			batch_id=batch_id,
+			total_papers=len(cases_raw),  # Total cases in dataset
+			enqueued=runs_enqueued,  # Runs created
+			skipped=len(cases_raw) - cases_enqueued,  # Cases not covered
+		)
+
+	@app.post("/api/baseline/batch-retry", response_model=BatchRetryResponse)
+	async def batch_retry(
+		req: BatchRetryRequest,
+		session: Session = Depends(get_session),
+	) -> BatchRetryResponse:
+		"""Retry all failed runs in a batch."""
+		queue = get_queue()
+
+		# Find the batch
+		stmt = select(BatchRun).where(BatchRun.batch_id == req.batch_id)
+		batch = session.exec(stmt).first()
+		if not batch:
+			raise HTTPException(status_code=404, detail=f"Batch not found: {req.batch_id}")
+
+		# Get provider (use same as batch if not specified)
+		provider = req.provider or batch.model_provider
+
+		# Find all failed runs in this batch
+		stmt = (
+			select(ExtractionRun)
+			.where(ExtractionRun.batch_id == req.batch_id)
+			.where(ExtractionRun.status == RunStatus.FAILED.value)
+		)
+		failed_runs = session.exec(stmt).all()
+
+		# Cache for local PDF uploads (to avoid re-reading same file multiple times)
+		local_upload_cache: Dict[str, str] = {}
+
+		retried = 0
+		skipped = 0
+
+		for run in failed_runs:
+			pdf_url = run.pdf_url
+
+			# If the pdf_url is an expired upload://, try to re-resolve from local PDF
+			if is_upload_url(pdf_url):
+				# Get baseline_case_id from run or from linking table
+				baseline_case_id = run.baseline_case_id
+				if not baseline_case_id:
+					link_stmt = select(BaselineCaseRun.baseline_case_id).where(BaselineCaseRun.run_id == run.id).limit(1)
+					linked_id = session.exec(link_stmt).first()
+					if linked_id:
+						baseline_case_id = linked_id
+
+				if baseline_case_id:
+					case_data = get_case(baseline_case_id)
+					if case_data:
+						case = BaselineCase(**case_data)
+						local_source = _resolve_local_pdf_source(case, local_upload_cache)
+						if local_source and local_source.pdf_url:
+							pdf_url = local_source.pdf_url
+							# Update the run's pdf_url so future retries work too
+							run.pdf_url = pdf_url
+
+			if not pdf_url:
+				skipped += 1
+				continue
+
+			# Reset status and re-enqueue
+			run.status = RunStatus.QUEUED.value
+			run.failure_reason = None
+			run.model_provider = provider
+			session.add(run)
+
+			await queue.enqueue(QueueItem(
+				run_id=run.id,
+				paper_id=run.paper_id,
+				pdf_url=pdf_url,
+				title="",  # Will be filled from paper
+				provider=provider,
+				force=True,
+				prompt_id=run.prompt_id,
+			))
+			retried += 1
+
+		# Reset batch counters
+		batch.failed = batch.failed - retried
+		batch.status = BatchStatus.RUNNING.value
+		session.add(batch)
+		session.commit()
+
+		return BatchRetryResponse(
+			batch_id=req.batch_id,
+			retried=retried,
+			skipped=skipped,
+		)
+
+	@app.get("/api/baseline/batch/{batch_id}")
+	async def get_batch(
+		batch_id: str,
+		session: Session = Depends(get_session),
+	) -> BatchInfo:
+		"""Get details of a specific batch."""
+		stmt = select(BatchRun).where(BatchRun.batch_id == batch_id)
+		batch = session.exec(stmt).first()
+		if not batch:
+			raise HTTPException(status_code=404, detail=f"Batch not found: {batch_id}")
+		return BatchInfo(
+			id=batch.id,
+			batch_id=batch.batch_id,
+			label=batch.label,
+			dataset=batch.dataset,
+			model_provider=batch.model_provider,
+			model_name=batch.model_name,
+			status=batch.status,
+			total_papers=batch.total_papers,
+			completed=batch.completed,
+			failed=batch.failed,
+			total_input_tokens=batch.total_input_tokens,
+			total_output_tokens=batch.total_output_tokens,
+			total_time_ms=_compute_wall_clock_time_ms(batch),
+			matched_entities=batch.matched_entities,
+			total_expected_entities=batch.total_expected_entities,
+			match_rate=_compute_match_rate(batch),
+			estimated_cost_usd=_compute_batch_cost(batch),
+			created_at=batch.created_at.isoformat() if batch.created_at else "",
+		)
+
+	@app.delete("/api/baseline/batch/{batch_id}")
+	async def delete_batch(
+		batch_id: str,
+		session: Session = Depends(get_session),
+	) -> dict:
+		"""Delete a batch and all its associated runs."""
+		# Find the batch
+		stmt = select(BatchRun).where(BatchRun.batch_id == batch_id)
+		batch = session.exec(stmt).first()
+		if not batch:
+			raise HTTPException(status_code=404, detail=f"Batch not found: {batch_id}")
+
+		# Delete all runs associated with this batch
+		stmt = select(ExtractionRun).where(ExtractionRun.batch_id == batch_id)
+		runs = session.exec(stmt).all()
+		run_ids = [r.id for r in runs]
+
+		# Delete baseline case run links
+		if run_ids:
+			session.exec(delete(BaselineCaseRun).where(BaselineCaseRun.run_id.in_(run_ids)))
+
+		# Delete extraction entities for these runs
+		if run_ids:
+			session.exec(delete(ExtractionEntity).where(ExtractionEntity.run_id.in_(run_ids)))
+
+		# Delete the runs
+		for run in runs:
+			session.delete(run)
+
+		# Delete the batch
+		session.delete(batch)
+		session.commit()
+
+		return {"status": "ok", "deleted_runs": len(runs)}
 
 	@app.get("/api/stream")
 	async def stream_events():
@@ -2872,5 +2899,3 @@ def create_app() -> FastAPI:
 
 
 app = create_app()
-
-
