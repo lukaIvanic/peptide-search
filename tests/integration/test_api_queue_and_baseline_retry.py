@@ -1,73 +1,22 @@
-import tempfile
 import unittest
-from pathlib import Path
 
-from fastapi.testclient import TestClient
-from sqlmodel import Session, create_engine, select
+from sqlmodel import Session, select
 
 from app.baseline.loader import list_cases
-from app.config import settings
-from app.persistence.models import BaselineCaseRun, BatchRun, BatchStatus, ExtractionRun, Paper, RunStatus
+from app.persistence.models import BaselineCaseRun, BatchRun, BatchStatus, ExtractionRun, RunStatus
+from support import ApiIntegrationTestCase
 
 
-class ApiQueueAndBaselineRetryTests(unittest.TestCase):
-    def setUp(self) -> None:
-        import app.db as db_module
-        import app.services.queue_service as queue_service
-        from app.main import create_app
-
-        self.db_module = db_module
-        self.queue_service = queue_service
-
-        self.temp_dir = tempfile.TemporaryDirectory()
-        db_path = Path(self.temp_dir.name) / "test_api.db"
-        self.test_engine = create_engine(f"sqlite:///{db_path}", echo=False)
-
-        self.old_engine = db_module.engine
-        self.old_queue_concurrency = settings.QUEUE_CONCURRENCY
-
-        settings.QUEUE_CONCURRENCY = 0
-        db_module.engine = self.test_engine
-        db_module.init_db()
-
-        queue_service._queue = None
-        queue_service._broadcaster = None
-
-        self.app = create_app()
-        self.client = TestClient(self.app)
-        self.client.__enter__()
-
-    def tearDown(self) -> None:
-        self.client.__exit__(None, None, None)
-        self.queue_service._queue = None
-        self.queue_service._broadcaster = None
-        self.test_engine.dispose()
-        self.db_module.engine = self.old_engine
-        settings.QUEUE_CONCURRENCY = self.old_queue_concurrency
-        self.temp_dir.cleanup()
-
-    def _create_paper(self, title: str = "Test Paper", doi: str | None = None, url: str | None = None) -> int:
-        with Session(self.db_module.engine) as session:
-            paper = Paper(title=title, doi=doi, url=url, source="test")
-            session.add(paper)
-            session.commit()
-            session.refresh(paper)
-            return paper.id
-
+class ApiQueueAndBaselineRetryTests(ApiIntegrationTestCase):
     def test_retry_failed_runs_api_transitions_to_queued(self) -> None:
-        paper_id = self._create_paper(doi="10.1000/test-queue", url="https://example.org/queue")
-        with Session(self.db_module.engine) as session:
-            run = ExtractionRun(
-                paper_id=paper_id,
-                status=RunStatus.FAILED.value,
-                failure_reason="provider error: timeout",
-                model_provider="mock",
-                pdf_url="https://example.org/queue.pdf",
-            )
-            session.add(run)
-            session.commit()
-            session.refresh(run)
-            run_id = run.id
+        paper_id = self.create_paper(doi="10.1000/test-queue", url="https://example.org/queue")
+        run_id = self.create_run(
+            paper_id=paper_id,
+            status=RunStatus.FAILED.value,
+            failure_reason="provider error: timeout",
+            model_provider="mock",
+            pdf_url="https://example.org/queue.pdf",
+        )
 
         response = self.client.post(
             "/api/runs/failures/retry",
@@ -94,7 +43,7 @@ class ApiQueueAndBaselineRetryTests(unittest.TestCase):
         case_id = case["id"]
         source_url = "https://example.org/baseline-case.pdf"
 
-        paper_id = self._create_paper(doi=case.get("doi"), url=case.get("paper_url"))
+        paper_id = self.create_paper(doi=case.get("doi"), url=case.get("paper_url"))
         with Session(self.db_module.engine) as session:
             failed_run = ExtractionRun(
                 paper_id=paper_id,
@@ -137,7 +86,7 @@ class ApiQueueAndBaselineRetryTests(unittest.TestCase):
 
     def test_baseline_batch_retry_requeues_failed_runs(self) -> None:
         batch_id = "batch_retry_test"
-        paper_id = self._create_paper(doi="10.1000/batch", url="https://example.org/batch")
+        paper_id = self.create_paper(doi="10.1000/batch", url="https://example.org/batch")
 
         with Session(self.db_module.engine) as session:
             batch = BatchRun(

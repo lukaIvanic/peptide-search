@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from contextlib import asynccontextmanager
 import logging
 from pathlib import Path
 
@@ -26,19 +27,8 @@ logger = logging.getLogger(__name__)
 
 
 def create_app() -> FastAPI:
-    app = FastAPI(title=settings.APP_NAME)
-    cors_origins = [origin.strip() for origin in settings.CORS_ORIGINS.split(",") if origin.strip()]
-    if cors_origins:
-        app.add_middleware(
-            CORSMiddleware,
-            allow_origins=cors_origins,
-            allow_credentials=True,
-            allow_methods=["*"],
-            allow_headers=["*"],
-        )
-
-    @app.on_event("startup")
-    async def _startup() -> None:
+    @asynccontextmanager
+    async def lifespan(_: FastAPI):
         init_db()
         backfill_failed_runs()
         cancel_stale_runs()
@@ -48,11 +38,22 @@ def create_app() -> FastAPI:
         queue = get_queue()
         queue.set_extract_callback(run_queued_extraction)
         logger.info("Application started")
+        try:
+            yield
+        finally:
+            await stop_queue()
+            logger.info("Application shutdown")
 
-    @app.on_event("shutdown")
-    async def _shutdown() -> None:
-        await stop_queue()
-        logger.info("Application shutdown")
+    app = FastAPI(title=settings.APP_NAME, lifespan=lifespan)
+    cors_origins = [origin.strip() for origin in settings.CORS_ORIGINS.split(",") if origin.strip()]
+    if cors_origins:
+        app.add_middleware(
+            CORSMiddleware,
+            allow_origins=cors_origins,
+            allow_credentials=True,
+            allow_methods=["*"],
+            allow_headers=["*"],
+        )
 
     static_dir: Path = settings.STATIC_DIR
     if static_dir.exists():
