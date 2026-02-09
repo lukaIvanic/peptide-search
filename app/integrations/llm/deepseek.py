@@ -36,6 +36,9 @@ class DeepSeekProvider:
             supports_json_mode=True,
         )
 
+    def get_last_usage(self) -> Optional[Dict[str, Optional[int]]]:
+        return None
+
     async def generate(
         self,
         system_prompt: str,
@@ -57,7 +60,7 @@ class DeepSeekProvider:
         if document:
             if document.input_type == InputType.TEXT and document.text:
                 full_prompt = f"{user_prompt}\n\nDocument text:\n{document.text}"
-            elif document.input_type in (InputType.URL, InputType.FILE):
+            elif document.input_type in (InputType.URL, InputType.FILE, InputType.MULTI_FILE):
                 raise RuntimeError(
                     f"DeepSeek provider does not support {document.input_type.name} input. "
                     "Text must be extracted first."

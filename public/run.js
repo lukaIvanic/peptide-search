@@ -579,13 +579,14 @@ function renderRunFixPanel(run) {
 	const fileInput = el('input', 'hidden');
 	fileInput.type = 'file';
 	fileInput.accept = '.pdf';
+	fileInput.multiple = true;
 	const uploadBtn = el('button', 'sw-btn sw-btn--sm sw-btn--ghost', 'Upload PDF');
 	uploadBtn.addEventListener('click', () => fileInput.click());
 	fileInput.addEventListener('change', async () => {
-		const file = fileInput.files && fileInput.files[0];
-		if (!file) return;
+		const files = fileInput.files;
+		if (!files || files.length === 0) return;
 		try {
-			await uploadRunPdf(run.id, file, run.model_provider);
+			await uploadRunPdf(run.id, files, run.model_provider);
 			await loadRun(run.id, { resetDiff: false });
 		} catch (err) {
 			alert(err.message || 'Failed to upload PDF');

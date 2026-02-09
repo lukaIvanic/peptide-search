@@ -28,6 +28,7 @@ class QueueItem:
     paper_id: int
     pdf_url: str
     title: str
+    pdf_urls: Optional[List[str]] = None
     provider: str = "openai"
     force: bool = False
     prompt_id: Optional[int] = None
@@ -149,20 +150,23 @@ class ExtractionQueue:
 
     async def enqueue(self, item: QueueItem) -> bool:
         """Add an item to the queue if URL is not pending."""
-        if item.pdf_url:
+        urls = self._get_item_urls(item)
+        if urls:
             async with self._lock:
-                if item.pdf_url in self._pending_urls:
+                if any(url in self._pending_urls for url in urls):
                     logger.info(
-                        f"Skipping enqueue for run {item.run_id}: URL already pending ({item.pdf_url})"
+                        f"Skipping enqueue for run {item.run_id}: URL already pending ({urls})"
                     )
                     return False
-                self._pending_urls.add(item.pdf_url)
+                for url in urls:
+                    self._pending_urls.add(url)
         try:
             await self._queue.put(item)
         except Exception:
-            if item.pdf_url:
+            if urls:
                 async with self._lock:
-                    self._pending_urls.discard(item.pdf_url)
+                    for url in urls:
+                        self._pending_urls.discard(url)
             raise
         logger.info(f"Enqueued run {item.run_id} for paper {item.paper_id}")
         return True
@@ -200,8 +204,8 @@ class ExtractionQueue:
             finally:
                 async with self._lock:
                     self._active_runs.pop(item.run_id, None)
-                    if item.pdf_url:
-                        self._pending_urls.discard(item.pdf_url)
+                    for url in self._get_item_urls(item):
+                        self._pending_urls.discard(url)
                 self._queue.task_done()
         
         logger.info(f"Worker {worker_id} stopped")
@@ -225,6 +229,7 @@ class ExtractionQueue:
                     run_id=run_id,
                     paper_id=item.paper_id,
                     pdf_url=item.pdf_url,
+                    pdf_urls=item.pdf_urls,
                     provider=item.provider,
                     prompt_id=item.prompt_id,
                     prompt_version_id=item.prompt_version_id,
@@ -275,6 +280,15 @@ class ExtractionQueue:
                     "baseline_case_ids": linked_case_ids,
                     "baseline_dataset": run.baseline_dataset,
                 })
+
+    @staticmethod
+    def _get_item_urls(item: QueueItem) -> List[str]:
+        urls: List[str] = []
+        if item.pdf_urls:
+            urls.extend([url for url in item.pdf_urls if url])
+        if item.pdf_url and item.pdf_url not in urls:
+            urls.insert(0, item.pdf_url)
+        return urls
 
 
 # Global queue instance

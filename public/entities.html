@@ -87,16 +87,16 @@
 				<div class="flex flex-wrap items-center gap-3">
 					<input id="entitySearch" type="text" placeholder="Search sequences, paper title, DOI..."
 						class="h-9 px-3 rounded-md border border-slate-300 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 flex-1 min-w-[200px]" />
-					<select id="providerFilter" class="h-9 px-3 rounded-md border border-slate-300 text-sm">
+					<select id="providerFilter" class="h-11 px-3 rounded-md border border-slate-300 text-sm">
 						<option value="all">All providers</option>
 					</select>
-					<select id="promptFilter" class="h-9 px-3 rounded-md border border-slate-300 text-sm">
+					<select id="promptFilter" class="h-11 px-3 rounded-md border border-slate-300 text-sm">
 						<option value="all">All prompts</option>
 					</select>
-					<select id="sourceFilter" class="h-9 px-3 rounded-md border border-slate-300 text-sm">
+					<select id="sourceFilter" class="h-11 px-3 rounded-md border border-slate-300 text-sm">
 						<option value="all">All sources</option>
 					</select>
-					<select id="entityType" class="h-9 px-3 rounded-md border border-slate-300 text-sm">
+					<select id="entityType" class="h-11 px-3 rounded-md border border-slate-300 text-sm">
 						<option value="all">All types</option>
 						<option value="peptide">Peptide</option>
 						<option value="molecule">Molecule</option>
@@ -125,7 +125,7 @@
 						<input id="recentMinutes" type="number" min="1" value="15" class="h-8 w-16 px-2 rounded-md border border-slate-300 text-xs" />
 						<span>min</span>
 					</div>
-					<select id="groupBySelect" class="h-9 px-3 rounded-md border border-slate-300 text-sm">
+					<select id="groupBySelect" class="h-11 px-3 rounded-md border border-slate-300 text-sm">
 						<option value="">Entity view</option>
 						<option value="peptide_sequence_one_letter">Group: peptide sequence (1-letter)</option>
 						<option value="peptide_sequence_three_letter">Group: peptide sequence (3-letter)</option>
@@ -159,10 +159,10 @@
 			<section class="sw-card bg-white border border-slate-200 rounded-xl shadow-sm p-4 space-y-3">
 				<div class="flex flex-wrap items-center gap-3 text-sm">
 				<div class="sw-kicker text-xs text-slate-500">Prompt comparison</div>
-					<select id="comparePromptA" class="h-9 px-3 rounded-md border border-slate-300 text-sm">
+					<select id="comparePromptA" class="h-11 px-3 rounded-md border border-slate-300 text-sm">
 						<option value="">Select prompt A</option>
 					</select>
-					<select id="comparePromptB" class="h-9 px-3 rounded-md border border-slate-300 text-sm">
+					<select id="comparePromptB" class="h-11 px-3 rounded-md border border-slate-300 text-sm">
 						<option value="">Select prompt B</option>
 					</select>
 					<button id="comparePromptsBtn" class="px-3 py-1.5 rounded-md border border-slate-300 hover:bg-slate-100">Compare</button>

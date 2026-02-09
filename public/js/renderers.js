@@ -458,11 +458,12 @@ export function renderDrawer(paper, runs, options = {}) {
                 const fileInput = el('input', 'hidden');
                 fileInput.type = 'file';
                 fileInput.accept = '.pdf';
+                fileInput.multiple = true;
                 uploadBtn.addEventListener('click', () => fileInput.click());
                 fileInput.addEventListener('change', () => {
-                    const file = fileInput.files && fileInput.files[0];
-                    if (!file) return;
-                    drawerCallbacks.onUpload(run.id, file);
+                    const files = fileInput.files;
+                    if (!files || files.length === 0) return;
+                    drawerCallbacks.onUpload(run.id, files);
                 });
                 actionRow.appendChild(uploadBtn);
                 actionRow.appendChild(fileInput);

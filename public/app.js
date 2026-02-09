@@ -6,12 +6,6 @@ import * as api from './js/api.js?v=dev48';
 import { initTour } from './js/tour.js?v=dev46';
 import { markMilestone, renderChecklist, resetMilestones } from './js/onboarding.js?v=dev46';
 import {
-    DEFAULT_PROMPT_CONTENT,
-    DEFAULT_PROMPT_DESCRIPTION,
-    DEFAULT_PROMPT_NAME,
-    DEFAULT_PROMPT_NOTES,
-} from './js/default_prompt.js?v=dev54';
-import {
     appStore,
     setSearchResults,
     setSearching,
@@ -101,32 +95,47 @@ const SIDE_DRAWERS = {
         closeBtn: '#closeFailureDrawer',
     },
 };
-const FALLBACK_PROMPT_ID = 0;
-const FALLBACK_PROMPT_VERSION_ID = 0;
 const CREATE_PROMPT_OPTION = '__create__';
 
-function getFallbackPrompts() {
-    const version = {
-        id: FALLBACK_PROMPT_VERSION_ID,
-        prompt_id: FALLBACK_PROMPT_ID,
-        version_index: 1,
-        content: DEFAULT_PROMPT_CONTENT,
-        notes: DEFAULT_PROMPT_NOTES,
-        created_by: 'system',
-        created_at: null,
-    };
-    return [
-        {
-            id: FALLBACK_PROMPT_ID,
-            name: DEFAULT_PROMPT_NAME,
-            description: DEFAULT_PROMPT_DESCRIPTION,
-            is_active: true,
-            created_at: null,
-            updated_at: null,
-            latest_version: version,
-            versions: [version],
-        },
-    ];
+const BLOCKING_ERROR_ID = 'blockingError';
+
+function showBlockingError(title, message, detail) {
+    let overlay = document.querySelector(`#${BLOCKING_ERROR_ID}`);
+    if (!overlay) {
+        overlay = document.createElement('div');
+        overlay.id = BLOCKING_ERROR_ID;
+        overlay.className = 'fixed inset-0 z-50 flex items-center justify-center bg-slate-950/80 p-6';
+        overlay.innerHTML = `
+            <div class="sw-card w-full max-w-xl p-6 space-y-3">
+                <div class="text-lg font-semibold text-slate-100" data-error-title></div>
+                <p class="text-sm text-slate-300" data-error-message></p>
+                <pre class="text-xs text-slate-400 whitespace-pre-wrap hidden" data-error-detail></pre>
+                <div class="flex items-center gap-2 pt-2">
+                    <button type="button" class="sw-btn sw-btn--primary" data-error-reload>Reload</button>
+                </div>
+            </div>
+        `;
+        document.body.appendChild(overlay);
+        const reloadBtn = overlay.querySelector('[data-error-reload]');
+        if (reloadBtn) {
+            reloadBtn.addEventListener('click', () => window.location.reload());
+        }
+    }
+
+    const titleEl = overlay.querySelector('[data-error-title]');
+    const messageEl = overlay.querySelector('[data-error-message]');
+    const detailEl = overlay.querySelector('[data-error-detail]');
+    if (titleEl) titleEl.textContent = title || 'Blocking error';
+    if (messageEl) messageEl.textContent = message || 'An unrecoverable error occurred.';
+    if (detailEl) {
+        if (detail) {
+            detailEl.textContent = detail;
+            detailEl.classList.remove('hidden');
+        } else {
+            detailEl.textContent = '';
+            detailEl.classList.add('hidden');
+        }
+    }
 }
 
 function appendCreatePromptOption(select) {
@@ -163,7 +172,12 @@ async function init() {
     initTourGuide();
     renderOnboarding();
     initContextHints();
-    await loadPrompts();
+    try {
+        await loadPrompts();
+    } catch (err) {
+        console.error('Failed to load prompts:', err);
+        return;
+    }
     
     // Subscribe to state changes
     initStateSubscriptions();
@@ -529,7 +543,9 @@ async function loadPrompts({ keepSelection = false } = {}) {
         let prompts = data.prompts || [];
         let activePromptId = data.active_prompt_id || null;
         if (!prompts.length) {
-            prompts = getFallbackPrompts();
+            throw new Error('No prompts are configured. Create one before using the dashboard.');
+        }
+        if (!activePromptId || !prompts.some((prompt) => prompt.id === activePromptId)) {
             activePromptId = prompts[0].id;
         }
         setPrompts(prompts, activePromptId);
@@ -541,16 +557,13 @@ async function loadPrompts({ keepSelection = false } = {}) {
         renderPromptSelect(prompts, activePromptId, resolved);
         renderPromptList(prompts, activePromptId);
     } catch (err) {
-        const prompts = getFallbackPrompts();
-        const activePromptId = prompts[0].id;
-        setPrompts(prompts, activePromptId);
-        const selectedPromptId = keepSelection ? getSelectedPrompt() : null;
-        const resolved = selectedPromptId || activePromptId;
-        if (resolved !== null && resolved !== undefined) {
-            setSelectedPrompt(resolved);
-        }
-        renderPromptSelect(prompts, activePromptId, resolved);
-        renderPromptList(prompts, activePromptId);
+        const detail = err?.message || String(err || '');
+        showBlockingError(
+            'Prompts unavailable',
+            'Failed to load prompts from the API. Fix the server and reload to continue.',
+            detail
+        );
+        throw err;
     }
 }
 
@@ -565,9 +578,9 @@ function initEventHandlers() {
     if (uploadPdfBtn && uploadPdfInput) {
         uploadPdfBtn.addEventListener('click', () => uploadPdfInput.click());
         uploadPdfInput.addEventListener('change', async (event) => {
-            const file = event.target.files && event.target.files[0];
-            if (!file) return;
-            await handleDashboardUpload(file);
+            const files = event.target.files;
+            if (!files || files.length === 0) return;
+            await handleDashboardUpload(files);
             uploadPdfInput.value = '';
         });
     }
@@ -1414,10 +1427,10 @@ async function handleRetryRunWithResolved(runId, sourceUrl) {
     }
 }
 
-async function handleUploadRunFile(runId, file) {
+async function handleUploadRunFile(runId, files) {
     try {
         const provider = getSelectedProvider();
-        await api.uploadRunPdf(runId, file, provider);
+        await api.uploadRunPdf(runId, files, provider);
         const paperId = appStore.get('drawerPaperId');
         if (paperId) {
             await loadPaperDetails(paperId);
@@ -1429,26 +1442,30 @@ async function handleUploadRunFile(runId, file) {
     }
 }
 
-async function handleDashboardUpload(file) {
-    if (!file) return;
-    if (!file.name || !file.name.toLowerCase().endsWith('.pdf')) {
-        alert('Please choose a PDF file.');
+async function handleDashboardUpload(files) {
+    const list = Array.from(files || []);
+    if (list.length === 0) return;
+    const invalid = list.find((item) => !item.name || !item.name.toLowerCase().endsWith('.pdf'));
+    if (invalid) {
+        alert('Please choose PDF files only.');
         return;
     }
     const promptId = getSelectedPrompt();
-    const title = file.name.replace(/\.pdf$/i, '');
-    setSearchStatus('Uploading PDF...', true);
+    const title = list.length === 1 ? list[0].name.replace(/\.pdf$/i, '') : null;
+    const label = list.length === 1 ? 'Uploading PDF...' : `Uploading ${list.length} PDFs...`;
+    setSearchStatus(label, true);
     
     try {
-        const result = await api.extractFile(file, promptId, title);
+        await api.extractFile(list, promptId, title);
         await refreshPapers();
-        setSearchStatus('PDF uploaded. Extraction started.');
-        if (result?.paper_id) {
-            await handlePaperClick(result.paper_id);
-        }
+        const doneLabel = list.length === 1
+            ? 'PDF uploaded. Extraction queued.'
+            : `${list.length} PDFs uploaded. Extraction queued.`;
+        setSearchStatus(doneLabel);
     } catch (e) {
         console.error('Failed to upload PDF:', e);
         setSearchStatus('Upload failed.');
+        await refreshPapers();
         alert(e.message || 'Failed to upload PDF');
     } finally {
         setSearchStatus(document.querySelector('#searchStatus')?.textContent || '', false);

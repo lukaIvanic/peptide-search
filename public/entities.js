@@ -328,8 +328,8 @@ function renderEntityRow(item) {
 		item.flags?.some((flag) => INVALID_FLAGS.has(flag)) ? 'border-l-red-400' : '',
 	].join(' ');
 	const row = el('div', rowClass);
-	const identifier = el('div', 'space-y-1');
-	identifier.appendChild(el('div', 'font-medium', formatIdentifier(item)));
+	const identifier = el('div', 'space-y-1 min-w-0');
+	identifier.appendChild(el('div', 'font-medium sw-entity-seq', formatIdentifier(item)));
 	const badges = el('div', 'flex flex-wrap gap-1');
 	if (item.flags?.includes('missing_evidence')) {
 		badges.appendChild(el('span', 'px-2 py-0.5 rounded-full bg-amber-100 text-amber-700 text-[10px]', 'missing evidence'));

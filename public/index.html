@@ -59,7 +59,9 @@
 						<div class="flex items-center gap-2">
 							<label class="sw-kicker text-[10px] text-slate-500">Provider:</label>
 							<select id="providerSelect" class="sw-select">
-								<option value="openai">OpenAI</option>
+								<option value="openai">OpenAI - Full</option>
+								<option value="openai-mini">OpenAI - Mini</option>
+								<option value="openai-nano">OpenAI - Nano</option>
 								<option value="mock">Mock (Demo)</option>
 							</select>
 						</div>
@@ -69,7 +71,7 @@
 						<button id="uploadPdfBtn" class="sw-btn sw-btn--ghost" type="button">
 							Upload PDF
 						</button>
-						<input id="uploadPdfInput" type="file" accept=".pdf" class="hidden" />
+						<input id="uploadPdfInput" type="file" accept=".pdf" multiple class="hidden" />
 					</div>
 					<div id="searchExamples" class="mt-2 flex flex-wrap items-center gap-2 text-[10px] text-slate-400">
 						<span class="sw-kicker text-[10px] text-slate-500">Examples</span>
@@ -345,10 +347,6 @@
 				</aside>
 			</div>
 		</main>
-
-		<footer class="max-w-7xl mx-auto px-6 py-8 text-xs text-slate-500">
-			Built for rapid prototyping. Provider is switchable (Mock/OpenAI).
-		</footer>
 
 		<script type="module" src="/static/app.js?v=dev54"></script>
 		<script src="/static/js/topbar_animations.js?v=dev6"></script>

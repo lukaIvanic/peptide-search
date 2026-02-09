@@ -783,6 +783,7 @@ body.theme-synthwave {
 .theme-synthwave .chip {
 	font-family: "Press Start 2P", cursive;
 	font-size: 10px;
+	font-weight: 700;
 	text-transform: uppercase;
 	padding: 6px 10px;
 	border-radius: 0;

@@ -23,7 +23,7 @@ const state = {
 	datasets: [],
 	filterDataset: '',
 	search: '',
-	selectedId: null,
+	selectedPaperKey: null, // Changed from selectedId to track paper group
 	provider: 'openai',
 	pdfStatusFilter: 'all',
 	resolvedSource: null,
@@ -31,6 +31,9 @@ const state = {
 	runPayloadCache: new Map(),
 	comparisonCache: new Map(),
 	manualPdfReasons: new Map(),
+	paperComparisonCache: new Map(), // Cache for paper-level comparisons
+	localPdfByCaseId: new Map(),
+	localPdfFileByCaseId: new Map(),
 };
 
 let sseConnection = null;
@@ -39,6 +42,11 @@ let analysisToken = 0;
 function normalizeSequence(seq) {
 	if (!seq) return '';
 	return String(seq).replace(/\s+/g, '').toUpperCase();
+}
+
+function normalizeDoiVersion(doi) {
+	if (!doi) return null;
+	return String(doi).replace(/\/v\d+$/i, '');
 }
 
 function getCaseKey(caseItem) {
@@ -119,6 +127,36 @@ function getPreferredPdfUrl(caseItem, runPayload = null) {
 		caseItem?.paper_url ||
 		null
 	);
+}
+
+function isLocalPdfUrl(url) {
+	return Boolean(url) && String(url).startsWith('upload://');
+}
+
+function markLocalPdfForGroup(paperGroup, sourceUrl) {
+	if (!paperGroup?.cases?.length || !isLocalPdfUrl(sourceUrl)) return;
+	paperGroup.cases.forEach((caseItem) => {
+		if (caseItem?.id) {
+			state.localPdfByCaseId.set(caseItem.id, true);
+		}
+	});
+}
+
+function isLocalPdfAvailable(paperGroup, runPayload = null) {
+	if (!paperGroup?.cases?.length) return false;
+	const preferred = getPreferredPdfUrl(paperGroup, runPayload);
+	if (isLocalPdfUrl(preferred)) return true;
+	if (paperGroup.cases.some((caseItem) => state.localPdfFileByCaseId.get(caseItem.id))) return true;
+	if (paperGroup.cases.some((caseItem) => state.localPdfByCaseId.get(caseItem.id))) return true;
+	const resolved = state.resolvedSource && paperGroup.cases.some((c) => c.id === state.resolvedSource.caseId)
+		? state.resolvedSource.url
+		: null;
+	return isLocalPdfUrl(resolved);
+}
+
+function isLocalPdfFileAvailable(paperGroup) {
+	if (!paperGroup?.cases?.length) return false;
+	return paperGroup.cases.some((caseItem) => state.localPdfFileByCaseId.get(caseItem.id));
 }
 
 function getStatusLabel(status) {
@@ -289,69 +327,155 @@ function buildComparison(caseItem, runPayload) {
 	};
 }
 
-function renderSelectedCaseStrip(caseItem, runPayload) {
+function buildPaperComparison(paperGroup, runPayload) {
+	if (!paperGroup || !runPayload) return null;
+	const run = runPayload.run || {};
+	if (run.status === 'failed') return null;
+	const rawJson = run.raw_json || {};
+	const extractedEntities = Array.isArray(rawJson.entities) ? rawJson.entities : [];
+	
+	// Build set of extracted sequences for matching
+	const extractedSeqSet = new Set();
+	const extractedSeqToIndex = new Map();
+	extractedEntities.forEach((entity, index) => {
+		const seq = normalizeSequence(entity?.peptide?.sequence_one_letter || '');
+		if (seq) {
+			extractedSeqSet.add(seq);
+			extractedSeqToIndex.set(seq, index);
+		}
+	});
+	
+	// Match each baseline case to extracted entities
+	const caseMatches = [];
+	let matchedCount = 0;
+	
+	for (const caseItem of paperGroup.cases) {
+		const baselineSeq = normalizeSequence(caseItem.sequence);
+		const isMatched = baselineSeq && extractedSeqSet.has(baselineSeq);
+		const matchIndex = isMatched ? extractedSeqToIndex.get(baselineSeq) : -1;
+		
+		if (isMatched) matchedCount++;
+		
+		// Calculate label overlap for matched entity
+		let labelOverlap = [];
+		if (matchIndex >= 0) {
+			const baselineLabels = (caseItem.labels || []).map(l => String(l).toLowerCase());
+			const extractedLabels = (extractedEntities[matchIndex]?.labels || []).map(l => String(l).toLowerCase());
+			labelOverlap = baselineLabels.filter(l => extractedLabels.includes(l));
+		}
+		
+		caseMatches.push({
+			caseId: caseItem.id,
+			sequence: caseItem.sequence,
+			labels: caseItem.labels || [],
+			isMatched,
+			matchIndex,
+			labelOverlap,
+		});
+	}
+	
+	return {
+		totalExpected: paperGroup.cases.length,
+		matchedCount,
+		extractedCount: extractedEntities.length,
+		caseMatches,
+	};
+}
+
+function renderSelectedPaperStrip(paperGroup, runPayload) {
 	const strip = $('#selectedCaseStrip');
 	if (!strip) return;
-	if (!caseItem) {
+	if (!paperGroup) {
 		strip.classList.add('hidden');
 		return;
 	}
 	strip.classList.remove('hidden');
 	const sequence = $('#selectedCaseSequence');
-	if (sequence) sequence.textContent = caseItem.sequence || '(No sequence)';
+	if (sequence) {
+		// Show DOI or identifier instead of sequence
+		sequence.textContent = paperGroup.doi || paperGroup.pubmed_id || paperGroup.key;
+	}
 	const dataset = $('#selectedCaseDataset');
-	if (dataset) dataset.textContent = caseItem.dataset || 'Unknown dataset';
+	if (dataset) {
+		const datasets = [...new Set(paperGroup.cases.map(c => c.dataset).filter(Boolean))];
+		dataset.textContent = datasets.join(', ') || 'Unknown dataset';
+	}
 	const meta = $('#selectedCaseMeta');
 	if (meta) {
 		meta.innerHTML = '';
 		meta.classList.add('flex', 'flex-wrap', 'gap-2');
-		const doiUrl = normalizeDoiToUrl(caseItem.doi);
-		const pdfUrl = getPreferredPdfUrl(caseItem, runPayload);
-		const manualStatus = getManualPdfStatus(caseItem, runPayload);
+		
+		// Entity count
+		meta.appendChild(el('span', 'sw-chip sw-chip--info text-[10px]', `${paperGroup.cases.length} expected entities`));
+		
+		const doiUrl = normalizeDoiToUrl(paperGroup.doi);
+		const pdfUrl = getPreferredPdfUrl(paperGroup, runPayload);
+		const firstCase = paperGroup.cases[0];
+		const localAvailable = isLocalPdfAvailable(paperGroup, runPayload);
+		const localFileAvailable = isLocalPdfFileAvailable(paperGroup);
+		const manualStatus = firstCase ? getManualPdfStatus(firstCase, runPayload) : null;
 		let resolveBtn = null;
+		let openLocalBtn = null;
+		
 		if (doiUrl) {
 			meta.appendChild(createExternalLink(doiUrl, 'break-all max-w-full'));
 		}
-		if (pdfUrl) {
+		if (pdfUrl && isLocalPdfUrl(pdfUrl)) {
+			meta.appendChild(el('span', 'sw-chip sw-chip--success text-[10px]', 'Local PDF'));
+		} else if (pdfUrl) {
 			meta.appendChild(createExternalLink(pdfUrl, 'break-all max-w-full'));
-		} else {
+		} else if (firstCase && !localAvailable) {
 			resolveBtn = el('button', 'sw-btn sw-btn--sm sw-btn--ghost');
 			resolveBtn.appendChild(el('span', 'sw-btn__label', 'Find PDF'));
 			meta.appendChild(resolveBtn);
 		}
-		const metaLine = [caseItem.pubmed_id, caseItem.id].filter(Boolean).join(' · ');
-		if (metaLine) {
-			meta.appendChild(el('span', 'text-[10px] text-slate-500', metaLine));
+		
+		if (localFileAvailable) {
+			openLocalBtn = el('button', 'sw-btn sw-btn--sm sw-btn--ghost');
+			openLocalBtn.appendChild(el('span', 'sw-btn__label', 'Open local PDF'));
+			meta.appendChild(openLocalBtn);
 		}
+		
+		if (paperGroup.pubmed_id) {
+			meta.appendChild(el('span', 'text-[10px] text-slate-500', `PubMed: ${paperGroup.pubmed_id}`));
+		}
+		
 		if (manualStatus?.detail) {
 			meta.appendChild(
 				el('span', 'text-[10px] text-amber-600 break-words', manualStatus.detail),
 			);
 		}
-		if (resolveBtn) {
+		
+		if (resolveBtn && firstCase) {
 			resolveBtn.addEventListener('click', async () => {
 				setButtonLoading(resolveBtn, true, 'Finding...');
 				try {
 					updateStatus('Searching for open-access source...');
-					const result = await api.resolveBaselineSource(caseItem.id);
+					const result = await api.resolveBaselineSource(firstCase.id);
 					if (!result.found) {
-						state.manualPdfReasons.set(caseItem.id, MANUAL_PDF_REASON_NO_OA);
+						state.manualPdfReasons.set(firstCase.id, MANUAL_PDF_REASON_NO_OA);
 						updateStatus('No open-access source found.');
-						renderSelectedCaseStrip(caseItem, runPayload);
+						renderSelectedPaperStrip(paperGroup, runPayload);
 						renderCaseList({ skipAnalysis: true });
 						return;
 					}
 					const resolvedUrl = result.pdf_url || result.url;
-					caseItem.pdf_url = resolvedUrl || caseItem.pdf_url;
-					state.manualPdfReasons.delete(caseItem.id);
+					paperGroup.pdf_url = resolvedUrl || paperGroup.pdf_url;
+					state.manualPdfReasons.delete(firstCase.id);
+					if (isLocalPdfUrl(resolvedUrl)) {
+						markLocalPdfForGroup(paperGroup, resolvedUrl);
+					}
 					state.resolvedSource = {
-						caseId: caseItem.id,
+						caseId: firstCase.id,
 						url: resolvedUrl,
 						label: result.pdf_url ? 'PDF URL' : 'Source URL',
 					};
+					if (isLocalPdfUrl(resolvedUrl)) {
+						state.resolvedSource.label = 'Local PDF';
+					}
 					updateStatus(`Found ${state.resolvedSource.label}.`);
-					renderSelectedCaseStrip(caseItem, runPayload);
-					renderExtractionDetail(runPayload, caseItem, null);
+					renderSelectedPaperStrip(paperGroup, runPayload);
+					renderExtractionDetail(runPayload, paperGroup, null);
 					renderCaseList({ skipAnalysis: true });
 				} catch (err) {
 					updateStatus(err.message || 'Failed to resolve source');
@@ -360,7 +484,38 @@ function renderSelectedCaseStrip(caseItem, runPayload) {
 				}
 			});
 		}
+
+		if (openLocalBtn && firstCase) {
+			openLocalBtn.addEventListener('click', () => {
+				if (!firstCase.id) {
+					updateStatus('No baseline case selected.');
+					return;
+				}
+				updateStatus('Opening local PDF...');
+				const url = api.getBaselineLocalPdfUrl(firstCase.id);
+				window.open(url, '_blank', 'noopener');
+			});
+		}
 	}
+}
+
+// Legacy alias for compatibility
+function renderSelectedCaseStrip(caseItem, runPayload) {
+	if (!caseItem) {
+		renderSelectedPaperStrip(null, null);
+		return;
+	}
+	// Convert single case to paper group format
+	const paperGroup = {
+		key: getPaperKey(caseItem),
+		doi: caseItem.doi,
+		pubmed_id: caseItem.pubmed_id,
+		paper_url: caseItem.paper_url,
+		pdf_url: caseItem.pdf_url,
+		dataset: caseItem.dataset,
+		cases: [caseItem],
+	};
+	renderSelectedPaperStrip(paperGroup, runPayload);
 }
 
 function renderSummaryBlock(comparison) {
@@ -413,14 +568,17 @@ function renderDatasetOptions() {
 	});
 }
 
-function renderCounts(filteredCount) {
+function renderCounts(paperCount, entityCount) {
 	const total = state.cases.length;
 	const baselineCount = $('#baselineCount');
-	if (baselineCount) baselineCount.textContent = total ? `${total} cases` : '';
+	if (baselineCount) baselineCount.textContent = total ? `${total} entities` : '';
 	const caseCount = $('#caseCount');
 	if (caseCount) {
-		const label = filteredCount === undefined ? total : filteredCount;
-		caseCount.textContent = total ? `${label} shown` : '';
+		if (paperCount !== undefined) {
+			caseCount.textContent = `${paperCount} papers (${entityCount} entities)`;
+		} else {
+			caseCount.textContent = '';
+		}
 	}
 }
 
@@ -449,6 +607,91 @@ function filterCases() {
 		}
 		return true;
 	});
+}
+
+function getPaperKey(caseItem) {
+	// Use DOI as primary key, fallback to pubmed_id, paper_url, or case id
+	const normalizedDoi = normalizeDoiVersion(caseItem.doi);
+	return normalizedDoi || caseItem.pubmed_id || caseItem.paper_url || caseItem.id;
+}
+
+function groupCasesByPaper(cases) {
+	const groups = new Map();
+	for (const caseItem of cases) {
+		const key = getPaperKey(caseItem);
+		if (!groups.has(key)) {
+			groups.set(key, {
+				key,
+				doi: caseItem.doi,
+				pubmed_id: caseItem.pubmed_id,
+				paper_url: caseItem.paper_url,
+				pdf_url: caseItem.pdf_url,
+				dataset: caseItem.dataset,
+				cases: [],
+			});
+		}
+		const group = groups.get(key);
+		group.cases.push(caseItem);
+		// Take the first available pdf_url from any case
+		if (!group.pdf_url && caseItem.pdf_url) {
+			group.pdf_url = caseItem.pdf_url;
+		}
+	}
+	return Array.from(groups.values());
+}
+
+function getPaperRunStatus(paperGroup) {
+	// Determine aggregate run status for a paper group
+	// Priority: processing > failed > stored > none
+	let latestRun = null;
+	let latestProcessingRun = null;
+	let latestFailedRun = null;
+	let hasStored = false;
+	
+	for (const caseItem of paperGroup.cases) {
+		const run = caseItem.latest_run;
+		if (!run) continue;
+		if (!latestRun || (run.run_id && run.run_id > (latestRun.run_id || 0))) {
+			latestRun = run;
+		}
+		if (isProcessingStatus(run.status)) {
+			if (!latestProcessingRun || (run.run_id && run.run_id > (latestProcessingRun.run_id || 0))) {
+				latestProcessingRun = run;
+			}
+		} else if (run.status === 'failed') {
+			if (!latestFailedRun || (run.run_id && run.run_id > (latestFailedRun.run_id || 0))) {
+				latestFailedRun = run;
+			}
+		} else if (run.status === 'stored') {
+			hasStored = true;
+		}
+	}
+	
+	if (latestProcessingRun) return { status: latestProcessingRun.status, run: latestProcessingRun };
+	if (latestFailedRun) return { status: 'failed', run: latestFailedRun };
+	if (hasStored) return { status: 'stored', run: latestRun };
+	return { status: 'none', run: null };
+}
+
+function getPaperDisplayLabel(paperGroup) {
+	// Get a display label for the paper
+	if (paperGroup.doi) {
+		// Shorten DOI for display
+		const doi = paperGroup.doi;
+		if (doi.length > 35) {
+			return doi.substring(0, 32) + '...';
+		}
+		return doi;
+	}
+	if (paperGroup.pubmed_id) return `PubMed: ${paperGroup.pubmed_id}`;
+	if (paperGroup.paper_url) {
+		const url = paperGroup.paper_url;
+		if (url.length > 35) {
+			return url.substring(0, 32) + '...';
+		}
+		return url;
+	}
+	return paperGroup.cases[0]?.id || 'Unknown';
 }
 
 function mean(values) {
@@ -618,20 +861,22 @@ function computeAggregateMetrics(successCases, runPayloads, comparisons = null) 
 	};
 }
 
-function renderAggregatePanel({ totalCount, statusCounts, metrics }) {
+function renderAggregatePanel({ paperCount, entityCount, paperStatusCounts, entityStatusCounts, metrics }) {
 	const container = $('#baselineAnalysis');
 	if (!container) return;
 	container.innerHTML = '';
 
-	if (!totalCount) {
-		container.appendChild(el('div', 'sw-empty text-xs text-slate-500', 'No baseline cases in this filter.'));
+	if (!paperCount) {
+		container.appendChild(el('div', 'sw-empty text-xs text-slate-500', 'No papers in this filter.'));
 		return;
 	}
 
-	const successCount = statusCounts.stored || 0;
-	const failedCount = statusCounts.failed || 0;
-	const pendingCount = (statusCounts.queued || 0) + (statusCounts.fetching || 0) + (statusCounts.provider || 0) + (statusCounts.validating || 0);
-	const noneCount = statusCounts.none || 0;
+	// Paper-level summary
+	const paperSuccessCount = paperStatusCounts.stored || 0;
+	const paperFailedCount = paperStatusCounts.failed || 0;
+	const paperPendingCount = (paperStatusCounts.queued || 0) + (paperStatusCounts.fetching || 0) + 
+		(paperStatusCounts.provider || 0) + (paperStatusCounts.validating || 0);
+	const paperNoneCount = paperStatusCounts.none || 0;
 
 	const summary = el('div', 'grid grid-cols-2 md:grid-cols-4 gap-2 text-[11px]');
 	const addSummary = (label, value) => {
@@ -640,13 +885,13 @@ function renderAggregatePanel({ totalCount, statusCounts, metrics }) {
 		cell.appendChild(el('div', 'text-slate-700', value));
 		summary.appendChild(cell);
 	};
-	addSummary('Filtered cases', totalCount);
-	addSummary('Successful', `${successCount} (${formatPercent(successCount, totalCount)})`);
-	addSummary('Failed', failedCount);
-	addSummary('Pending/none', pendingCount + noneCount);
+	addSummary('Papers', `${paperCount} (${entityCount} entities)`);
+	addSummary('Successful', `${paperSuccessCount} (${formatPercent(paperSuccessCount, paperCount)})`);
+	addSummary('Failed', paperFailedCount);
+	addSummary('Pending/none', paperPendingCount + paperNoneCount);
 	container.appendChild(summary);
 
-	if (!metrics || metrics.comparisonsCount === 0) {
+	if (!metrics || metrics.papersAnalyzed === 0) {
 		container.appendChild(el('div', 'mt-2 text-xs text-slate-500', 'No successful runs to analyze yet.'));
 		return;
 	}
@@ -658,26 +903,16 @@ function renderAggregatePanel({ totalCount, statusCounts, metrics }) {
 		cell.appendChild(el('div', 'text-slate-700', value));
 		metricsGrid.appendChild(cell);
 	};
-	addMetric('Sequence match rate', `${formatPercent(metrics.sequenceMatchCount, metrics.comparisonsCount)} (${metrics.sequenceMatchCount}/${metrics.comparisonsCount})`);
-	addMetric('Label overlap avg/median', `${formatNumber(metrics.labelOverlapAvg)} / ${formatNumber(metrics.labelOverlapMedian)}`);
-	addMetric('Entity delta avg/median', `${formatNumber(metrics.entityDeltaAvg)} / ${formatNumber(metrics.entityDeltaMedian)}`);
+	
+	// Entity match rate across all papers
+	addMetric('Entity match rate', `${formatPercent(metrics.totalMatched, metrics.totalExpected)} (${metrics.totalMatched}/${metrics.totalExpected})`);
+	addMetric('Avg match rate per paper', `${formatNumber(metrics.avgMatchRate * 100, 0)}%`);
+	addMetric('Papers with all matched', `${metrics.perfectMatchCount}/${metrics.papersAnalyzed}`);
 	container.appendChild(metricsGrid);
 
-	const overlaps = el('div', 'mt-3');
-	overlaps.appendChild(el('div', 'sw-kicker text-[10px] text-slate-400', 'Top overlapping labels'));
-	if (metrics.overlapLabels.length === 0) {
-		overlaps.appendChild(el('div', 'mt-1 text-xs text-slate-500', 'n/a'));
-	} else {
-		const list = el('div', 'mt-1 flex flex-wrap gap-1');
-		metrics.overlapLabels.forEach((entry) => {
-			list.appendChild(el('span', 'sw-chip text-[10px] text-slate-500', `${entry.label} (${entry.count})`));
-		});
-		overlaps.appendChild(list);
-	}
-	container.appendChild(overlaps);
-
+	// Entity delta distribution
 	const deltas = el('div', 'mt-3');
-	deltas.appendChild(el('div', 'sw-kicker text-[10px] text-slate-400', 'Entity delta distribution'));
+	deltas.appendChild(el('div', 'sw-kicker text-[10px] text-slate-400', 'Extracted vs expected (per paper)'));
 	if (metrics.entityDeltaBuckets.every((bucket) => bucket.count === 0)) {
 		deltas.appendChild(el('div', 'mt-1 text-xs text-slate-500', 'n/a'));
 	} else {
@@ -689,6 +924,7 @@ function renderAggregatePanel({ totalCount, statusCounts, metrics }) {
 	}
 	container.appendChild(deltas);
 
+	// Top tags from extracted entities
 	const tags = el('div', 'mt-3 grid grid-cols-1 md:grid-cols-3 gap-2 text-[11px]');
 	const addTags = (label, items) => {
 		const col = el('div', 'flex flex-col gap-1');
@@ -713,13 +949,27 @@ function renderAggregatePanel({ totalCount, statusCounts, metrics }) {
 async function updateAggregateAnalysis(cases = filterCases()) {
 	const container = $('#baselineAnalysis');
 	if (!container) return;
-	const totalCount = cases.length;
-	const statusCounts = cases.reduce((counts, item) => {
+	
+	const paperGroups = groupCasesByPaper(cases);
+	const paperCount = paperGroups.length;
+	const entityCount = cases.length;
+	
+	// Compute paper-level status counts
+	const paperStatusCounts = {};
+	const entityStatusCounts = {};
+	
+	paperGroups.forEach(paperGroup => {
+		const runStatus = getPaperRunStatus(paperGroup);
+		paperStatusCounts[runStatus.status] = (paperStatusCounts[runStatus.status] || 0) + 1;
+	});
+	
+	cases.forEach(item => {
 		const status = item.latest_run?.status || 'none';
-		counts[status] = (counts[status] || 0) + 1;
-		return counts;
-	}, {});
-	const successCases = cases.filter((item) => item.latest_run?.status === 'stored');
+		entityStatusCounts[status] = (entityStatusCounts[status] || 0) + 1;
+	});
+	
+	const successPapers = paperGroups.filter(g => getPaperRunStatus(g).status === 'stored');
+	
 	pruneComparisonCache(cases);
 	cases.forEach((item) => {
 		if (item.latest_run?.status !== 'stored') {
@@ -729,37 +979,105 @@ async function updateAggregateAnalysis(cases = filterCases()) {
 
 	const hint = $('#analysisHint');
 	if (hint) {
-		const successCount = statusCounts.stored || 0;
-		hint.textContent = totalCount ? `${successCount} successful of ${totalCount} filtered` : 'No filtered cases';
+		const successCount = paperStatusCounts.stored || 0;
+		hint.textContent = paperCount ? `${successCount} successful of ${paperCount} papers` : 'No papers';
 	}
 
 	container.innerHTML = '';
-	if (!totalCount) {
-		container.appendChild(el('div', 'sw-empty text-xs text-slate-500', 'No baseline cases in this filter.'));
+	if (!paperCount) {
+		container.appendChild(el('div', 'sw-empty text-xs text-slate-500', 'No papers in this filter.'));
 		return;
 	}
 	container.appendChild(el('div', 'sw-empty text-xs text-slate-500', 'Computing analysis...'));
 
-	if (!successCases.length) {
-		renderAggregatePanel({ totalCount, statusCounts, metrics: null });
+	if (!successPapers.length) {
+		renderAggregatePanel({ paperCount, entityCount, paperStatusCounts, entityStatusCounts, metrics: null });
 		return;
 	}
 
 	const token = ++analysisToken;
-	const runPayloads = await mapWithConcurrency(successCases, 6, fetchLatestRunPayload);
+	
+	// Fetch run payloads for successful papers (use first case of each paper)
+	const runPayloads = await mapWithConcurrency(successPapers, 6, async (paperGroup) => {
+		const firstCase = paperGroup.cases[0];
+		return fetchLatestRunPayload(firstCase);
+	});
+	
 	if (token !== analysisToken) return;
-	const comparisons = successCases.map((caseItem, index) => {
+	
+	// Build paper comparisons and compute metrics
+	const paperComparisons = successPapers.map((paperGroup, index) => {
 		const runPayload = runPayloads[index];
 		if (!runPayload?.run) return null;
-		const comparison = buildComparison(caseItem, runPayload);
+		const comparison = buildPaperComparison(paperGroup, runPayload);
 		if (comparison) {
-			setComparisonCache(caseItem, comparison);
+			state.paperComparisonCache.set(paperGroup.key, comparison);
 		}
 		return comparison;
 	});
-	const metrics = computeAggregateMetrics(successCases, runPayloads, comparisons);
-	renderAggregatePanel({ totalCount, statusCounts, metrics });
+	
+	const metrics = computePaperAggregateMetrics(successPapers, runPayloads, paperComparisons);
+	renderAggregatePanel({ paperCount, entityCount, paperStatusCounts, entityStatusCounts, metrics });
 	renderCaseList({ skipAnalysis: true });
+}
+
+function computePaperAggregateMetrics(successPapers, runPayloads, paperComparisons) {
+	let papersAnalyzed = 0;
+	let totalExpected = 0;
+	let totalMatched = 0;
+	let perfectMatchCount = 0;
+	const matchRates = [];
+	const deltaValues = [];
+	const tagCounts = {
+		labels: new Map(),
+		morphology: new Map(),
+		methods: new Map(),
+	};
+	
+	successPapers.forEach((paperGroup, index) => {
+		const runPayload = runPayloads[index];
+		const comparison = paperComparisons[index];
+		if (!runPayload?.run || !comparison) return;
+		
+		papersAnalyzed++;
+		totalExpected += comparison.totalExpected;
+		totalMatched += comparison.matchedCount;
+		
+		const matchRate = comparison.totalExpected > 0 
+			? comparison.matchedCount / comparison.totalExpected 
+			: 0;
+		matchRates.push(matchRate);
+		
+		if (comparison.matchedCount === comparison.totalExpected) {
+			perfectMatchCount++;
+		}
+		
+		const delta = comparison.extractedCount - comparison.totalExpected;
+		deltaValues.push(delta);
+		
+		// Collect tags from extracted entities
+		const rawJson = runPayload.run.raw_json || runPayload.run.payload || {};
+		const entities = Array.isArray(rawJson.entities) ? rawJson.entities : [];
+		entities.forEach((entity) => {
+			(entity.labels || []).forEach((label) => incrementCount(tagCounts.labels, label));
+			(entity.morphology || []).forEach((label) => incrementCount(tagCounts.morphology, label));
+			(entity.validation_methods || []).forEach((label) => incrementCount(tagCounts.methods, label));
+		});
+	});
+	
+	return {
+		papersAnalyzed,
+		totalExpected,
+		totalMatched,
+		perfectMatchCount,
+		avgMatchRate: mean(matchRates) || 0,
+		entityDeltaBuckets: bucketizeDeltas(deltaValues),
+		topTags: {
+			labels: getTopEntries(tagCounts.labels),
+			morphology: getTopEntries(tagCounts.morphology),
+			methods: getTopEntries(tagCounts.methods),
+		},
+	};
 }
 
 function renderCaseList({ skipAnalysis = false } = {}) {
@@ -767,111 +1085,155 @@ function renderCaseList({ skipAnalysis = false } = {}) {
 	container.innerHTML = '';
 	const cases = filterCases();
 	if (!cases.length) {
-		container.appendChild(el('div', 'sw-empty py-6 text-sm text-slate-500 text-center', 'No baseline cases found.'));
+		container.appendChild(el('div', 'sw-empty py-6 text-sm text-slate-500 text-center', 'No papers found.'));
 		return;
 	}
 
-	cases.forEach((item) => {
-		const isSelected = state.selectedId === item.id;
+	const paperGroups = groupCasesByPaper(cases);
+
+	paperGroups.forEach((paperGroup) => {
+		const isSelected = state.selectedPaperKey === paperGroup.key;
 		const row = el('div', `py-3 px-3 flex items-start gap-3 sw-row ${isSelected ? 'sw-row--selected' : ''}`);
 		row.setAttribute('role', 'button');
 		row.setAttribute('tabindex', '0');
 
 		const content = el('div', 'flex-1 min-w-0');
 		const titleRow = el('div', 'flex items-start gap-2');
-		const latest = item.latest_run;
-		const statusKey = latest?.status || 'none';
-		titleRow.appendChild(buildRunIndicator(statusKey));
-		titleRow.appendChild(el('div', 'text-xs font-medium text-slate-900 flex-1 break-words', item.sequence || '(No sequence)'));
+		
+		const runStatus = getPaperRunStatus(paperGroup);
+		titleRow.appendChild(buildRunIndicator(runStatus.status));
+		titleRow.appendChild(el('div', 'text-xs font-medium text-slate-900 flex-1 break-words', getPaperDisplayLabel(paperGroup)));
 
 		content.appendChild(titleRow);
 
 		const metaRow = el('div', 'mt-1 flex flex-wrap items-center gap-2');
-		const manualStatus = getManualPdfStatus(item);
-		if (item.dataset) {
-			metaRow.appendChild(el('span', 'sw-chip text-[9px] text-slate-500', item.dataset));
+		
+		// Entity count badge
+		const entityCount = paperGroup.cases.length;
+		metaRow.appendChild(el('span', 'sw-chip sw-chip--info text-[9px]', `${entityCount} ${entityCount === 1 ? 'entity' : 'entities'}`));
+		
+		// Dataset chips (unique datasets in this paper)
+		const datasets = [...new Set(paperGroup.cases.map(c => c.dataset).filter(Boolean))];
+		datasets.forEach(dataset => {
+			metaRow.appendChild(el('span', 'sw-chip text-[9px] text-slate-500', dataset));
+		});
+		
+		// Source hint
+		const sourceHint = getSourceHint(paperGroup);
+		if (sourceHint) {
+			metaRow.appendChild(el('span', `sw-chip ${sourceHint.className} text-[9px]`, sourceHint.label));
 		}
-	const sourceHint = getSourceHint(item);
-	if (sourceHint) {
-		metaRow.appendChild(el('span', `sw-chip ${sourceHint.className} text-[9px]`, sourceHint.label));
-	}
-		if (manualStatus?.tag) {
-			metaRow.appendChild(el('span', 'sw-chip sw-chip--warning text-[9px]', manualStatus.tag));
+
+		// Local PDF badge
+		const hasLocalPdf = isLocalPdfAvailable(paperGroup);
+		if (hasLocalPdf) {
+			metaRow.appendChild(el('span', 'sw-chip sw-chip--success text-[9px]', 'Local PDF'));
 		}
-		const metaLine = [item.doi || item.pubmed_id || item.id].filter(Boolean).join(' · ');
-		if (metaLine) {
-			metaRow.appendChild(el('div', 'text-[10px] text-slate-500 break-words', metaLine));
+		
+		// Check if any case needs manual PDF
+		const needsManualPdf = paperGroup.cases.some(c => getManualPdfStatus(c));
+		if (needsManualPdf) {
+			metaRow.appendChild(el('span', 'sw-chip sw-chip--warning text-[9px]', MANUAL_PDF_TAG));
 		}
+		
 		if (metaRow.childNodes.length) {
 			content.appendChild(metaRow);
 		}
 
-		if (latest?.status === 'stored') {
+		// Show comparison stats if run is stored
+		if (runStatus.status === 'stored') {
 			const tagRow = el('div', 'mt-1 flex flex-wrap items-center gap-2');
-			const comparison = getComparisonCache(item);
-			if (!comparison) {
+			const paperComparison = state.paperComparisonCache.get(paperGroup.key);
+			if (!paperComparison) {
 				tagRow.appendChild(el('span', 'sw-chip sw-chip--info text-[9px]', 'Analyzing...'));
 			} else {
-				const seqLabel = comparison.sequenceMatch ? 'Seq: Match' : 'Seq: No match';
-				const seqClass = comparison.sequenceMatch ? 'sw-chip--success' : 'sw-chip--warning';
-				tagRow.appendChild(el('span', `sw-chip ${seqClass} text-[9px]`, seqLabel));
-				tagRow.appendChild(el('span', 'sw-chip text-[9px]', `Overlap: ${comparison.labelOverlapCount ?? 0}`));
-				if (comparison.entityDelta !== null && comparison.entityDelta !== undefined) {
-					const delta = comparison.entityDelta;
-					const deltaText = `${delta > 0 ? '+' : ''}${delta}`;
-					tagRow.appendChild(el('span', 'sw-chip text-[9px]', `Δ entities: ${deltaText}`));
+				const matchedCount = paperComparison.matchedCount || 0;
+				const totalExpected = paperComparison.totalExpected || paperGroup.cases.length;
+				const matchLabel = `${matchedCount}/${totalExpected} matched`;
+				const matchClass = matchedCount === totalExpected ? 'sw-chip--success' : 
+					matchedCount > 0 ? 'sw-chip--info' : 'sw-chip--warning';
+				tagRow.appendChild(el('span', `sw-chip ${matchClass} text-[9px]`, matchLabel));
+				
+				if (paperComparison.extractedCount !== undefined) {
+					const extracted = paperComparison.extractedCount;
+					const deltaText = extracted > totalExpected ? `+${extracted - totalExpected} extra` : 
+						extracted < totalExpected ? `${totalExpected - extracted} missing` : '';
+					if (deltaText) {
+						tagRow.appendChild(el('span', 'sw-chip text-[9px]', deltaText));
+					}
 				}
 			}
 			content.appendChild(tagRow);
 		}
 
-		if (latest?.status === 'failed' && latest.failure_reason) {
-			const friendly = formatFailureReason(latest.failure_reason);
-			const message = friendly?.title || latest.failure_reason;
+		// Show failure reason if failed
+		if (runStatus.status === 'failed' && runStatus.run?.failure_reason) {
+			const friendly = formatFailureReason(runStatus.run.failure_reason);
+			const message = friendly?.title || runStatus.run.failure_reason;
 			content.appendChild(el('div', 'mt-1 text-[10px] text-red-500 break-words', message));
 		}
 
 		row.appendChild(content);
-		row.addEventListener('click', () => selectCase(item.id));
+		row.addEventListener('click', () => selectPaper(paperGroup.key));
 		row.addEventListener('keydown', (event) => {
 			if (event.key === 'Enter' || event.key === ' ') {
 				event.preventDefault();
-				selectCase(item.id);
+				selectPaper(paperGroup.key);
 			}
 		});
 		container.appendChild(row);
 	});
 
-	renderCounts(cases.length);
+	renderCounts(paperGroups.length, cases.length);
 	if (!skipAnalysis) {
 		updateAggregateAnalysis(cases);
 	}
 }
 
-function renderBaselineDetail(caseItem, comparison, runPayload = null) {
+function renderBaselineDetail(paperGroupOrCase, comparison, runPayload = null) {
 	const container = $('#baselineDetail');
 	container.innerHTML = '';
-	if (!caseItem) {
-		container.appendChild(el('div', 'sw-empty text-xs text-slate-500', 'Select a case from the list to compare against the latest run.'));
+	
+	if (!paperGroupOrCase) {
+		container.appendChild(el('div', 'sw-empty text-xs text-slate-500', 'Select a paper from the list to compare against the latest run.'));
 		return;
 	}
 
-	const headerRow = el('div', 'flex flex-wrap items-center gap-2');
-	headerRow.appendChild(el('div', 'text-sm font-medium text-slate-900', caseItem.sequence || '(No sequence)'));
-	const matchLabel = comparison
-		? comparison.sequenceMatch ? 'Match' : 'No match'
-		: 'Not compared';
-	const matchClass = comparison
-		? comparison.sequenceMatch ? 'sw-chip--success' : 'sw-chip--warning'
-		: 'sw-chip--info';
-	headerRow.appendChild(el('span', `sw-chip ${matchClass} text-[10px]`, matchLabel));
-	container.appendChild(headerRow);
-	const tags = el('div', 'flex flex-wrap gap-2 text-[10px] text-slate-500');
-	(caseItem.labels || []).forEach((label) => tags.appendChild(el('span', 'sw-chip', label)));
-	if (caseItem.dataset) tags.appendChild(el('span', 'sw-chip', caseItem.dataset));
-	container.appendChild(tags);
+	// Handle both paper group and single case formats
+	const isPaperGroup = Array.isArray(paperGroupOrCase.cases);
+	const paperGroup = isPaperGroup ? paperGroupOrCase : {
+		key: getPaperKey(paperGroupOrCase),
+		doi: paperGroupOrCase.doi,
+		pubmed_id: paperGroupOrCase.pubmed_id,
+		paper_url: paperGroupOrCase.paper_url,
+		pdf_url: paperGroupOrCase.pdf_url,
+		dataset: paperGroupOrCase.dataset,
+		cases: [paperGroupOrCase],
+	};
 
-	const meta = el('div', 'grid grid-cols-1 gap-2 text-[11px]');
+	// Paper header
+	const headerRow = el('div', 'flex flex-wrap items-center gap-2');
+	const headerLabel = paperGroup.doi || paperGroup.pubmed_id || paperGroup.key;
+	headerRow.appendChild(el('div', 'text-sm font-medium text-slate-900 break-words', headerLabel));
+	
+	// Match summary
+	if (comparison && comparison.matchedCount !== undefined) {
+		const matchLabel = `${comparison.matchedCount}/${comparison.totalExpected} matched`;
+		const matchClass = comparison.matchedCount === comparison.totalExpected ? 'sw-chip--success' : 
+			comparison.matchedCount > 0 ? 'sw-chip--info' : 'sw-chip--warning';
+		headerRow.appendChild(el('span', `sw-chip ${matchClass} text-[10px]`, matchLabel));
+	} else if (comparison) {
+		// Legacy single-case comparison
+		const matchLabel = comparison.sequenceMatch ? 'Match' : 'No match';
+		const matchClass = comparison.sequenceMatch ? 'sw-chip--success' : 'sw-chip--warning';
+		headerRow.appendChild(el('span', `sw-chip ${matchClass} text-[10px]`, matchLabel));
+	} else {
+		headerRow.appendChild(el('span', 'sw-chip sw-chip--info text-[10px]', 'Not compared'));
+	}
+	container.appendChild(headerRow);
+
+	// Paper metadata
+	const meta = el('div', 'grid grid-cols-1 gap-2 text-[11px] mt-2');
 	const addRow = (label, value, allowEmpty = false) => {
 		if (!allowEmpty && (value === null || value === undefined || value === '')) return;
 		const row = el('div', 'flex flex-col gap-1');
@@ -887,32 +1249,81 @@ function renderBaselineDetail(caseItem, comparison, runPayload = null) {
 		meta.appendChild(row);
 	};
 
-	addRow('DOI', caseItem.doi);
-	addRow('PubMed/Patent', caseItem.pubmed_id);
-	addRow('N-terminus', caseItem.n_terminal);
-	addRow('C-terminus', caseItem.c_terminal);
-	const preferredPdfUrl = getPreferredPdfUrl(caseItem, runPayload);
-	addLinkRow('PDF link', preferredPdfUrl);
-	if (caseItem.paper_url && caseItem.paper_url !== preferredPdfUrl) {
-		addLinkRow('Paper link', caseItem.paper_url);
+	addRow('DOI', paperGroup.doi);
+	addRow('PubMed/Patent', paperGroup.pubmed_id);
+	const preferredPdfUrl = getPreferredPdfUrl(paperGroup, runPayload);
+	if (preferredPdfUrl) {
+		if (isLocalPdfUrl(preferredPdfUrl)) {
+			addRow('PDF source', 'Local PDF', true);
+		} else {
+			addLinkRow('PDF link', preferredPdfUrl);
+		}
 	}
-	const sourceFlags = getSourceFlags(caseItem);
+	if (paperGroup.paper_url && paperGroup.paper_url !== preferredPdfUrl) {
+		addLinkRow('Paper link', paperGroup.paper_url);
+	}
+	const sourceFlags = getSourceFlags(paperGroup);
 	addRow('Source fields', sourceFlags.length ? sourceFlags.join(', ') : 'None', true);
-	addRow('Expected entities', getExpectedEntityCount(caseItem), true);
 	container.appendChild(meta);
 
-	if (caseItem.metadata && Object.keys(caseItem.metadata).length) {
-		const metaBlock = el('div', 'sw-card sw-card--note p-3 text-[11px] text-slate-600');
-		metaBlock.appendChild(el('div', 'sw-kicker text-[10px] text-slate-400', 'Dataset metadata'));
-		Object.entries(caseItem.metadata).forEach(([key, value]) => {
-			if (value === null || value === undefined || value === '') return;
-			const row = el('div', 'mt-1');
-			row.appendChild(el('span', 'text-slate-500', `${key}: `));
-			row.appendChild(el('span', 'text-slate-700 break-words', String(value)));
-			metaBlock.appendChild(row);
-		});
-		container.appendChild(metaBlock);
-	}
+	// Expected entities section
+	const entitiesSection = el('div', 'mt-4');
+	entitiesSection.appendChild(el('div', 'sw-kicker text-[10px] text-slate-400 mb-2', `Expected entities (${paperGroup.cases.length})`));
+	
+	const entitiesList = el('div', 'space-y-2');
+	paperGroup.cases.forEach((caseItem, index) => {
+		// Check if this case was matched
+		let isMatched = false;
+		let labelOverlap = [];
+		if (comparison && comparison.caseMatches) {
+			const match = comparison.caseMatches.find(m => m.caseId === caseItem.id);
+			if (match) {
+				isMatched = match.isMatched;
+				labelOverlap = match.labelOverlap || [];
+			}
+		}
+		
+		const cardClass = isMatched ? 'sw-card sw-card--success p-2' : 'sw-card p-2';
+		const card = el('div', cardClass);
+		
+		// Entity header with sequence
+		const entityHeader = el('div', 'flex flex-wrap items-center gap-2');
+		entityHeader.appendChild(el('span', 'text-[10px] text-slate-400', `#${index + 1}`));
+		entityHeader.appendChild(el('div', 'text-xs font-medium text-slate-900 break-words', caseItem.sequence || '(No sequence)'));
+		if (isMatched) {
+			entityHeader.appendChild(el('span', 'sw-chip sw-chip--success text-[9px]', 'Matched'));
+		}
+		card.appendChild(entityHeader);
+		
+		// Labels
+		if (caseItem.labels && caseItem.labels.length) {
+			const labelsRow = el('div', 'mt-1 flex flex-wrap gap-1');
+			caseItem.labels.forEach(label => {
+				const isOverlap = labelOverlap.includes(label.toLowerCase());
+				const labelClass = isOverlap ? 'sw-chip sw-chip--success text-[9px]' : 'sw-chip text-[9px]';
+				labelsRow.appendChild(el('span', labelClass, label));
+			});
+			card.appendChild(labelsRow);
+		}
+		
+		// Additional metadata (collapsed by default for brevity)
+		const metaItems = [];
+		if (caseItem.n_terminal) metaItems.push(`N: ${caseItem.n_terminal}`);
+		if (caseItem.c_terminal) metaItems.push(`C: ${caseItem.c_terminal}`);
+		if (caseItem.dataset) metaItems.push(caseItem.dataset);
+		if (caseItem.metadata?.validation_methods_raw) {
+			metaItems.push(`Validation: ${caseItem.metadata.validation_methods_raw}`);
+		}
+		
+		if (metaItems.length) {
+			card.appendChild(el('div', 'mt-1 text-[10px] text-slate-500 break-words', metaItems.join(' · ')));
+		}
+		
+		entitiesList.appendChild(card);
+	});
+	
+	entitiesSection.appendChild(entitiesList);
+	container.appendChild(entitiesSection);
 }
 
 function renderEntityDetails(entity) {
@@ -1014,16 +1425,41 @@ function renderEntities(rawJson, matchIndex) {
 	return container;
 }
 
-function renderExtractionDetail(runPayload, caseItem, comparison) {
+function renderExtractionDetail(runPayload, paperGroupOrCase, comparison) {
 	const container = $('#extractionDetail');
 	container.innerHTML = '';
-	if (!caseItem) {
-		container.appendChild(el('div', 'sw-empty text-xs text-slate-500', 'Select a case from the list to compare against the latest run.'));
+	
+	if (!paperGroupOrCase) {
+		container.appendChild(el('div', 'sw-empty text-xs text-slate-500', 'Select a paper from the list to compare against the latest run.'));
 		return;
 	}
+	
+	// Handle both paper group and single case formats
+	const isPaperGroup = Array.isArray(paperGroupOrCase.cases);
+	const paperGroup = isPaperGroup ? paperGroupOrCase : {
+		key: getPaperKey(paperGroupOrCase),
+		doi: paperGroupOrCase.doi,
+		pubmed_id: paperGroupOrCase.pubmed_id,
+		paper_url: paperGroupOrCase.paper_url,
+		pdf_url: paperGroupOrCase.pdf_url,
+		dataset: paperGroupOrCase.dataset,
+		cases: [paperGroupOrCase],
+	};
+	const firstCase = paperGroup.cases[0];
+	const localAvailable = isLocalPdfAvailable(paperGroup, runPayload);
+
+	const localAction = renderLocalPdfAction(paperGroup);
+	
 	if (!runPayload) {
 		container.appendChild(el('div', 'sw-empty text-xs text-slate-500', 'No extraction run yet.'));
-		container.appendChild(renderBaselineFixPanel(caseItem, null));
+		if (localAction) {
+			container.appendChild(localAction);
+		}
+		if (firstCase) {
+			if (!localAvailable) {
+				container.appendChild(renderBaselineFixPanel(firstCase, null, localAvailable));
+			}
+		}
 		return;
 	}
 
@@ -1040,17 +1476,28 @@ function renderExtractionDetail(runPayload, caseItem, comparison) {
 	if (paper?.doi) {
 		header.appendChild(el('div', '', `DOI: ${paper.doi}`));
 	}
-	const headerPdfUrl = getPreferredPdfUrl(caseItem, runPayload);
+	const headerPdfUrl = getPreferredPdfUrl(paperGroup, runPayload);
 	if (headerPdfUrl) {
-		const linkRow = el('div', 'break-all max-w-full');
-		linkRow.appendChild(el('span', '', 'PDF link: '));
-		linkRow.appendChild(createExternalLink(headerPdfUrl));
-		header.appendChild(linkRow);
+		if (isLocalPdfUrl(headerPdfUrl)) {
+			const localRow = el('div', 'flex items-center gap-2');
+			localRow.appendChild(el('span', '', 'PDF source: '));
+			localRow.appendChild(el('span', 'sw-chip sw-chip--success text-[9px]', 'Local PDF'));
+			header.appendChild(localRow);
+		} else {
+			const linkRow = el('div', 'break-all max-w-full');
+			linkRow.appendChild(el('span', '', 'PDF link: '));
+			linkRow.appendChild(createExternalLink(headerPdfUrl));
+			header.appendChild(linkRow);
+		}
 	}
 	container.appendChild(header);
 
+	if (localAction) {
+		container.appendChild(localAction);
+	}
+
 	const paperId = paper?.id || run.paper_id;
-	if (paperId && run.status === 'stored') {
+	if (paperId && run.status === 'stored' && firstCase) {
 		const actionsRow = el('div', 'mt-2 flex flex-wrap items-center gap-2');
 		const forceBtn = el('button', 'sw-btn sw-btn--sm sw-btn--primary');
 		forceBtn.appendChild(el('span', 'sw-btn__label', 'Force Re-extract'));
@@ -1059,7 +1506,7 @@ function renderExtractionDetail(runPayload, caseItem, comparison) {
 			try {
 				updateStatus('Forcing re-extract...');
 				await api.forceReextract(paperId, state.provider);
-				await loadCaseDetails(caseItem.id);
+				await loadPaperDetails(paperGroup.key);
 				await loadCases();
 				updateStatus('Re-extract queued.');
 			} catch (err) {
@@ -1081,8 +1528,8 @@ function renderExtractionDetail(runPayload, caseItem, comparison) {
 			setButtonLoading(uploadBtn, true, 'Uploading...');
 			try {
 				updateStatus('Uploading PDF and queuing extraction...');
-				await api.uploadBaselinePdf(caseItem.id, file, state.provider);
-				await loadCaseDetails(caseItem.id);
+				await api.uploadBaselinePdf(firstCase.id, file, state.provider);
+				await loadPaperDetails(paperGroup.key);
 				await loadCases();
 				updateStatus('PDF uploaded. Extraction queued.');
 			} catch (err) {
@@ -1116,19 +1563,173 @@ function renderExtractionDetail(runPayload, caseItem, comparison) {
 			errorBox.textContent = run.failure_reason || 'Unknown failure';
 		}
 		container.appendChild(errorBox);
-		container.appendChild(renderBaselineFixPanel(caseItem, runPayload));
+		if (firstCase) {
+			if (!localAvailable) {
+				container.appendChild(renderBaselineFixPanel(firstCase, runPayload, localAvailable));
+			}
+		}
 		return;
 	}
 
-	const comparisonInfo = comparison || buildComparison(caseItem, runPayload);
-	container.appendChild(renderSummaryBlock(comparisonInfo));
+	// Summary block for paper-level comparison
+	const paperComparison = comparison || buildPaperComparison(paperGroup, runPayload);
+	container.appendChild(renderPaperSummaryBlock(paperComparison, paperGroup));
 
+	// Extracted entities with match highlighting
 	const rawJson = run.raw_json || {};
-	const matchIndex = comparisonInfo?.matchIndex ?? -1;
-	container.appendChild(renderEntities(rawJson, matchIndex));
+	container.appendChild(renderExtractedEntities(rawJson, paperComparison));
 }
 
-function renderBaselineFixPanel(caseItem, runPayload) {
+function renderPaperSummaryBlock(comparison, paperGroup) {
+	const wrapper = el('div', 'sw-card sw-card--note p-3 text-[11px] text-slate-600');
+	wrapper.appendChild(el('div', 'sw-kicker text-[10px] text-slate-400', 'Summary'));
+	const grid = el('div', 'mt-2 grid grid-cols-1 sm:grid-cols-3 gap-2');
+	const addMetric = (label, value) => {
+		const row = el('div', 'flex flex-col gap-1');
+		row.appendChild(el('div', 'sw-kicker text-[10px] text-slate-400', label));
+		row.appendChild(el('div', 'text-slate-700', value));
+		grid.appendChild(row);
+	};
+	
+	if (!comparison) {
+		addMetric('Expected', paperGroup ? `${paperGroup.cases.length} entities` : 'n/a');
+		addMetric('Extracted', 'n/a');
+		addMetric('Matched', 'n/a');
+		wrapper.appendChild(grid);
+		return wrapper;
+	}
+	
+	addMetric('Expected', `${comparison.totalExpected} entities`);
+	addMetric('Extracted', `${comparison.extractedCount} entities`);
+	
+	const matchRate = comparison.totalExpected > 0 
+		? `${comparison.matchedCount}/${comparison.totalExpected} (${Math.round(comparison.matchedCount / comparison.totalExpected * 100)}%)`
+		: 'n/a';
+	addMetric('Matched', matchRate);
+	
+	wrapper.appendChild(grid);
+	
+	// Delta info
+	if (comparison.extractedCount !== comparison.totalExpected) {
+		const delta = comparison.extractedCount - comparison.totalExpected;
+		const deltaText = delta > 0 
+			? `${delta} extra entities extracted` 
+			: `${Math.abs(delta)} entities missing`;
+		wrapper.appendChild(el('div', 'mt-2 text-[10px] text-slate-500', deltaText));
+	}
+	
+	return wrapper;
+}
+
+function renderExtractedEntities(rawJson, paperComparison) {
+	const container = el('div', 'mt-4');
+	container.appendChild(el('div', 'sw-kicker text-[10px] text-slate-400 mb-2', 
+		`Extracted entities (${rawJson?.entities?.length || 0})`));
+	
+	if (!rawJson?.entities?.length) {
+		container.appendChild(el('div', 'sw-empty text-xs text-slate-500 p-3', 'No entities found.'));
+		return container;
+	}
+	
+	// Build set of matched indices
+	const matchedIndices = new Set();
+	if (paperComparison?.caseMatches) {
+		paperComparison.caseMatches.forEach(match => {
+			if (match.isMatched && match.matchIndex >= 0) {
+				matchedIndices.add(match.matchIndex);
+			}
+		});
+	}
+	
+	const entitiesList = el('div', 'space-y-2');
+	rawJson.entities.forEach((entity, index) => {
+		const isMatched = matchedIndices.has(index);
+		const card = el('div', `sw-card p-2 ${isMatched ? 'sw-card--success' : ''}`);
+		
+		// Entity header
+		const entityHeader = el('div', 'flex flex-wrap items-center gap-2');
+		entityHeader.appendChild(el('span', 'sw-kicker text-[10px] text-slate-500', `#${index + 1}`));
+		entityHeader.appendChild(el('div', 'text-xs font-medium text-slate-900', entity.type || 'entity'));
+		if (isMatched) {
+			entityHeader.appendChild(el('span', 'sw-chip sw-chip--success text-[9px]', 'Matched baseline'));
+		}
+		card.appendChild(entityHeader);
+		
+		// Sequence or identifier
+		if (entity.type === 'peptide' && entity.peptide) {
+			const peptide = entity.peptide;
+			const seq = peptide.sequence_one_letter || peptide.sequence_three_letter;
+			if (seq) {
+				card.appendChild(el('div', 'text-xs text-slate-900 mt-1 font-mono break-words', seq));
+			}
+		}
+		if (entity.type === 'molecule' && entity.molecule) {
+			const molecule = entity.molecule;
+			const id = molecule.chemical_formula || molecule.smiles || molecule.inchi;
+			if (id) {
+				card.appendChild(el('div', 'text-xs text-slate-900 mt-1 font-mono break-words', id));
+			}
+		}
+		
+		// Labels
+		if (entity.labels && entity.labels.length) {
+			const labelsRow = el('div', 'mt-1 flex flex-wrap gap-1');
+			entity.labels.forEach(label => {
+				labelsRow.appendChild(el('span', 'sw-chip text-[9px]', label));
+			});
+			card.appendChild(labelsRow);
+		}
+		
+		// Compact details
+		const details = renderEntityDetails(entity);
+		if (details) card.appendChild(details);
+		
+		entitiesList.appendChild(card);
+	});
+	
+	container.appendChild(entitiesList);
+	return container;
+}
+
+function renderLocalPdfAction(paperGroup) {
+	if (!paperGroup?.cases?.length) return null;
+	const firstCase = paperGroup.cases[0];
+	const wrapper = el('div', 'mt-2');
+	const button = el('button', 'sw-btn sw-btn--primary sw-btn--sm');
+	button.appendChild(el('span', 'sw-btn__label', 'Run with local PDF'));
+	button.addEventListener('click', async () => {
+		setButtonLoading(button, true, 'Running...');
+		try {
+			updateStatus('Resolving local PDF...');
+			const result = await api.resolveBaselineSource(firstCase.id, { localOnly: true });
+			if (!result?.found) {
+				updateStatus('No local PDF found for this paper.');
+				return;
+			}
+			const sourceUrl = result.pdf_url || result.url;
+			if (!isLocalPdfUrl(sourceUrl)) {
+				updateStatus('No local PDF found for this paper.');
+				return;
+			}
+			state.resolvedSource = { caseId: firstCase.id, url: sourceUrl, label: 'Local PDF' };
+			state.stagedFile = null;
+			markLocalPdfForGroup(paperGroup, sourceUrl);
+			updateStatus('Starting extraction with local PDF...');
+			await api.retryBaselineCase(firstCase.id, { provider: state.provider, source_url: sourceUrl });
+			await loadCaseDetails(firstCase.id);
+			await loadCases();
+			updateStatus('Local PDF extraction queued.');
+		} catch (err) {
+			updateStatus(err.message || 'Failed to start local PDF extraction');
+		} finally {
+			setButtonLoading(button, false);
+		}
+	});
+	wrapper.appendChild(button);
+	return wrapper;
+}
+
+function renderBaselineFixPanel(caseItem, runPayload, localAvailable = false) {
 	const panel = el('div', 'sw-card sw-card--note p-3 text-[11px] text-slate-600');
 	panel.appendChild(el('div', 'sw-kicker text-[10px] text-slate-400', 'Fix this failure'));
 
@@ -1150,7 +1751,7 @@ function renderBaselineFixPanel(caseItem, runPayload) {
 	uploadBtn.appendChild(el('span', 'sw-btn__label', 'Upload PDF'));
 
 	let runNowBtn = null;
-	const actionButtons = [retryBtn, resolveBtn, uploadBtn];
+	const actionButtons = [];
 	const setButtonsDisabled = (disabled) => {
 		actionButtons.forEach((btn) => {
 			if (!btn) return;
@@ -1167,75 +1768,84 @@ function renderBaselineFixPanel(caseItem, runPayload) {
 		});
 	};
 
-	retryBtn.addEventListener('click', async () => {
-		setButtonsDisabled(true);
-		setButtonLoading(retryBtn, true, 'Retrying...');
-		try {
-			updateStatus('Re-queueing baseline case...');
-			await api.retryBaselineCase(caseItem.id, { provider: state.provider });
-			state.resolvedSource = null;
-			state.stagedFile = null;
-			await loadCaseDetails(caseItem.id);
-			await loadCases();
-			updateStatus('Baseline case re-queued.');
-		} catch (err) {
-			updateStatus(err.message || 'Failed to retry baseline case');
-		} finally {
-			setButtonLoading(retryBtn, false);
-			setButtonsDisabled(false);
-		}
-	});
-	actions.appendChild(retryBtn);
-
-	resolveBtn.addEventListener('click', async () => {
-		setButtonsDisabled(true);
-		setButtonLoading(resolveBtn, true, 'Searching...');
-		try {
-			updateStatus('Searching for open-access source...');
-			const result = await api.resolveBaselineSource(caseItem.id);
-			if (!result.found) {
+	if (!localAvailable) {
+		actionButtons.push(retryBtn, resolveBtn, uploadBtn);
+		retryBtn.addEventListener('click', async () => {
+			setButtonsDisabled(true);
+			setButtonLoading(retryBtn, true, 'Retrying...');
+			try {
+				updateStatus('Re-queueing baseline case...');
+				await api.retryBaselineCase(caseItem.id, { provider: state.provider });
 				state.resolvedSource = null;
 				state.stagedFile = null;
-				state.manualPdfReasons.set(caseItem.id, MANUAL_PDF_REASON_NO_OA);
-				updateStatus('No open-access source found.');
-				renderCaseList({ skipAnalysis: true });
-				return;
+				await loadCaseDetails(caseItem.id);
+				await loadCases();
+				updateStatus('Baseline case re-queued.');
+			} catch (err) {
+				updateStatus(err.message || 'Failed to retry baseline case');
+			} finally {
+				setButtonLoading(retryBtn, false);
+				setButtonsDisabled(false);
 			}
-			state.resolvedSource = {
-				caseId: caseItem.id,
-				url: result.pdf_url || result.url,
-				label: result.pdf_url ? 'PDF URL' : 'Source URL',
-			};
-			state.manualPdfReasons.delete(caseItem.id);
-			state.stagedFile = null;
-			updateStatus(`Found ${state.resolvedSource.label}. Review and run.`);
-			renderExtractionDetail(runPayload, caseItem, null);
-			renderCaseList({ skipAnalysis: true });
-		} catch (err) {
-			updateStatus(err.message || 'Failed to resolve source');
-		} finally {
-			setButtonLoading(resolveBtn, false);
-			setButtonsDisabled(false);
-		}
-	});
-	if (!hasHeaderPdf) {
-		actions.appendChild(resolveBtn);
+		});
+		actions.appendChild(retryBtn);
 	}
 
-	uploadBtn.addEventListener('click', () => fileInput.click());
-	fileInput.addEventListener('change', () => {
-		const file = fileInput.files && fileInput.files[0];
-		if (!file) return;
-		state.stagedFile = { caseId: caseItem.id, file, name: file.name };
-		state.resolvedSource = null;
-		state.manualPdfReasons.delete(caseItem.id);
-		fileInput.value = '';
-		updateStatus(`Selected PDF: ${file.name}. Click Run now.`);
-		renderExtractionDetail(runPayload, caseItem, null);
-		renderCaseList({ skipAnalysis: true });
-	});
-	panel.appendChild(fileInput);
-	actions.appendChild(uploadBtn);
+	if (!localAvailable) {
+		resolveBtn.addEventListener('click', async () => {
+			setButtonsDisabled(true);
+			setButtonLoading(resolveBtn, true, 'Searching...');
+			try {
+				updateStatus('Searching for open-access source...');
+				const result = await api.resolveBaselineSource(caseItem.id);
+				if (!result.found) {
+					state.resolvedSource = null;
+					state.stagedFile = null;
+					state.manualPdfReasons.set(caseItem.id, MANUAL_PDF_REASON_NO_OA);
+					updateStatus('No open-access source found.');
+					renderCaseList({ skipAnalysis: true });
+					return;
+				}
+				const resolvedUrl = result.pdf_url || result.url;
+				state.resolvedSource = {
+					caseId: caseItem.id,
+					url: resolvedUrl,
+					label: result.pdf_url ? 'PDF URL' : 'Source URL',
+				};
+				if (isLocalPdfUrl(resolvedUrl)) {
+					state.resolvedSource.label = 'Local PDF';
+				}
+				state.manualPdfReasons.delete(caseItem.id);
+				state.stagedFile = null;
+				updateStatus(`Found ${state.resolvedSource.label}. Review and run.`);
+				renderExtractionDetail(runPayload, caseItem, null);
+				renderCaseList({ skipAnalysis: true });
+			} catch (err) {
+				updateStatus(err.message || 'Failed to resolve source');
+			} finally {
+				setButtonLoading(resolveBtn, false);
+				setButtonsDisabled(false);
+			}
+		});
+		if (!hasHeaderPdf) {
+			actions.appendChild(resolveBtn);
+		}
+
+		uploadBtn.addEventListener('click', () => fileInput.click());
+		fileInput.addEventListener('change', () => {
+			const file = fileInput.files && fileInput.files[0];
+			if (!file) return;
+			state.stagedFile = { caseId: caseItem.id, file, name: file.name };
+			state.resolvedSource = null;
+			state.manualPdfReasons.delete(caseItem.id);
+			fileInput.value = '';
+			updateStatus(`Selected PDF: ${file.name}. Click Run now.`);
+			renderExtractionDetail(runPayload, caseItem, null);
+			renderCaseList({ skipAnalysis: true });
+		});
+		panel.appendChild(fileInput);
+		actions.appendChild(uploadBtn);
+	}
 
 	panel.appendChild(actions);
 
@@ -1252,7 +1862,7 @@ function renderBaselineFixPanel(caseItem, runPayload) {
 		panel.appendChild(fileRow);
 	}
 
-	if ((resolvedSource && resolvedSource.url) || stagedFile) {
+	if (!localAvailable && ((resolvedSource && resolvedSource.url) || stagedFile)) {
 		runNowBtn = el('button', 'sw-btn sw-btn--sm sw-btn--primary mt-2');
 		runNowBtn.appendChild(el('span', 'sw-btn__label', 'Run now'));
 		actionButtons.push(runNowBtn);
@@ -1292,37 +1902,95 @@ function renderBaselineFixPanel(caseItem, runPayload) {
 	return panel;
 }
 
-async function loadCaseDetails(caseId) {
+function getSelectedPaperGroup() {
+	if (!state.selectedPaperKey) return null;
+	const cases = filterCases();
+	const paperGroups = groupCasesByPaper(cases);
+	return paperGroups.find(g => g.key === state.selectedPaperKey) || null;
+}
+
+async function loadPaperDetails(paperKey) {
+	const paperGroup = getSelectedPaperGroup();
+	if (!paperGroup) {
+		renderBaselineDetail(null, null, null);
+		renderExtractionDetail(null, null, null);
+		renderSelectedPaperStrip(null, null);
+		$('#comparisonHint').textContent = 'Select a paper, then run with local PDF';
+		return;
+	}
+	
 	try {
-		const caseData = await api.getBaselineCase(caseId);
-		if (caseData.latest_run) {
-			const runPayload = await api.getBaselineLatestRun(caseId);
-			const comparison = buildComparison(caseData, runPayload);
-			renderBaselineDetail(caseData, comparison, runPayload);
-			renderExtractionDetail(runPayload, caseData, comparison);
-			renderSelectedCaseStrip(caseData, runPayload);
-			$('#comparisonHint').textContent = `Case ${caseData.id}`;
-		} else {
-			renderBaselineDetail(caseData, null, null);
-			renderExtractionDetail(null, caseData, null);
-			renderSelectedCaseStrip(caseData, null);
-			$('#comparisonHint').textContent = `Case ${caseData.id}`;
+		// Load run payload from the first case (they share the same run via DOI)
+		const firstCase = paperGroup.cases[0];
+		const runPayloadPromise = firstCase?.latest_run
+			? api.getBaselineLatestRun(firstCase.id)
+			: Promise.resolve(null);
+		const localInfoPromise = firstCase?.id
+			? api.getBaselineLocalPdfInfo(firstCase.id).catch(() => null)
+			: Promise.resolve(null);
+		const [runPayload, localInfo] = await Promise.all([runPayloadPromise, localInfoPromise]);
+		
+		if (localInfo && firstCase?.id) {
+			if (localInfo.found) {
+				state.localPdfFileByCaseId.set(firstCase.id, true);
+				state.localPdfByCaseId.set(firstCase.id, true);
+			} else {
+				state.localPdfFileByCaseId.delete(firstCase.id);
+			}
 		}
+
+		const runPdfUrl = runPayload?.run?.pdf_url;
+		if (isLocalPdfUrl(runPdfUrl)) {
+			markLocalPdfForGroup(paperGroup, runPdfUrl);
+		}
+		
+		// Build paper-level comparison
+		const paperComparison = buildPaperComparison(paperGroup, runPayload);
+		if (paperComparison) {
+			state.paperComparisonCache.set(paperKey, paperComparison);
+		}
+		
+		renderBaselineDetail(paperGroup, paperComparison, runPayload);
+		renderExtractionDetail(runPayload, paperGroup, paperComparison);
+		renderSelectedPaperStrip(paperGroup, runPayload);
+		
+		const label = paperGroup.doi || paperGroup.pubmed_id || paperGroup.key;
+		$('#comparisonHint').textContent = `Paper: ${label.length > 30 ? label.substring(0, 27) + '...' : label}`;
 	} catch (err) {
 		renderBaselineDetail(null, null, null);
 		renderExtractionDetail(null, null, null);
-		renderSelectedCaseStrip(null, null);
-		$('#comparisonHint').textContent = 'Select a baseline case';
-		updateStatus(err.message || 'Failed to load case');
+		renderSelectedPaperStrip(null, null);
+		$('#comparisonHint').textContent = 'Select a paper, then run with local PDF';
+		updateStatus(err.message || 'Failed to load paper details');
 	}
 }
 
-async function selectCase(caseId) {
-	state.selectedId = caseId;
+async function selectPaper(paperKey) {
+	state.selectedPaperKey = paperKey;
 	state.resolvedSource = null;
 	state.stagedFile = null;
-	renderCaseList();
-	await loadCaseDetails(caseId);
+	renderCaseList({ skipAnalysis: true });
+	await loadPaperDetails(paperKey);
+}
+
+// Legacy function for compatibility
+async function loadCaseDetails(caseId) {
+	// Find the paper key for this case
+	const caseItem = state.cases.find(c => c.id === caseId);
+	if (caseItem) {
+		const paperKey = getPaperKey(caseItem);
+		state.selectedPaperKey = paperKey;
+		await loadPaperDetails(paperKey);
+	}
+}
+
+// Legacy function for compatibility
+async function selectCase(caseId) {
+	const caseItem = state.cases.find(c => c.id === caseId);
+	if (caseItem) {
+		const paperKey = getPaperKey(caseItem);
+		await selectPaper(paperKey);
+	}
 }
 
 async function loadCases() {
@@ -1331,24 +1999,42 @@ async function loadCases() {
 		const data = await api.getBaselineCases(state.filterDataset);
 		state.cases = data.cases || [];
 		state.datasets = data.datasets || [];
+		const caseIdSet = new Set(state.cases.map((item) => item.id));
+		for (const caseId of state.localPdfByCaseId.keys()) {
+			if (!caseIdSet.has(caseId)) {
+				state.localPdfByCaseId.delete(caseId);
+			}
+		}
+		for (const caseId of state.localPdfFileByCaseId.keys()) {
+			if (!caseIdSet.has(caseId)) {
+				state.localPdfFileByCaseId.delete(caseId);
+			}
+		}
 		state.cases.forEach((item) => {
 			if (item?.id && item?.pdf_url) {
 				state.manualPdfReasons.delete(item.id);
+			}
+			if (item?.id) {
+				if (isLocalPdfUrl(item.pdf_url)) {
+					state.localPdfByCaseId.set(item.id, true);
+				}
 			}
 		});
 		pruneManualPdfReasons(state.cases);
 		renderDatasetOptions();
 		renderCaseList();
-		if (state.selectedId) {
-			const stillExists = state.cases.some((item) => item.id === state.selectedId);
+		if (state.selectedPaperKey) {
+			// Check if the selected paper still exists
+			const paperGroups = groupCasesByPaper(state.cases);
+			const stillExists = paperGroups.some((g) => g.key === state.selectedPaperKey);
 			if (!stillExists) {
-				state.selectedId = null;
+				state.selectedPaperKey = null;
 				state.resolvedSource = null;
 				state.stagedFile = null;
 				renderBaselineDetail(null, null);
 				renderExtractionDetail(null, null, null);
-				renderSelectedCaseStrip(null, null);
-				$('#comparisonHint').textContent = 'Select a baseline case';
+				renderSelectedPaperStrip(null, null);
+				$('#comparisonHint').textContent = 'Select a paper, then run with local PDF';
 			}
 		}
 		updateStatus('');
@@ -1438,8 +2124,8 @@ async function resolveBaselineSourcesBulk() {
 		if (skipped) summaryParts.push(`${skipped} skipped`);
 		updateStatus(`${summaryParts.join('. ')}.`);
 		renderCaseList({ skipAnalysis: true });
-		if (state.selectedId) {
-			await loadCaseDetails(state.selectedId);
+		if (state.selectedPaperKey) {
+			await loadPaperDetails(state.selectedPaperKey);
 		}
 	} finally {
 		if (resolveButton) {
@@ -1460,7 +2146,9 @@ function connectSSE() {
 			: (data.baseline_case_id ? [data.baseline_case_id] : []);
 		if (!caseIds.length) return;
 		let updated = false;
-		let selectedUpdated = false;
+		let selectedPaperUpdated = false;
+		const updatedPaperKeys = new Set();
+		
 		caseIds.forEach((caseId) => {
 			const caseItem = state.cases.find((item) => item.id === caseId);
 			if (!caseItem) return;
@@ -1472,13 +2160,21 @@ function connectSSE() {
 				status: data.status,
 				failure_reason: data.failure_reason || null,
 			};
-			if (state.selectedId === caseId) {
-				selectedUpdated = true;
+			
+			// Track which paper groups are affected
+			const paperKey = getPaperKey(caseItem);
+			updatedPaperKeys.add(paperKey);
+			state.paperComparisonCache.delete(paperKey);
+			
+			if (state.selectedPaperKey === paperKey) {
+				selectedPaperUpdated = true;
 			}
 		});
+		
 		if (!updated) return;
 		renderCaseList();
-		if (selectedUpdated) {
+		
+		if (selectedPaperUpdated) {
 			if (isProcessingStatus(data.status)) {
 				updateStatus(`Extraction ${getStatusLabel(data.status).toLowerCase()}...`);
 			} else if (data.status === 'stored') {
@@ -1488,7 +2184,7 @@ function connectSSE() {
 			} else if (data.status === 'cancelled') {
 				updateStatus('Extraction cancelled.');
 			}
-			loadCaseDetails(state.selectedId);
+			loadPaperDetails(state.selectedPaperKey);
 		}
 	});
 }

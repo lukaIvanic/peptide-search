@@ -5,6 +5,9 @@
 const runtimeConfig = (typeof window !== 'undefined' && window.PEPTIDE_APP_CONFIG) ? window.PEPTIDE_APP_CONFIG : {};
 const API_BASE = runtimeConfig.apiBase || '/api';
 const STREAM_BASE = runtimeConfig.streamBase || '/api/stream';
+const REQUEST_TIMEOUT_MS = Number.isFinite(runtimeConfig.requestTimeoutMs)
+    ? runtimeConfig.requestTimeoutMs
+    : 30000;
 
 function buildUrl(path) {
     const base = API_BASE.replace(/\/$/, '');
@@ -28,15 +31,29 @@ function buildUrl(path) {
  */
 async function request(path, opts = {}) {
     const url = buildUrl(path.startsWith('/') ? path : `/${path}`);
-    const res = await fetch(url, {
-        headers: { 'Content-Type': 'application/json' },
-        ...opts,
-    });
-    if (!res.ok) {
-        const err = await res.text();
-        throw new Error(err || res.statusText);
+    const { timeoutMs, headers, ...fetchOpts } = opts;
+    const controller = new AbortController();
+    const resolvedTimeout = Number.isFinite(timeoutMs) ? timeoutMs : REQUEST_TIMEOUT_MS;
+    const timer = setTimeout(() => controller.abort(), resolvedTimeout);
+    try {
+        const res = await fetch(url, {
+            headers: { 'Content-Type': 'application/json', ...(headers || {}) },
+            signal: controller.signal,
+            ...fetchOpts,
+        });
+        if (!res.ok) {
+            const err = await res.text();
+            throw new Error(err || res.statusText);
+        }
+        return res.json();
+    } catch (err) {
+        if (err?.name === 'AbortError') {
+            throw new Error(`Request timed out after ${Math.round(resolvedTimeout / 1000)}s`);
+        }
+        throw err;
+    } finally {
+        clearTimeout(timer);
     }
-    return res.json();
 }
 
 /**
@@ -44,15 +61,38 @@ async function request(path, opts = {}) {
  */
 async function requestForm(path, formData, opts = {}) {
     const url = buildUrl(path.startsWith('/') ? path : `/${path}`);
-    const res = await fetch(url, {
-        ...opts,
-        body: formData,
-    });
-    if (!res.ok) {
-        const err = await res.text();
-        throw new Error(err || res.statusText);
+    const { timeoutMs, ...fetchOpts } = opts;
+    const controller = new AbortController();
+    const resolvedTimeout = Number.isFinite(timeoutMs) ? timeoutMs : REQUEST_TIMEOUT_MS;
+    const timer = setTimeout(() => controller.abort(), resolvedTimeout);
+    try {
+        const res = await fetch(url, {
+            signal: controller.signal,
+            ...fetchOpts,
+            body: formData,
+        });
+        if (!res.ok) {
+            const err = await res.text();
+            throw new Error(err || res.statusText);
+        }
+        return res.json();
+    } catch (err) {
+        if (err?.name === 'AbortError') {
+            throw new Error(`Request timed out after ${Math.round(resolvedTimeout / 1000)}s`);
+        }
+        throw err;
+    } finally {
+        clearTimeout(timer);
     }
-    return res.json();
+}
+
+function normalizeFiles(input) {
+    if (!input) return [];
+    if (Array.isArray(input)) return input;
+    if (typeof FileList !== 'undefined' && input instanceof FileList) {
+        return Array.from(input);
+    }
+    return [input];
 }
 
 /**
@@ -154,11 +194,12 @@ export async function retryRunWithSource(runId, payload = {}) {
 }
 
 /**
- * Upload a PDF for a run (creates a new run).
+ * Upload PDFs for a run (creates a new run).
  */
-export async function uploadRunPdf(runId, file, provider, promptId) {
+export async function uploadRunPdf(runId, files, provider, promptId) {
     const formData = new FormData();
-    formData.append('file', file);
+    const list = normalizeFiles(files);
+    list.forEach((item) => formData.append('files', item));
     if (provider) formData.append('provider', provider);
     if (promptId !== undefined && promptId !== null) formData.append('prompt_id', String(promptId));
     return requestForm(`/api/runs/${runId}/upload`, formData, {
@@ -226,10 +267,29 @@ export async function getBaselineCase(caseId) {
 /**
  * Resolve a fresh source URL for a baseline case.
  */
-export async function resolveBaselineSource(caseId) {
-    return request(`/api/baseline/cases/${encodeURIComponent(caseId)}/resolve-source`, {
+export async function resolveBaselineSource(caseId, options = {}) {
+    const params = new URLSearchParams();
+    if (options.localOnly) {
+        params.set('local_only', 'true');
+    }
+    const suffix = params.toString() ? `?${params.toString()}` : '';
+    return request(`/api/baseline/cases/${encodeURIComponent(caseId)}/resolve-source${suffix}`, {
         method: 'POST',
     });
+}
+
+/**
+ * Get local PDF availability for a baseline case.
+ */
+export async function getBaselineLocalPdfInfo(caseId) {
+	return request(`/api/baseline/cases/${encodeURIComponent(caseId)}/local-pdf-info`);
+}
+
+/**
+ * Build a direct URL to open the local PDF in a new tab.
+ */
+export function getBaselineLocalPdfUrl(caseId) {
+	return buildUrl(`/api/baseline/cases/${encodeURIComponent(caseId)}/local-pdf`);
 }
 
 /**
@@ -477,24 +537,16 @@ export async function extract(body) {
 }
 
 /**
- * Upload a PDF file for extraction.
+ * Upload PDF files for extraction.
  */
-export async function extractFile(file, promptId, title) {
+export async function extractFile(files, promptId, title) {
     const formData = new FormData();
-    formData.append('file', file);
+    const list = normalizeFiles(files);
+    list.forEach((item) => formData.append('files', item));
     if (title) formData.append('title', title);
     if (promptId) formData.append('prompt_id', String(promptId));
-    
-    const res = await fetch('/api/extract-file', {
-        method: 'POST',
-        body: formData,
-    });
-    
-    if (!res.ok) {
-        const err = await res.text();
-        throw new Error(err || res.statusText);
-    }
-    return res.json();
+
+    return requestForm('/api/extract-file', formData, { method: 'POST' });
 }
 
 /**

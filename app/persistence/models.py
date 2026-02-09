@@ -66,6 +66,12 @@ class ExtractionRun(SQLModel, table=True):
     # Model info
     model_provider: Optional[str] = Field(default=None)
     model_name: Optional[str] = Field(default=None)
+
+    # Token usage (nullable for backward compatibility)
+    input_tokens: Optional[int] = Field(default=None)
+    output_tokens: Optional[int] = Field(default=None)
+    reasoning_tokens: Optional[int] = Field(default=None)
+    total_tokens: Optional[int] = Field(default=None)
     
     # Provenance
     source_text_hash: Optional[str] = Field(default=None, index=True)  # SHA256 of input text

@@ -135,6 +135,10 @@ class ExtractionRepository:
         status: Optional[str] = None,
         baseline_case_id: Optional[str] = None,
         baseline_dataset: Optional[str] = None,
+        input_tokens: Optional[int] = None,
+        output_tokens: Optional[int] = None,
+        reasoning_tokens: Optional[int] = None,
+        total_tokens: Optional[int] = None,
     ) -> Tuple[int, List[int]]:
         """
         Save an extraction run and its entities.
@@ -160,6 +164,10 @@ class ExtractionRepository:
             prompt_version_id=prompt_version_id,
             baseline_case_id=baseline_case_id,
             baseline_dataset=baseline_dataset,
+            input_tokens=input_tokens,
+            output_tokens=output_tokens,
+            reasoning_tokens=reasoning_tokens,
+            total_tokens=total_tokens,
         )
         if status:
             run.status = status

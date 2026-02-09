@@ -39,7 +39,7 @@ class EnqueueItem(BaseModel):
 class EnqueueRequest(BaseModel):
 	"""Request to enqueue papers for extraction."""
 	papers: List[EnqueueItem]
-	provider: str = "openai"  # openai | mock
+	provider: str = "openai"  # openai | openai-mini | openai-nano | mock | deepseek
 	prompt_id: Optional[int] = None
 
 
@@ -59,6 +59,14 @@ class EnqueueResponse(BaseModel):
 	total: int
 	enqueued: int
 	skipped: int
+
+
+class UploadEnqueueResponse(BaseModel):
+	"""Response from upload enqueue endpoint."""
+	run_id: int
+	paper_id: Optional[int] = None
+	status: str
+	message: str
 
 
 # --- Baseline models ---
@@ -113,7 +121,7 @@ class BaselineEnqueuedRun(BaseModel):
 
 
 class BaselineEnqueueRequest(BaseModel):
-	provider: str = "openai"
+	provider: str = "openai"  # openai | openai-mini | openai-nano | mock | deepseek
 	prompt_id: Optional[int] = None
 	force: bool = False
 	dataset: Optional[str] = None
@@ -137,15 +145,20 @@ class ResolvedSourceResponse(BaseModel):
 	authors: List[str] = Field(default_factory=list)
 
 
+class LocalPdfInfoResponse(BaseModel):
+	found: bool
+	filename: Optional[str] = None
+
+
 class BaselineRetryRequest(BaseModel):
 	source_url: Optional[str] = None
-	provider: Optional[str] = None
+	provider: Optional[str] = None  # openai | openai-mini | openai-nano | mock | deepseek
 	prompt_id: Optional[int] = None
 
 
 class RunRetryWithSourceRequest(BaseModel):
 	source_url: Optional[str] = None
-	provider: Optional[str] = None
+	provider: Optional[str] = None  # openai | openai-mini | openai-nano | mock | deepseek
 	prompt_id: Optional[int] = None
 
 
@@ -272,7 +285,7 @@ class ExtractRequest(BaseModel):
 
 class FollowupRequest(BaseModel):
 	instruction: str
-	provider: Optional[str] = None
+	provider: Optional[str] = None  # openai | openai-mini | openai-nano | mock | deepseek
 
 
 class EditRunRequest(BaseModel):
@@ -473,7 +486,7 @@ class BulkRetryRequest(BaseModel):
 	limit: int = 25
 	max_runs: int = 1000
 	bucket: Optional[str] = None
-	provider: Optional[str] = None
+	provider: Optional[str] = None  # openai | openai-mini | openai-nano | mock | deepseek
 	source: Optional[str] = None
 	reason: Optional[str] = None
 

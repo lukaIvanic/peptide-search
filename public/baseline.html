@@ -16,8 +16,8 @@
 			<div class="brand">
 				<div class="logo"></div>
 				<div>
-					<div class="title">Baseline Benchmark</div>
-					<div class="subtitle">Compare baseline peptides against extracted runs</div>
+				<div class="title">Baseline Benchmark</div>
+				<div class="subtitle">Compare expected entities by paper against extraction runs</div>
 				</div>
 			</div>
 			<nav class="nav">
@@ -38,7 +38,7 @@
 						</select>
 					</label>
 					<div class="flex items-center gap-2 flex-[2] min-w-[220px]">
-						<input id="caseSearch" type="text" placeholder="Search sequence, DOI, or ID"
+						<input id="caseSearch" type="text" placeholder="Search DOI, sequence, or ID"
 							class="sw-input sw-input--sm w-full" />
 						<button id="searchBtn" class="sw-btn sw-btn--sm sw-btn--ghost" type="button">
 							Search
@@ -47,7 +47,9 @@
 					<label class="flex items-center gap-2 min-w-[160px]">
 						<span class="sw-kicker text-[10px] text-slate-500">Provider</span>
 						<select id="baselineProvider" class="sw-select sw-select--sm w-full">
-							<option value="openai">OpenAI</option>
+							<option value="openai">OpenAI - Full</option>
+							<option value="openai-mini">OpenAI - Mini</option>
+							<option value="openai-nano">OpenAI - Nano</option>
 							<option value="mock">Mock (Demo)</option>
 						</select>
 					</label>
@@ -72,7 +74,7 @@
 			<section class="grid grid-cols-1 lg:grid-cols-3 gap-6">
 				<div class="sw-card p-4 lg:col-span-1">
 					<div class="flex items-center justify-between mb-3">
-						<div class="section-title">Baseline cases</div>
+						<div class="section-title">Papers</div>
 						<span id="caseCount" class="sw-chip sw-kicker text-[10px] text-slate-500"></span>
 					</div>
 					<div id="baselineList" class="list list--synth max-h-[70vh] overflow-y-auto"></div>
@@ -92,19 +94,19 @@
 					<div class="sw-card p-4 space-y-4 mt-4">
 						<div class="flex flex-wrap items-center gap-3 text-xs text-slate-600">
 							<div class="section-title">Comparison</div>
-							<span id="comparisonHint" class="sw-chip text-[10px] text-slate-500">Select a baseline case</span>
+							<span id="comparisonHint" class="sw-chip text-[10px] text-slate-500">Select a paper, then run with local PDF</span>
 						</div>
-						<div id="selectedCaseStrip" class="hidden">
-							<div class="flex flex-wrap items-center gap-2 text-[11px] text-slate-600">
-								<span class="sw-chip sw-kicker text-[10px] text-slate-500">Selected case</span>
-								<span id="selectedCaseSequence" class="font-semibold text-slate-900"></span>
-								<span id="selectedCaseDataset" class="sw-chip text-[10px] text-slate-500"></span>
-								<span id="selectedCaseMeta" class="text-[10px] text-slate-500"></span>
-							</div>
+					<div id="selectedCaseStrip" class="hidden">
+						<div class="flex flex-wrap items-center gap-2 text-[11px] text-slate-600">
+							<span class="sw-chip sw-kicker text-[10px] text-slate-500">Selected paper</span>
+							<span id="selectedCaseSequence" class="font-semibold text-slate-900"></span>
+							<span id="selectedCaseDataset" class="sw-chip text-[10px] text-slate-500"></span>
+							<span id="selectedCaseMeta" class="text-[10px] text-slate-500"></span>
 						</div>
+					</div>
 						<div class="grid grid-cols-1 lg:grid-cols-2 gap-4 px-1 text-[10px] uppercase tracking-wide text-slate-400">
-							<div>Baseline (source)</div>
-							<div>Extraction (run)</div>
+							<div>Expected entities</div>
+							<div>Extracted entities</div>
 						</div>
 						<div class="grid grid-cols-1 lg:grid-cols-2 gap-0 border border-slate-200 overflow-hidden divide-y lg:divide-y-0 lg:divide-x divide-slate-200">
 							<div class="p-4">

@@ -3,9 +3,10 @@ from __future__ import annotations
 import asyncio
 import json
 import logging
+import re
 from datetime import datetime, timedelta
 from pathlib import Path
-from typing import List, Optional
+from typing import Dict, List, Optional
 
 from fastapi import Depends, FastAPI, File, Form, HTTPException, Query, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
@@ -17,7 +18,7 @@ from sqlalchemy import delete
 from .config import settings
 from .db import init_db, get_session, session_scope
 from .persistence.models import Paper, Extraction, ExtractionRun, ExtractionEntity, RunStatus, BaselineCaseRun
-from .baseline.loader import load_index, list_cases, get_case
+from .baseline.loader import load_index, list_cases, get_case, normalize_doi, resolve_local_pdf_path
 from .integrations.document import DocumentExtractor
 from .persistence.repository import (
 	PromptRepository,
@@ -47,6 +48,7 @@ from .schemas import (
 	PapersResponse,
 	EnqueueRequest,
 	EnqueueResponse,
+	UploadEnqueueResponse,
 	EnqueuedRun,
 	EnqueueItem,
 	PaperWithStatus,
@@ -68,12 +70,20 @@ from .schemas import (
 	BaselineRetryRequest,
 	RunRetryWithSourceRequest,
 	ResolvedSourceResponse,
+	LocalPdfInfoResponse,
 	PaperMeta,
 	ExtractionPayload,
 )
 from .services.search_service import search_all_free_sources
 from .prompts import build_system_prompt
-from .services.extraction_service import run_extraction, run_extraction_from_file, run_followup, run_followup_stream, run_edit
+from .services.extraction_service import (
+	run_extraction,
+	run_extraction_from_file,
+	run_extraction_from_files,
+	run_followup,
+	run_followup_stream,
+	run_edit,
+)
 from .services.upload_store import store_upload
 from .services.quality_service import (
 	get_quality_rules,
@@ -264,7 +274,57 @@ def create_app() -> FastAPI:
 			return None
 		return results[0]
 
-	async def _resolve_baseline_source(case: BaselineCase) -> Optional[SearchItem]:
+	def _resolve_local_pdf_source(
+		case: BaselineCase,
+		local_upload_cache: Optional[Dict[str, str]] = None,
+	) -> Optional[SearchItem]:
+		normalized_doi = normalize_doi(case.doi)
+		if not normalized_doi:
+			return None
+		if local_upload_cache is not None and normalized_doi in local_upload_cache:
+			upload_url = local_upload_cache[normalized_doi]
+			return SearchItem(
+				title=_baseline_title(case),
+				doi=case.doi,
+				url=case.paper_url,
+				pdf_url=upload_url,
+				source="local",
+				year=None,
+				authors=[],
+			)
+
+		local_path = resolve_local_pdf_path(case.doi)
+		if not local_path:
+			return None
+		try:
+			content = local_path.read_bytes()
+		except Exception as exc:
+			logger.warning("Failed to read local PDF for DOI %s: %s", case.doi, exc)
+			return None
+
+		upload_url = store_upload(content, local_path.name)
+		if local_upload_cache is not None:
+			local_upload_cache[normalized_doi] = upload_url
+		return SearchItem(
+			title=_baseline_title(case),
+			doi=case.doi,
+			url=case.paper_url,
+			pdf_url=upload_url,
+			source="local",
+			year=None,
+			authors=[],
+		)
+
+	async def _resolve_baseline_source(
+		case: BaselineCase,
+		local_upload_cache: Optional[Dict[str, str]] = None,
+		local_only: bool = False,
+	) -> Optional[SearchItem]:
+		local_source = _resolve_local_pdf_source(case, local_upload_cache)
+		if local_source:
+			return local_source
+		if local_only:
+			return None
 		if case.pdf_url and DocumentExtractor.looks_like_pdf_url(case.pdf_url):
 			return SearchItem(
 				title=_baseline_title(case),
@@ -291,13 +351,20 @@ def create_app() -> FastAPI:
 		results = await search_all_free_sources(query, per_source=3)
 		return _select_baseline_result(results, case.doi)
 
+	def _normalize_case_doi(value: Optional[str]) -> Optional[str]:
+		normalized = normalize_doi(value)
+		if not normalized:
+			return None
+		return re.sub(r"/v\\d+$", "", normalized)
+
 	def _get_source_key(case: BaselineCase, resolved_url: Optional[str]) -> Optional[str]:
 		"""Canonical key for sharing extractions across baseline cases."""
 		source_url = resolved_url or case.pdf_url or case.paper_url
 		if source_url:
 			return f"url:{source_url.strip()}"
-		if case.doi:
-			return f"doi:{case.doi.strip().lower()}"
+		normalized_doi = _normalize_case_doi(case.doi)
+		if normalized_doi:
+			return f"doi:{normalized_doi}"
 		if case.pubmed_id:
 			return f"pubmed:{case.pubmed_id.strip()}"
 		return None
@@ -307,8 +374,9 @@ def create_app() -> FastAPI:
 		source_url = resolved_url or case.pdf_url or case.paper_url
 		if source_url:
 			keys.append(f"url:{source_url.strip()}")
-		if case.doi:
-			keys.append(f"doi:{case.doi.strip().lower()}")
+		normalized_doi = _normalize_case_doi(case.doi)
+		if normalized_doi:
+			keys.append(f"doi:{normalized_doi}")
 		if case.pubmed_id:
 			keys.append(f"pubmed:{case.pubmed_id.strip()}")
 		return keys
@@ -462,11 +530,32 @@ def create_app() -> FastAPI:
 			if updated:
 				logger.info(f"Backfilled {updated} failed runs missing metadata")
 
+	def _cancel_stale_runs() -> None:
+		stale_statuses = {
+			RunStatus.QUEUED.value,
+			RunStatus.FETCHING.value,
+			RunStatus.PROVIDER.value,
+			RunStatus.VALIDATING.value,
+		}
+		with session_scope() as session:
+			stmt = select(ExtractionRun).where(ExtractionRun.status.in_(stale_statuses))
+			runs = session.exec(stmt).all()
+			if not runs:
+				return
+			for run in runs:
+				run.status = RunStatus.CANCELLED.value
+				if not run.failure_reason:
+					run.failure_reason = "Cancelled after server restart"
+				session.add(run)
+			session.commit()
+			logger.info(f"Cancelled {len(runs)} stale runs after restart")
+
 	# Initialize DB and queue at startup
 	@app.on_event("startup")
 	async def _startup() -> None:
 		init_db()
 		_backfill_failed_runs()
+		_cancel_stale_runs()
 		# Start the extraction queue
 		await start_queue()
 		# Set up extraction callback
@@ -778,12 +867,15 @@ def create_app() -> FastAPI:
 		return _build_run_payload(run, paper)
 
 	@app.post("/api/baseline/cases/{case_id}/resolve-source", response_model=ResolvedSourceResponse)
-	async def resolve_baseline_case_source(case_id: str) -> ResolvedSourceResponse:
+	async def resolve_baseline_case_source(
+		case_id: str,
+		local_only: bool = Query(False),
+	) -> ResolvedSourceResponse:
 		case_data = get_case(case_id)
 		if not case_data:
 			raise HTTPException(status_code=404, detail="Baseline case not found")
 		case = BaselineCase(**case_data)
-		source = await _resolve_baseline_source(case)
+		source = await _resolve_baseline_source(case, local_only=local_only)
 		if not source:
 			return ResolvedSourceResponse(found=False)
 		return ResolvedSourceResponse(
@@ -795,6 +887,33 @@ def create_app() -> FastAPI:
 			source=source.source,
 			year=source.year,
 			authors=source.authors or [],
+		)
+
+	@app.get("/api/baseline/cases/{case_id}/local-pdf-info", response_model=LocalPdfInfoResponse)
+	async def get_baseline_case_local_pdf_info(case_id: str) -> LocalPdfInfoResponse:
+		case_data = get_case(case_id)
+		if not case_data:
+			raise HTTPException(status_code=404, detail="Baseline case not found")
+		case = BaselineCase(**case_data)
+		local_path = resolve_local_pdf_path(case.doi)
+		if not local_path or not local_path.exists():
+			return LocalPdfInfoResponse(found=False)
+		return LocalPdfInfoResponse(found=True, filename=local_path.name)
+
+	@app.get("/api/baseline/cases/{case_id}/local-pdf")
+	async def get_baseline_case_local_pdf(case_id: str) -> FileResponse:
+		case_data = get_case(case_id)
+		if not case_data:
+			raise HTTPException(status_code=404, detail="Baseline case not found")
+		case = BaselineCase(**case_data)
+		local_path = resolve_local_pdf_path(case.doi)
+		if not local_path or not local_path.exists():
+			raise HTTPException(status_code=404, detail="Local PDF not found for baseline case")
+		return FileResponse(
+			local_path,
+			media_type="application/pdf",
+			filename=local_path.name,
+			headers={"Content-Disposition": f'inline; filename="{local_path.name}"'},
 		)
 
 	@app.post("/api/baseline/cases/{case_id}/retry")
@@ -1005,8 +1124,9 @@ def create_app() -> FastAPI:
 		}
 
 		entries: List[dict] = []
+		local_upload_cache: Dict[str, str] = {}
 		for case in cases:
-			source = await _resolve_baseline_source(case)
+			source = await _resolve_baseline_source(case, local_upload_cache)
 			resolved_url = source.pdf_url if source and source.pdf_url else (source.url if source else None)
 			source_key = _get_source_key(case, resolved_url)
 			entries.append({
@@ -1274,41 +1394,82 @@ def create_app() -> FastAPI:
 
 		return ExtractResponse(extraction=payload, extraction_id=extraction_id, paper_id=paper_id)
 
-	@app.post("/api/extract-file", response_model=ExtractResponse)
+	@app.post("/api/extract-file", response_model=UploadEnqueueResponse)
 	async def extract_file(
-		file: UploadFile = File(...),
+		file: Optional[UploadFile] = File(None),
+		files: Optional[List[UploadFile]] = File(None),
 		title: Optional[str] = Form(None),
 		prompt_id: Optional[int] = Form(None),
 		session: Session = Depends(get_session),
-	) -> ExtractResponse:
-		# Validate file type
-		if not file.filename:
-			raise HTTPException(status_code=400, detail="No file provided")
-		
-		if not file.filename.lower().endswith(".pdf"):
-			raise HTTPException(status_code=400, detail="Only PDF files are supported")
-		
-		# Read file content
-		content = await file.read()
-		if len(content) == 0:
-			raise HTTPException(status_code=400, detail="Empty file")
-		
-		# Limit file size (20MB)
-		if len(content) > 20 * 1024 * 1024:
-			raise HTTPException(status_code=400, detail="File too large (max 20MB)")
+	) -> UploadEnqueueResponse:
+		upload_files = files or ([file] if file else [])
+		if not upload_files:
+			raise HTTPException(status_code=400, detail="No files provided")
 
-		try:
-			extraction_id, paper_id, payload = await run_extraction_from_file(
-				session=session,
-				file_content=content,
-				filename=file.filename,
-				title=title,
-				prompt_id=prompt_id,
-			)
-		except (ValueError, RuntimeError) as exc:
-			raise HTTPException(status_code=400, detail=str(exc)) from exc
+		file_payloads: List[tuple[bytes, str]] = []
+		total_size = 0
+		for upload in upload_files:
+			if not upload or not upload.filename:
+				raise HTTPException(status_code=400, detail="No file provided")
+			if not upload.filename.lower().endswith(".pdf"):
+				raise HTTPException(status_code=400, detail="Only PDF files are supported")
+			content = await upload.read()
+			if len(content) == 0:
+				raise HTTPException(status_code=400, detail="Empty file")
+			if len(content) > 20 * 1024 * 1024:
+				raise HTTPException(status_code=400, detail="File too large (max 20MB)")
+			total_size += len(content)
+			if total_size > 50 * 1024 * 1024:
+				raise HTTPException(status_code=400, detail="Total upload too large (max 50MB)")
+			file_payloads.append((content, upload.filename))
 
-		return ExtractResponse(extraction=payload, extraction_id=extraction_id, paper_id=paper_id)
+		upload_urls = [store_upload(content, filename) for content, filename in file_payloads]
+		first_filename = file_payloads[0][1]
+		if title:
+			resolved_title = title
+		elif len(file_payloads) == 1:
+			resolved_title = first_filename.rsplit(".", 1)[0]
+		else:
+			base_title = first_filename.rsplit(".", 1)[0]
+			resolved_title = f"{base_title} (+{len(file_payloads) - 1} more)"
+		meta = PaperMeta(
+			title=resolved_title,
+			source="upload",
+		)
+		paper_repo = PaperRepository(session)
+		paper_id = paper_repo.upsert(meta)
+		if not paper_id:
+			raise HTTPException(status_code=400, detail="Unable to create paper record for upload")
+
+		use_provider = settings.LLM_PROVIDER
+		run = ExtractionRun(
+			paper_id=paper_id,
+			status=RunStatus.QUEUED.value,
+			model_provider=use_provider,
+			prompt_id=prompt_id,
+		)
+		session.add(run)
+		session.commit()
+		session.refresh(run)
+
+		queue = get_queue()
+		await queue.enqueue(QueueItem(
+			run_id=run.id,
+			paper_id=paper_id,
+			pdf_url=upload_urls[0],
+			pdf_urls=upload_urls,
+			title=meta.title or "(Untitled)",
+			provider=use_provider,
+			force=True,
+			prompt_id=prompt_id,
+		))
+
+		return UploadEnqueueResponse(
+			run_id=run.id,
+			paper_id=paper_id,
+			status=run.status,
+			message="Upload accepted and queued for processing",
+		)
 
 	@app.get("/api/papers", response_model=PapersWithStatusResponse)
 	async def list_papers(session: Session = Depends(get_session)) -> PapersWithStatusResponse:
@@ -2565,7 +2726,8 @@ def create_app() -> FastAPI:
 	@app.post("/api/runs/{run_id}/upload", response_model=ExtractResponse)
 	async def upload_run_file(
 		run_id: int,
-		file: UploadFile = File(...),
+		file: Optional[UploadFile] = File(None),
+		files: Optional[List[UploadFile]] = File(None),
 		provider: Optional[str] = Form(None),
 		prompt_id: Optional[int] = Form(None),
 		session: Session = Depends(get_session),
@@ -2574,24 +2736,41 @@ def create_app() -> FastAPI:
 		if not run:
 			raise HTTPException(status_code=404, detail="Run not found")
 		paper = session.get(Paper, run.paper_id) if run.paper_id else None
-		if not file.filename:
-			raise HTTPException(status_code=400, detail="No file provided")
-		if not file.filename.lower().endswith(".pdf"):
-			raise HTTPException(status_code=400, detail="Only PDF files are supported")
-		content = await file.read()
-		if len(content) == 0:
-			raise HTTPException(status_code=400, detail="Empty file")
-		if len(content) > 20 * 1024 * 1024:
-			raise HTTPException(status_code=400, detail="File too large (max 20MB)")
+		upload_files = files or ([file] if file else [])
+		if not upload_files:
+			raise HTTPException(status_code=400, detail="No files provided")
+
+		file_payloads: List[tuple[bytes, str]] = []
+		total_size = 0
+		for upload in upload_files:
+			if not upload or not upload.filename:
+				raise HTTPException(status_code=400, detail="No file provided")
+			if not upload.filename.lower().endswith(".pdf"):
+				raise HTTPException(status_code=400, detail="Only PDF files are supported")
+			content = await upload.read()
+			if len(content) == 0:
+				raise HTTPException(status_code=400, detail="Empty file")
+			if len(content) > 20 * 1024 * 1024:
+				raise HTTPException(status_code=400, detail="File too large (max 20MB)")
+			total_size += len(content)
+			if total_size > 50 * 1024 * 1024:
+				raise HTTPException(status_code=400, detail="Total upload too large (max 50MB)")
+			file_payloads.append((content, upload.filename))
 
 		use_prompt_id = prompt_id or run.prompt_id
 		use_provider = provider or run.model_provider or settings.LLM_PROVIDER
-		title = paper.title if paper and paper.title else file.filename.rsplit(".", 1)[0]
+		first_filename = file_payloads[0][1]
+		if paper and paper.title:
+			title = paper.title
+		elif len(file_payloads) == 1:
+			title = first_filename.rsplit(".", 1)[0]
+		else:
+			base_title = first_filename.rsplit(".", 1)[0]
+			title = f"{base_title} (+{len(file_payloads) - 1} more)"
 		try:
-			extraction_id, paper_id, payload = await run_extraction_from_file(
+			extraction_id, paper_id, payload = await run_extraction_from_files(
 				session=session,
-				file_content=content,
-				filename=file.filename,
+				files=file_payloads,
 				title=title,
 				prompt_id=use_prompt_id,
 				provider_name=use_provider,

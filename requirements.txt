@@ -11,4 +11,5 @@ lxml
 alembic
 typer
 python-multipart
+openai
 

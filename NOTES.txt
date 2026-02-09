@@ -1,0 +1,36 @@
+pokazat search
+pokazat postojece
+pokazat ekstrakciju 
+pokazat follow-up chat
+pokazat editing
+pokazati force re-extract (i compare)
+pokazat entity explorer
+quality rules
+baseline
+
+
+
+evidence za supporting u prompt
+
+1.
+*vise pdfova za isti extraction*
+
+2.
+baseline benchmark
+
+
+
+sto za research, tips:
+
+
+
+
+
+
+da pise koliko vremena je trajao extraction.
+
+
+like a highlighted little dot, on an extraction run, if it's "new" in the sense that we didn't click on the details yet.
+
+
+negdje treba pisati koliko input/output tokena je svaki run kostao.
