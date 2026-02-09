@@ -10,35 +10,37 @@ from sqlmodel import Session
 
 from ...config import settings
 from ...db import get_session
-from ...persistence.models import Extraction, ExtractionEntity, ExtractionRun, Paper
+from ...persistence.models import ActiveSourceLock, ExtractionEntity, ExtractionRun, Paper, QueueJob
+from ...schemas import ClearExtractionsResponse, HealthResponse
 from ...services.queue_service import get_broadcaster, start_queue, stop_queue
 
 router = APIRouter(tags=["system"])
 
 
-@router.get("/api/health")
-async def health() -> dict:
+@router.get("/api/health", response_model=HealthResponse)
+async def health() -> HealthResponse:
     model = None
     if settings.LLM_PROVIDER == "openai":
         model = settings.OPENAI_MODEL
     elif settings.LLM_PROVIDER == "deepseek":
         model = settings.DEEPSEEK_MODEL
-    return {"status": "ok", "provider": settings.LLM_PROVIDER, "model": model}
+    return HealthResponse(status="ok", provider=settings.LLM_PROVIDER, model=model)
 
 
-@router.post("/api/admin/clear-extractions")
-async def clear_extractions(session: Session = Depends(get_session)) -> dict:
+@router.post("/api/admin/clear-extractions", response_model=ClearExtractionsResponse)
+async def clear_extractions(session: Session = Depends(get_session)) -> ClearExtractionsResponse:
     """Dangerous: wipe all extracted runs and papers."""
     await stop_queue()
     try:
+        session.exec(delete(ActiveSourceLock))
+        session.exec(delete(QueueJob))
         session.exec(delete(ExtractionEntity))
         session.exec(delete(ExtractionRun))
-        session.exec(delete(Extraction))
         session.exec(delete(Paper))
         session.commit()
     finally:
         await start_queue()
-    return {"status": "ok"}
+    return ClearExtractionsResponse(status="ok")
 
 
 @router.get("/api/stream")

@@ -11,7 +11,6 @@ from .models import (
     Paper,
     ExtractionRun,
     ExtractionEntity,
-    Extraction,
     BasePrompt,
     PromptVersion,
     BaselineCaseRun,
@@ -428,68 +427,3 @@ class BaselineCaseRunRepository:
             return
         self.session.add_all(new_links)
         self.session.commit()
-    
-    # Legacy support: save to old Extraction table
-    def save_extraction_legacy(
-        self,
-        payload: ExtractionPayload,
-        paper_id: Optional[int],
-        provider_name: str,
-        model_name: Optional[str],
-    ) -> int:
-        """Save extraction to legacy Extraction table for backward compatibility."""
-        payload_json = payload.model_dump_json()
-        first_id = None
-        
-        if not payload.entities:
-            row = Extraction(
-                raw_json=payload_json,
-                model_name=model_name,
-                model_provider=provider_name,
-                paper_id=paper_id,
-            )
-            self.session.add(row)
-            self.session.commit()
-            self.session.refresh(row)
-            return row.id
-        
-        for entity in payload.entities:
-            peptide = entity.peptide if entity.type == "peptide" else None
-            molecule = entity.molecule if entity.type == "molecule" else None
-            conditions = entity.conditions
-            thresholds = entity.thresholds
-            
-            row = Extraction(
-                paper_id=paper_id,
-                entity_type=entity.type,
-                peptide_sequence_one_letter=peptide.sequence_one_letter if peptide else None,
-                peptide_sequence_three_letter=peptide.sequence_three_letter if peptide else None,
-                n_terminal_mod=peptide.n_terminal_mod if peptide else None,
-                c_terminal_mod=peptide.c_terminal_mod if peptide else None,
-                is_hydrogel=peptide.is_hydrogel if peptide else None,
-                chemical_formula=molecule.chemical_formula if molecule else None,
-                smiles=molecule.smiles if molecule else None,
-                inchi=molecule.inchi if molecule else None,
-                labels=json.dumps(entity.labels, ensure_ascii=False) if entity.labels else None,
-                morphology=json.dumps(entity.morphology, ensure_ascii=False) if entity.morphology else None,
-                ph=conditions.ph if conditions else None,
-                concentration=conditions.concentration if conditions else None,
-                concentration_units=conditions.concentration_units if conditions else None,
-                temperature_c=conditions.temperature_c if conditions else None,
-                cac=thresholds.cac if thresholds else None,
-                cgc=thresholds.cgc if thresholds else None,
-                mgc=thresholds.mgc if thresholds else None,
-                validation_methods=json.dumps(entity.validation_methods, ensure_ascii=False) if entity.validation_methods else None,
-                process_protocol=entity.process_protocol,
-                reported_characteristics=json.dumps(entity.reported_characteristics, ensure_ascii=False) if entity.reported_characteristics else None,
-                raw_json=payload_json,
-                model_name=model_name,
-                model_provider=provider_name,
-            )
-            self.session.add(row)
-            self.session.commit()
-            self.session.refresh(row)
-            if first_id is None:
-                first_id = row.id
-        
-        return first_id

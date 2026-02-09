@@ -9,6 +9,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
 
+from .api.errors import register_error_handlers
 from .api.routers import (
     baseline_router,
     extraction_router,
@@ -19,9 +20,13 @@ from .api.routers import (
     system_router,
 )
 from .config import settings
-from .db import init_db
+from .db import assert_schema_current
 from .services.queue_service import get_queue, start_queue, stop_queue
-from .services.runtime_maintenance import backfill_failed_runs, cancel_stale_runs
+from .services.runtime_maintenance import (
+    backfill_failed_runs,
+    cancel_stale_runs,
+    ensure_runtime_defaults,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -29,7 +34,8 @@ logger = logging.getLogger(__name__)
 def create_app() -> FastAPI:
     @asynccontextmanager
     async def lifespan(_: FastAPI):
-        init_db()
+        assert_schema_current()
+        ensure_runtime_defaults()
         backfill_failed_runs()
         cancel_stale_runs()
         await start_queue()
@@ -45,6 +51,7 @@ def create_app() -> FastAPI:
             logger.info("Application shutdown")
 
     app = FastAPI(title=settings.APP_NAME, lifespan=lifespan)
+    register_error_handlers(app)
     cors_origins = [origin.strip() for origin in settings.CORS_ORIGINS.split(",") if origin.strip()]
     if cors_origins:
         app.add_middleware(

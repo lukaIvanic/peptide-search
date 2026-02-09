@@ -12,8 +12,10 @@ from ..schemas import BulkRetryRequest, BulkRetryResponse
 from ..time_utils import utc_now
 from .baseline_helpers import link_cases_to_run
 from .failure_reason import bucket_failure_reason, normalize_failure_reason
-from .queue_service import ExtractionQueue, QueueItem
+from .queue_coordinator import QueueCoordinator
+from .queue_service import ExtractionQueue
 from .retry_policies import failure_matches_filters, reconcile_skipped_count, resolve_retry_source_url
+from .serializers import iso_z
 
 
 @dataclass
@@ -29,6 +31,7 @@ async def retry_run(
     queue: ExtractionQueue,
     default_provider: str,
 ) -> dict:
+    coordinator = QueueCoordinator()
     run = session.get(ExtractionRun, run_id)
     if not run:
         raise ServiceError(status_code=404, detail="Run not found")
@@ -50,28 +53,26 @@ async def retry_run(
             "message": "Run already queued for processing",
         }
 
-    run.status = RunStatus.QUEUED.value
-    run.failure_reason = None
-    session.add(run)
-    session.commit()
-    session.refresh(run)
-
-    await queue.enqueue(
-        QueueItem(
-            run_id=run.id,
-            paper_id=paper.id,
-            pdf_url=run.pdf_url,
-            title=paper.title,
-            provider=run.model_provider or default_provider,
-            force=True,
-            prompt_id=run.prompt_id,
-            prompt_version_id=run.prompt_version_id,
-        )
+    result = coordinator.enqueue_existing_run(
+        session,
+        run=run,
+        title=paper.title or "(Untitled)",
+        provider=run.model_provider or default_provider,
+        pdf_url=run.pdf_url,
+        pdf_urls=None,
+        prompt_id=run.prompt_id,
+        prompt_version_id=run.prompt_version_id,
     )
+    if not result.enqueued:
+        return {
+            "id": result.conflict_run_id or run.id,
+            "status": result.conflict_run_status or RunStatus.QUEUED.value,
+            "message": "Run already queued for processing",
+        }
 
     return {
-        "id": run.id,
-        "status": run.status,
+        "id": result.run_id,
+        "status": result.run_status,
         "message": "Run re-queued for processing",
     }
 
@@ -86,6 +87,7 @@ async def retry_run_with_source(
     queue: ExtractionQueue,
     default_provider: str,
 ) -> dict:
+    coordinator = QueueCoordinator()
     run = session.get(ExtractionRun, run_id)
     if not run:
         raise ServiceError(status_code=404, detail="Run not found")
@@ -115,31 +117,27 @@ async def retry_run_with_source(
         prompt_version_id=run.prompt_version_id,
         parent_run_id=run.id,
     )
-    session.add(new_run)
-    session.commit()
-    session.refresh(new_run)
+    result = coordinator.enqueue_new_run(
+        session,
+        run=new_run,
+        title=paper.title or "(Untitled)",
+        pdf_urls=None,
+    )
+    if not result.enqueued:
+        return {
+            "id": result.conflict_run_id or run.id,
+            "status": result.conflict_run_status or RunStatus.QUEUED.value,
+            "message": "Run already queued for processing",
+        }
 
     linked_cases = BaselineCaseRunRepository(session).list_case_ids_for_run(run.id)
     if not linked_cases and run.baseline_case_id:
         linked_cases = [run.baseline_case_id]
-    link_cases_to_run(session, linked_cases, new_run.id)
-
-    await queue.enqueue(
-        QueueItem(
-            run_id=new_run.id,
-            paper_id=paper.id,
-            pdf_url=resolved_source_url,
-            title=paper.title or "(Untitled)",
-            provider=use_provider,
-            force=True,
-            prompt_id=use_prompt_id,
-            prompt_version_id=run.prompt_version_id,
-        )
-    )
+    link_cases_to_run(session, linked_cases, result.run_id)
 
     return {
-        "id": new_run.id,
-        "status": new_run.status,
+        "id": result.run_id,
+        "status": result.run_status,
         "message": "New run created and queued",
     }
 
@@ -151,6 +149,7 @@ async def retry_failed_runs(
     queue: ExtractionQueue,
     default_provider: str,
 ) -> BulkRetryResponse:
+    coordinator = QueueCoordinator()
     cutoff = utc_now() - timedelta(days=req.days)
     stmt = (
         select(ExtractionRun, Paper)
@@ -172,8 +171,6 @@ async def retry_failed_runs(
     skipped_missing_pdf = 0
     skipped_missing_paper = 0
     skipped_not_failed = 0
-    to_enqueue: list[QueueItem] = []
-
     for run, paper in rows:
         if not failure_matches_filters(run.failure_reason, req.bucket, req.reason):
             continue
@@ -196,26 +193,20 @@ async def retry_failed_runs(
             skipped += 1
             continue
 
-        run.status = RunStatus.QUEUED.value
-        run.failure_reason = None
-        session.add(run)
-        to_enqueue.append(
-            QueueItem(
-                run_id=run.id,
-                paper_id=paper.id,
-                pdf_url=run.pdf_url,
-                title=paper.title or "(Untitled)",
-                provider=run.model_provider or default_provider,
-                force=True,
-                prompt_id=run.prompt_id,
-                prompt_version_id=run.prompt_version_id,
-            )
+        result = coordinator.enqueue_existing_run(
+            session,
+            run=run,
+            title=paper.title or "(Untitled)",
+            provider=run.model_provider or default_provider,
+            pdf_url=run.pdf_url,
+            pdf_urls=None,
+            prompt_id=run.prompt_id,
+            prompt_version_id=run.prompt_version_id,
         )
-
-    session.commit()
-    for item in to_enqueue:
-        await queue.enqueue(item)
-        enqueued += 1
+        if result.enqueued:
+            enqueued += 1
+        else:
+            skipped += 1
 
     skipped = reconcile_skipped_count(
         requested=requested,
@@ -279,7 +270,7 @@ def list_failed_runs_payload(
                 "normalized_reason": normalized_reason,
                 "model_provider": run.model_provider,
                 "model_name": run.model_name,
-                "created_at": run.created_at.isoformat() + "Z" if run.created_at else None,
+                "created_at": iso_z(run.created_at),
                 "paper_title": paper.title if paper else None,
                 "paper_doi": paper.doi if paper else None,
                 "paper_url": paper.url if paper else None,
@@ -290,7 +281,7 @@ def list_failed_runs_payload(
         if len(items) >= limit:
             break
 
-    window_start = cutoff.isoformat() + "Z"
+    window_start = iso_z(cutoff)
     return {
         "items": items,
         "total": len(items),
@@ -317,7 +308,7 @@ def run_history_payload(*, session: Session, run_id: int) -> dict:
                 "status": item.status,
                 "model_provider": item.model_provider,
                 "model_name": item.model_name,
-                "created_at": item.created_at.isoformat() + "Z" if item.created_at else None,
+                "created_at": iso_z(item.created_at),
             }
         )
     return {"paper_id": run.paper_id, "versions": versions}

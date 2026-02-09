@@ -10,7 +10,8 @@ from sqlmodel import Session, select
 from ...db import get_session
 from ...persistence.models import ExtractionRun, Paper, RunStatus
 from ...schemas import EnqueueRequest, EnqueueResponse, EnqueuedRun, SearchItem, SearchResponse
-from ...services.queue_service import QueueItem, get_queue
+from ...services.queue_coordinator import QueueCoordinator
+from ...services.queue_service import get_queue
 from ...services.search_service import search_all_free_sources
 
 router = APIRouter(tags=["search"])
@@ -91,6 +92,7 @@ async def enqueue_papers(
 ) -> EnqueueResponse:
     """Enqueue papers for batch extraction."""
     queue = get_queue()
+    coordinator = QueueCoordinator()
     runs: List[EnqueuedRun] = []
     enqueued = 0
     skipped = 0
@@ -168,28 +170,33 @@ async def enqueue_papers(
             pdf_url=item.pdf_url,
             prompt_id=req.prompt_id,
         )
-        session.add(run)
-        session.commit()
-        session.refresh(run)
-
-        await queue.enqueue(
-            QueueItem(
-                run_id=run.id,
-                paper_id=paper.id,
-                pdf_url=item.pdf_url,
-                title=item.title,
-                provider=req.provider,
-                force=item.force,
-                prompt_id=req.prompt_id,
-            )
+        result = coordinator.enqueue_new_run(
+            session,
+            run=run,
+            title=item.title,
+            pdf_urls=None,
         )
+        if not result.enqueued:
+            conflict_run = session.get(ExtractionRun, result.conflict_run_id) if result.conflict_run_id else None
+            runs.append(
+                EnqueuedRun(
+                    run_id=result.conflict_run_id or 0,
+                    paper_id=(conflict_run.paper_id if conflict_run and conflict_run.paper_id else paper.id),
+                    title=item.title,
+                    status=result.conflict_run_status or RunStatus.QUEUED.value,
+                    skipped=True,
+                    skip_reason="Already queued",
+                )
+            )
+            skipped += 1
+            continue
 
         runs.append(
             EnqueuedRun(
-                run_id=run.id,
+                run_id=result.run_id,
                 paper_id=paper.id,
                 title=item.title,
-                status=run.status,
+                status=result.run_status,
                 skipped=False,
             )
         )

@@ -148,23 +148,17 @@ async def _run_batch_extraction(
                 
                 if existing_paper:
                     # A paper existing is not the same as being extracted.
-                    # Skip only if it already has at least one extraction run/entity
-                    # (or legacy extraction rows in older DBs).
+                    # Skip only if it already has at least one extraction run.
                     from sqlmodel import select
-                    from app.persistence.models import Extraction, ExtractionRun
+                    from app.persistence.models import ExtractionRun
 
                     has_new = session.exec(
                         select(ExtractionRun.id)
                         .where(ExtractionRun.paper_id == existing_paper.id)
                         .limit(1)
                     ).first()
-                    has_old = session.exec(
-                        select(Extraction.id)
-                        .where(Extraction.paper_id == existing_paper.id)
-                        .limit(1)
-                    ).first()
 
-                    if has_new or has_old:
+                    if has_new:
                         typer.echo("  Skipping (already extracted)")
                         stats["skipped"] += 1
                         results.append({
@@ -270,17 +264,15 @@ def stats():
     session = next(session_gen)
     
     from sqlmodel import select, func
-    from app.persistence.models import Paper, Extraction, ExtractionRun, ExtractionEntity
+    from app.persistence.models import Paper, ExtractionRun, ExtractionEntity
     
     try:
         paper_count = session.exec(select(func.count(Paper.id))).one()
-        extraction_count = session.exec(select(func.count(Extraction.id))).one()
         run_count = session.exec(select(func.count(ExtractionRun.id))).one()
         entity_count = session.exec(select(func.count(ExtractionEntity.id))).one()
         
         typer.echo("Database Statistics:")
         typer.echo(f"  Papers:            {paper_count}")
-        typer.echo(f"  Extractions (old): {extraction_count}")
         typer.echo(f"  Extraction Runs:   {run_count}")
         typer.echo(f"  Entities:          {entity_count}")
     finally:

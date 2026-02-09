@@ -44,6 +44,9 @@ class Settings:
 
 	# Queue settings
 	QUEUE_CONCURRENCY: int = int(os.getenv("QUEUE_CONCURRENCY", "3"))
+	QUEUE_CLAIM_TIMEOUT_SECONDS: int = int(os.getenv("QUEUE_CLAIM_TIMEOUT_SECONDS", "300"))
+	QUEUE_MAX_ATTEMPTS: int = int(os.getenv("QUEUE_MAX_ATTEMPTS", "3"))
+	QUEUE_ENGINE_VERSION: str = os.getenv("QUEUE_ENGINE_VERSION", "v2")
 
 	# CORS
 	CORS_ORIGINS: str = os.getenv("CORS_ORIGINS", "")
@@ -67,7 +70,10 @@ class Settings:
 				f"Unknown LLM_PROVIDER '{self.LLM_PROVIDER}'. "
 				"Expected one of: openai, openai-full, openai-mini, openai-nano, deepseek, mock."
 			)
+		if self.QUEUE_ENGINE_VERSION not in {"v2"}:
+			raise RuntimeError(
+				f"Unsupported QUEUE_ENGINE_VERSION '{self.QUEUE_ENGINE_VERSION}'. Expected: v2."
+			)
 
 
 settings = Settings()
-

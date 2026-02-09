@@ -1,9 +1,8 @@
-from .models import Paper, Extraction, ExtractionRun, ExtractionEntity
+from .models import Paper, ExtractionRun, ExtractionEntity
 from .repository import PaperRepository, ExtractionRepository
 
 __all__ = [
     "Paper",
-    "Extraction",
     "ExtractionRun",
     "ExtractionEntity",
     "PaperRepository",

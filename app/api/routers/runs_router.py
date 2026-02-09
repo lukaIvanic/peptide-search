@@ -11,17 +11,24 @@ from sqlmodel import Session, func, select
 from ...config import settings
 from ...db import get_session
 from ...integrations.document import DocumentExtractor
-from ...persistence.models import BaselineCaseRun, Extraction, ExtractionEntity, ExtractionRun, Paper, RunStatus
+from ...persistence.models import BaselineCaseRun, ExtractionEntity, ExtractionRun, Paper, RunStatus
 from ...persistence.repository import BaselineCaseRunRepository
 from ...schemas import (
     BulkRetryRequest,
     BulkRetryResponse,
     EditRunRequest,
+    ExtractionDetailResponse,
+    ExtractionListItem,
     ExtractResponse,
     FailedRunsResponse,
     FailureSummaryResponse,
     FollowupRequest,
+    PaperRunsResponse,
+    RecentRunsResponse,
+    RetryResponse,
     ResolvedSourceResponse,
+    RunHistoryResponse,
+    RunPayloadResponse,
     RunRetryWithSourceRequest,
 )
 from ...services.baseline_helpers import link_cases_to_run, select_baseline_result
@@ -39,113 +46,71 @@ from ...services.runs_retry_service import (
 from ...services.search_service import search_all_free_sources
 from ...time_utils import utc_now
 from ...services.view_builders import build_run_payload
+from ...services.serializers import iso_z, parse_json_list, parse_json_object
 
 router = APIRouter(tags=["runs"])
 
 
-@router.get("/api/extractions")
-async def list_extractions(session: Session = Depends(get_session)) -> list[dict]:
-    has_run = session.exec(select(ExtractionRun.id).limit(1)).first()
-    if has_run:
-        subq = (
-            select(ExtractionEntity.run_id, func.count(ExtractionEntity.id).label("cnt"))
-            .group_by(ExtractionEntity.run_id)
-            .subquery()
-        )
-        stmt = (
-            select(ExtractionRun, subq.c.cnt)
-            .outerjoin(subq, ExtractionRun.id == subq.c.run_id)
-            .order_by(ExtractionRun.created_at.desc())
-            .limit(200)
-        )
-        rows = session.exec(stmt).all()
-        result: list[dict] = []
-        for run, cnt in rows:
-            result.append(
-                {
-                    "id": run.id,
-                    "paper_id": run.paper_id,
-                    "entity_count": int(cnt or 0),
-                    "comment": run.comment,
-                    "model_provider": run.model_provider,
-                    "model_name": run.model_name,
-                    "created_at": run.created_at.isoformat() + "Z",
-                }
-            )
-        return result
-
-    stmt = select(Extraction).order_by(Extraction.created_at.desc()).limit(200)
+@router.get("/api/extractions", response_model=list[ExtractionListItem])
+async def list_extractions(session: Session = Depends(get_session)) -> list[ExtractionListItem]:
+    subq = (
+        select(ExtractionEntity.run_id, func.count(ExtractionEntity.id).label("cnt"))
+        .group_by(ExtractionEntity.run_id)
+        .subquery()
+    )
+    stmt = (
+        select(ExtractionRun, subq.c.cnt)
+        .outerjoin(subq, ExtractionRun.id == subq.c.run_id)
+        .order_by(ExtractionRun.created_at.desc())
+        .limit(200)
+    )
     rows = session.exec(stmt).all()
-    result: list[dict] = []
-    for r in rows:
+    result: list[ExtractionListItem] = []
+    for run, cnt in rows:
         result.append(
-            {
-                "id": r.id,
-                "paper_id": r.paper_id,
-                "entity_type": r.entity_type,
-                "sequence": r.peptide_sequence_one_letter,
-                "chemical_formula": r.chemical_formula,
-                "labels": json.loads(r.labels) if r.labels else [],
-                "morphology": json.loads(r.morphology) if r.morphology else [],
-                "created_at": r.created_at.isoformat() + "Z",
-            }
+            ExtractionListItem(
+                id=run.id,
+                paper_id=run.paper_id,
+                entity_count=int(cnt or 0),
+                comment=run.comment,
+                model_provider=run.model_provider,
+                model_name=run.model_name,
+                created_at=iso_z(run.created_at),
+            )
         )
     return result
 
 
-@router.get("/api/extractions/{extraction_id}")
-async def get_extraction(extraction_id: int, session: Session = Depends(get_session)) -> dict:
-    has_run = session.exec(select(ExtractionRun.id).limit(1)).first()
-    if has_run:
-        run = session.get(ExtractionRun, extraction_id)
-        if not run:
-            raise HTTPException(status_code=404, detail="ExtractionRun not found")
-        try:
-            payload = json.loads(run.raw_json or "{}")
-        except Exception:
-            payload = {}
-        return {
-            "id": run.id,
-            "paper_id": run.paper_id,
-            "payload": payload,
-            "model_provider": run.model_provider,
-            "model_name": run.model_name,
-            "created_at": run.created_at.isoformat() + "Z",
-        }
-
-    row = session.get(Extraction, extraction_id)
-    if not row:
-        raise HTTPException(status_code=404, detail="Extraction not found")
-    try:
-        payload = json.loads(row.raw_json or "{}")
-    except Exception:
-        payload = {}
-    return {
-        "id": row.id,
-        "paper_id": row.paper_id,
-        "payload": payload,
-        "model_provider": row.model_provider,
-        "model_name": row.model_name,
-        "created_at": row.created_at.isoformat() + "Z",
-    }
+@router.get("/api/extractions/{extraction_id}", response_model=ExtractionDetailResponse)
+async def get_extraction(
+    extraction_id: int,
+    session: Session = Depends(get_session),
+) -> ExtractionDetailResponse:
+    run = session.get(ExtractionRun, extraction_id)
+    if not run:
+        raise HTTPException(status_code=404, detail="Extraction run not found")
+    payload = parse_json_object(run.raw_json)
+    return ExtractionDetailResponse(
+        id=run.id,
+        paper_id=run.paper_id,
+        payload=payload,
+        model_provider=run.model_provider,
+        model_name=run.model_name,
+        created_at=iso_z(run.created_at),
+    )
 
 
-@router.get("/api/runs")
+@router.get("/api/runs", response_model=PaperRunsResponse)
 async def list_runs(
     paper_id: int = Query(...),
     session: Session = Depends(get_session),
-) -> dict:
+) -> PaperRunsResponse:
     """List all runs for a paper, including prompts and raw JSON."""
     paper = session.get(Paper, paper_id)
     if not paper:
         raise HTTPException(status_code=404, detail="Paper not found")
 
-    authors = []
-    if paper.authors_json:
-        try:
-            authors = json.loads(paper.authors_json)
-        except Exception:
-            authors = []
+    authors = [str(item) for item in parse_json_list(paper.authors_json)]
 
     stmt = (
         select(ExtractionRun)
@@ -167,19 +132,8 @@ async def list_runs(
 
     runs_data = []
     for run in runs:
-        prompts = None
-        if run.prompts_json:
-            try:
-                prompts = json.loads(run.prompts_json)
-            except Exception:
-                prompts = {"raw": run.prompts_json}
-
-        raw_json = None
-        if run.raw_json:
-            try:
-                raw_json = json.loads(run.raw_json)
-            except Exception:
-                raw_json = {"raw": run.raw_json}
+        prompts = parse_json_object(run.prompts_json) if run.prompts_json else None
+        raw_json = parse_json_object(run.raw_json) if run.raw_json else None
 
         runs_data.append(
             {
@@ -195,14 +149,14 @@ async def list_runs(
                 "model_name": run.model_name,
                 "pdf_url": run.pdf_url,
                 "entity_count": entity_counts.get(run.id, 0),
-                "created_at": run.created_at.isoformat() + "Z" if run.created_at else None,
+                "created_at": iso_z(run.created_at),
             }
         )
 
     latest_status = runs[0].status if runs else None
 
-    return {
-        "paper": {
+    return PaperRunsResponse(
+        paper={
             "id": paper.id,
             "title": paper.title,
             "doi": paper.doi,
@@ -212,16 +166,16 @@ async def list_runs(
             "authors": authors,
             "status": latest_status,
         },
-        "runs": runs_data,
-    }
+        runs=runs_data,
+    )
 
 
-@router.get("/api/runs/recent")
+@router.get("/api/runs/recent", response_model=RecentRunsResponse)
 async def list_recent_runs(
     status: Optional[str] = Query(default=None),
     limit: int = Query(default=10, ge=1, le=50),
     session: Session = Depends(get_session),
-) -> dict:
+) -> RecentRunsResponse:
     stmt = select(ExtractionRun).order_by(ExtractionRun.created_at.desc()).limit(limit)
     if status:
         stmt = stmt.where(ExtractionRun.status == status)
@@ -237,7 +191,7 @@ async def list_recent_runs(
                 "failure_reason": run.failure_reason,
                 "model_provider": run.model_provider,
                 "model_name": run.model_name,
-                "created_at": run.created_at.isoformat() + "Z" if run.created_at else None,
+                "created_at": iso_z(run.created_at),
                 "paper": {
                     "id": paper.id if paper else None,
                     "title": paper.title if paper else None,
@@ -248,7 +202,7 @@ async def list_recent_runs(
                 },
             }
         )
-    return {"runs": results}
+    return RecentRunsResponse(runs=results)
 
 
 @router.get("/api/runs/failure-summary", response_model=FailureSummaryResponse)
@@ -303,7 +257,7 @@ async def get_failure_summary(
     def _sorted(values: dict) -> list:
         return sorted(values.values(), key=lambda item: item["count"], reverse=True)
 
-    window_start = cutoff.isoformat() + "Z"
+    window_start = iso_z(cutoff)
     return FailureSummaryResponse(
         total_failed=len(rows),
         runs_analyzed=len(rows),
@@ -354,14 +308,14 @@ async def retry_failed_runs(
     )
 
 
-@router.get("/api/runs/{run_id}")
-async def get_run(run_id: int, session: Session = Depends(get_session)) -> dict:
+@router.get("/api/runs/{run_id}", response_model=RunPayloadResponse)
+async def get_run(run_id: int, session: Session = Depends(get_session)) -> RunPayloadResponse:
     run = session.get(ExtractionRun, run_id)
     if not run:
         raise HTTPException(status_code=404, detail="Run not found")
 
     paper = session.get(Paper, run.paper_id) if run.paper_id else None
-    return build_run_payload(run, paper)
+    return RunPayloadResponse(**build_run_payload(run, paper))
 
 
 @router.post("/api/runs/{run_id}/followup", response_model=ExtractResponse)
@@ -430,27 +384,28 @@ async def edit_run(
     return ExtractResponse(extraction=payload, extraction_id=new_run_id, paper_id=paper_id)
 
 
-@router.get("/api/runs/{run_id}/history")
-async def get_run_history(run_id: int, session: Session = Depends(get_session)) -> dict:
+@router.get("/api/runs/{run_id}/history", response_model=RunHistoryResponse)
+async def get_run_history(run_id: int, session: Session = Depends(get_session)) -> RunHistoryResponse:
     try:
-        return run_history_payload(session=session, run_id=run_id)
+        return RunHistoryResponse(**run_history_payload(session=session, run_id=run_id))
     except ServiceError as exc:
         raise HTTPException(status_code=exc.status_code, detail=exc.detail) from exc
 
 
-@router.post("/api/runs/{run_id}/retry")
+@router.post("/api/runs/{run_id}/retry", response_model=RetryResponse)
 async def retry_run(
     run_id: int,
     session: Session = Depends(get_session),
-) -> dict:
+) -> RetryResponse:
     queue = get_queue()
     try:
-        return await retry_run_service(
+        payload = await retry_run_service(
             session=session,
             run_id=run_id,
             queue=queue,
             default_provider=settings.LLM_PROVIDER,
         )
+        return RetryResponse(**payload)
     except ServiceError as exc:
         raise HTTPException(status_code=exc.status_code, detail=exc.detail) from exc
 
@@ -473,7 +428,7 @@ async def resolve_run_source(
             pdf_url=run.pdf_url,
             source=paper.source if paper else None,
             year=paper.year if paper else None,
-            authors=json.loads(paper.authors_json) if paper and paper.authors_json else [],
+            authors=[str(item) for item in parse_json_list(paper.authors_json)] if paper else [],
         )
     query = (paper.doi if paper else None) or (paper.url if paper else None)
     if not query:
@@ -490,7 +445,7 @@ async def resolve_run_source(
                 pdf_url=run.pdf_url if run.pdf_url and DocumentExtractor.looks_like_pdf_url(run.pdf_url) else None,
                 source=paper.source,
                 year=paper.year,
-                authors=json.loads(paper.authors_json) if paper.authors_json else [],
+                authors=[str(item) for item in parse_json_list(paper.authors_json)],
             )
         return ResolvedSourceResponse(found=False)
     return ResolvedSourceResponse(
@@ -505,15 +460,15 @@ async def resolve_run_source(
     )
 
 
-@router.post("/api/runs/{run_id}/retry-with-source")
+@router.post("/api/runs/{run_id}/retry-with-source", response_model=RetryResponse)
 async def retry_run_with_source(
     run_id: int,
     req: RunRetryWithSourceRequest,
     session: Session = Depends(get_session),
-) -> dict:
+) -> RetryResponse:
     queue = get_queue()
     try:
-        return await retry_run_with_source_service(
+        payload = await retry_run_with_source_service(
             session=session,
             run_id=run_id,
             source_url=req.source_url,
@@ -522,6 +477,7 @@ async def retry_run_with_source(
             queue=queue,
             default_provider=settings.LLM_PROVIDER,
         )
+        return RetryResponse(**payload)
     except ServiceError as exc:
         raise HTTPException(status_code=exc.status_code, detail=exc.detail) from exc
 

@@ -16,7 +16,8 @@ from .baseline_helpers import (
     resolve_baseline_source,
     resolve_local_pdf_source,
 )
-from .queue_service import ExtractionQueue, QueueItem
+from .queue_coordinator import QueueCoordinator
+from .queue_service import ExtractionQueue
 from .upload_store import is_upload_url
 from .runs_retry_service import ServiceError
 
@@ -37,6 +38,7 @@ async def retry_baseline_case(
     queue: ExtractionQueue,
     default_provider: str,
 ) -> dict:
+    coordinator = QueueCoordinator()
     case_data = get_case(case_id)
     if not case_data:
         raise ServiceError(status_code=404, detail="Baseline case not found")
@@ -116,26 +118,27 @@ async def retry_baseline_case(
         pdf_url=source_url,
         prompt_id=req.prompt_id,
     )
-    session.add(run)
-    session.commit()
-    session.refresh(run)
-    link_cases_to_run(session, case_ids, run.id)
-
-    await queue.enqueue(
-        QueueItem(
-            run_id=run.id,
-            paper_id=paper_id,
-            pdf_url=source_url,
-            title=meta.title or baseline_title(case),
-            provider=use_provider,
-            force=True,
-            prompt_id=req.prompt_id,
-        )
+    result = coordinator.enqueue_new_run(
+        session,
+        run=run,
+        title=meta.title or baseline_title(case),
+        pdf_urls=None,
     )
+    if not result.enqueued:
+        conflict_run_id = result.conflict_run_id or (existing.id if existing else None)
+        if conflict_run_id:
+            link_cases_to_run(session, case_ids, conflict_run_id)
+        return {
+            "id": conflict_run_id,
+            "status": result.conflict_run_status or RunStatus.QUEUED.value,
+            "message": "Baseline case already queued for processing",
+            "source_url": source_url,
+        }
+    link_cases_to_run(session, case_ids, result.run_id)
 
     return {
-        "id": run.id,
-        "status": run.status,
+        "id": result.run_id,
+        "status": result.run_status,
         "message": "Baseline case re-queued for processing",
         "source_url": source_url,
     }
@@ -148,6 +151,7 @@ async def retry_batch_runs(
     provider: str | None,
     queue: ExtractionQueue,
 ) -> BatchRetryResponse:
+    coordinator = QueueCoordinator()
     stmt = select(BatchRun).where(BatchRun.batch_id == batch_id)
     batch = session.exec(stmt).first()
     if not batch:
@@ -194,20 +198,20 @@ async def retry_batch_runs(
         run.status = RunStatus.QUEUED.value
         run.failure_reason = None
         run.model_provider = resolved_provider
-        session.add(run)
-
-        await queue.enqueue(
-            QueueItem(
-                run_id=run.id,
-                paper_id=run.paper_id,
-                pdf_url=pdf_url,
-                title="",
-                provider=resolved_provider,
-                force=True,
-                prompt_id=run.prompt_id,
-            )
+        result = coordinator.enqueue_existing_run(
+            session,
+            run=run,
+            title="",
+            provider=resolved_provider,
+            pdf_url=pdf_url,
+            pdf_urls=None,
+            prompt_id=run.prompt_id,
+            prompt_version_id=run.prompt_version_id,
         )
-        retried += 1
+        if result.enqueued:
+            retried += 1
+        else:
+            skipped += 1
 
     batch.failed = batch.failed - retried
     batch.status = BatchStatus.RUNNING.value

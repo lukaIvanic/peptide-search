@@ -19,7 +19,10 @@ class ApiRunRetryEndpointTests(ApiIntegrationTestCase):
 
         response = self.client.post(f"/api/runs/{run_id}/retry")
         self.assertEqual(response.status_code, 400)
-        self.assertIn("Can only retry failed runs", response.json().get("detail", ""))
+        self.assertIn(
+            "Can only retry failed runs",
+            response.json().get("error", {}).get("message", ""),
+        )
 
     def test_retry_run_transitions_failed_to_queued(self) -> None:
         paper_id = self.create_paper(doi="10.1000/retry-ok", url="https://example.org/retry-ok")

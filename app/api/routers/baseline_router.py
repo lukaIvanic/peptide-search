@@ -37,11 +37,14 @@ from ...schemas import (
     BatchListResponse,
     BatchRetryRequest,
     BatchRetryResponse,
+    DeleteBatchResponse,
     ExtractionPayload,
     LocalPdfInfoResponse,
     LocalPdfSiInfoResponse,
     PaperMeta,
     ResolvedSourceResponse,
+    RetryResponse,
+    RunPayloadResponse,
 )
 from ...services.baseline_helpers import (
     baseline_dataset_infos,
@@ -65,7 +68,9 @@ from ...services.batch_metrics import (
     generate_batch_id,
     get_model_name_for_provider,
 )
-from ...services.queue_service import QueueItem, get_queue
+from ...services.queue_coordinator import QueueCoordinator
+from ...services.queue_service import get_queue
+from ...services.serializers import iso_z
 from ...services.upload_store import store_upload
 from ...services.view_builders import build_run_payload
 from ...services.runs_retry_service import ServiceError
@@ -123,16 +128,16 @@ async def get_baseline_case(
     )
 
 
-@router.get("/api/baseline/cases/{case_id}/latest-run")
+@router.get("/api/baseline/cases/{case_id}/latest-run", response_model=RunPayloadResponse)
 async def get_baseline_latest_run(
     case_id: str,
     session: Session = Depends(get_session),
-) -> dict:
+) -> RunPayloadResponse:
     run = get_latest_baseline_run(session, case_id)
     if not run:
         raise HTTPException(status_code=404, detail="No runs for baseline case")
     paper = session.get(Paper, run.paper_id) if run.paper_id else None
-    return build_run_payload(run, paper)
+    return RunPayloadResponse(**build_run_payload(run, paper))
 
 
 @router.post("/api/baseline/cases/{case_id}/resolve-source", response_model=ResolvedSourceResponse)
@@ -230,33 +235,35 @@ async def get_baseline_case_local_pdf_si(case_id: str, index: int = 0) -> FileRe
     )
 
 
-@router.post("/api/baseline/cases/{case_id}/retry")
+@router.post("/api/baseline/cases/{case_id}/retry", response_model=RetryResponse)
 async def retry_baseline_case(
     case_id: str,
     req: BaselineRetryRequest,
     session: Session = Depends(get_session),
-) -> dict:
+) -> RetryResponse:
     queue = get_queue()
     try:
-        return await retry_baseline_case_service(
+        payload = await retry_baseline_case_service(
             session=session,
             case_id=case_id,
             req=req,
             queue=queue,
             default_provider=settings.LLM_PROVIDER,
         )
+        return RetryResponse(**payload)
     except ServiceError as exc:
         raise HTTPException(status_code=exc.status_code, detail=exc.detail) from exc
 
 
-@router.post("/api/baseline/cases/{case_id}/upload")
+@router.post("/api/baseline/cases/{case_id}/upload", response_model=RetryResponse)
 async def upload_baseline_case(
     case_id: str,
     file: UploadFile = File(...),
     provider: Optional[str] = Form(None),
     prompt_id: Optional[int] = Form(None),
     session: Session = Depends(get_session),
-) -> dict:
+) -> RetryResponse:
+    coordinator = QueueCoordinator()
     case_data = get_case(case_id)
     if not case_data:
         raise HTTPException(status_code=404, detail="Baseline case not found")
@@ -296,31 +303,28 @@ async def upload_baseline_case(
         paper_id=paper_id,
         status=RunStatus.QUEUED.value,
         model_provider=use_provider,
+        pdf_url=upload_url,
         prompt_id=prompt_id,
     )
-    session.add(run)
-    session.commit()
-    session.refresh(run)
-    link_cases_to_run(session, case_ids, run.id)
-
-    queue = get_queue()
-    await queue.enqueue(
-        QueueItem(
-            run_id=run.id,
-            paper_id=paper_id,
-            pdf_url=upload_url,
-            title=meta.title or baseline_title(case),
-            provider=use_provider,
-            force=True,
-            prompt_id=prompt_id,
-        )
+    result = coordinator.enqueue_new_run(
+        session,
+        run=run,
+        title=meta.title or baseline_title(case),
+        pdf_urls=None,
     )
+    if not result.enqueued:
+        return RetryResponse(
+            id=result.conflict_run_id,
+            status=result.conflict_run_status or RunStatus.QUEUED.value,
+            message="Upload source already queued",
+        )
+    link_cases_to_run(session, case_ids, result.run_id)
 
-    return {
-        "id": run.id,
-        "status": run.status,
-        "message": "Upload accepted and queued for processing",
-    }
+    return RetryResponse(
+        id=result.run_id,
+        status=result.run_status,
+        message="Upload accepted and queued for processing",
+    )
 
 
 @router.post("/api/baseline/enqueue", response_model=BaselineEnqueueResponse)
@@ -329,6 +333,7 @@ async def enqueue_baseline(
     session: Session = Depends(get_session),
 ) -> BaselineEnqueueResponse:
     queue = get_queue()
+    coordinator = QueueCoordinator()
     paper_repo = PaperRepository(session)
     cases_raw = list_cases(req.dataset)
     cases = [BaselineCase(**case_data) for case_data in cases_raw]
@@ -472,30 +477,40 @@ async def enqueue_baseline(
             pdf_url=resolved_url,
             prompt_id=req.prompt_id,
         )
-        session.add(run)
-        session.commit()
-        session.refresh(run)
-        link_cases_to_run(session, case_ids, run.id)
-
-        enqueued += len(case_ids)
-        await queue.enqueue(
-            QueueItem(
-                run_id=run.id,
-                paper_id=paper_id,
-                pdf_url=resolved_url,
-                title=meta.title or baseline_title(case),
-                provider=req.provider,
-                force=req.force,
-                prompt_id=req.prompt_id,
-            )
+        result = coordinator.enqueue_new_run(
+            session,
+            run=run,
+            title=meta.title or baseline_title(case),
+            pdf_urls=source.pdf_urls if source and source.pdf_urls else None,
         )
+        if not result.enqueued:
+            conflict_id = result.conflict_run_id or (existing.id if existing else None)
+            conflict_status = result.conflict_run_status or (
+                existing.status if existing else RunStatus.QUEUED.value
+            )
+            if conflict_id:
+                link_cases_to_run(session, case_ids, conflict_id)
+            for case_id in case_ids:
+                runs.append(
+                    BaselineEnqueuedRun(
+                        baseline_case_id=case_id,
+                        run_id=conflict_id,
+                        status=conflict_status,
+                        skipped=True,
+                        skip_reason="Already queued",
+                    )
+                )
+            skipped += len(case_ids)
+            continue
+        link_cases_to_run(session, case_ids, result.run_id)
+        enqueued += len(case_ids)
 
         for case_id in case_ids:
             runs.append(
                 BaselineEnqueuedRun(
                     baseline_case_id=case_id,
-                    run_id=run.id,
-                    status=run.status,
+                    run_id=result.run_id,
+                    status=result.run_status,
                     skipped=False,
                 )
             )
@@ -605,7 +620,7 @@ async def list_batches(
                 total_expected_entities=b.total_expected_entities,
                 match_rate=compute_match_rate(b),
                 estimated_cost_usd=compute_batch_cost(b),
-                created_at=b.created_at.isoformat() if b.created_at else "",
+                created_at=iso_z(b.created_at) or "",
             )
             for b in batches
         ]
@@ -618,7 +633,7 @@ async def batch_enqueue(
     session: Session = Depends(get_session),
 ) -> BatchEnqueueResponse:
     """Create a batch and enqueue all papers from a dataset."""
-    queue = get_queue()
+    coordinator = QueueCoordinator()
     paper_repo = PaperRepository(session)
 
     model_name = get_model_name_for_provider(req.provider)
@@ -691,26 +706,18 @@ async def batch_enqueue(
             prompt_id=req.prompt_id,
             batch_id=batch_id,
         )
-        session.add(run)
-        session.commit()
-        session.refresh(run)
-        link_cases_to_run(session, case_ids, run.id)
-
+        all_pdf_urls = source.pdf_urls if source and source.pdf_urls else None
+        result = coordinator.enqueue_new_run(
+            session,
+            run=run,
+            title=meta.title or baseline_title(case),
+            pdf_urls=all_pdf_urls,
+        )
+        if not result.enqueued:
+            continue
+        link_cases_to_run(session, case_ids, result.run_id)
         runs_enqueued += 1
         cases_enqueued += len(case_ids)
-        all_pdf_urls = source.pdf_urls if source and source.pdf_urls else None
-        await queue.enqueue(
-            QueueItem(
-                run_id=run.id,
-                paper_id=paper_id,
-                pdf_url=resolved_url,
-                pdf_urls=all_pdf_urls,
-                title=meta.title or baseline_title(case),
-                provider=req.provider,
-                force=req.force,
-                prompt_id=req.prompt_id,
-            )
-        )
 
     batch.total_papers = runs_enqueued
     session.add(batch)
@@ -741,7 +748,7 @@ async def batch_retry(
         raise HTTPException(status_code=exc.status_code, detail=exc.detail) from exc
 
 
-@router.get("/api/baseline/batch/{batch_id}")
+@router.get("/api/baseline/batch/{batch_id}", response_model=BatchInfo)
 async def get_batch(
     batch_id: str,
     session: Session = Depends(get_session),
@@ -769,15 +776,15 @@ async def get_batch(
         total_expected_entities=batch.total_expected_entities,
         match_rate=compute_match_rate(batch),
         estimated_cost_usd=compute_batch_cost(batch),
-        created_at=batch.created_at.isoformat() if batch.created_at else "",
+        created_at=iso_z(batch.created_at) or "",
     )
 
 
-@router.delete("/api/baseline/batch/{batch_id}")
+@router.delete("/api/baseline/batch/{batch_id}", response_model=DeleteBatchResponse)
 async def delete_batch(
     batch_id: str,
     session: Session = Depends(get_session),
-) -> dict:
+) -> DeleteBatchResponse:
     """Delete a batch and all its associated runs."""
     stmt = select(BatchRun).where(BatchRun.batch_id == batch_id)
     batch = session.exec(stmt).first()
@@ -800,4 +807,4 @@ async def delete_batch(
     session.delete(batch)
     session.commit()
 
-    return {"status": "ok", "deleted_runs": len(runs)}
+    return DeleteBatchResponse(status="ok", deleted_runs=len(runs))
