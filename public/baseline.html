@@ -6,24 +6,28 @@
 		<title>Baseline Benchmark - Peptide Literature Extractor</title>
 		<link rel="preconnect" href="https://fonts.googleapis.com">
 		<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-		<link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+		<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
 		<script src="https://cdn.tailwindcss.com"></script>
-		<link rel="stylesheet" href="/static/styles.css?v=dev56" />
-		<script src="/static/app_config.js?v=dev46"></script>
+		<link rel="stylesheet" href="/static/styles.css?v=2026-02-09" />
+		<script src="/static/app_config.js?v=2026-02-09"></script>
 	</head>
 	<body class="theme-synthwave baseline-page min-h-screen flex flex-col">
 		<header class="topbar">
 			<div class="brand">
+				<a href="/baseline" class="flex items-center gap-2 text-slate-400 hover:text-slate-200 mr-3" id="backToOverview">
+					<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+					<span class="text-xs">Back</span>
+				</a>
 				<div class="logo"></div>
 				<div>
-				<div class="title">Baseline Benchmark</div>
-				<div class="subtitle">Compare expected entities by paper against extraction runs</div>
+				<div class="title" id="pageTitle">Batch Details</div>
+				<div class="subtitle" id="pageSubtitle">Compare expected entities by paper against extraction runs</div>
 				</div>
 			</div>
 			<nav class="nav">
 				<a href="/" class="nav-link">Dashboard</a>
 				<a href="/entities" class="nav-link">Entity Explorer</a>
-				<a href="/baseline" class="nav-link">Baseline</a>
+				<a href="/baseline" class="nav-link active">Batches</a>
 				<a href="/help" class="nav-link">Help</a>
 			</nav>
 		</header>
@@ -31,10 +35,18 @@
 		<main class="max-w-7xl w-full flex-1 mx-auto px-6 py-6 space-y-6">
 			<section class="sw-card p-3">
 				<div class="flex flex-wrap items-center gap-3 text-[11px] text-slate-600 w-full">
-					<label class="flex items-center gap-2 flex-1 min-w-[180px]">
+					<!-- Hidden in single-batch mode -->
+					<label id="datasetFilterLabel" class="flex items-center gap-2 flex-1 min-w-[180px] hidden">
 						<span class="sw-kicker text-[10px] text-slate-500">Dataset</span>
 						<select id="datasetFilter" class="sw-select sw-select--sm w-full">
 							<option value="">All datasets</option>
+						</select>
+					</label>
+					<!-- Hidden in single-batch mode -->
+					<label id="batchFilterLabel" class="flex items-center gap-2 min-w-[160px] hidden">
+						<span class="sw-kicker text-[10px] text-slate-500">Batch</span>
+						<select id="batchFilter" class="sw-select sw-select--sm w-full">
+							<option value="">All runs</option>
 						</select>
 					</label>
 					<div class="flex items-center gap-2 flex-[2] min-w-[220px]">
@@ -49,7 +61,7 @@
 						<select id="baselineProvider" class="sw-select sw-select--sm w-full">
 							<option value="openai">OpenAI - Full</option>
 							<option value="openai-mini">OpenAI - Mini</option>
-							<option value="openai-nano">OpenAI - Nano</option>
+							<option value="openai-nano" selected>OpenAI - Nano</option>
 							<option value="mock">Mock (Demo)</option>
 						</select>
 					</label>
@@ -64,10 +76,51 @@
 					<button id="runBaselineBtn" class="sw-btn sw-btn--primary sw-btn--sm" type="button">
 						Run benchmark
 					</button>
+					<!-- Hidden in single-batch mode -->
+					<button id="runAllBtn" class="sw-btn sw-btn--sm sw-btn--accent hidden" type="button" title="Run all papers with local PDFs">
+						Run All
+					</button>
+					<button id="retryAllFailedBtn" class="sw-btn sw-btn--sm sw-btn--ghost hidden" type="button" title="Retry all failed extractions in current batch">
+						Retry Failed
+					</button>
 					<button id="resolveBaselineBtn" class="sw-btn sw-btn--sm sw-btn--ghost" type="button">
 						Find PDFs
 					</button>
 					<span id="baselineStatus" class="sw-chip text-[10px] text-slate-500"></span>
+				</div>
+			</section>
+
+			<!-- Batch summary panel (shown when batch selected) -->
+			<section id="batchSummary" class="sw-card p-3 hidden">
+				<div class="flex flex-wrap items-center gap-4 text-[11px] text-slate-600">
+					<div class="flex items-center gap-2">
+						<span class="sw-kicker text-[10px] text-slate-500">Batch</span>
+						<span id="batchLabel" class="font-semibold"></span>
+					</div>
+					<div class="flex items-center gap-2">
+						<span class="sw-kicker text-[10px] text-slate-500">Model</span>
+						<span id="batchModel" class="sw-chip"></span>
+					</div>
+					<div class="flex items-center gap-2">
+						<span class="sw-kicker text-[10px] text-slate-500">Progress</span>
+						<span id="batchProgress" class="sw-chip"></span>
+					</div>
+					<div class="flex items-center gap-2">
+						<span class="sw-kicker text-[10px] text-slate-500">Match Rate</span>
+						<span id="batchMatchRate" class="sw-chip"></span>
+					</div>
+					<div class="flex items-center gap-2">
+						<span class="sw-kicker text-[10px] text-slate-500">Tokens</span>
+						<span id="batchTokens" class="sw-chip"></span>
+					</div>
+					<div class="flex items-center gap-2">
+						<span class="sw-kicker text-[10px] text-slate-500">Time</span>
+						<span id="batchTime" class="sw-chip"></span>
+					</div>
+					<div class="flex items-center gap-2">
+						<span class="sw-kicker text-[10px] text-slate-500">Cost</span>
+						<span id="batchCost" class="sw-chip"></span>
+					</div>
 				</div>
 			</section>
 
@@ -123,6 +176,6 @@
 			</section>
 		</main>
 
-		<script type="module" src="/static/baseline.js?v=dev1"></script>
+		<script type="module" src="/static/baseline.js?v=2026-02-09"></script>
 	</body>
 </html>

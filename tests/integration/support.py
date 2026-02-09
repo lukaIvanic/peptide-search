@@ -27,10 +27,12 @@ class ApiIntegrationTestCase(unittest.TestCase):
 
         self.old_engine = db_module.engine
         self.old_queue_concurrency = settings.QUEUE_CONCURRENCY
+        self.old_db_url = settings.DB_URL
 
         settings.QUEUE_CONCURRENCY = 0
+        settings.DB_URL = str(self.test_engine.url)
         db_module.engine = self.test_engine
-        db_module.init_db()
+        db_module.run_migrations(db_url=str(self.test_engine.url))
 
         queue_service._queue = None
         queue_service._broadcaster = None
@@ -46,6 +48,7 @@ class ApiIntegrationTestCase(unittest.TestCase):
         self.test_engine.dispose()
         self.db_module.engine = self.old_engine
         settings.QUEUE_CONCURRENCY = self.old_queue_concurrency
+        settings.DB_URL = self.old_db_url
         self.temp_dir.cleanup()
 
     def create_paper(

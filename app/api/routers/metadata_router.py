@@ -10,7 +10,6 @@ from sqlmodel import Session, select
 from ...db import get_session
 from ...persistence.models import ExtractionEntity, ExtractionRun, Paper
 from ...persistence.repository import PromptRepository
-from ...prompts import build_system_prompt
 from ...schemas import (
     EntitiesResponse,
     EntityListItem,
@@ -32,6 +31,7 @@ from ...services.quality_service import (
 )
 from ...services.view_builders import parse_json_list, build_prompt_info
 from ...time_utils import utc_now
+from ...services.serializers import iso_z
 
 router = APIRouter(tags=["metadata"])
 
@@ -54,7 +54,6 @@ async def update_quality_rules_endpoint(
 @router.get("/api/prompts", response_model=PromptListResponse)
 async def list_prompts(session: Session = Depends(get_session)) -> PromptListResponse:
     repo = PromptRepository(session)
-    repo.ensure_default_prompt(build_system_prompt())
     prompts = repo.list_prompts()
     active = repo.get_active_prompt()
     payload = []
@@ -197,7 +196,7 @@ async def list_entities(
                 paper_doi=paper.doi if paper else None,
                 paper_year=paper.year if paper else None,
                 paper_source=paper.source if paper else None,
-                run_created_at=run.created_at.isoformat() + "Z" if run.created_at else None,
+                run_created_at=iso_z(run.created_at),
                 model_provider=run.model_provider,
                 model_name=run.model_name,
                 prompt_version=run.prompt_version,
@@ -392,7 +391,7 @@ async def get_entity_detail(entity_id: int, session: Session = Depends(get_sessi
         paper_doi=paper.doi if paper else None,
         paper_year=paper.year if paper else None,
         paper_source=paper.source if paper else None,
-        run_created_at=run.created_at.isoformat() + "Z" if run and run.created_at else None,
+        run_created_at=iso_z(run.created_at) if run else None,
         model_provider=run.model_provider if run else None,
         model_name=run.model_name if run else None,
         prompt_version=run.prompt_version if run else None,
@@ -408,7 +407,7 @@ async def get_entity_detail(entity_id: int, session: Session = Depends(get_sessi
         "model_provider": run.model_provider if run else None,
         "model_name": run.model_name if run else None,
         "prompt_version": run.prompt_version if run else None,
-        "created_at": run.created_at.isoformat() + "Z" if run and run.created_at else None,
+        "created_at": iso_z(run.created_at) if run else None,
     }
     paper_meta = {
         "id": paper.id if paper else None,

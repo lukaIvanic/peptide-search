@@ -1,13 +1,13 @@
-export const STATUS_LABELS = {
-    queued: 'Queued',
-    fetching: 'Fetching',
-    provider: 'Processing',
-    validating: 'Validating',
-    stored: 'Complete',
-    failed: 'Error',
-    cancelled: 'Cancelled',
-    none: 'No run',
-};
+import {
+    STATUS_LABELS,
+    formatFailureReason,
+    getStatusLabel,
+    isNoSourceResolvedFailure,
+    isProcessingStatus,
+    isProviderEmptyFailure,
+} from '../shared/formatting.js';
+
+export { STATUS_LABELS, formatFailureReason, getStatusLabel, isNoSourceResolvedFailure, isProcessingStatus, isProviderEmptyFailure };
 
 export const MANUAL_PDF_TAG = 'Manual PDF required';
 export const MANUAL_PDF_REASON_NO_OA = 'no-open-access';
@@ -35,10 +35,6 @@ export function getCaseKey(caseItem) {
     return caseItem.id || '';
 }
 
-export function isProcessingStatus(status) {
-    return ['queued', 'fetching', 'provider', 'validating'].includes(status);
-}
-
 export function normalizeDoiToUrl(doi) {
     if (!doi) return null;
     const cleaned = String(doi).trim();
@@ -49,54 +45,6 @@ export function normalizeDoiToUrl(doi) {
 
 export function isLocalPdfUrl(url) {
     return Boolean(url) && String(url).startsWith('upload://');
-}
-
-export function getStatusLabel(status) {
-    if (!status) return STATUS_LABELS.none;
-    return STATUS_LABELS[status] || status;
-}
-
-export function isProviderEmptyFailure(reason) {
-    if (!reason) return false;
-    const lower = String(reason).toLowerCase();
-    return lower.includes('openai returned empty response') || lower.includes('stream has ended unexpectedly');
-}
-
-export function isNoSourceResolvedFailure(reason) {
-    if (!reason) return false;
-    const lower = String(reason).toLowerCase();
-    return lower.includes('no source url resolved') || lower.includes('no pdf url resolved');
-}
-
-export function formatFailureReason(reason) {
-    if (!reason) return null;
-    const text = String(reason);
-    const lower = text.toLowerCase();
-    if (lower.includes('http 403')) {
-        return {
-            title: 'Access blocked (HTTP 403)',
-            detail: 'Publisher blocked this URL. Try open-access search or upload a PDF.',
-        };
-    }
-    if (lower.includes('no source url resolved') || lower.includes('no pdf url resolved')) {
-        return {
-            title: 'No source URL found',
-            detail: 'We could not find a usable PDF/HTML source. Try open-access search or upload a PDF.',
-        };
-    }
-    if (lower.includes('openai returned empty response') || lower.includes('stream has ended unexpectedly')) {
-        return {
-            title: 'Provider response was empty',
-            detail: 'The provider returned no usable output. Retry or upload a PDF for better reliability.',
-        };
-    }
-    if (lower.startsWith('provider error')) {
-        return {
-            title: 'Provider error',
-            detail: text.replace(/^provider error:\s*/i, '') || 'The provider failed. Retry or upload a PDF.',
-        };
-    }
-    return { title: text, detail: null };
 }
 
 export function mean(values) {

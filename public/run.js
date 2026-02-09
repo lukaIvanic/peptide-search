@@ -1,4 +1,5 @@
-import { getRun, getRunHistory, retryRun, resolveRunSource, retryRunWithSource, uploadRunPdf } from './js/api.js?v=dev48';
+import { getRun, getRunHistory, retryRun, resolveRunSource, retryRunWithSource, uploadRunPdf } from './js/api.js';
+import { formatFailureReason, getStatusLabel } from './js/shared/formatting.js';
 
 const $ = (sel) => document.querySelector(sel);
 
@@ -36,7 +37,7 @@ function renderRun(run) {
 	if (!run) return;
 
 	const meta = [
-		run.status ? `Status: ${run.status}` : null,
+		run.status ? `Status: ${getStatusLabel(run.status)}` : null,
 		run.model_provider ? `Provider: ${run.model_provider}` : null,
 		run.model_name ? `Model: ${run.model_name}` : null,
 		run.created_at ? `Created: ${new Date(run.created_at).toLocaleString()}` : null,
@@ -489,37 +490,6 @@ async function loadRun(runId, options = {}) {
 	currentRunId = nextRunId;
 	setEditLink(currentRunId);
 	await loadHistory(runId);
-}
-
-function formatFailureReason(reason) {
-	if (!reason) return null;
-	const text = String(reason);
-	const lower = text.toLowerCase();
-	if (lower.includes('http 403')) {
-		return {
-			title: 'Access blocked (HTTP 403)',
-			detail: 'Publisher blocked this URL. Try open-access search or upload a PDF.',
-		};
-	}
-	if (lower.includes('no source url resolved') || lower.includes('no pdf url resolved')) {
-		return {
-			title: 'No source URL found',
-			detail: 'We could not find a usable PDF/HTML source. Try open-access search or upload a PDF.',
-		};
-	}
-	if (lower.includes('openai returned empty response') || lower.includes('stream has ended unexpectedly')) {
-		return {
-			title: 'Provider response was empty',
-			detail: 'Retry or upload a PDF for better reliability.',
-		};
-	}
-	if (lower.startsWith('provider error')) {
-		return {
-			title: 'Provider error',
-			detail: text.replace(/^provider error:\s*/i, '') || 'The provider failed. Retry or upload a PDF.',
-		};
-	}
-	return { title: text, detail: null };
 }
 
 function renderRunFixPanel(run) {

@@ -1,20 +1,14 @@
 from __future__ import annotations
 
-import json
 from typing import List, Optional
 
 from ..persistence.models import ExtractionRun, Paper
 from ..schemas import PromptInfo
+from .serializers import iso_z, parse_json_list as parse_json_list_value, parse_json_object
 
 
 def parse_json_list(value: Optional[str]) -> List[str]:
-    if not value:
-        return []
-    try:
-        parsed = json.loads(value)
-        return parsed if isinstance(parsed, list) else []
-    except Exception:
-        return []
+    return [str(item) for item in parse_json_list_value(value)]
 
 
 def build_prompt_info(prompt, versions) -> PromptInfo:
@@ -28,7 +22,7 @@ def build_prompt_info(prompt, versions) -> PromptInfo:
                 "content": version.content,
                 "notes": version.notes,
                 "created_by": version.created_by,
-                "created_at": version.created_at.isoformat() + "Z" if version.created_at else None,
+                "created_at": iso_z(version.created_at),
             }
         )
     latest_version = version_entries[0] if version_entries else None
@@ -37,8 +31,8 @@ def build_prompt_info(prompt, versions) -> PromptInfo:
         name=prompt.name,
         description=prompt.description,
         is_active=prompt.is_active,
-        created_at=prompt.created_at.isoformat() + "Z" if prompt.created_at else None,
-        updated_at=prompt.updated_at.isoformat() + "Z" if prompt.updated_at else None,
+        created_at=iso_z(prompt.created_at),
+        updated_at=iso_z(prompt.updated_at),
         latest_version=latest_version,
         versions=version_entries,
     )
@@ -47,24 +41,11 @@ def build_prompt_info(prompt, versions) -> PromptInfo:
 def build_run_payload(run: ExtractionRun, paper: Optional[Paper]) -> dict:
     authors = []
     if paper and paper.authors_json:
-        try:
-            authors = json.loads(paper.authors_json)
-        except Exception:
-            authors = []
+        parsed_authors = parse_json_list_value(paper.authors_json)
+        authors = [str(item) for item in parsed_authors]
 
-    prompts = None
-    if run.prompts_json:
-        try:
-            prompts = json.loads(run.prompts_json)
-        except Exception:
-            prompts = {"raw": run.prompts_json}
-
-    raw_json = None
-    if run.raw_json:
-        try:
-            raw_json = json.loads(run.raw_json)
-        except Exception:
-            raw_json = {"raw": run.raw_json}
+    prompts = parse_json_object(run.prompts_json) if run.prompts_json else None
+    raw_json = parse_json_object(run.raw_json) if run.raw_json else None
 
     return {
         "paper": {
@@ -90,6 +71,6 @@ def build_run_payload(run: ExtractionRun, paper: Optional[Paper]) -> dict:
             "model_provider": run.model_provider,
             "model_name": run.model_name,
             "pdf_url": run.pdf_url,
-            "created_at": run.created_at.isoformat() + "Z" if run.created_at else None,
+            "created_at": iso_z(run.created_at),
         },
     }

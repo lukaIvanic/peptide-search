@@ -7,6 +7,9 @@ from sqlmodel import select
 
 from ..db import session_scope
 from ..persistence.models import ExtractionRun, RunStatus
+from ..persistence.repository import PromptRepository
+from ..prompts import build_system_prompt
+from .quality_service import ensure_quality_rules
 
 logger = logging.getLogger(__name__)
 
@@ -49,3 +52,11 @@ def cancel_stale_runs() -> None:
             session.add(run)
         session.commit()
         logger.info("Cancelled %s stale runs after restart", len(runs))
+
+
+def ensure_runtime_defaults() -> None:
+    """Initialize runtime-managed defaults outside request GET paths."""
+    with session_scope() as session:
+        repo = PromptRepository(session)
+        repo.ensure_default_prompt(build_system_prompt())
+        ensure_quality_rules(session)

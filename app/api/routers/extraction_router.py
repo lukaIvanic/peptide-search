@@ -10,8 +10,8 @@ from ...db import get_session
 from ...persistence.models import ExtractionRun, RunStatus
 from ...persistence.repository import PaperRepository
 from ...schemas import ExtractRequest, ExtractResponse, PaperMeta, UploadEnqueueResponse
+from ...services.queue_coordinator import QueueCoordinator
 from ...services.extraction_service import run_extraction
-from ...services.queue_service import QueueItem, get_queue
 from ...services.upload_store import store_upload
 
 router = APIRouter(tags=["extraction"])
@@ -84,27 +84,18 @@ async def extract_file(
         model_provider=use_provider,
         prompt_id=prompt_id,
     )
-    session.add(run)
-    session.commit()
-    session.refresh(run)
-
-    queue = get_queue()
-    await queue.enqueue(
-        QueueItem(
-            run_id=run.id,
-            paper_id=paper_id,
-            pdf_url=upload_urls[0],
-            pdf_urls=upload_urls,
-            title=meta.title or "(Untitled)",
-            provider=use_provider,
-            force=True,
-            prompt_id=prompt_id,
-        )
+    result = QueueCoordinator().enqueue_new_run(
+        session,
+        run=run,
+        title=meta.title or "(Untitled)",
+        pdf_urls=upload_urls,
     )
+    if not result.enqueued:
+        raise HTTPException(status_code=409, detail="Uploaded source is already queued")
 
     return UploadEnqueueResponse(
-        run_id=run.id,
+        run_id=result.run_id,
         paper_id=paper_id,
-        status=run.status,
+        status=result.run_status,
         message="Upload accepted and queued for processing",
     )

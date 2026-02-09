@@ -29,11 +29,24 @@ def get_quality_rules(session: Session) -> Dict[str, Any]:
 			return json.loads(row.rules_json)
 		except Exception:
 			return DEFAULT_RULES
+	return DEFAULT_RULES
+
+
+def ensure_quality_rules(session: Session) -> Dict[str, Any]:
+	row = session.exec(select(QualityRuleConfig)).first()
+	if row:
+		try:
+			return json.loads(row.rules_json)
+		except Exception:
+			row.rules_json = json.dumps(DEFAULT_RULES)
+			row.updated_at = utc_now()
+			session.add(row)
+			session.commit()
+			return DEFAULT_RULES
 
 	row = QualityRuleConfig(rules_json=json.dumps(DEFAULT_RULES), updated_at=utc_now())
 	session.add(row)
 	session.commit()
-	session.refresh(row)
 	return DEFAULT_RULES
 
 

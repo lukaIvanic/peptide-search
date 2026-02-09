@@ -1,477 +1,550 @@
 {
   "10.1002/anie.200604014": {
     "main": [
-      "app\\baseline\\local_pdfs\\papers\\01_10.1002_anie.200604014\\SS_0001.pdf"
+      "Peptide LLM/Datasets/downloaded_papers/SS/SS_0001.pdf"
     ],
-    "supplementary": []
+    "supplementary": [
+      "Peptide LLM/Datasets/downloaded_papers/SS_SI/SS_0001_SI.pdf"
+    ]
   },
   "10.1002/anie.201307247": {
     "main": [
-      "app\\baseline\\local_pdfs\\papers\\02_10.1002_anie.201307247\\SS_0002.pdf"
+      "Peptide LLM/Datasets/downloaded_papers/SS/SS_0002.pdf"
     ],
     "supplementary": []
   },
   "10.1007/s11596-009-0424-6": {
     "main": [
-      "app\\baseline\\local_pdfs\\papers\\03_10.1007_s11596-009-0424-6\\SS_0003.pdf"
+      "Peptide LLM/Datasets/downloaded_papers/SS/SS_0003.pdf"
     ],
     "supplementary": []
   },
   "10.1016/j.bbrc.2016.12.011": {
     "main": [
-      "app\\baseline\\local_pdfs\\papers\\04_10.1016_j.bbrc.2016.12.011\\SS_0004.pdf"
+      "Peptide LLM/Datasets/downloaded_papers/SS/SS_0004.pdf"
     ],
     "supplementary": []
   },
   "10.1016/j.biomaterials.2012.08.046": {
     "main": [
-      "app\\baseline\\local_pdfs\\papers\\05_10.1016_j.biomaterials.2012.08.046\\SS_0005.pdf"
+      "Peptide LLM/Datasets/downloaded_papers/SS/SS_0005.pdf"
     ],
-    "supplementary": []
+    "supplementary": [
+      "Peptide LLM/Datasets/downloaded_papers/SS_SI/SS_0005_SI.pdf"
+    ]
   },
   "10.1016/j.bpj.2011.02.060": {
     "main": [
-      "app\\baseline\\local_pdfs\\papers\\06_10.1016_j.bpj.2011.02.060\\SS_0006.pdf"
+      "Peptide LLM/Datasets/downloaded_papers/SS/SS_0006.pdf"
     ],
-    "supplementary": []
+    "supplementary": [
+      "Peptide LLM/Datasets/downloaded_papers/SS_SI/SS_0006_SI.pdf"
+    ]
   },
   "10.1016/j.jconrel.2010.08.002": {
     "main": [
-      "app\\baseline\\local_pdfs\\papers\\07_10.1016_j.jconrel.2010.08.002\\SS_0007.pdf"
+      "Peptide LLM/Datasets/downloaded_papers/SS/SS_0007.pdf"
     ],
     "supplementary": []
   },
   "10.1021/acs.analchem.5b03454": {
     "main": [
-      "app\\baseline\\local_pdfs\\papers\\08_10.1021_acs.analchem.5b03454\\SS_0008.pdf"
+      "Peptide LLM/Datasets/downloaded_papers/SS/SS_0008.pdf"
     ],
-    "supplementary": []
+    "supplementary": [
+      "Peptide LLM/Datasets/downloaded_papers/SS_SI/SS_0008_SI.pdf"
+    ]
   },
   "10.1021/acs.bioconjchem.9b00327": {
     "main": [
-      "app\\baseline\\local_pdfs\\papers\\09_10.1021_acs.bioconjchem.9b00327\\SS_0009.pdf"
+      "Peptide LLM/Datasets/downloaded_papers/SS/SS_0009.pdf"
     ],
     "supplementary": []
   },
   "10.1021/acs.biomac.5b00850": {
     "main": [
-      "app\\baseline\\local_pdfs\\papers\\10_10.1021_acs.biomac.5b00850\\SS_0010.pdf"
+      "Peptide LLM/Datasets/downloaded_papers/SS/SS_0010.pdf"
     ],
-    "supplementary": []
+    "supplementary": [
+      "Peptide LLM/Datasets/downloaded_papers/SS_SI/SS_0010_SI.pdf"
+    ]
   },
   "10.1021/acs.biomac.6b01169": {
     "main": [
-      "app\\baseline\\local_pdfs\\papers\\11_10.1021_acs.biomac.6b01169\\SS_0011.pdf"
+      "Peptide LLM/Datasets/downloaded_papers/SS/SS_0011.pdf"
     ],
-    "supplementary": []
+    "supplementary": [
+      "Peptide LLM/Datasets/downloaded_papers/SS_SI/SS_0011_SI.pdf"
+    ]
   },
   "10.1021/acs.molpharmaceut.6b01003": {
     "main": [
-      "app\\baseline\\local_pdfs\\papers\\12_10.1021_acs.molpharmaceut.6b01003\\SS_0012.pdf"
+      "Peptide LLM/Datasets/downloaded_papers/SS/SS_0012.pdf"
     ],
-    "supplementary": []
+    "supplementary": [
+      "Peptide LLM/Datasets/downloaded_papers/SS_SI/SS_0012_SI.pdf"
+    ]
   },
   "10.1021/acsami.7b11681": {
     "main": [
-      "app\\baseline\\local_pdfs\\papers\\13_10.1021_acsami.7b11681\\SS_0013.pdf"
+      "Peptide LLM/Datasets/downloaded_papers/SS/SS_0013.pdf"
     ],
-    "supplementary": []
+    "supplementary": [
+      "Peptide LLM/Datasets/downloaded_papers/SS_SI/SS_0013_SI.pdf"
+    ]
   },
   "10.1021/bi8000616": {
     "main": [
-      "app\\baseline\\local_pdfs\\papers\\14_10.1021_bi8000616\\SS_0014.pdf"
+      "Peptide LLM/Datasets/downloaded_papers/SS/SS_0014.pdf"
     ],
-    "supplementary": []
+    "supplementary": [
+      "Peptide LLM/Datasets/downloaded_papers/SS_SI/SS_0014_SI.pdf"
+    ]
   },
   "10.1021/bm0341374": {
     "main": [
-      "app\\baseline\\local_pdfs\\papers\\15_10.1021_bm0341374\\SS_0015.pdf"
+      "Peptide LLM/Datasets/downloaded_papers/SS/SS_0015.pdf"
     ],
-    "supplementary": []
+    "supplementary": [
+      "Peptide LLM/Datasets/downloaded_papers/SS_SI/SS_0015_SI (1).pdf",
+      "Peptide LLM/Datasets/downloaded_papers/SS_SI/SS_0015_SI (2).pdf"
+    ]
   },
   "10.1021/bm0704267": {
     "main": [
-      "app\\baseline\\local_pdfs\\papers\\16_10.1021_bm0704267\\SS_0016.pdf"
+      "Peptide LLM/Datasets/downloaded_papers/SS/SS_0016.pdf"
     ],
-    "supplementary": []
+    "supplementary": [
+      "Peptide LLM/Datasets/downloaded_papers/SS_SI/SS_0016_SI.pdf"
+    ]
   },
   "10.1021/bm1010195": {
     "main": [
-      "app\\baseline\\local_pdfs\\papers\\17_10.1021_bm1010195\\SS_0017.pdf"
+      "Peptide LLM/Datasets/downloaded_papers/SS/SS_0017.pdf"
     ],
-    "supplementary": []
+    "supplementary": [
+      "Peptide LLM/Datasets/downloaded_papers/SS_SI/SS_0017_SI.pdf"
+    ]
   },
   "10.1021/bm301141h": {
     "main": [
-      "app\\baseline\\local_pdfs\\papers\\18_10.1021_bm301141h\\SS_0018.pdf"
+      "Peptide LLM/Datasets/downloaded_papers/SS/SS_0018.pdf"
     ],
-    "supplementary": []
+    "supplementary": [
+      "Peptide LLM/Datasets/downloaded_papers/SS_SI/SS_0018_SI.pdf"
+    ]
   },
   "10.1021/ja049477r": {
     "main": [
-      "app\\baseline\\local_pdfs\\papers\\19_10.1021_ja049477r\\SS_0019.pdf"
+      "Peptide LLM/Datasets/downloaded_papers/SS/SS_0019.pdf"
     ],
     "supplementary": []
   },
   "10.1021/jp904251j": {
     "main": [
-      "app\\baseline\\local_pdfs\\papers\\20_10.1021_jp904251j\\SS_0020.pdf"
+      "Peptide LLM/Datasets/downloaded_papers/SS/SS_0020.pdf"
     ],
-    "supplementary": []
+    "supplementary": [
+      "Peptide LLM/Datasets/downloaded_papers/SS_SI/SS_0020_SI.pdf"
+    ]
   },
   "10.1021/la801605b": {
     "main": [
-      "app\\baseline\\local_pdfs\\papers\\21_10.1021_la801605b\\SS_0021.pdf"
+      "Peptide LLM/Datasets/downloaded_papers/SS/SS_0021.pdf"
     ],
-    "supplementary": []
+    "supplementary": [
+      "Peptide LLM/Datasets/downloaded_papers/SS_SI/SS_0021_SI.pdf"
+    ]
   },
   "10.1021/la802499n": {
     "main": [
-      "Peptide LLM\\Datasets\\downloaded_papers\\SS\\SS_0049.pdf"
+      "Peptide LLM/Datasets/downloaded_papers/SS/SS_0049.pdf"
     ],
-    "supplementary": []
+    "supplementary": [
+      "Peptide LLM/Datasets/downloaded_papers/SS_SI/SS_0049_SI.pdf"
+    ]
   },
   "10.1021/la8025232": {
     "main": [
-      "app\\baseline\\local_pdfs\\papers\\22_10.1021_la8025232\\SS_0022.pdf"
+      "Peptide LLM/Datasets/downloaded_papers/SS/SS_0022.pdf"
     ],
     "supplementary": []
   },
   "10.1021/la804175h": {
     "main": [
-      "Peptide LLM\\Datasets\\downloaded_papers\\SS\\SS_0050.pdf"
+      "Peptide LLM/Datasets/downloaded_papers/SS/SS_0050.pdf"
     ],
     "supplementary": []
   },
   "10.1021/nl025563i": {
     "main": [
-      "app\\baseline\\local_pdfs\\papers\\23_10.1021_nl025563i\\SS_0023.pdf"
+      "Peptide LLM/Datasets/downloaded_papers/SS/SS_0023.pdf"
     ],
     "supplementary": []
   },
   "10.1038/nchem.2122": {
     "main": [
-      "app\\baseline\\local_pdfs\\papers\\24_10.1038_nchem.2122\\SS_0024.pdf"
+      "Peptide LLM/Datasets/downloaded_papers/SS/SS_0024.pdf"
     ],
     "supplementary": [
-      "Peptide LLM\\Datasets\\downloaded_papers\\SS_SI\\SS_0024_SI.pdf"
+      "Peptide LLM/Datasets/downloaded_papers/SS_SI/SS_0024_SI.pdf"
     ]
   },
   "10.1038/s41557-022-01055-3": {
     "main": [
-      "app\\baseline\\local_pdfs\\papers\\25_10.1038_s41557-022-01055-3\\SS_0025.pdf"
+      "Peptide LLM/Datasets/downloaded_papers/SS/SS_0025.pdf"
     ],
     "supplementary": [
-      "Peptide LLM\\Datasets\\downloaded_papers\\SS_SI\\SS_0025_SI.pdf"
+      "Peptide LLM/Datasets/downloaded_papers/SS_SI/SS_0025_SI.pdf"
     ]
   },
   "10.1039/c9tb02590a": {
     "main": [
-      "app\\baseline\\local_pdfs\\papers\\26_10.1039_c9tb02590a\\SS_0026.pdf"
+      "Peptide LLM/Datasets/downloaded_papers/SS/SS_0026.pdf"
     ],
     "supplementary": []
   },
   "10.1039/C4RA04393F": {
     "main": [
-      "app\\baseline\\local_pdfs\\papers\\56_10.1039_C4RA04393F\\SS_0056.pdf"
+      "Peptide LLM/Datasets/downloaded_papers/SS/SS_0056.pdf"
     ],
-    "supplementary": []
+    "supplementary": [
+      "Peptide LLM/Datasets/downloaded_papers/SS_SI/SS_0056_SI.pdf"
+    ]
   },
   "10.1080/13506120412331272287": {
     "main": [
-      "app\\baseline\\local_pdfs\\papers\\29_10.1080_13506120412331272287\\SS_0029.pdf"
+      "Peptide LLM/Datasets/downloaded_papers/SS/SS_0029.pdf"
     ],
     "supplementary": []
   },
   "10.1038/s41467-021-24597-5": {
     "main": [
-      "app\\baseline\\local_pdfs\\papers\\32_10.1038_s41467-021-24597-5\\SS_0032.pdf"
+      "Peptide LLM/Datasets/downloaded_papers/SS/SS_0032.pdf"
     ],
     "supplementary": []
   },
   "10.1529/biophysj.106.088542": {
     "main": [
-      "app\\baseline\\local_pdfs\\papers\\33_10.1529_biophysj.106.088542\\SS_0033.pdf"
+      "Peptide LLM/Datasets/downloaded_papers/SS/SS_0033.pdf"
     ],
     "supplementary": []
   },
   "10.1002/adfm.202009382": {
     "main": [
-      "app\\baseline\\local_pdfs\\papers\\34_10.1002_adfm.202009382\\SS_0034.pdf"
+      "Peptide LLM/Datasets/downloaded_papers/SS/SS_0034.pdf"
     ],
     "supplementary": [
-      "Peptide LLM\\Datasets\\downloaded_papers\\SS_SI\\SS_0034_SI.pdf"
+      "Peptide LLM/Datasets/downloaded_papers/SS_SI/SS_0034_SI.pdf"
     ]
   },
   "10.1002/advs.201801255": {
     "main": [
-      "app\\baseline\\local_pdfs\\papers\\35_10.1002_advs.201801255\\SS_0035.pdf"
+      "Peptide LLM/Datasets/downloaded_papers/SS/SS_0035.pdf"
     ],
     "supplementary": []
   },
   "10.1002/bip.21340": {
     "main": [
-      "app\\baseline\\local_pdfs\\papers\\36_10.1002_bip.21340\\SS_0036.pdf"
+      "Peptide LLM/Datasets/downloaded_papers/SS/SS_0036.pdf"
     ],
     "supplementary": []
   },
   "10.1002/bit.22274": {
     "main": [
-      "app\\baseline\\local_pdfs\\papers\\37_10.1002_bit.22274\\SS_0037.pdf"
+      "Peptide LLM/Datasets/downloaded_papers/SS/SS_0037.pdf"
     ],
     "supplementary": []
   },
   "10.1016/0142-9612(95)96874-Y": {
     "main": [
-      "app\\baseline\\local_pdfs\\papers\\38_10.1016_0142-9612(95)96874-y\\SS_0038.pdf"
+      "Peptide LLM/Datasets/downloaded_papers/SS/SS_0038.pdf"
     ],
     "supplementary": []
   },
   "10.1016/j.biomaterials.2016.04.039": {
     "main": [
-      "app\\baseline\\local_pdfs\\papers\\39_10.1016_j.biomaterials.2016.04.039\\SS_0039.pdf"
+      "Peptide LLM/Datasets/downloaded_papers/SS/SS_0039.pdf"
     ],
     "supplementary": []
   },
   "10.1016/S1047-8477(02)00630-5": {
     "main": [
-      "app\\baseline\\local_pdfs\\papers\\40_10.1016_S1047-8477(02)00630-5\\SS_0040.pdf"
+      "Peptide LLM/Datasets/downloaded_papers/SS/SS_0040.pdf"
     ],
     "supplementary": []
   },
   "10.1021/acs.jpcb.6b07673": {
     "main": [
-      "app\\baseline\\local_pdfs\\papers\\41_10.1021_acs.jpcb.6b07673\\SS_0041.pdf"
+      "Peptide LLM/Datasets/downloaded_papers/SS/SS_0041.pdf"
     ],
-    "supplementary": []
+    "supplementary": [
+      "Peptide LLM/Datasets/downloaded_papers/SS_SI/SS_0041_SI.pdf"
+    ]
   },
   "10.1021/acs.langmuir.0c00198": {
     "main": [
-      "app\\baseline\\local_pdfs\\papers\\42_10.1021_acs.langmuir.0c00198\\SS_0042.pdf"
+      "Peptide LLM/Datasets/downloaded_papers/SS/SS_0042.pdf"
     ],
-    "supplementary": []
+    "supplementary": [
+      "Peptide LLM/Datasets/downloaded_papers/SS_SI/SS_0042_SI.pdf"
+    ]
   },
   "10.1021/acsnano.8b00417": {
     "main": [
-      "app\\baseline\\local_pdfs\\papers\\43_10.1021_acsnano.8b00417\\SS_0043.pdf"
+      "Peptide LLM/Datasets/downloaded_papers/SS/SS_0043.pdf"
     ],
-    "supplementary": []
+    "supplementary": [
+      "Peptide LLM/Datasets/downloaded_papers/SS_SI/SS_0043_SI.pdf"
+    ]
   },
   "10.1021/acsnano.8b07401": {
     "main": [
-      "app\\baseline\\local_pdfs\\papers\\44_10.1021_acsnano.8b07401\\SS_0044.pdf"
+      "Peptide LLM/Datasets/downloaded_papers/SS/SS_0044.pdf"
     ],
-    "supplementary": []
+    "supplementary": [
+      "Peptide LLM/Datasets/downloaded_papers/SS_SI/SS_0044_SI.pdf"
+    ]
   },
   "10.1021/jp4046287": {
     "main": [
-      "app\\baseline\\local_pdfs\\papers\\45_10.1021_jp4046287\\SS_0045.pdf"
+      "Peptide LLM/Datasets/downloaded_papers/SS/SS_0045.pdf"
     ],
-    "supplementary": []
+    "supplementary": [
+      "Peptide LLM/Datasets/downloaded_papers/SS_SI/SS_0045_SI.pdf"
+    ]
   },
   "10.1021/jp502473s": {
     "main": [
-      "app\\baseline\\local_pdfs\\papers\\46_10.1021_jp502473s\\SS_0046.pdf"
+      "Peptide LLM/Datasets/downloaded_papers/SS/SS_0046.pdf"
     ],
-    "supplementary": []
+    "supplementary": [
+      "Peptide LLM/Datasets/downloaded_papers/SS_SI/SS_0046_si.pdf"
+    ]
   },
   "10.1021/la026526+": {
     "main": [
-      "app\\baseline\\local_pdfs\\papers\\47_10.1021_la026526+\\SS_0047.pdf"
+      "Peptide LLM/Datasets/downloaded_papers/SS/SS_0047.pdf"
     ],
     "supplementary": []
   },
   "10.1021/la100623y": {
     "main": [
-      "app\\baseline\\local_pdfs\\papers\\48_10.1021_la100623y\\SS_0048.pdf"
+      "Peptide LLM/Datasets/downloaded_papers/SS/SS_0048.pdf"
     ],
     "supplementary": []
   },
   "10.1021/nl802813f": {
     "main": [
-      "app\\baseline\\local_pdfs\\papers\\51_10.1021_nl802813f\\SS_0051.pdf"
+      "Peptide LLM/Datasets/downloaded_papers/SS/SS_0051.pdf"
     ],
-    "supplementary": []
+    "supplementary": [
+      "Peptide LLM/Datasets/downloaded_papers/SS_SI/SS_0051_SI.pdf"
+    ]
   },
   "10.1039/b719868j": {
     "main": [
-      "Peptide LLM\\Datasets\\downloaded_papers\\SS\\SS_0052.pdf"
+      "Peptide LLM/Datasets/downloaded_papers/SS/SS_0052.pdf"
     ],
-    "supplementary": []
+    "supplementary": [
+      "Peptide LLM/Datasets/downloaded_papers/SS_SI/SS_0052_SI.pdf"
+    ]
   },
   "10.1039/c2nr32006a": {
     "main": [
-      "Peptide LLM\\Datasets\\downloaded_papers\\SS\\SS_0053.pdf"
+      "Peptide LLM/Datasets/downloaded_papers/SS/SS_0053.pdf"
     ],
-    "supplementary": []
+    "supplementary": [
+      "Peptide LLM/Datasets/downloaded_papers/SS_SI/SS_0053_SI.pdf"
+    ]
   },
   "10.1039/c3sm50303h": {
     "main": [
-      "Peptide LLM\\Datasets\\downloaded_papers\\SS\\SS_0054.pdf"
+      "Peptide LLM/Datasets/downloaded_papers/SS/SS_0054.pdf"
     ],
-    "supplementary": []
+    "supplementary": [
+      "Peptide LLM/Datasets/downloaded_papers/SS_SI/SS_0054_SI.pdf"
+    ]
   },
   "10.1039/c3sm50764e": {
     "main": [
-      "Peptide LLM\\Datasets\\downloaded_papers\\SS\\SS_0055.pdf"
+      "Peptide LLM/Datasets/downloaded_papers/SS/SS_0055.pdf"
     ],
-    "supplementary": []
+    "supplementary": [
+      "Peptide LLM/Datasets/downloaded_papers/SS_SI/SS_0055_SI.pdf"
+    ]
   },
   "10.1039/c4ra04393f": {
     "main": [
-      "Peptide LLM\\Datasets\\downloaded_papers\\SS\\SS_0056.pdf"
+      "Peptide LLM/Datasets/downloaded_papers/SS/SS_0056.pdf"
     ],
-    "supplementary": []
+    "supplementary": [
+      "Peptide LLM/Datasets/downloaded_papers/SS_SI/SS_0056_SI.pdf"
+    ]
   },
   "10.1073/pnas.0511298103": {
     "main": [
-      "app\\baseline\\local_pdfs\\papers\\27_10.1073_pnas.0511298103\\SS_0027.pdf"
+      "Peptide LLM/Datasets/downloaded_papers/SS/SS_0027.pdf"
     ],
     "supplementary": []
   },
   "10.1073/pnas.2634884100": {
     "main": [
-      "app\\baseline\\local_pdfs\\papers\\28_10.1073_pnas.2634884100\\SS_0028.pdf"
+      "Peptide LLM/Datasets/downloaded_papers/SS/SS_0028.pdf"
     ],
     "supplementary": []
   },
   "10.1073/pnas.1014796108": {
     "main": [
-      "app\\baseline\\local_pdfs\\papers\\58_10.1073_pnas.1014796108\\SS_0058.pdf"
+      "Peptide LLM/Datasets/downloaded_papers/SS/SS_0058.pdf"
     ],
     "supplementary": [
-      "Peptide LLM\\Datasets\\downloaded_papers\\SS_SI\\SS_0058_SI.pdf"
+      "Peptide LLM/Datasets/downloaded_papers/SS_SI/SS_0058_SI.pdf"
     ]
   },
   "10.1074/jbc.271.15.8545": {
     "main": [
-      "Peptide LLM\\Datasets\\downloaded_papers\\SS\\SS_0059.pdf"
+      "Peptide LLM/Datasets/downloaded_papers/SS/SS_0059.pdf"
     ],
     "supplementary": []
   },
   "10.1103/physrevlett.96.238301": {
     "main": [
-      "Peptide LLM\\Datasets\\downloaded_papers\\SS\\SS_0060.pdf"
+      "Peptide LLM/Datasets/downloaded_papers/SS/SS_0060.pdf"
     ],
     "supplementary": []
   },
   "10.1126/science.1093783": {
     "main": [
-      "app\\baseline\\local_pdfs\\papers\\30_10.1126_science.1093783\\SS_0030.pdf"
+      "Peptide LLM/Datasets/downloaded_papers/SS/SS_0030.pdf"
     ],
-    "supplementary": []
+    "supplementary": [
+      "Peptide LLM/Datasets/downloaded_papers/SS_SI/SS_0030_SI.pdf"
+    ]
   },
   "10.1126/science.aal5005": {
     "main": [
-      "app\\baseline\\local_pdfs\\papers\\31_10.1126_science.aal5005\\SS_0031.pdf"
+      "Peptide LLM/Datasets/downloaded_papers/SS/SS_0031.pdf"
     ],
     "supplementary": []
   },
   "10.1177/0885328210379927": {
     "main": [
-      "app\\baseline\\local_pdfs\\papers\\61_10.1177_0885328210379927\\SS_0061.pdf"
+      "Peptide LLM/Datasets/downloaded_papers/SS/SS_0061.pdf"
     ],
     "supplementary": []
   },
   "10.1021/jacs.3c11712": {
     "main": [
-      "app\\baseline\\local_pdfs\\papers\\63_10.1021_jacs.3c11712\\SS_0063.pdf"
+      "Peptide LLM/Datasets/downloaded_papers/SS/SS_0063.pdf"
     ],
-    "supplementary": []
+    "supplementary": [
+      "Peptide LLM/Datasets/downloaded_papers/SS_SI/SS_0063_SI.pdf"
+    ]
   },
   "10.1021/ja027993g": {
     "main": [
-      "app\\baseline\\local_pdfs\\papers\\65_10.1021_ja027993g\\SS_0065.pdf"
+      "Peptide LLM/Datasets/downloaded_papers/SS/SS_0065.pdf"
     ],
-    "supplementary": []
+    "supplementary": [
+      "Peptide LLM/Datasets/downloaded_papers/SS_SI/SS_0065_SI.pdf"
+    ]
   },
   "10.1021/ja054719o": {
     "main": [
-      "app\\baseline\\local_pdfs\\papers\\66_10.1021_ja054719o\\SS_0066.pdf"
+      "Peptide LLM/Datasets/downloaded_papers/SS/SS_0066.pdf"
     ],
-    "supplementary": []
+    "supplementary": [
+      "Peptide LLM/Datasets/downloaded_papers/SS_SI/SS_0066_SI.pdf"
+    ]
   },
   "10.1039/B719868J": {
     "main": [
-      "app\\baseline\\local_pdfs\\papers\\52_10.1039_B719868J\\SS_0052.pdf"
+      "Peptide LLM/Datasets/downloaded_papers/SS/SS_0052.pdf"
     ],
-    "supplementary": []
+    "supplementary": [
+      "Peptide LLM/Datasets/downloaded_papers/SS_SI/SS_0052_SI.pdf"
+    ]
   },
   "10.1039/C2NR32006A": {
     "main": [
-      "app\\baseline\\local_pdfs\\papers\\53_10.1039_C2NR32006A\\SS_0053.pdf"
+      "Peptide LLM/Datasets/downloaded_papers/SS/SS_0053.pdf"
     ],
-    "supplementary": []
+    "supplementary": [
+      "Peptide LLM/Datasets/downloaded_papers/SS_SI/SS_0053_SI.pdf"
+    ]
   },
   "10.1039/C3SM50303H": {
     "main": [
-      "app\\baseline\\local_pdfs\\papers\\54_10.1039_C3SM50303H\\SS_0054.pdf"
+      "Peptide LLM/Datasets/downloaded_papers/SS/SS_0054.pdf"
     ],
-    "supplementary": []
+    "supplementary": [
+      "Peptide LLM/Datasets/downloaded_papers/SS_SI/SS_0054_SI.pdf"
+    ]
   },
   "10.1039/C3SM50764E": {
     "main": [
-      "app\\baseline\\local_pdfs\\papers\\55_10.1039_C3SM50764E\\SS_0055.pdf"
+      "Peptide LLM/Datasets/downloaded_papers/SS/SS_0055.pdf"
     ],
-    "supplementary": []
+    "supplementary": [
+      "Peptide LLM/Datasets/downloaded_papers/SS_SI/SS_0055_SI.pdf"
+    ]
   },
   "10.1073/pnas.072089599": {
     "main": [
-      "app\\baseline\\local_pdfs\\papers\\57_10.1073_pnas.072089599\\SS_0057.pdf"
-    ],
-    "supplementary": []
-  },
-  "10.1074/jbc.271.15.8545": {
-    "main": [
-      "app\\baseline\\local_pdfs\\papers\\59_10.1074_jbc.271.15.8545\\SS_0059.pdf"
+      "Peptide LLM/Datasets/downloaded_papers/SS/SS_0057.pdf"
     ],
     "supplementary": []
   },
   "10.1103/PhysRevLett.96.238301": {
     "main": [
-      "app\\baseline\\local_pdfs\\papers\\60_10.1103_PhysRevLett.96.238301\\SS_0060.pdf"
+      "Peptide LLM/Datasets/downloaded_papers/SS/SS_0060.pdf"
     ],
     "supplementary": []
   },
   "10.1006/jmbi.1999.3422": {
     "main": [
-      "app\\baseline\\local_pdfs\\papers\\62_10.1006_jmbi.1999.3422\\SS_0062.pdf"
+      "Peptide LLM/Datasets/downloaded_papers/SS/SS_0062.pdf"
     ],
     "supplementary": []
   },
   "10.1021/acs.molpharmaceut.6b01171": {
     "main": [
-      "app\\baseline\\local_pdfs\\papers\\64_10.1021_acs.molpharmaceut.6b01171\\SS_0064.pdf"
+      "Peptide LLM/Datasets/downloaded_papers/SS/SS_0064.pdf"
     ],
-    "supplementary": []
+    "supplementary": [
+      "Peptide LLM/Datasets/downloaded_papers/SS_SI/SS_0064_SI.pdf"
+    ]
   },
   "10.1021/acs.biomac.6b01171": {
     "main": [
-      "app\\baseline\\local_pdfs\\papers\\64_10.1021_acs.molpharmaceut.6b01171\\SS_0064.pdf"
+      "Peptide LLM/Datasets/downloaded_papers/SS/SS_0064.pdf"
     ],
-    "supplementary": []
+    "supplementary": [
+      "Peptide LLM/Datasets/downloaded_papers/SS_SI/SS_0064_SI.pdf"
+    ]
   },
   "10.21203/rs.3.rs-109949": {
     "main": [
-      "Peptide LLM\\Datasets\\downloaded_papers\\SS\\SS_0032.pdf"
+      "Peptide LLM/Datasets/downloaded_papers/SS/SS_0032.pdf"
     ],
     "supplementary": []
   },
   "10.21203/rs.3.rs-109949/v1": {
     "main": [
-      "Peptide LLM\\Datasets\\downloaded_papers\\SS\\SS_0032.pdf"
+      "Peptide LLM/Datasets/downloaded_papers/SS/SS_0032.pdf"
     ],
     "supplementary": []
   },
   "10.21203/rs.3.rs-109949/v10": {
     "main": [
-      "Peptide LLM\\Datasets\\downloaded_papers\\SS\\SS_0032.pdf"
+      "Peptide LLM/Datasets/downloaded_papers/SS/SS_0032.pdf"
     ],
     "supplementary": []
   },
   "10.21203/rs.3.rs-109949/v13": {
     "main": [
-      "Peptide LLM\\Datasets\\downloaded_papers\\SS\\SS_0032.pdf"
+      "Peptide LLM/Datasets/downloaded_papers/SS/SS_0032.pdf"
     ],
     "supplementary": []
   }

@@ -8,11 +8,18 @@ from sqlmodel import Session, func, select
 
 from ...config import settings
 from ...db import get_session
-from ...persistence.models import Extraction, ExtractionEntity, ExtractionRun, Paper, RunStatus
+from ...persistence.models import ExtractionEntity, ExtractionRun, Paper, RunStatus
 from ...persistence.repository import PromptRepository
 from ...prompts import build_system_prompt
-from ...schemas import PaperWithStatus, PapersWithStatusResponse
-from ...services.queue_service import QueueItem, get_queue
+from ...schemas import (
+    ForceReextractResponse,
+    PaperExtractionsResponse,
+    PaperWithStatus,
+    PapersWithStatusResponse,
+)
+from ...services.queue_coordinator import QueueCoordinator
+from ...services.queue_service import get_queue
+from ...services.serializers import iso_z, parse_json_list
 
 router = APIRouter(tags=["papers"])
 
@@ -54,12 +61,7 @@ async def list_papers(session: Session = Depends(get_session)) -> PapersWithStat
     items: list[PaperWithStatus] = []
 
     for paper, latest_run, run_count in rows:
-        authors = []
-        if paper.authors_json:
-            try:
-                authors = json.loads(paper.authors_json)
-            except Exception:
-                authors = []
+        authors = [str(item) for item in parse_json_list(paper.authors_json)]
 
         pdf_url = latest_run.pdf_url if latest_run else None
 
@@ -76,7 +78,7 @@ async def list_papers(session: Session = Depends(get_session)) -> PapersWithStat
                 latest_run_id=latest_run.id if latest_run else None,
                 status=latest_run.status if latest_run else None,
                 failure_reason=latest_run.failure_reason if latest_run else None,
-                last_run_at=latest_run.created_at.isoformat() + "Z" if latest_run else None,
+                last_run_at=iso_z(latest_run.created_at) if latest_run else None,
                 run_count=run_count or 0,
             )
         )
@@ -93,18 +95,16 @@ async def list_papers(session: Session = Depends(get_session)) -> PapersWithStat
     )
 
 
-@router.get("/api/papers/{paper_id}/extractions")
-async def get_paper_extractions(paper_id: int, session: Session = Depends(get_session)) -> dict:
+@router.get("/api/papers/{paper_id}/extractions", response_model=PaperExtractionsResponse)
+async def get_paper_extractions(
+    paper_id: int,
+    session: Session = Depends(get_session),
+) -> PaperExtractionsResponse:
     paper = session.get(Paper, paper_id)
     if not paper:
         raise HTTPException(status_code=404, detail="Paper not found")
 
-    authors = []
-    if paper.authors_json:
-        try:
-            authors = json.loads(paper.authors_json)
-        except Exception:
-            authors = []
+    authors = [str(item) for item in parse_json_list(paper.authors_json)]
 
     merged: list[tuple[object, dict]] = []
 
@@ -129,8 +129,8 @@ async def get_paper_extractions(paper_id: int, session: Session = Depends(get_se
                     "chemical_formula": ent.chemical_formula,
                     "smiles": ent.smiles,
                     "inchi": ent.inchi,
-                    "labels": json.loads(ent.labels) if ent.labels else [],
-                    "morphology": json.loads(ent.morphology) if ent.morphology else [],
+                    "labels": parse_json_list(ent.labels),
+                    "morphology": parse_json_list(ent.morphology),
                     "ph": ent.ph,
                     "concentration": ent.concentration,
                     "concentration_units": ent.concentration_units,
@@ -139,45 +139,10 @@ async def get_paper_extractions(paper_id: int, session: Session = Depends(get_se
                     "cac": ent.cac,
                     "cgc": ent.cgc,
                     "mgc": ent.mgc,
-                    "validation_methods": json.loads(ent.validation_methods) if ent.validation_methods else [],
+                    "validation_methods": parse_json_list(ent.validation_methods),
                     "model_provider": run.model_provider,
                     "model_name": run.model_name,
-                    "created_at": run.created_at.isoformat() + "Z",
-                },
-            )
-        )
-
-    old_stmt = select(Extraction).where(Extraction.paper_id == paper_id)
-    for r in session.exec(old_stmt).all():
-        merged.append(
-            (
-                r.created_at,
-                {
-                    "id": r.id,
-                    "run_id": None,
-                    "storage": "legacy",
-                    "entity_type": r.entity_type,
-                    "sequence_one_letter": r.peptide_sequence_one_letter,
-                    "sequence_three_letter": r.peptide_sequence_three_letter,
-                    "n_terminal_mod": r.n_terminal_mod,
-                    "c_terminal_mod": r.c_terminal_mod,
-                    "chemical_formula": r.chemical_formula,
-                    "smiles": r.smiles,
-                    "inchi": r.inchi,
-                    "labels": json.loads(r.labels) if r.labels else [],
-                    "morphology": json.loads(r.morphology) if r.morphology else [],
-                    "ph": r.ph,
-                    "concentration": r.concentration,
-                    "concentration_units": r.concentration_units,
-                    "temperature_c": r.temperature_c,
-                    "is_hydrogel": r.is_hydrogel,
-                    "cac": r.cac,
-                    "cgc": r.cgc,
-                    "mgc": r.mgc,
-                    "validation_methods": json.loads(r.validation_methods) if r.validation_methods else [],
-                    "model_provider": r.model_provider,
-                    "model_name": r.model_name,
-                    "created_at": r.created_at.isoformat() + "Z",
+                    "created_at": iso_z(run.created_at),
                 },
             )
         )
@@ -185,8 +150,8 @@ async def get_paper_extractions(paper_id: int, session: Session = Depends(get_se
     merged.sort(key=lambda t: t[0], reverse=True)
     extractions = [item for _, item in merged]
 
-    return {
-        "paper": {
+    return PaperExtractionsResponse(
+        paper={
             "id": paper.id,
             "title": paper.title,
             "doi": paper.doi,
@@ -195,16 +160,16 @@ async def get_paper_extractions(paper_id: int, session: Session = Depends(get_se
             "year": paper.year,
             "authors": authors,
         },
-        "extractions": extractions,
-    }
+        extractions=extractions,
+    )
 
 
-@router.post("/api/papers/{paper_id}/force-reextract")
+@router.post("/api/papers/{paper_id}/force-reextract", response_model=ForceReextractResponse)
 async def force_reextract(
     paper_id: int,
     provider: Optional[str] = None,
     session: Session = Depends(get_session),
-) -> dict:
+) -> ForceReextractResponse:
     """Force re-extraction of a paper by creating a new run."""
     paper = session.get(Paper, paper_id)
     if not paper:
@@ -230,12 +195,12 @@ async def force_reextract(
 
     queue = get_queue()
     if await queue.is_url_pending(pdf_url):
-        return {
-            "id": latest_run.id if latest_run else None,
-            "paper_id": paper.id,
-            "status": RunStatus.QUEUED.value,
-            "message": "Extraction already queued for this paper",
-        }
+        return ForceReextractResponse(
+            id=latest_run.id if latest_run else None,
+            paper_id=paper.id,
+            status=RunStatus.QUEUED.value,
+            message="Extraction already queued for this paper",
+        )
 
     use_provider = provider or (latest_run.model_provider if latest_run else None) or settings.LLM_PROVIDER
 
@@ -254,25 +219,24 @@ async def force_reextract(
         pdf_url=pdf_url,
         prompt_id=prompt_id,
     )
-    session.add(new_run)
-    session.commit()
-    session.refresh(new_run)
 
-    await queue.enqueue(
-        QueueItem(
-            run_id=new_run.id,
-            paper_id=paper.id,
-            pdf_url=pdf_url,
-            title=paper.title,
-            provider=use_provider,
-            force=True,
-            prompt_id=prompt_id,
-        )
+    result = QueueCoordinator().enqueue_new_run(
+        session,
+        run=new_run,
+        title=paper.title,
+        pdf_urls=None,
     )
+    if not result.enqueued:
+        return ForceReextractResponse(
+            id=result.conflict_run_id,
+            paper_id=paper.id,
+            status=result.conflict_run_status or RunStatus.QUEUED.value,
+            message="Extraction already queued for this paper",
+        )
 
-    return {
-        "id": new_run.id,
-        "paper_id": paper.id,
-        "status": new_run.status,
-        "message": "New extraction run created and queued",
-    }
+    return ForceReextractResponse(
+        id=result.run_id,
+        paper_id=paper.id,
+        status=result.run_status,
+        message="New extraction run created and queued",
+    )

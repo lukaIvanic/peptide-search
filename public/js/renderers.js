@@ -2,6 +2,8 @@
  * Renderers module - DOM rendering functions.
  */
 
+import { formatFailureReason, getStatusConfig } from './shared/formatting.js';
+
 // DOM helpers
 export const $ = (sel) => document.querySelector(sel);
 export const $$ = (sel) => Array.from(document.querySelectorAll(sel));
@@ -41,48 +43,6 @@ function getSourceLabel(source, { short = false } = {}) {
         return SOURCE_LABELS_SHORT[key];
     }
     return source.toUpperCase();
-}
-
-// Status display config (no emojis, subtle colors)
-const STATUS_CONFIG = {
-    queued: { label: 'Queued', badge: 'sw-badge--queued', dot: 'sw-dot sw-dot--queued' },
-    fetching: { label: 'Fetching', badge: 'sw-badge--processing', dot: 'sw-dot sw-dot--processing' },
-    provider: { label: 'Processing', badge: 'sw-badge--processing', dot: 'sw-dot sw-dot--processing' },
-    validating: { label: 'Validating', badge: 'sw-badge--processing', dot: 'sw-dot sw-dot--processing' },
-    stored: { label: 'Done', badge: 'sw-badge--done', dot: 'sw-dot sw-dot--done' },
-    failed: { label: 'Failed', badge: 'sw-badge--failed', dot: 'sw-dot sw-dot--failed' },
-    cancelled: { label: 'Cancelled', badge: 'sw-badge--warn', dot: 'sw-dot sw-dot--neutral' },
-};
-
-function formatFailureReason(reason) {
-    if (!reason) return null;
-    const text = String(reason);
-    const lower = text.toLowerCase();
-    if (lower.includes('http 403')) {
-        return {
-            title: 'Access blocked (HTTP 403)',
-            detail: 'Publisher blocked this URL. Try open-access search or upload a PDF.',
-        };
-    }
-    if (lower.includes('no source url resolved') || lower.includes('no pdf url resolved')) {
-        return {
-            title: 'No source URL found',
-            detail: 'We could not find a usable PDF/HTML source. Try open-access search or upload a PDF.',
-        };
-    }
-    if (lower.includes('openai returned empty response') || lower.includes('stream has ended unexpectedly')) {
-        return {
-            title: 'Provider response was empty',
-            detail: 'Retry or upload a PDF for better reliability.',
-        };
-    }
-    if (lower.startsWith('provider error')) {
-        return {
-            title: 'Provider error',
-            detail: text.replace(/^provider error:\s*/i, '') || 'The provider failed. Retry or upload a PDF.',
-        };
-    }
-    return { title: text, detail: null };
 }
 
 /**
@@ -278,7 +238,7 @@ export function renderPapersTable(papers, onRowClick, options = {}) {
         });
         
         // Status indicator
-        const statusConfig = STATUS_CONFIG[p.status] || STATUS_CONFIG.queued;
+        const statusConfig = getStatusConfig(p.status || 'queued');
         const statusBadge = el(
             'span',
             `sw-badge ${statusConfig.badge} w-28 text-center flex-shrink-0`,
@@ -397,7 +357,7 @@ export function renderDrawer(paper, runs, options = {}) {
     
     const runsList = el('div', 'space-y-4');
     for (const run of runs) {
-        const statusConfig = STATUS_CONFIG[run.status] || STATUS_CONFIG.queued;
+        const statusConfig = getStatusConfig(run.status || 'queued');
         
         const card = el('div', `sw-card ${run.status === 'failed' ? 'sw-card--error' : ''} p-4`);
         

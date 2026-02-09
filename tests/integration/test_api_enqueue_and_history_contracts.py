@@ -4,6 +4,14 @@ from support import ApiIntegrationTestCase
 
 
 class ApiEnqueueAndHistoryContractTests(ApiIntegrationTestCase):
+    def test_error_envelope_shape_for_missing_run(self) -> None:
+        response = self.client.get("/api/runs/999999")
+        self.assertEqual(response.status_code, 404)
+        body = response.json()
+        self.assertIn("error", body)
+        self.assertEqual(body["error"]["code"], "not_found")
+        self.assertIn("message", body["error"])
+
     def test_enqueue_contract_and_url_dedupe(self) -> None:
         payload = {
             "papers": [
@@ -102,6 +110,9 @@ class ApiEnqueueAndHistoryContractTests(ApiIntegrationTestCase):
             self.assertIn("model_provider", by_id[run_id])
             self.assertIn("model_name", by_id[run_id])
             self.assertIn("created_at", by_id[run_id])
+            created_at = by_id[run_id]["created_at"]
+            self.assertIsInstance(created_at, str)
+            self.assertTrue(created_at.endswith("Z"))
 
 
 if __name__ == "__main__":

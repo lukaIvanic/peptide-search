@@ -27,6 +27,7 @@ from ..schemas import (
 from ..services.failure_reason import normalize_failure_reason
 from ..services.search_service import search_all_free_sources
 from ..services.upload_store import store_upload
+from .serializers import iso_z
 
 logger = logging.getLogger(__name__)
 
@@ -62,7 +63,7 @@ def build_baseline_run_summary(run: ExtractionRun) -> BaselineRunSummary:
         paper_id=run.paper_id,
         status=run.status,
         failure_reason=normalized_failure,
-        created_at=run.created_at.isoformat() + "Z" if run.created_at else None,
+        created_at=iso_z(run.created_at),
         model_provider=run.model_provider,
         model_name=run.model_name,
         batch_id=run.batch_id,

@@ -13,18 +13,12 @@ from alembic import context
 project_root = Path(__file__).parent.parent.parent.parent
 sys.path.insert(0, str(project_root))
 
-# Import our config to get DB_URL
-from app.config import settings
-
 # Import all models to register them with SQLModel.metadata
-from app.persistence.models import Paper, Extraction, ExtractionRun, ExtractionEntity
+from app.persistence import models as _models  # noqa: F401
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.
 config = context.config
-
-# Override sqlalchemy.url with our app config
-config.set_main_option("sqlalchemy.url", settings.DB_URL)
 
 # Interpret the config file for Python logging.
 # This line sets up loggers basically.
