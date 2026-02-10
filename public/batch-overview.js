@@ -263,6 +263,7 @@ function aggregateProviderStats(finishedBatches) {
 				matched: 0,
 				expected: 0,
 				papersAllMatched: 0,
+				papersAllMatchedSamples: 0,
 				cost: 0,
 				timeMs: 0,
 				batches: 0,
@@ -271,7 +272,10 @@ function aggregateProviderStats(finishedBatches) {
 		const row = grouped.get(provider);
 		row.matched += matched;
 		row.expected += Math.max(0, expected);
-		row.papersAllMatched += papersAllMatched;
+		if (Number.isFinite(Number(batch.papers_all_matched))) {
+			row.papersAllMatched += papersAllMatched;
+			row.papersAllMatchedSamples += 1;
+		}
 		row.cost += getBatchEstimatedCostUsd(batch);
 		row.timeMs += Math.max(0, Number(batch.total_time_ms || 0));
 		row.batches += 1;
@@ -285,7 +289,7 @@ function computeMetricValue(row, metric) {
 		case 'accuracy':
 			return row.expected > 0 ? row.matched / row.expected : null;
 		case 'papers_all_matched':
-			return Number(row.papersAllMatched || 0);
+			return row.papersAllMatchedSamples > 0 ? Number(row.papersAllMatched || 0) : null;
 		case 'total_cost':
 			return Number(row.cost || 0);
 		case 'total_time':
@@ -666,21 +670,29 @@ function renderProviderAccuracyChart() {
 
 	const finishedBatches = selectFinishedBatches(state.batches);
 	const { rows, totals } = computeProviderMetricRows(finishedBatches, metric);
+	const papersAllMatchedMissing =
+		metric.id === 'papers_all_matched' &&
+		finishedBatches.length > 0 &&
+		finishedBatches.every((batch) => !Number.isFinite(Number(batch.papers_all_matched)));
 
 	if (!rows.length) {
 		if (summary) summary.textContent = `No ${metric.label.toLowerCase()} data yet`;
 		if (stateText) {
-			stateText.textContent = isError
-				? 'Analytics refresh failed. Showing fallback state.'
-				: 'Only completed, partial, and failed runs are included.';
+			stateText.textContent = papersAllMatchedMissing
+				? 'Papers Fully Matched requires refreshed backend analytics. Restart the server to load this metric.'
+				: isError
+					? 'Analytics refresh failed. Showing fallback state.'
+					: 'Only completed, partial, and failed runs are included.';
 		}
 		plotMount.appendChild(
 			el(
 				'div',
 				'sw-empty text-xs text-slate-500',
-				state.batches.length
-					? 'No providers have enough data for this metric yet.'
-					: 'No runs available yet. Start a run to populate analytics.',
+				papersAllMatchedMissing
+					? 'Metric unavailable from the current API payload.'
+					: state.batches.length
+						? 'No providers have enough data for this metric yet.'
+						: 'No runs available yet. Start a run to populate analytics.',
 			),
 		);
 		return;
