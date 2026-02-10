@@ -50,7 +50,7 @@ class Settings:
 	STATIC_DIR: Path = PROJECT_ROOT / "public"
 
 	# Queue settings
-	QUEUE_CONCURRENCY: int = int(os.getenv("QUEUE_CONCURRENCY", "3"))
+	QUEUE_CONCURRENCY: int = int(os.getenv("QUEUE_CONCURRENCY", "128"))
 	QUEUE_CLAIM_TIMEOUT_SECONDS: int = int(os.getenv("QUEUE_CLAIM_TIMEOUT_SECONDS", "300"))
 	QUEUE_MAX_ATTEMPTS: int = int(os.getenv("QUEUE_MAX_ATTEMPTS", "3"))
 	QUEUE_ENGINE_VERSION: str = os.getenv("QUEUE_ENGINE_VERSION", "v2")

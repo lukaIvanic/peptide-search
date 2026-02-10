@@ -26,7 +26,7 @@ Set these in Render:
   - `OPENAI_API_KEY` when using OpenAI variants
   - `DEEPSEEK_API_KEY` when using DeepSeek
 - `DB_URL=sqlite:////var/data/peptide_search.db`
-- `QUEUE_CONCURRENCY=1`
+- `QUEUE_CONCURRENCY=128`
 - `QUEUE_CLAIM_TIMEOUT_SECONDS=300`
 - `QUEUE_MAX_ATTEMPTS=3`
 - `QUEUE_ENGINE_VERSION=v2`

@@ -90,7 +90,7 @@ class ExtractionQueue:
 
     def __init__(
         self,
-        concurrency: int = 3,
+        concurrency: int = 128,
         broadcaster: Optional[SSEBroadcaster] = None,
         coordinator: Optional[QueueCoordinator] = None,
     ):
@@ -377,7 +377,7 @@ def get_queue() -> ExtractionQueue:
     global _queue, _broadcaster
     if _queue is None:
         _broadcaster = get_broadcaster()
-        concurrency = int(getattr(settings, "QUEUE_CONCURRENCY", 3))
+        concurrency = int(getattr(settings, "QUEUE_CONCURRENCY", 128))
         _queue = ExtractionQueue(concurrency=concurrency, broadcaster=_broadcaster)
     return _queue
 
