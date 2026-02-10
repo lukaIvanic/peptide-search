@@ -5,7 +5,7 @@ from typing import Dict, List, Optional
 
 from fastapi import APIRouter, Depends, File, Form, HTTPException, Query, UploadFile
 from fastapi.responses import FileResponse
-from sqlalchemy import delete
+from sqlalchemy import delete, update
 from sqlmodel import Session, select
 
 from ...baseline.loader import get_case, list_cases, resolve_all_local_pdf_paths, resolve_local_pdf_path
@@ -15,9 +15,12 @@ from ...persistence.models import (
     BaselineCaseRun,
     BatchRun,
     BatchStatus,
+    ActiveSourceLock,
     ExtractionEntity,
     ExtractionRun,
     Paper,
+    QueueJob,
+    QueueJobStatus,
     RunStatus,
 )
 from ...persistence.repository import ExtractionRepository, PaperRepository
@@ -74,6 +77,7 @@ from ...services.serializers import iso_z
 from ...services.upload_store import store_upload
 from ...services.view_builders import build_run_payload
 from ...services.runs_retry_service import ServiceError
+from ...time_utils import utc_now
 
 router = APIRouter(tags=["baseline"])
 
@@ -796,9 +800,23 @@ async def delete_batch(
     run_ids = [r.id for r in runs]
 
     if run_ids:
+        now = utc_now()
+        session.exec(
+            update(QueueJob)
+            .where(QueueJob.run_id.in_(run_ids))
+            .where(QueueJob.status.in_([QueueJobStatus.QUEUED.value, QueueJobStatus.CLAIMED.value]))
+            .values(
+                status=QueueJobStatus.CANCELLED.value,
+                claimed_by=None,
+                claim_token=None,
+                claimed_at=None,
+                finished_at=now,
+                updated_at=now,
+            )
+        )
+        session.exec(delete(ActiveSourceLock).where(ActiveSourceLock.run_id.in_(run_ids)))
+        session.exec(delete(QueueJob).where(QueueJob.run_id.in_(run_ids)))
         session.exec(delete(BaselineCaseRun).where(BaselineCaseRun.run_id.in_(run_ids)))
-
-    if run_ids:
         session.exec(delete(ExtractionEntity).where(ExtractionEntity.run_id.in_(run_ids)))
 
     for run in runs:

@@ -681,9 +681,10 @@ async def run_queued_extraction(
 
     with session_scope() as session:
         run = session.get(ExtractionRun, run_id)
-        if run:
-            prompt_id = prompt_id or run.prompt_id
-            prompt_version_id = prompt_version_id or run.prompt_version_id
+        if not run:
+            raise RuntimeError(f"Run {run_id} not found")
+        prompt_id = prompt_id or run.prompt_id
+        prompt_version_id = prompt_version_id or run.prompt_version_id
         (
             system_prompt,
             resolved_prompt_id,

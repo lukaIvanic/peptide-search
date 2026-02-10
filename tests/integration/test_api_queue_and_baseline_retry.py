@@ -4,8 +4,18 @@ from unittest.mock import AsyncMock, patch
 from sqlmodel import Session, select
 
 from app.baseline.loader import list_cases
-from app.persistence.models import BaselineCaseRun, BatchRun, BatchStatus, ExtractionRun, RunStatus
+from app.persistence.models import (
+    ActiveSourceLock,
+    BaselineCaseRun,
+    BatchRun,
+    BatchStatus,
+    ExtractionRun,
+    QueueJob,
+    QueueJobStatus,
+    RunStatus,
+)
 from app.schemas import SearchItem
+from app.time_utils import utc_now
 from support import ApiIntegrationTestCase
 
 
@@ -155,6 +165,54 @@ class ApiQueueAndBaselineRetryTests(ApiIntegrationTestCase):
             batch = session.exec(select(BatchRun).where(BatchRun.batch_id == batch_id)).first()
             self.assertEqual(batch.status, BatchStatus.RUNNING.value)
             self.assertEqual(batch.failed, 0)
+
+    def test_delete_batch_removes_runs_queue_jobs_and_locks(self) -> None:
+        batch_id = "delete_batch_cleanup"
+        paper_id = self.create_paper(doi="10.1000/delete-batch", url="https://example.org/delete-batch")
+        run_id = self.create_run(
+            paper_id=paper_id,
+            status=RunStatus.QUEUED.value,
+            model_provider="mock",
+            pdf_url="https://example.org/delete-batch.pdf",
+            batch_id=batch_id,
+        )
+
+        with Session(self.db_module.engine) as session:
+            batch = BatchRun(
+                batch_id=batch_id,
+                label="Delete me",
+                dataset="self_assembly",
+                model_provider="mock",
+                model_name="mock-model",
+                status=BatchStatus.RUNNING.value,
+                total_papers=1,
+                completed=0,
+                failed=0,
+            )
+            session.add(batch)
+            session.commit()
+
+        self.create_queue_job(
+            run_id=run_id,
+            pdf_url="https://example.org/delete-batch.pdf",
+            status=QueueJobStatus.CLAIMED.value,
+            claim_token="claim-token",
+            claimed_by="worker-1",
+            claimed_at=utc_now(),
+        )
+        self.create_source_lock(run_id=run_id, source_url="https://example.org/delete-batch.pdf")
+
+        response = self.client.delete(f"/api/baseline/batch/{batch_id}")
+        self.assertEqual(response.status_code, 200)
+        payload = response.json()
+        self.assertEqual(payload["status"], "ok")
+        self.assertEqual(payload["deleted_runs"], 1)
+
+        with Session(self.db_module.engine) as session:
+            self.assertIsNone(session.exec(select(BatchRun).where(BatchRun.batch_id == batch_id)).first())
+            self.assertIsNone(session.get(ExtractionRun, run_id))
+            self.assertIsNone(session.exec(select(QueueJob).where(QueueJob.run_id == run_id)).first())
+            self.assertIsNone(session.exec(select(ActiveSourceLock).where(ActiveSourceLock.run_id == run_id)).first())
 
     def test_retry_failed_runs_api_applies_filters_and_limit_boundary(self) -> None:
         paper_a = self.create_paper(
