@@ -63,14 +63,29 @@
 
 			<!-- Provider analytics -->
 			<section id="providerAccuracySection" class="sw-card p-4">
-				<div class="flex flex-wrap items-center justify-between gap-2">
-					<h3 class="section-title">Average Accuracy by Provider</h3>
-					<span id="providerAccuracySummary" class="text-[11px] text-slate-500"></span>
+				<div class="provider-accuracy-head">
+					<div class="provider-accuracy-head__title">
+						<h3 id="providerAccuracyTitle" class="section-title">Average Accuracy by Provider</h3>
+						<span id="providerAccuracySummary" class="text-[11px] text-slate-500"></span>
+					</div>
+					<div id="providerMetricControls" class="provider-accuracy-controls">
+						<label for="providerMetricSelect" class="sw-kicker text-[10px] text-slate-500">Metric</label>
+						<select
+							id="providerMetricSelect"
+							class="sw-select sw-select--sm provider-accuracy-controls__select"
+							aria-label="Select provider ranking metric"
+						></select>
+						<div class="provider-accuracy-controls__meta">
+							<span id="providerMetricDirection" class="sw-chip sw-kicker text-[10px] text-slate-500">Higher is better</span>
+							<span id="providerMetricHelp" class="text-[10px] text-slate-500"></span>
+						</div>
+					</div>
 				</div>
 				<div id="providerAccuracyChart" class="provider-accuracy-chart mt-3">
 					<div id="providerAccuracyState" class="provider-accuracy-chart__state text-[11px] text-slate-500">
 						Loading latest scored evaluation runs...
 					</div>
+					<div id="providerAccuracySubnote" class="provider-accuracy-chart__subnote hidden text-[10px] text-slate-500"></div>
 					<div id="providerAccuracyPlot" class="provider-accuracy-chart__plot">
 						<div class="sw-empty text-xs text-slate-500">Loading provider analytics...</div>
 					</div>

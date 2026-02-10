@@ -21,6 +21,8 @@ class FrontendSmokePagesTests(ApiIntegrationTestCase):
         if has_evaluation_view:
             self.assertIn('id="providerAccuracyChart"', text)
             self.assertIn('id="providerAccuracyPlot"', text)
+            self.assertIn('id="providerMetricControls"', text)
+            self.assertIn('id="providerMetricSelect"', text)
             self.assertIn('id="resetBaselineDefaultsBtn"', text)
 
     def test_baseline_detail_page_loads(self) -> None:
