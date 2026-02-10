@@ -290,6 +290,61 @@ export async function getBaselineCase(caseId) {
 }
 
 /**
+ * Create a baseline case.
+ */
+export async function createBaselineCase(payload) {
+    return request('/api/baseline/cases', {
+        method: 'POST',
+        body: JSON.stringify(payload),
+    });
+}
+
+/**
+ * Update a baseline case.
+ */
+export async function updateBaselineCase(caseId, payload) {
+    return request(`/api/baseline/cases/${encodeURIComponent(caseId)}`, {
+        method: 'PATCH',
+        body: JSON.stringify(payload),
+    });
+}
+
+/**
+ * Delete a single baseline case.
+ */
+export async function deleteBaselineCase(caseId, expectedUpdatedAt) {
+    return request(`/api/baseline/cases/${encodeURIComponent(caseId)}`, {
+        method: 'DELETE',
+        body: JSON.stringify({ expected_updated_at: expectedUpdatedAt }),
+    });
+}
+
+/**
+ * Delete all baseline cases for a paper key.
+ */
+export async function deleteBaselinePaper(paperKey) {
+    return request(`/api/baseline/papers/${encodeURIComponent(paperKey)}`, {
+        method: 'DELETE',
+    });
+}
+
+/**
+ * Baseline recompute status.
+ */
+export async function getBaselineRecomputeStatus() {
+    return request('/api/baseline/recompute-status');
+}
+
+/**
+ * Reset DB baseline cases to backup JSON defaults.
+ */
+export async function resetBaselineDefaults() {
+    return request('/api/baseline/reset-defaults', {
+        method: 'POST',
+    });
+}
+
+/**
  * Resolve a fresh source URL for a baseline case.
  */
 export async function resolveBaselineSource(caseId, options = {}) {

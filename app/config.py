@@ -63,6 +63,9 @@ class Settings:
 	ACCESS_GATE_USERNAME: str = os.getenv("ACCESS_GATE_USERNAME", "")
 	ACCESS_GATE_PASSWORD: str = os.getenv("ACCESS_GATE_PASSWORD", "")
 
+	# Baseline editing
+	BASELINE_EDITING_ENABLED: bool = _as_bool("BASELINE_EDITING_ENABLED", True)
+
 	def __init__(self) -> None:
 		allowed = (
 			"openai",

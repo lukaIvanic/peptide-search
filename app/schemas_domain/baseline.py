@@ -30,6 +30,7 @@ class BaselineCase(BaseModel):
     id: str
     dataset: str
     paper_key: Optional[str] = None
+    updated_at: Optional[str] = None
     sequence: Optional[str] = None
     n_terminal: Optional[str] = None
     c_terminal: Optional[str] = None
@@ -100,6 +101,61 @@ class BaselineRetryRequest(BaseModel):
     source_url: Optional[str] = None
     provider: Optional[str] = None
     prompt_id: Optional[int] = None
+
+
+class BaselineCaseCreateRequest(BaseModel):
+    id: str
+    dataset: str
+    sequence: Optional[str] = None
+    n_terminal: Optional[str] = None
+    c_terminal: Optional[str] = None
+    labels: List[str] = Field(default_factory=list)
+    doi: Optional[str] = None
+    pubmed_id: Optional[str] = None
+    paper_url: Optional[str] = None
+    pdf_url: Optional[str] = None
+    source_unverified: bool = False
+    metadata: Dict[str, Any] = Field(default_factory=dict)
+
+
+class BaselineCaseUpdateRequest(BaseModel):
+    expected_updated_at: str
+    dataset: Optional[str] = None
+    sequence: Optional[str] = None
+    n_terminal: Optional[str] = None
+    c_terminal: Optional[str] = None
+    labels: Optional[List[str]] = None
+    doi: Optional[str] = None
+    pubmed_id: Optional[str] = None
+    paper_url: Optional[str] = None
+    pdf_url: Optional[str] = None
+    source_unverified: Optional[bool] = None
+    metadata: Optional[Dict[str, Any]] = None
+
+
+class BaselineCaseDeleteRequest(BaseModel):
+    expected_updated_at: str
+
+
+class BaselineDeleteResponse(BaseModel):
+    status: str
+    deleted_cases: int
+
+
+class BaselineResetResponse(BaseModel):
+    status: str
+    deleted_cases: int
+    inserted_cases: int
+    total_cases: int
+
+
+class BaselineRecomputeStatusResponse(BaseModel):
+    running: bool
+    queued: bool
+    stale_batches: int
+    processing_batches: int
+    last_started_at: Optional[str] = None
+    last_finished_at: Optional[str] = None
 
 
 class BaselineShadowSeedRequest(BaseModel):

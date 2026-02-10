@@ -10,7 +10,7 @@ from support import ApiIntegrationTestCase
 
 
 class UiApiContractTests(ApiIntegrationTestCase):
-    def test_baseline_cases_contract_exposes_paper_key_and_unverified_flag(self) -> None:
+    def test_baseline_cases_contract_exposes_paper_key_unverified_and_updated_at(self) -> None:
         response = self.client.get("/api/baseline/cases?dataset=self_assembly")
         self.assertEqual(response.status_code, 200)
         payload = response.json()
@@ -20,8 +20,11 @@ class UiApiContractTests(ApiIntegrationTestCase):
         first_case = payload["cases"][0]
         self.assertIn("paper_key", first_case)
         self.assertIn("source_unverified", first_case)
+        self.assertIn("updated_at", first_case)
         self.assertIsInstance(first_case["paper_key"], str)
         self.assertIsInstance(first_case["source_unverified"], bool)
+        if first_case["updated_at"] is not None:
+            self.assertTrue(first_case["updated_at"].endswith("Z"))
 
     def test_baseline_batches_contract_has_required_keys(self) -> None:
         with Session(self.db_module.engine) as session:

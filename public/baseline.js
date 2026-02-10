@@ -1,3 +1,7 @@
-import { initBaseline } from './js/baseline/controller.js';
+const assetVersion = window.PEPTIDE_APP_CONFIG?.assetVersion || 'dev';
 
-initBaseline();
+import(`./js/baseline/controller.js?v=${encodeURIComponent(assetVersion)}`)
+	.then(({ initBaseline }) => initBaseline())
+	.catch((error) => {
+		console.error('Failed to initialize baseline page', error);
+	});

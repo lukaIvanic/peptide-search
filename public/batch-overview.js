@@ -753,6 +753,10 @@ function connectSSE() {
 
 	state.sseConnection = api.createSSEConnection(
 		(data) => {
+			if (data.event === 'baseline_recompute_finished' || data.event === 'baseline_recompute_progress') {
+				queueBatchUpdate(data.data?.batch_id || '__baseline_recompute__');
+				return;
+			}
 			if (data.event === 'run_status' && data.data?.batch_id) {
 				// Queue batch update with debouncing
 				queueBatchUpdate(data.data.batch_id);
@@ -790,6 +794,13 @@ async function processPendingBatchUpdates() {
 		const fetchedBatches = response.batches || [];
 		state.providerChartState = 'ready';
 		state.providerChartError = '';
+
+		if (batchIds.includes('__baseline_recompute__')) {
+			state.batches = fetchedBatches;
+			renderBatchGrid();
+			return;
+		}
+
 		let shouldRenderGrid = false;
 
 		for (const batchId of batchIds) {

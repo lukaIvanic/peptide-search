@@ -42,6 +42,11 @@ const state = {
 	localPdfByCaseId: new Map(),
 	localPdfFileByCaseId: new Map(),
 	singleBatchMode: false, // True when viewing /baseline/{batch_id}
+	baselineEditEnabled: true,
+	baselineModal: {
+		caseId: null,
+		expectedUpdatedAt: null,
+	},
 };
 
 let sseConnection = null;
@@ -50,6 +55,323 @@ let analysisToken = 0;
 function updateStatus(message) {
 	const status = $('#baselineStatus');
 	if (status) status.textContent = message || '';
+}
+
+function getRecomputeChip() {
+	return $('#baselineRecomputeStatus');
+}
+
+function setRecomputeChip(status) {
+	const chip = getRecomputeChip();
+	if (!chip) return;
+	const running = Boolean(status?.running);
+	const queued = Boolean(status?.queued);
+	const stale = Number(status?.stale_batches || 0);
+	const processing = Number(status?.processing_batches || 0);
+	let label = 'Idle';
+	if (running) {
+		label = `Recomputing (${Math.max(processing, 1)})`;
+	} else if (queued || stale > 0) {
+		label = `Queued (${stale})`;
+	}
+	chip.textContent = label;
+	chip.className = 'sw-chip text-[10px] ' + (running || queued || stale > 0 ? 'sw-chip--warning' : 'text-slate-500');
+}
+
+async function refreshRecomputeStatus() {
+	try {
+		const status = await api.getBaselineRecomputeStatus();
+		setRecomputeChip(status);
+	} catch (_err) {
+		// Keep silent here; this is optional status telemetry.
+	}
+}
+
+function showBaselineModalError(message) {
+	const node = $('#baselineCaseModalError');
+	if (!node) return;
+	if (!message) {
+		node.textContent = '';
+		node.classList.add('hidden');
+		return;
+	}
+	node.textContent = message;
+	node.classList.remove('hidden');
+}
+
+function setBaselineModalBusy(isBusy) {
+	const saveButton = $('#baselineCaseSaveBtn');
+	const deleteButton = $('#baselineCaseDeleteBtn');
+	if (saveButton) saveButton.disabled = isBusy;
+	if (deleteButton) deleteButton.disabled = isBusy;
+	[
+		'#baselineCaseId',
+		'#baselineCaseDataset',
+		'#baselineCaseSequence',
+		'#baselineCaseNTerminal',
+		'#baselineCaseCTerminal',
+		'#baselineCaseLabels',
+		'#baselineCaseDoi',
+		'#baselineCasePubmedId',
+		'#baselineCasePaperUrl',
+		'#baselineCasePdfUrl',
+		'#baselineCaseMetadata',
+		'#baselineCaseUnverified',
+	].forEach((selector) => {
+		const field = $(selector);
+		if (field) field.disabled = isBusy;
+	});
+}
+
+function setBaselineModalOpen(isOpen) {
+	const modal = $('#baselineCaseModal');
+	if (!modal) return;
+	if (isOpen) {
+		modal.classList.remove('hidden');
+	} else {
+		modal.classList.add('hidden');
+	}
+}
+
+function closeBaselineCaseModal() {
+	setBaselineModalOpen(false);
+	showBaselineModalError('');
+	state.baselineModal.caseId = null;
+	state.baselineModal.expectedUpdatedAt = null;
+}
+
+function parseLabelList(value) {
+	if (!value) return [];
+	return String(value)
+		.split(',')
+		.map((item) => item.trim())
+		.filter(Boolean);
+}
+
+function parseMetadataJson(value) {
+	if (!value || !String(value).trim()) return {};
+	const parsed = JSON.parse(String(value));
+	if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) {
+		throw new Error('Metadata must be a JSON object.');
+	}
+	return parsed;
+}
+
+function getModalPayloadFromForm() {
+	const dataset = $('#baselineCaseDataset')?.value?.trim() || '';
+	if (!dataset) {
+		throw new Error('Dataset is required.');
+	}
+	return {
+		dataset,
+		sequence: $('#baselineCaseSequence')?.value?.trim() || null,
+		n_terminal: $('#baselineCaseNTerminal')?.value?.trim() || null,
+		c_terminal: $('#baselineCaseCTerminal')?.value?.trim() || null,
+		labels: parseLabelList($('#baselineCaseLabels')?.value || ''),
+		doi: $('#baselineCaseDoi')?.value?.trim() || null,
+		pubmed_id: $('#baselineCasePubmedId')?.value?.trim() || null,
+		paper_url: $('#baselineCasePaperUrl')?.value?.trim() || null,
+		pdf_url: $('#baselineCasePdfUrl')?.value?.trim() || null,
+		source_unverified: Boolean($('#baselineCaseUnverified')?.checked),
+		metadata: parseMetadataJson($('#baselineCaseMetadata')?.value || '{}'),
+	};
+}
+
+function fillBaselineModalFields(caseData) {
+	const modalTitle = $('#baselineCaseModalTitle');
+	const idInput = $('#baselineCaseId');
+	const datasetInput = $('#baselineCaseDataset');
+	const sequenceInput = $('#baselineCaseSequence');
+	const nTerminalInput = $('#baselineCaseNTerminal');
+	const cTerminalInput = $('#baselineCaseCTerminal');
+	const labelsInput = $('#baselineCaseLabels');
+	const doiInput = $('#baselineCaseDoi');
+	const pubmedInput = $('#baselineCasePubmedId');
+	const paperUrlInput = $('#baselineCasePaperUrl');
+	const pdfUrlInput = $('#baselineCasePdfUrl');
+	const metadataInput = $('#baselineCaseMetadata');
+	const unverifiedInput = $('#baselineCaseUnverified');
+	const deleteButton = $('#baselineCaseDeleteBtn');
+
+	if (modalTitle) modalTitle.textContent = 'Edit Baseline Case';
+	if (idInput) {
+		idInput.value = caseData?.id || '';
+		idInput.readOnly = true;
+	}
+	if (datasetInput) datasetInput.value = caseData?.dataset || state.filterDataset || 'self_assembly';
+	if (sequenceInput) sequenceInput.value = caseData?.sequence || '';
+	if (nTerminalInput) nTerminalInput.value = caseData?.n_terminal || '';
+	if (cTerminalInput) cTerminalInput.value = caseData?.c_terminal || '';
+	if (labelsInput) labelsInput.value = Array.isArray(caseData?.labels) ? caseData.labels.join(', ') : '';
+	if (doiInput) doiInput.value = caseData?.doi || '';
+	if (pubmedInput) pubmedInput.value = caseData?.pubmed_id || '';
+	if (paperUrlInput) paperUrlInput.value = caseData?.paper_url || '';
+	if (pdfUrlInput) pdfUrlInput.value = caseData?.pdf_url || '';
+	if (metadataInput) metadataInput.value = JSON.stringify(caseData?.metadata || {}, null, 2);
+	if (unverifiedInput) unverifiedInput.checked = Boolean(caseData?.source_unverified);
+	if (deleteButton) deleteButton.classList.remove('hidden');
+}
+
+async function openEditBaselineCaseModal(caseId) {
+	if (!state.baselineEditEnabled) {
+		updateStatus('Baseline editing is disabled.');
+		return;
+	}
+	if (!caseId) return;
+	try {
+		setBaselineModalBusy(true);
+		const response = await api.getBaselineCase(caseId);
+		state.baselineModal.caseId = caseId;
+		state.baselineModal.expectedUpdatedAt = response.updated_at || null;
+		fillBaselineModalFields(response);
+		showBaselineModalError('');
+		setBaselineModalOpen(true);
+	} catch (err) {
+		updateStatus(err.message || 'Failed to load baseline case');
+	} finally {
+		setBaselineModalBusy(false);
+	}
+}
+
+async function deleteBaselineCaseFromUi(caseItem, expectedUpdatedAt = null) {
+	if (!caseItem?.id) return false;
+	if (!state.baselineEditEnabled) {
+		updateStatus('Baseline editing is disabled.');
+		return false;
+	}
+	const expected = expectedUpdatedAt || caseItem.updated_at;
+	if (!expected) {
+		updateStatus('Case is missing updated_at; refresh and try again.');
+		return false;
+	}
+	const confirmed = window.confirm(`Delete baseline case "${caseItem.id}"?`);
+	if (!confirmed) return false;
+	try {
+		await api.deleteBaselineCase(caseItem.id, expected);
+		updateStatus('Baseline case deleted. Recomputing batch metrics...');
+		await Promise.all([loadCases(), loadBatches(), refreshRecomputeStatus()]);
+		if (state.selectedPaperKey) {
+			await loadPaperDetails(state.selectedPaperKey);
+		}
+		return true;
+	} catch (err) {
+		updateStatus(err.message || 'Failed to delete baseline case');
+		return false;
+	}
+}
+
+async function deletePaperGroupFromUi(paperGroup) {
+	if (!paperGroup?.key) return;
+	if (!state.baselineEditEnabled) {
+		updateStatus('Baseline editing is disabled.');
+		return;
+	}
+	const confirmed = window.confirm(`Delete all baseline cases for this paper (${paperGroup.cases.length} entities)?`);
+	if (!confirmed) return;
+	try {
+		await api.deleteBaselinePaper(paperGroup.key);
+		updateStatus('Paper removed from baseline. Recomputing batch metrics...');
+		await Promise.all([loadCases(), loadBatches(), refreshRecomputeStatus()]);
+		if (state.selectedPaperKey) {
+			await loadPaperDetails(state.selectedPaperKey);
+		}
+	} catch (err) {
+		updateStatus(err.message || 'Failed to delete paper group');
+	}
+}
+
+function clearSelectedComparisonPanels() {
+	state.selectedPaperKey = null;
+	state.resolvedSource = null;
+	state.stagedFile = null;
+	renderBaselineDetail(null, null, null);
+	renderExtractionDetail(null, null, null);
+	renderSelectedPaperStrip(null, null);
+	const hint = $('#comparisonHint');
+	if (hint) {
+		hint.textContent = 'Select a paper, then run with local PDF';
+	}
+}
+
+async function resetBaselineToDefaults() {
+	if (!state.baselineEditEnabled) {
+		updateStatus('Baseline editing is disabled.');
+		return;
+	}
+	const resetButton = $('#resetBaselineBtn');
+	const confirmed = window.confirm(
+		'Reset baseline to backup defaults? This removes all live baseline edits.'
+	);
+	if (!confirmed) return;
+	setButtonLoading(resetButton, true, 'Resetting...');
+	try {
+		updateStatus('Resetting baseline to default dataset...');
+		const response = await api.resetBaselineDefaults();
+		clearSelectedComparisonPanels();
+		await Promise.all([loadCases(), loadBatches(), refreshRecomputeStatus()]);
+		updateStatus(
+			`Baseline reset complete (${response.total_cases} cases loaded, ${response.deleted_cases} deleted).`
+		);
+	} catch (err) {
+		updateStatus(err.message || 'Failed to reset baseline');
+	} finally {
+		setButtonLoading(resetButton, false);
+	}
+}
+
+async function onBaselineCaseModalSubmit(event) {
+	event.preventDefault();
+	if (!state.baselineEditEnabled) {
+		updateStatus('Baseline editing is disabled.');
+		return;
+	}
+	try {
+		showBaselineModalError('');
+		setBaselineModalBusy(true);
+		if (!state.baselineModal.caseId) {
+			throw new Error('No baseline case selected for editing.');
+		}
+		const payload = getModalPayloadFromForm();
+		const response = await api.updateBaselineCase(state.baselineModal.caseId, {
+			expected_updated_at: state.baselineModal.expectedUpdatedAt,
+			dataset: payload.dataset,
+			sequence: payload.sequence,
+			n_terminal: payload.n_terminal,
+			c_terminal: payload.c_terminal,
+			labels: payload.labels,
+			doi: payload.doi,
+			pubmed_id: payload.pubmed_id,
+			paper_url: payload.paper_url,
+			pdf_url: payload.pdf_url,
+			source_unverified: payload.source_unverified,
+			metadata: payload.metadata,
+		});
+		updateStatus('Baseline case updated. Recomputing batch metrics...');
+		closeBaselineCaseModal();
+		if (response?.paper_key) {
+			state.selectedPaperKey = response.paper_key;
+		}
+		await Promise.all([loadCases(), loadBatches(), refreshRecomputeStatus()]);
+		if (state.selectedPaperKey) {
+			await loadPaperDetails(state.selectedPaperKey);
+		}
+	} catch (err) {
+		showBaselineModalError(err.message || 'Failed to save case');
+	} finally {
+		setBaselineModalBusy(false);
+	}
+}
+
+async function onBaselineModalDeleteClick() {
+	const caseItem = state.cases.find((item) => item.id === state.baselineModal.caseId);
+	if (!caseItem) {
+		showBaselineModalError('Case no longer exists. Refresh and try again.');
+		return;
+	}
+	const deleted = await deleteBaselineCaseFromUi(caseItem, state.baselineModal.expectedUpdatedAt);
+	if (deleted) {
+		closeBaselineCaseModal();
+	}
 }
 
 
@@ -1125,6 +1447,23 @@ function renderBaselineDetail(paperGroupOrCase, comparison, runPayload = null) {
 	} else {
 		headerRow.appendChild(el('span', 'sw-chip sw-chip--info text-[10px]', 'Not compared'));
 	}
+	if (paperGroup.cases.length && state.baselineEditEnabled) {
+		const actions = el('div', 'ml-auto flex flex-wrap items-center gap-1');
+		const editBtn = el('button', 'sw-btn sw-btn--sm sw-btn--ghost');
+		editBtn.appendChild(el('span', 'sw-btn__label', 'Edit Case'));
+		editBtn.addEventListener('click', () => {
+			openEditBaselineCaseModal(paperGroup.cases[0].id);
+		});
+		actions.appendChild(editBtn);
+
+		const deletePaperBtn = el('button', 'sw-btn sw-btn--sm sw-btn--ghost text-red-500');
+		deletePaperBtn.appendChild(el('span', 'sw-btn__label', 'Delete Paper'));
+		deletePaperBtn.addEventListener('click', () => {
+			deletePaperGroupFromUi(paperGroup);
+		});
+		actions.appendChild(deletePaperBtn);
+		headerRow.appendChild(actions);
+	}
 	container.appendChild(headerRow);
 
 	// Paper metadata
@@ -1188,6 +1527,23 @@ function renderBaselineDetail(paperGroupOrCase, comparison, runPayload = null) {
 		entityHeader.appendChild(el('div', 'text-xs font-medium text-slate-900 break-words', caseItem.sequence || '(No sequence)'));
 		if (isMatched) {
 			entityHeader.appendChild(el('span', 'sw-chip sw-chip--success text-[9px]', 'Matched'));
+		}
+		if (state.baselineEditEnabled) {
+			const rowActions = el('div', 'ml-auto flex items-center gap-1');
+			const editBtn = el('button', 'sw-btn sw-btn--sm sw-btn--ghost text-[10px]');
+			editBtn.appendChild(el('span', 'sw-btn__label', 'Edit'));
+			editBtn.addEventListener('click', () => {
+				openEditBaselineCaseModal(caseItem.id);
+			});
+			rowActions.appendChild(editBtn);
+
+			const deleteBtn = el('button', 'sw-btn sw-btn--sm sw-btn--ghost text-red-500 text-[10px]');
+			deleteBtn.appendChild(el('span', 'sw-btn__label', 'Delete'));
+			deleteBtn.addEventListener('click', () => {
+				deleteBaselineCaseFromUi(caseItem);
+			});
+			rowActions.appendChild(deleteBtn);
+			entityHeader.appendChild(rowActions);
 		}
 		card.appendChild(entityHeader);
 		
@@ -1344,6 +1700,16 @@ function renderExtractionDetail(runPayload, paperGroupOrCase, comparison) {
 	};
 	const firstCase = paperGroup.cases[0];
 	const localAvailable = isLocalPdfAvailable(paperGroup, runPayload);
+	if (firstCase?.id && state.baselineEditEnabled) {
+		const editRow = el('div', 'mb-2 flex flex-wrap items-center gap-2');
+		const editBtn = el('button', 'sw-btn sw-btn--sm sw-btn--ghost');
+		editBtn.appendChild(el('span', 'sw-btn__label', 'Edit selected case'));
+		editBtn.addEventListener('click', () => {
+			openEditBaselineCaseModal(firstCase.id);
+		});
+		editRow.appendChild(editBtn);
+		container.appendChild(editRow);
+	}
 
 	const localAction = renderLocalPdfAction(paperGroup);
 	
@@ -2003,6 +2369,7 @@ async function loadBatches() {
 		state.batches = data.batches || [];
 		renderBatchOptions();
 		updateBatchSummary();
+		await refreshRecomputeStatus();
 	} catch (err) {
 		console.error('Failed to load batches:', err);
 	}
@@ -2036,15 +2403,16 @@ function updateBatchSummary() {
 
 	if (!state.filterBatchId) {
 		summaryEl.classList.add('hidden');
-		$('#retryAllFailedBtn')?.classList.add('hidden');
 		return;
 	}
 
 	const batch = state.batches.find(b => b.batch_id === state.filterBatchId);
 	if (!batch) {
 		summaryEl.classList.add('hidden');
-		$('#retryAllFailedBtn')?.classList.add('hidden');
 		return;
+	}
+	if (batch.model_provider) {
+		state.provider = batch.model_provider;
 	}
 
 	summaryEl.classList.remove('hidden');
@@ -2104,79 +2472,6 @@ function updateBatchSummary() {
 		} else {
 			costEl.textContent = 'N/A';
 		}
-	}
-
-	// Show retry button if there are failed runs
-	const retryBtn = $('#retryAllFailedBtn');
-	if (retryBtn) {
-		if (batch.failed > 0) {
-			retryBtn.classList.remove('hidden');
-			retryBtn.textContent = `Retry ${batch.failed} Failed`;
-		} else {
-			retryBtn.classList.add('hidden');
-		}
-	}
-}
-
-async function runAllBatch() {
-	const runAllBtn = $('#runAllBtn');
-	if (!runAllBtn) return;
-
-	const dataset = state.filterDataset;
-	if (!dataset) {
-		updateStatus('Please select a dataset first');
-		return;
-	}
-
-	// Prompt for optional batch label
-	const label = prompt('Enter a label for this batch (optional):', '');
-
-	setButtonLoading(runAllBtn, true, 'Starting...');
-
-	try {
-		const resp = await api.post('/api/baseline/batch-enqueue', {
-			dataset: dataset,
-			label: label || undefined,
-			provider: state.provider,
-			force: false,
-		});
-
-		updateStatus(`Batch ${resp.batch_id} created: ${resp.enqueued} papers enqueued`);
-
-		// Reload batches and select the new one
-		await loadBatches();
-		state.filterBatchId = resp.batch_id;
-		const batchSelect = $('#batchFilter');
-		if (batchSelect) batchSelect.value = resp.batch_id;
-		updateBatchSummary();
-
-	} catch (err) {
-		updateStatus(err.message || 'Failed to create batch');
-	} finally {
-		setButtonLoading(runAllBtn, false);
-	}
-}
-
-async function retryAllFailed() {
-	const retryBtn = $('#retryAllFailedBtn');
-	if (!retryBtn || !state.filterBatchId) return;
-
-	setButtonLoading(retryBtn, true, 'Retrying...');
-
-	try {
-		const resp = await api.post('/api/baseline/batch-retry', {
-			batch_id: state.filterBatchId,
-			provider: state.provider,
-		});
-
-		updateStatus(`Retrying ${resp.retried} failed runs`);
-		await loadBatches();
-		updateBatchSummary();
-
-	} catch (err) {
-		updateStatus(err.message || 'Failed to retry batch');
-	} finally {
-		setButtonLoading(retryBtn, false);
 	}
 }
 
@@ -2276,6 +2571,15 @@ function connectSSE() {
 		sseConnection.close();
 	}
 	sseConnection = api.createSSEConnection((message) => {
+		if (message.event === 'baseline_recompute_started' || message.event === 'baseline_recompute_progress') {
+			setRecomputeChip({ running: true, queued: true, stale_batches: 1, processing_batches: 1 });
+			return;
+		}
+		if (message.event === 'baseline_recompute_finished') {
+			refreshRecomputeStatus();
+			loadBatches();
+			return;
+		}
 		if (message.event !== 'run_status') return;
 		const data = message.data || {};
 		const caseIds = Array.isArray(data.baseline_case_ids) && data.baseline_case_ids.length
@@ -2351,14 +2655,6 @@ function initEventHandlers() {
 		});
 	}
 
-	const providerSelect = $('#baselineProvider');
-	if (providerSelect) {
-		state.provider = providerSelect.value || 'openai';
-		providerSelect.addEventListener('change', (event) => {
-			state.provider = event.target.value || 'openai';
-		});
-	}
-
 	const pdfStatusFilter = $('#pdfStatusFilter');
 	if (pdfStatusFilter) {
 		state.pdfStatusFilter = pdfStatusFilter.value || 'all';
@@ -2372,6 +2668,13 @@ function initEventHandlers() {
 	if (runButton) {
 		runButton.addEventListener('click', () => {
 			enqueueBaselineRuns();
+		});
+	}
+
+	const resetBaselineButton = $('#resetBaselineBtn');
+	if (resetBaselineButton) {
+		resetBaselineButton.addEventListener('click', () => {
+			resetBaselineToDefaults();
 		});
 	}
 
@@ -2392,19 +2695,36 @@ function initEventHandlers() {
 		});
 	}
 
-	const runAllBtn = $('#runAllBtn');
-	if (runAllBtn) {
-		runAllBtn.addEventListener('click', () => {
-			runAllBatch();
+	const modalClose = $('#baselineCaseModalClose');
+	if (modalClose) {
+		modalClose.addEventListener('click', () => {
+			closeBaselineCaseModal();
+		});
+	}
+	const modalBackdrop = $('#baselineCaseModalBackdrop');
+	if (modalBackdrop) {
+		modalBackdrop.addEventListener('click', () => {
+			closeBaselineCaseModal();
+		});
+	}
+	const modalForm = $('#baselineCaseForm');
+	if (modalForm) {
+		modalForm.addEventListener('submit', onBaselineCaseModalSubmit);
+	}
+	const modalDelete = $('#baselineCaseDeleteBtn');
+	if (modalDelete) {
+		modalDelete.addEventListener('click', () => {
+			onBaselineModalDeleteClick();
 		});
 	}
 
-	const retryBtn = $('#retryAllFailedBtn');
-	if (retryBtn) {
-		retryBtn.addEventListener('click', () => {
-			retryAllFailed();
-		});
-	}
+	document.addEventListener('keydown', (event) => {
+		if (event.key !== 'Escape') return;
+		const modal = $('#baselineCaseModal');
+		if (modal && !modal.classList.contains('hidden')) {
+			closeBaselineCaseModal();
+		}
+	});
 }
 
 export async function initBaseline() {
@@ -2424,7 +2744,6 @@ export async function initBaseline() {
 		// Keep dropdowns visible for backward compatibility
 		$('#datasetFilterLabel')?.classList.remove('hidden');
 		$('#batchFilterLabel')?.classList.remove('hidden');
-		$('#runAllBtn')?.classList.remove('hidden');
 	}
 
 	initEventHandlers();

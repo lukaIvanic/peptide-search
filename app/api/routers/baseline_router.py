@@ -12,6 +12,8 @@ from ...baseline.loader import (
     get_case,
     is_local_pdf_unverified,
     list_cases,
+    load_backup_dataset,
+    load_backup_index,
     resolve_all_local_pdf_paths,
     resolve_local_pdf_path,
 )
@@ -32,14 +34,20 @@ from ...persistence.models import (
 from ...persistence.repository import ExtractionRepository, PaperRepository
 from ...schemas import (
     BaselineCase,
+    BaselineCaseCreateRequest,
+    BaselineCaseDeleteRequest,
     BaselineCaseSummary,
     BaselineCasesResponse,
     BaselineEnqueueRequest,
     BaselineEnqueueResponse,
     BaselineEnqueuedRun,
+    BaselineDeleteResponse,
+    BaselineRecomputeStatusResponse,
+    BaselineResetResponse,
     BaselineRetryRequest,
     BaselineShadowSeedRequest,
     BaselineShadowSeedResponse,
+    BaselineCaseUpdateRequest,
     BatchEnqueueRequest,
     BatchEnqueueResponse,
     BatchInfo,
@@ -69,8 +77,19 @@ from ...services.baseline_helpers import (
     load_shadow_entries,
     resolve_baseline_source,
 )
+from ...services.baseline_recompute_service import (
+    get_recompute_status,
+    mark_batches_stale_and_trigger,
+    recompute_batches_now,
+)
 from ...services.baseline_retry_service import retry_baseline_case as retry_baseline_case_service
 from ...services.baseline_retry_service import retry_batch_runs
+from ...services.baseline_store import (
+    BaselineConflictError,
+    BaselineNotFoundError,
+    BaselineStore,
+    BaselineValidationError,
+)
 from ...services.batch_metrics import (
     compute_batch_cost,
     compute_match_rate,
@@ -96,6 +115,11 @@ PROCESSING_STATUSES = {
 }
 
 
+def _ensure_baseline_editing_enabled() -> None:
+    if not settings.BASELINE_EDITING_ENABLED:
+        raise HTTPException(status_code=403, detail="Baseline editing is disabled")
+
+
 @router.get("/api/baseline/cases", response_model=BaselineCasesResponse)
 async def list_baseline_cases(
     dataset: Optional[str] = Query(None),
@@ -110,7 +134,10 @@ async def list_baseline_cases(
     for case_data in cases_raw:
         case = BaselineCase(**case_data)
         case.paper_key = get_case_paper_key(case)
-        case.source_unverified = is_local_pdf_unverified(case.doi)
+        if case_data.get("source_unverified") is None:
+            case.source_unverified = is_local_pdf_unverified(case.doi)
+        else:
+            case.source_unverified = bool(case_data.get("source_unverified"))
         cases.append(
             BaselineCaseSummary(
                 **case.model_dump(),
@@ -136,11 +163,134 @@ async def get_baseline_case(
     run = get_latest_baseline_run(session, case_id)
     case = BaselineCase(**case_data)
     case.paper_key = get_case_paper_key(case)
-    case.source_unverified = is_local_pdf_unverified(case.doi)
+    if case_data.get("source_unverified") is None:
+        case.source_unverified = is_local_pdf_unverified(case.doi)
+    else:
+        case.source_unverified = bool(case_data.get("source_unverified"))
     return BaselineCaseSummary(
         **case.model_dump(),
         latest_run=build_baseline_run_summary(run) if run else None,
     )
+
+
+@router.post("/api/baseline/cases", response_model=BaselineCaseSummary)
+async def create_baseline_case(
+    req: BaselineCaseCreateRequest,
+    session: Session = Depends(get_session),
+) -> BaselineCaseSummary:
+    _ensure_baseline_editing_enabled()
+    store = BaselineStore(session)
+    try:
+        case_data = store.create_case(req.model_dump())
+    except BaselineConflictError as exc:
+        raise HTTPException(status_code=409, detail=str(exc)) from exc
+    except BaselineValidationError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+
+    case = BaselineCase(**case_data)
+    await mark_batches_stale_and_trigger(dataset=case.dataset)
+    return BaselineCaseSummary(**case.model_dump(), latest_run=None)
+
+
+@router.patch("/api/baseline/cases/{case_id}", response_model=BaselineCaseSummary)
+async def update_baseline_case(
+    case_id: str,
+    req: BaselineCaseUpdateRequest,
+    session: Session = Depends(get_session),
+) -> BaselineCaseSummary:
+    _ensure_baseline_editing_enabled()
+    store = BaselineStore(session)
+    payload = req.model_dump(exclude_none=True)
+    expected_updated_at = payload.pop("expected_updated_at", None)
+    try:
+        case_data = store.update_case(case_id, payload, expected_updated_at)
+    except BaselineNotFoundError as exc:
+        raise HTTPException(status_code=404, detail=str(exc)) from exc
+    except BaselineConflictError as exc:
+        raise HTTPException(status_code=409, detail=str(exc)) from exc
+    except BaselineValidationError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+
+    case = BaselineCase(**case_data)
+    latest_run = get_latest_baseline_run(session, case.id)
+    await mark_batches_stale_and_trigger(dataset=case.dataset)
+    return BaselineCaseSummary(
+        **case.model_dump(),
+        latest_run=build_baseline_run_summary(latest_run) if latest_run else None,
+    )
+
+
+@router.delete("/api/baseline/cases/{case_id}", response_model=BaselineDeleteResponse)
+async def delete_baseline_case(
+    case_id: str,
+    req: BaselineCaseDeleteRequest,
+    session: Session = Depends(get_session),
+) -> BaselineDeleteResponse:
+    _ensure_baseline_editing_enabled()
+    store = BaselineStore(session)
+    existing = store.get_case(case_id)
+    if not existing:
+        raise HTTPException(status_code=404, detail="Baseline case not found")
+
+    try:
+        deleted = store.delete_case(case_id, req.expected_updated_at)
+    except BaselineConflictError as exc:
+        raise HTTPException(status_code=409, detail=str(exc)) from exc
+    except BaselineValidationError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+
+    if not deleted:
+        raise HTTPException(status_code=404, detail="Baseline case not found")
+
+    await mark_batches_stale_and_trigger(dataset=existing.get("dataset"))
+    return BaselineDeleteResponse(status="ok", deleted_cases=1)
+
+
+@router.delete("/api/baseline/papers/{paper_key:path}", response_model=BaselineDeleteResponse)
+async def delete_baseline_paper_group(
+    paper_key: str,
+    session: Session = Depends(get_session),
+) -> BaselineDeleteResponse:
+    _ensure_baseline_editing_enabled()
+    store = BaselineStore(session)
+    deleted = store.delete_paper_group(paper_key)
+    if deleted == 0:
+        raise HTTPException(status_code=404, detail="Baseline paper not found")
+    await mark_batches_stale_and_trigger()
+    return BaselineDeleteResponse(status="ok", deleted_cases=deleted)
+
+
+@router.post("/api/baseline/reset-defaults", response_model=BaselineResetResponse)
+async def reset_baseline_defaults(
+    session: Session = Depends(get_session),
+) -> BaselineResetResponse:
+    _ensure_baseline_editing_enabled()
+    index_payload = load_backup_index()
+    dataset_cases: Dict[str, List[Dict[str, object]]] = {}
+    for dataset_entry in index_payload.get("datasets", []):
+        dataset_id = dataset_entry.get("id")
+        if not dataset_id:
+            continue
+        seeded_rows: List[Dict[str, object]] = []
+        for case_payload in load_backup_dataset(dataset_id):
+            row = dict(case_payload or {})
+            if row.get("source_unverified") is None:
+                row["source_unverified"] = is_local_pdf_unverified(row.get("doi"))
+            seeded_rows.append(row)
+        dataset_cases[dataset_id] = seeded_rows
+
+    store = BaselineStore(session)
+    result = store.reset_from_backup(index_payload, dataset_cases)
+    store.relink_runs_to_cases_from_papers()
+    # Reset should return immediately consistent summaries for overview screens.
+    recompute_batches_now()
+    await mark_batches_stale_and_trigger()
+    return BaselineResetResponse(status="ok", **result)
+
+
+@router.get("/api/baseline/recompute-status", response_model=BaselineRecomputeStatusResponse)
+async def get_baseline_recompute_status() -> BaselineRecomputeStatusResponse:
+    return BaselineRecomputeStatusResponse(**get_recompute_status())
 
 
 @router.get("/api/baseline/cases/{case_id}/latest-run", response_model=RunPayloadResponse)
