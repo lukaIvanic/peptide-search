@@ -7,6 +7,13 @@ PROJECT_ROOT = Path(__file__).parent.parent
 load_dotenv(PROJECT_ROOT / ".env")
 
 
+def _as_bool(name: str, default: bool = False) -> bool:
+	raw = os.getenv(name)
+	if raw is None:
+		return default
+	return raw.strip().lower() in {"1", "true", "yes", "on"}
+
+
 class Settings:
 	"""Application configuration loaded from environment variables."""
 
@@ -51,6 +58,11 @@ class Settings:
 	# CORS
 	CORS_ORIGINS: str = os.getenv("CORS_ORIGINS", "")
 
+	# Access gate
+	ACCESS_GATE_ENABLED: bool = _as_bool("ACCESS_GATE_ENABLED", False)
+	ACCESS_GATE_USERNAME: str = os.getenv("ACCESS_GATE_USERNAME", "")
+	ACCESS_GATE_PASSWORD: str = os.getenv("ACCESS_GATE_PASSWORD", "")
+
 	def __init__(self) -> None:
 		allowed = (
 			"openai",
@@ -73,6 +85,12 @@ class Settings:
 		if self.QUEUE_ENGINE_VERSION not in {"v2"}:
 			raise RuntimeError(
 				f"Unsupported QUEUE_ENGINE_VERSION '{self.QUEUE_ENGINE_VERSION}'. Expected: v2."
+			)
+		if self.ACCESS_GATE_ENABLED and (
+			not self.ACCESS_GATE_USERNAME or not self.ACCESS_GATE_PASSWORD
+		):
+			raise RuntimeError(
+				"ACCESS_GATE_ENABLED=true requires ACCESS_GATE_USERNAME and ACCESS_GATE_PASSWORD."
 			)
 
 

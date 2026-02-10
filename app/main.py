@@ -9,6 +9,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
 
+from .api.access_gate import AccessGateMiddleware
 from .api.errors import register_error_handlers
 from .api.routers import (
     baseline_router,
@@ -52,6 +53,12 @@ def create_app() -> FastAPI:
 
     app = FastAPI(title=settings.APP_NAME, lifespan=lifespan)
     register_error_handlers(app)
+    if settings.ACCESS_GATE_ENABLED:
+        app.add_middleware(
+            AccessGateMiddleware,
+            username=settings.ACCESS_GATE_USERNAME,
+            password=settings.ACCESS_GATE_PASSWORD,
+        )
     cors_origins = [origin.strip() for origin in settings.CORS_ORIGINS.split(",") if origin.strip()]
     if cors_origins:
         app.add_middleware(

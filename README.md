@@ -172,10 +172,13 @@ See `ARCHITECTURE.md` for detailed documentation of:
 - Database schema
 - Configuration options
 
+### Deployment (Render)
+
+For a managed demo deployment with persistent SQLite storage and optional access gate, see `docs/DEPLOY_RENDER.md`.
+
 ### Roadmap (optional)
 - Improve PDF text extraction (layout parsing, figure/table handling).
 - Add additional providers (e.g., Anthropic, Claude) via the same interface.
 - Add filters and advanced search on the UI (e.g., pH, morphology, labels).
 - Add batch extraction from the web UI with progress tracking.
-
 

@@ -16,6 +16,8 @@ from app.time_utils import utc_now
 class ApiIntegrationTestCase(unittest.TestCase):
     """Reusable isolated app+db harness for integration API tests."""
 
+    settings_overrides: dict[str, object] = {}
+
     def setUp(self) -> None:
         import app.db as db_module
         import app.services.queue_service as queue_service
@@ -29,11 +31,12 @@ class ApiIntegrationTestCase(unittest.TestCase):
         self.test_engine = create_engine(f"sqlite:///{db_path}", echo=False)
 
         self.old_engine = db_module.engine
-        self.old_queue_concurrency = settings.QUEUE_CONCURRENCY
-        self.old_db_url = settings.DB_URL
-
-        settings.QUEUE_CONCURRENCY = 0
-        settings.DB_URL = str(self.test_engine.url)
+        self.old_settings: dict[str, object] = {}
+        effective_overrides = {"QUEUE_CONCURRENCY": 0, "DB_URL": str(self.test_engine.url)}
+        effective_overrides.update(self.settings_overrides)
+        for key, value in effective_overrides.items():
+            self.old_settings[key] = getattr(settings, key)
+            setattr(settings, key, value)
         db_module.engine = self.test_engine
         db_module.run_migrations(db_url=str(self.test_engine.url))
 
@@ -50,8 +53,8 @@ class ApiIntegrationTestCase(unittest.TestCase):
         self.queue_service._broadcaster = None
         self.test_engine.dispose()
         self.db_module.engine = self.old_engine
-        settings.QUEUE_CONCURRENCY = self.old_queue_concurrency
-        settings.DB_URL = self.old_db_url
+        for key, value in self.old_settings.items():
+            setattr(settings, key, value)
         self.temp_dir.cleanup()
 
     def create_paper(
