@@ -60,6 +60,7 @@ class BatchRun(SQLModel, table=True):
     total_input_tokens: int = 0
     total_output_tokens: int = 0
     total_time_ms: int = 0
+    wall_clock_paused_ms: int = 0  # accumulated idle gaps between finish -> retry start
     matched_entities: int = 0  # count of extracted sequences matching baseline
     total_expected_entities: int = 0  # count of baseline entities checked
     metrics_stale: bool = Field(default=False, index=True)

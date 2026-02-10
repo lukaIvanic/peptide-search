@@ -57,5 +57,6 @@ def compute_wall_clock_time_ms(batch: BatchRun) -> int:
     if not batch.created_at:
         return 0
     end_time = batch.completed_at if batch.completed_at else utc_now()
-    delta = end_time - batch.created_at
-    return int(delta.total_seconds() * 1000)
+    delta_ms = int((end_time - batch.created_at).total_seconds() * 1000)
+    paused_ms = max(0, int(getattr(batch, "wall_clock_paused_ms", 0) or 0))
+    return max(0, delta_ms - paused_ms)

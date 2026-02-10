@@ -53,6 +53,21 @@ class BatchMetricsTests(unittest.TestCase):
         elapsed_ms = compute_wall_clock_time_ms(batch)
         self.assertGreaterEqual(elapsed_ms, 9000)
 
+    def test_compute_wall_clock_subtracts_retry_idle_time(self) -> None:
+        now = utc_now()
+        batch = BatchRun(
+            batch_id="b3",
+            dataset="self_assembly",
+            model_provider="mock",
+            model_name="mock-model",
+            created_at=now - timedelta(seconds=20),
+            completed_at=now,
+            wall_clock_paused_ms=5000,
+        )
+        elapsed_ms = compute_wall_clock_time_ms(batch)
+        self.assertGreaterEqual(elapsed_ms, 14000)
+        self.assertLessEqual(elapsed_ms, 16000)
+
 
 if __name__ == "__main__":
     unittest.main()

@@ -271,6 +271,11 @@ async def retry_batch_runs(
     batch.failed = max(0, batch.failed - retried)
     remaining = max(0, batch.total_papers - (batch.completed + batch.failed))
     if remaining > 0:
+        # Exclude idle time between prior completion and this retry start from wall-clock metric.
+        if batch.completed_at:
+            paused_delta_ms = int((utc_now() - batch.completed_at).total_seconds() * 1000)
+            if paused_delta_ms > 0:
+                batch.wall_clock_paused_ms = int(batch.wall_clock_paused_ms or 0) + paused_delta_ms
         batch.status = BatchStatus.RUNNING.value
         batch.completed_at = None
     elif batch.failed == 0:

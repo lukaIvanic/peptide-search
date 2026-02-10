@@ -1,4 +1,5 @@
 import unittest
+from datetime import timedelta
 from unittest.mock import AsyncMock, patch
 
 from sqlmodel import Session, select
@@ -132,6 +133,8 @@ class ApiQueueAndBaselineRetryTests(ApiIntegrationTestCase):
                 total_papers=1,
                 completed=0,
                 failed=1,
+                created_at=utc_now() - timedelta(minutes=15),
+                completed_at=utc_now() - timedelta(minutes=10),
             )
             session.add(batch)
             run = ExtractionRun(
@@ -165,6 +168,8 @@ class ApiQueueAndBaselineRetryTests(ApiIntegrationTestCase):
             batch = session.exec(select(BatchRun).where(BatchRun.batch_id == batch_id)).first()
             self.assertEqual(batch.status, BatchStatus.RUNNING.value)
             self.assertEqual(batch.failed, 0)
+            self.assertIsNone(batch.completed_at)
+            self.assertGreater(batch.wall_clock_paused_ms, 0)
 
     def test_batch_enqueue_uses_canonical_paper_count_and_records_unresolved_papers(self) -> None:
         fake_cases = [
