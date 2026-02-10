@@ -63,6 +63,7 @@ class BaselineEnqueuedRun(BaseModel):
 
 class BaselineEnqueueRequest(BaseModel):
     provider: str = "openai"
+    model: Optional[str] = None
     prompt_id: Optional[int] = None
     force: bool = False
     dataset: Optional[str] = None
@@ -100,6 +101,7 @@ class LocalPdfSiInfoResponse(BaseModel):
 class BaselineRetryRequest(BaseModel):
     source_url: Optional[str] = None
     provider: Optional[str] = None
+    model: Optional[str] = None
     prompt_id: Optional[int] = None
 
 
@@ -176,6 +178,7 @@ class BatchEnqueueRequest(BaseModel):
     dataset: str
     label: Optional[str] = None
     provider: str = "openai-nano"
+    model: Optional[str] = None
     prompt_id: Optional[int] = None
     force: bool = False
 
@@ -199,6 +202,7 @@ class BatchInfo(BaseModel):
     matched_entities: int = 0
     total_expected_entities: int = 0
     match_rate: Optional[float] = None
+    papers_all_matched: int = 0
     estimated_cost_usd: Optional[float] = None
     created_at: str
 
@@ -223,6 +227,7 @@ class BatchRetryRequest(BaseModel):
 
     batch_id: str
     provider: Optional[str] = None
+    model: Optional[str] = None
 
 
 class BatchRetryResponse(BaseModel):

@@ -42,6 +42,7 @@ class EnqueueRequest(BaseModel):
 
     papers: List[EnqueueItem]
     provider: str = "openai"
+    model: Optional[str] = None
     prompt_id: Optional[int] = None
 
 

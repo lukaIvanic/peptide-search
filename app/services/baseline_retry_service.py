@@ -1,10 +1,11 @@
 from __future__ import annotations
 
-from typing import Dict
+from typing import Dict, Optional
 
 from sqlmodel import Session, select
 
 from ..baseline.loader import get_case, list_cases
+from ..integrations.llm import ProviderSelectionError, resolve_provider_selection
 from ..persistence.models import BaselineCaseRun, BatchRun, BatchStatus, ExtractionRun, RunStatus
 from ..persistence.repository import PaperRepository
 from ..schemas import BaselineCase, BaselineRetryRequest, BatchRetryResponse, PaperMeta
@@ -29,6 +30,41 @@ PROCESSING_STATUSES = {
     RunStatus.PROVIDER.value,
     RunStatus.VALIDATING.value,
 }
+
+
+def _resolve_selection_or_error(
+    *,
+    provider: Optional[str],
+    model: Optional[str],
+    default_provider: Optional[str],
+    strict_model: bool,
+):
+    try:
+        return resolve_provider_selection(
+            provider=provider or default_provider,
+            model=model,
+            default_provider=default_provider,
+            require_enabled=True,
+        )
+    except ProviderSelectionError as exc:
+        if model and not strict_model:
+            try:
+                return resolve_provider_selection(
+                    provider=provider or default_provider,
+                    model=None,
+                    default_provider=default_provider,
+                    require_enabled=True,
+                )
+            except ProviderSelectionError:
+                pass
+        raise ServiceError(
+            status_code=400,
+            detail={
+                "code": "bad_request",
+                "message": str(exc),
+                "details": exc.details,
+            },
+        ) from exc
 
 
 async def retry_baseline_case(
@@ -111,11 +147,18 @@ async def retry_baseline_case(
     paper_repo = PaperRepository(session)
     paper_id = paper_repo.upsert(meta)
 
-    use_provider = req.provider or default_provider
+    selection = _resolve_selection_or_error(
+        provider=req.provider,
+        model=req.model,
+        default_provider=default_provider,
+        strict_model=bool(req.model),
+    )
+
     run = ExtractionRun(
         paper_id=paper_id,
         status=RunStatus.QUEUED.value,
-        model_provider=use_provider,
+        model_provider=selection.provider_id,
+        model_name=selection.model_id,
         pdf_url=source_url,
         prompt_id=req.prompt_id,
     )
@@ -150,6 +193,7 @@ async def retry_batch_runs(
     session: Session,
     batch_id: str,
     provider: str | None,
+    model: str | None,
     queue: ExtractionQueue,
 ) -> BatchRetryResponse:
     coordinator = QueueCoordinator()
@@ -158,7 +202,8 @@ async def retry_batch_runs(
     if not batch:
         raise ServiceError(status_code=404, detail=f"Batch not found: {batch_id}")
 
-    resolved_provider = provider or batch.model_provider
+    provider_candidate = provider or batch.model_provider
+    model_candidate = model or batch.model_name
 
     stmt = (
         select(ExtractionRun)
@@ -196,14 +241,23 @@ async def retry_batch_runs(
             skipped += 1
             continue
 
+        selection = _resolve_selection_or_error(
+            provider=provider_candidate or run.model_provider,
+            model=model_candidate or run.model_name,
+            default_provider=provider_candidate or run.model_provider,
+            strict_model=bool(model),
+        )
+
         run.status = RunStatus.QUEUED.value
         run.failure_reason = None
-        run.model_provider = resolved_provider
+        run.model_provider = selection.provider_id
+        run.model_name = selection.model_id
         result = coordinator.enqueue_existing_run(
             session,
             run=run,
             title="",
-            provider=resolved_provider,
+            provider=selection.provider_id,
+            model=selection.model_id,
             pdf_url=pdf_url,
             pdf_urls=None,
             prompt_id=run.prompt_id,

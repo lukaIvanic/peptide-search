@@ -27,9 +27,12 @@ def get_model_name_for_provider(provider: str) -> str:
     """Get the model name for a given provider."""
     provider_models = {
         "openai": settings.OPENAI_MODEL,
+        "openai-full": settings.OPENAI_MODEL,
         "openai-mini": settings.OPENAI_MODEL_MINI,
         "openai-nano": settings.OPENAI_MODEL_NANO,
         "deepseek": settings.DEEPSEEK_MODEL,
+        "gemini": settings.GEMINI_MODEL,
+        "openrouter": settings.OPENROUTER_MODEL,
         "mock": "mock-model",
     }
     return provider_models.get(provider, provider)

@@ -2,10 +2,11 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from datetime import timedelta
-from typing import Optional
+from typing import Any, Optional
 
 from sqlmodel import Session, select
 
+from ..integrations.llm import ProviderSelectionError, resolve_provider_selection
 from ..persistence.models import ExtractionRun, Paper, RunStatus
 from ..persistence.repository import BaselineCaseRunRepository
 from ..schemas import BulkRetryRequest, BulkRetryResponse
@@ -21,7 +22,42 @@ from .serializers import iso_z
 @dataclass
 class ServiceError(Exception):
     status_code: int
-    detail: str
+    detail: Any
+
+
+def _resolve_retry_selection(
+    *,
+    provider: Optional[str],
+    model: Optional[str],
+    default_provider: str,
+    strict_model: bool = False,
+):
+    try:
+        return resolve_provider_selection(
+            provider=provider or default_provider,
+            model=model,
+            default_provider=default_provider,
+            require_enabled=True,
+        )
+    except ProviderSelectionError as exc:
+        if model and not strict_model:
+            try:
+                return resolve_provider_selection(
+                    provider=provider or default_provider,
+                    model=None,
+                    default_provider=default_provider,
+                    require_enabled=True,
+                )
+            except ProviderSelectionError:
+                pass
+        raise ServiceError(
+            status_code=400,
+            detail={
+                "code": "bad_request",
+                "message": str(exc),
+                "details": exc.details,
+            },
+        ) from exc
 
 
 async def retry_run(
@@ -46,6 +82,12 @@ async def retry_run(
     if not paper:
         raise ServiceError(status_code=404, detail="Paper not found")
 
+    selection = _resolve_retry_selection(
+        provider=run.model_provider or default_provider,
+        model=run.model_name,
+        default_provider=default_provider,
+    )
+
     if run.pdf_url and await queue.is_url_pending(run.pdf_url):
         return {
             "id": run.id,
@@ -57,7 +99,8 @@ async def retry_run(
         session,
         run=run,
         title=paper.title or "(Untitled)",
-        provider=run.model_provider or default_provider,
+        provider=selection.provider_id,
+        model=selection.model_id,
         pdf_url=run.pdf_url,
         pdf_urls=None,
         prompt_id=run.prompt_id,
@@ -83,6 +126,7 @@ async def retry_run_with_source(
     run_id: int,
     source_url: Optional[str],
     provider: Optional[str],
+    model: Optional[str],
     prompt_id: Optional[int],
     queue: ExtractionQueue,
     default_provider: str,
@@ -99,7 +143,12 @@ async def retry_run_with_source(
     if not resolved_source_url:
         raise ServiceError(status_code=400, detail="No source URL available for retry")
 
-    use_provider = provider or run.model_provider or default_provider
+    selection = _resolve_retry_selection(
+        provider=provider or run.model_provider or default_provider,
+        model=model or run.model_name,
+        default_provider=default_provider,
+        strict_model=bool(model),
+    )
     use_prompt_id = prompt_id or run.prompt_id
     if await queue.is_url_pending(resolved_source_url):
         return {
@@ -111,7 +160,8 @@ async def retry_run_with_source(
     new_run = ExtractionRun(
         paper_id=paper.id,
         status=RunStatus.QUEUED.value,
-        model_provider=use_provider,
+        model_provider=selection.provider_id,
+        model_name=selection.model_id,
         pdf_url=resolved_source_url,
         prompt_id=use_prompt_id,
         prompt_version_id=run.prompt_version_id,
@@ -193,11 +243,17 @@ async def retry_failed_runs(
             skipped += 1
             continue
 
+        selection = _resolve_retry_selection(
+            provider=run.model_provider or default_provider,
+            model=run.model_name,
+            default_provider=default_provider,
+        )
         result = coordinator.enqueue_existing_run(
             session,
             run=run,
             title=paper.title or "(Untitled)",
-            provider=run.model_provider or default_provider,
+            provider=selection.provider_id,
+            model=selection.model_id,
             pdf_url=run.pdf_url,
             pdf_urls=None,
             prompt_id=run.prompt_id,

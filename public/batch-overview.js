@@ -27,7 +27,7 @@ const STATUS_LABELS = {
 };
 
 const SCORED_BATCH_STATUSES = new Set(['completed', 'partial', 'failed']);
-const DEFAULT_PROVIDER_METRIC = 'weighted_accuracy';
+const DEFAULT_PROVIDER_METRIC = 'accuracy';
 const PROVIDER_METRIC_STORAGE_KEY = 'peptide.evaluation.chart.metric';
 const SVG_NS = 'http://www.w3.org/2000/svg';
 const COMPACT_FORMAT = new Intl.NumberFormat('en-US', {
@@ -37,47 +37,32 @@ const COMPACT_FORMAT = new Intl.NumberFormat('en-US', {
 const NUMBER_FORMAT = new Intl.NumberFormat('en-US');
 
 const PROVIDER_METRICS = {
-	weighted_accuracy: {
-		id: 'weighted_accuracy',
-		label: 'Weighted Accuracy',
-		title: 'Average Accuracy by Provider',
-		description: 'Weighted by expected entities across finished runs.',
-		direction: 'higher',
+	accuracy: {
+		id: 'accuracy',
+		label: 'Accuracy',
 		axisMode: 'percent',
-		exclusionReason: 'no expected entities',
 	},
-	match_volume: {
-		id: 'match_volume',
-		label: 'Match Volume',
-		title: 'Match Volume by Provider',
-		description: 'Total matched entities across finished runs.',
-		direction: 'higher',
+	papers_all_matched: {
+		id: 'papers_all_matched',
+		label: 'Papers Fully Matched',
 		axisMode: 'number',
-		exclusionReason: 'insufficient data',
 	},
-	cost_per_match: {
-		id: 'cost_per_match',
-		label: 'Cost per Matched Entity',
-		title: 'Cost per Matched Entity',
-		description: 'Provider spend divided by matched entities.',
-		direction: 'lower',
+	total_cost: {
+		id: 'total_cost',
+		label: 'Total Cost',
 		axisMode: 'number',
-		exclusionReason: 'no matched entities',
 	},
-	matched_per_minute: {
-		id: 'matched_per_minute',
-		label: 'Matched Entities per Minute',
-		title: 'Matched Entities per Minute',
-		description: 'Useful output throughput from finished runs.',
-		direction: 'higher',
+	total_time: {
+		id: 'total_time',
+		label: 'Total Time',
 		axisMode: 'number',
-		exclusionReason: 'no elapsed run time',
 	},
 };
 
 const state = {
 	batches: [],
 	prompts: [],
+	providers: [],
 	activePromptId: null,
 	sseConnection: null,
 	providerChartState: 'loading',
@@ -94,9 +79,15 @@ function normalizeProviderKey(provider) {
 
 function formatProviderName(provider) {
 	const key = normalizeProviderKey(provider);
+	const descriptor = (state.providers || []).find(
+		(item) => normalizeProviderKey(item.provider_id) === key,
+	);
+	if (descriptor?.label) return descriptor.label;
 	if (key === 'openai') return 'OpenAI Full';
 	if (key === 'openai-mini') return 'OpenAI Mini';
 	if (key === 'openai-nano') return 'OpenAI Nano';
+	if (key === 'openrouter') return 'OpenRouter';
+	if (key === 'gemini') return 'Gemini';
 	if (key === 'deepseek') return 'DeepSeek';
 	if (key === 'mock') return 'Mock';
 	return provider || 'Unknown';
@@ -181,11 +172,16 @@ function formatCurrencyTick(value) {
 	return `$${value.toFixed(2)}`;
 }
 
-function formatRate(value) {
-	if (!Number.isFinite(value)) return 'n/a';
-	if (value >= 100) return `${value.toFixed(0)}/min`;
-	if (value >= 10) return `${value.toFixed(1)}/min`;
-	return `${value.toFixed(2)}/min`;
+function formatDurationTick(ms) {
+	if (!Number.isFinite(ms) || ms <= 0) return '0s';
+	const seconds = Math.floor(ms / 1000);
+	if (seconds < 60) return `${seconds}s`;
+	const minutes = Math.floor(seconds / 60);
+	if (minutes < 60) return `${minutes}m`;
+	const hours = Math.floor(minutes / 60);
+	if (hours < 24) return `${hours}h`;
+	const days = Math.floor(hours / 24);
+	return `${days}d`;
 }
 
 function getMetricConfig(metricId) {
@@ -223,30 +219,14 @@ function initProviderMetricControls() {
 
 	state.providerChartMetric = getProviderChartMetricFromStorage();
 	select.value = state.providerChartMetric;
-	updateProviderMetricCopy();
 
 	select.addEventListener('change', (event) => {
 		const nextMetric = event.target.value;
 		if (!PROVIDER_METRICS[nextMetric]) return;
 		state.providerChartMetric = nextMetric;
 		persistProviderChartMetric(nextMetric);
-		updateProviderMetricCopy();
 		renderProviderAccuracyChart();
 	});
-}
-
-function updateProviderMetricCopy() {
-	const metric = getMetricConfig(state.providerChartMetric);
-	const title = $('#providerAccuracyTitle');
-	const direction = $('#providerMetricDirection');
-	const help = $('#providerMetricHelp');
-
-	if (title) title.textContent = metric.title;
-	if (help) help.textContent = metric.description;
-	if (direction) {
-		direction.textContent = metric.direction === 'lower' ? 'Lower is better' : 'Higher is better';
-		direction.className = `sw-chip sw-kicker text-[10px] ${metric.direction === 'lower' ? 'provider-accuracy-direction provider-accuracy-direction--lower' : 'provider-accuracy-direction provider-accuracy-direction--higher'}`;
-	}
 }
 
 function getBatchEstimatedCostUsd(batch) {
@@ -274,6 +254,7 @@ function aggregateProviderStats(finishedBatches) {
 		if (!providerRaw) continue;
 		const expected = Number(batch.total_expected_entities || 0);
 		const matched = Math.max(0, Number(batch.matched_entities || 0));
+		const papersAllMatched = Math.max(0, Number(batch.papers_all_matched || 0));
 		const provider = normalizeProviderKey(providerRaw);
 		if (!grouped.has(provider)) {
 			grouped.set(provider, {
@@ -281,6 +262,7 @@ function aggregateProviderStats(finishedBatches) {
 				providerLabel: formatProviderName(provider),
 				matched: 0,
 				expected: 0,
+				papersAllMatched: 0,
 				cost: 0,
 				timeMs: 0,
 				batches: 0,
@@ -289,6 +271,7 @@ function aggregateProviderStats(finishedBatches) {
 		const row = grouped.get(provider);
 		row.matched += matched;
 		row.expected += Math.max(0, expected);
+		row.papersAllMatched += papersAllMatched;
 		row.cost += getBatchEstimatedCostUsd(batch);
 		row.timeMs += Math.max(0, Number(batch.total_time_ms || 0));
 		row.batches += 1;
@@ -299,14 +282,14 @@ function aggregateProviderStats(finishedBatches) {
 
 function computeMetricValue(row, metric) {
 	switch (metric.id) {
-		case 'weighted_accuracy':
+		case 'accuracy':
 			return row.expected > 0 ? row.matched / row.expected : null;
-		case 'match_volume':
-			return Number(row.matched || 0);
-		case 'cost_per_match':
-			return row.matched > 0 ? row.cost / row.matched : null;
-		case 'matched_per_minute':
-			return row.timeMs > 0 ? row.matched / (row.timeMs / 60000) : null;
+		case 'papers_all_matched':
+			return Number(row.papersAllMatched || 0);
+		case 'total_cost':
+			return Number(row.cost || 0);
+		case 'total_time':
+			return Number(row.timeMs || 0);
 		default:
 			return null;
 	}
@@ -314,22 +297,22 @@ function computeMetricValue(row, metric) {
 
 function buildMetricMetaLabel(row, metric, compact) {
 	switch (metric.id) {
-		case 'weighted_accuracy':
+		case 'accuracy':
 			return compact
 				? `${formatCount(row.matched)}/${formatCount(row.expected)} · ${row.batches}r`
 				: `${formatCount(row.matched)}/${formatCount(row.expected)} matched · ${row.batches} run${row.batches === 1 ? '' : 's'}`;
-		case 'match_volume':
+		case 'papers_all_matched':
 			return compact
-				? `${formatCount(row.matched)} matched · ${row.batches}r`
-				: `${formatCount(row.matched)} matched entities · ${row.batches} run${row.batches === 1 ? '' : 's'}`;
-		case 'cost_per_match':
+				? `${formatCount(row.papersAllMatched)} papers · ${row.batches}r`
+				: `${formatCount(row.papersAllMatched)} papers fully matched · ${row.batches} run${row.batches === 1 ? '' : 's'}`;
+		case 'total_cost':
 			return compact
-				? `${formatCurrency(row.metricValue)} · ${formatCurrency(row.cost)} total`
-				: `${formatCurrency(row.metricValue)} per matched · ${formatCurrency(row.cost)} total spend`;
-		case 'matched_per_minute':
+				? `${formatCurrency(row.cost)} total · ${row.batches}r`
+				: `${formatCurrency(row.cost)} total spend · ${row.batches} run${row.batches === 1 ? '' : 's'}`;
+		case 'total_time':
 			return compact
-				? `${formatRate(row.metricValue)} · ${formatCount(row.matched)} matched`
-				: `${formatRate(row.metricValue)} · ${formatCount(row.matched)} matched entities`;
+				? `${formatDuration(row.timeMs)} total · ${row.batches}r`
+				: `${formatDuration(row.timeMs)} total time · ${row.batches} run${row.batches === 1 ? '' : 's'}`;
 		default:
 			return '';
 	}
@@ -337,14 +320,14 @@ function buildMetricMetaLabel(row, metric, compact) {
 
 function formatMetricValue(metric, value) {
 	switch (metric.id) {
-		case 'weighted_accuracy':
+		case 'accuracy':
 			return formatPercent(value, 1);
-		case 'match_volume':
-			return formatCompactNumber(value);
-		case 'cost_per_match':
+		case 'papers_all_matched':
+			return formatCount(value);
+		case 'total_cost':
 			return formatCurrency(value);
-		case 'matched_per_minute':
-			return formatRate(value);
+		case 'total_time':
+			return formatDuration(value);
 		default:
 			return String(value);
 	}
@@ -352,16 +335,14 @@ function formatMetricValue(metric, value) {
 
 function formatMetricTick(metric, value) {
 	switch (metric.id) {
-		case 'weighted_accuracy':
+		case 'accuracy':
 			return `${Math.round(value * 100)}%`;
-		case 'match_volume':
+		case 'papers_all_matched':
 			return formatCompactNumber(value);
-		case 'cost_per_match':
+		case 'total_cost':
 			return formatCurrencyTick(value);
-		case 'matched_per_minute':
-			if (value >= 100) return `${value.toFixed(0)}/m`;
-			if (value >= 10) return `${value.toFixed(1)}/m`;
-			return `${value.toFixed(2)}/m`;
+		case 'total_time':
+			return formatDurationTick(value);
 		default:
 			return String(value);
 	}
@@ -370,12 +351,10 @@ function formatMetricTick(metric, value) {
 function computeProviderMetricRows(finishedBatches, metric) {
 	const aggregated = aggregateProviderStats(finishedBatches);
 	const rows = [];
-	const insufficientProviders = [];
 
 	aggregated.forEach((row) => {
 		const metricValue = computeMetricValue(row, metric);
 		if (!Number.isFinite(metricValue) || metricValue < 0) {
-			insufficientProviders.push(row.providerLabel);
 			return;
 		}
 		rows.push({
@@ -385,9 +364,7 @@ function computeProviderMetricRows(finishedBatches, metric) {
 	});
 
 	rows.sort((a, b) => {
-		const delta = metric.direction === 'lower'
-			? a.metricValue - b.metricValue
-			: b.metricValue - a.metricValue;
+		const delta = b.metricValue - a.metricValue;
 		if (delta !== 0) return delta;
 		if (b.matched !== a.matched) return b.matched - a.matched;
 		return b.expected - a.expected;
@@ -397,15 +374,16 @@ function computeProviderMetricRows(finishedBatches, metric) {
 		(acc, row) => {
 			acc.matched += row.matched;
 			acc.expected += row.expected;
+			acc.papersAllMatched += row.papersAllMatched;
 			acc.cost += row.cost;
 			acc.timeMs += row.timeMs;
 			acc.runs += row.batches;
 			return acc;
 		},
-		{ matched: 0, expected: 0, cost: 0, timeMs: 0, runs: 0 },
+		{ matched: 0, expected: 0, papersAllMatched: 0, cost: 0, timeMs: 0, runs: 0 },
 	);
 
-	return { rows, totals, insufficientProviders };
+	return { rows, totals };
 }
 
 function getNiceStep(rawStep) {
@@ -519,7 +497,7 @@ function renderProviderAccuracySvg(container, model, metric, options = {}) {
 		class: 'provider-accuracy-svg',
 		viewBox: `0 0 ${model.width} ${model.height}`,
 		role: 'img',
-		'aria-label': `${metric.title} chart`,
+		'aria-label': `${metric.label} by provider chart`,
 	});
 	svg.style.width = '100%';
 	svg.style.height = 'auto';
@@ -655,14 +633,14 @@ function renderProviderAccuracySvg(container, model, metric, options = {}) {
 function buildMetricSummary(metric, rows, totals) {
 	if (!rows.length) return 'No provider data';
 	switch (metric.id) {
-		case 'weighted_accuracy':
-			return `${rows.length} provider${rows.length === 1 ? '' : 's'} · ${formatCount(totals.matched)}/${formatCount(totals.expected)} matched · weighted by expected entities`;
-		case 'match_volume':
-			return `${rows.length} provider${rows.length === 1 ? '' : 's'} · ${formatCount(totals.matched)} matched entities · ${formatCount(totals.runs)} runs`;
-		case 'cost_per_match':
-			return `${rows.length} provider${rows.length === 1 ? '' : 's'} · ${formatCurrency(totals.cost)} total spend · lower is better`;
-		case 'matched_per_minute':
-			return `${rows.length} provider${rows.length === 1 ? '' : 's'} · ${formatRate(totals.timeMs > 0 ? totals.matched / (totals.timeMs / 60000) : 0)} overall`;
+		case 'accuracy':
+			return `${rows.length} provider${rows.length === 1 ? '' : 's'} · ${formatCount(totals.matched)}/${formatCount(totals.expected)} matched`;
+		case 'papers_all_matched':
+			return `${rows.length} provider${rows.length === 1 ? '' : 's'} · ${formatCount(totals.papersAllMatched)} papers fully matched`;
+		case 'total_cost':
+			return `${rows.length} provider${rows.length === 1 ? '' : 's'} · ${formatCurrency(totals.cost)} total cost`;
+		case 'total_time':
+			return `${rows.length} provider${rows.length === 1 ? '' : 's'} · ${formatDuration(totals.timeMs)} total time`;
 		default:
 			return `${rows.length} providers`;
 	}
@@ -673,15 +651,9 @@ function renderProviderAccuracyChart() {
 	const plotMount = $('#providerAccuracyPlot');
 	const summary = $('#providerAccuracySummary');
 	const stateText = $('#providerAccuracyState');
-	const subnote = $('#providerAccuracySubnote');
 	const metric = getMetricConfig(state.providerChartMetric);
-	updateProviderMetricCopy();
 	if (!container || !plotMount) return;
 	plotMount.innerHTML = '';
-	if (subnote) {
-		subnote.textContent = '';
-		subnote.classList.add('hidden');
-	}
 
 	const isLoading = state.providerChartState === 'loading';
 	const isError = state.providerChartState === 'error';
@@ -693,7 +665,7 @@ function renderProviderAccuracyChart() {
 	}
 
 	const finishedBatches = selectFinishedBatches(state.batches);
-	const { rows, totals, insufficientProviders } = computeProviderMetricRows(finishedBatches, metric);
+	const { rows, totals } = computeProviderMetricRows(finishedBatches, metric);
 
 	if (!rows.length) {
 		if (summary) summary.textContent = `No ${metric.label.toLowerCase()} data yet`;
@@ -701,10 +673,6 @@ function renderProviderAccuracyChart() {
 			stateText.textContent = isError
 				? 'Analytics refresh failed. Showing fallback state.'
 				: 'Only completed, partial, and failed runs are included.';
-		}
-		if (subnote && insufficientProviders.length) {
-			subnote.textContent = `Excluded for this metric (${metric.exclusionReason}): ${insufficientProviders.join(', ')}`;
-			subnote.classList.remove('hidden');
 		}
 		plotMount.appendChild(
 			el(
@@ -725,10 +693,6 @@ function renderProviderAccuracyChart() {
 		stateText.textContent = isError
 			? 'Live refresh hit an error. Displaying last available analytics.'
 			: 'Includes completed, partial, and failed runs.';
-	}
-	if (subnote && insufficientProviders.length) {
-		subnote.textContent = `Excluded for this metric (${metric.exclusionReason}): ${insufficientProviders.join(', ')}`;
-		subnote.classList.remove('hidden');
 	}
 
 	const model = buildProviderChartModel(rows, metric, plotMount.clientWidth || container.clientWidth || 720);
@@ -963,10 +927,52 @@ function closeNewBatchModal() {
 		// Reset form
 		const form = $('#newBatchForm');
 		if (form) form.reset();
+		syncBatchModelHint();
 	}
 }
 
-async function createBatch(name, model, promptId) {
+function syncBatchModelHint() {
+	const select = $('#batchModel');
+	const input = $('#batchCustomModel');
+	if (!select || !input) return;
+	const descriptor = (state.providers || []).find((item) => item.provider_id === select.value);
+	const defaultModel = descriptor?.default_model || '';
+	input.placeholder = defaultModel ? `Default: ${defaultModel}` : 'Use provider default';
+	if (!input.value) {
+		input.value = defaultModel || '';
+	}
+}
+
+function renderBatchProviderOptions() {
+	const select = $('#batchModel');
+	if (!select) return;
+	const enabled = (state.providers || []).filter((item) => item.enabled);
+	if (!enabled.length) return;
+	const previous = select.value;
+	select.innerHTML = '';
+	for (const item of enabled) {
+		const option = document.createElement('option');
+		option.value = item.provider_id;
+		option.textContent = item.label || item.provider_id;
+		select.appendChild(option);
+	}
+	select.value = enabled.some((item) => item.provider_id === previous)
+		? previous
+		: enabled[0].provider_id;
+	syncBatchModelHint();
+}
+
+async function loadProviders() {
+	try {
+		const payload = await api.get('/api/providers');
+		state.providers = payload.providers || [];
+		renderBatchProviderOptions();
+	} catch (err) {
+		console.error('Failed to load provider catalog:', err);
+	}
+}
+
+async function createBatch(name, model, promptId, customModel) {
 	const submitBtn = $('#submitBatchBtn');
 	const label = submitBtn?.querySelector('.sw-btn__label');
 
@@ -982,6 +988,7 @@ async function createBatch(name, model, promptId) {
 			dataset: 'self_assembly',
 			label: name || null,
 			provider: model,
+			model: customModel || null,
 			prompt_id: promptId ? parseInt(promptId, 10) : null,
 		});
 
@@ -1191,6 +1198,7 @@ function init() {
 	// Load data
 	initProviderMetricControls();
 	renderProviderAccuracyChart();
+	loadProviders();
 	loadBatches();
 	loadPrompts();
 
@@ -1202,6 +1210,8 @@ function init() {
 	$('#emptyNewBatchBtn')?.addEventListener('click', openNewBatchModal);
 	$('#cancelBatchBtn')?.addEventListener('click', closeNewBatchModal);
 	$('#modalBackdrop')?.addEventListener('click', closeNewBatchModal);
+	$('#batchModel')?.addEventListener('change', syncBatchModelHint);
+	syncBatchModelHint();
 	$('#resetBaselineDefaultsBtn')?.addEventListener('click', async () => {
 		await resetBaselineDefaults($('#resetBaselineDefaultsBtn'));
 	});
@@ -1211,8 +1221,9 @@ function init() {
 		e.preventDefault();
 		const name = $('#batchName')?.value?.trim() || '';
 		const model = $('#batchModel')?.value || 'openai-nano';
+		const customModel = $('#batchCustomModel')?.value?.trim() || null;
 		const promptId = $('#batchPrompt')?.value || null;
-		await createBatch(name, model, promptId);
+		await createBatch(name, model, promptId, customModel);
 	});
 
 	// Keyboard escape to close modal

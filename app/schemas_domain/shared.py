@@ -58,6 +58,38 @@ class HealthResponse(BaseModel):
     model: Optional[str] = None
 
 
+class ProviderCapabilities(BaseModel):
+    supports_pdf_url: bool
+    supports_pdf_file: bool
+    supports_json_mode: bool
+
+
+class ProviderCatalogItem(BaseModel):
+    provider_id: str
+    label: str
+    enabled: bool
+    capabilities: ProviderCapabilities
+    default_model: str
+    curated_models: List[str] = Field(default_factory=list)
+    supports_custom_model: bool = True
+    supports_model_discovery: bool = False
+    cache_ttl_seconds: Optional[int] = None
+    last_refreshed_at: Optional[str] = None
+
+
+class ProvidersResponse(BaseModel):
+    providers: List[ProviderCatalogItem] = Field(default_factory=list)
+
+
+class ProvidersRefreshWarning(BaseModel):
+    provider_id: str
+    message: str
+
+
+class ProvidersRefreshResponse(ProvidersResponse):
+    warnings: List[ProvidersRefreshWarning] = Field(default_factory=list)
+
+
 class ClearExtractionsResponse(BaseModel):
     status: str
 

@@ -24,6 +24,7 @@ class EnqueuePayload:
     pdf_url: str
     title: str
     provider: str
+    model: Optional[str] = None
     pdf_urls: Optional[list[str]] = None
     prompt_id: Optional[int] = None
     prompt_version_id: Optional[int] = None
@@ -145,6 +146,7 @@ class QueueCoordinator:
                 pdf_urls=normalized_urls,
                 title=title,
                 provider=run.model_provider or "openai",
+                model=run.model_name,
                 prompt_id=run.prompt_id,
                 prompt_version_id=run.prompt_version_id,
             )
@@ -181,6 +183,7 @@ class QueueCoordinator:
         run: ExtractionRun,
         title: str,
         provider: Optional[str] = None,
+        model: Optional[str] = None,
         pdf_url: Optional[str] = None,
         pdf_urls: Optional[list[str]] = None,
         prompt_id: Optional[int] = None,
@@ -223,6 +226,7 @@ class QueueCoordinator:
             )
 
         use_provider = provider or run.model_provider or "openai"
+        use_model = model or run.model_name
         use_prompt_id = prompt_id if prompt_id is not None else run.prompt_id
         use_prompt_version_id = (
             prompt_version_id if prompt_version_id is not None else run.prompt_version_id
@@ -231,6 +235,7 @@ class QueueCoordinator:
         run.status = RunStatus.QUEUED.value
         run.failure_reason = None
         run.model_provider = use_provider
+        run.model_name = use_model
         run.pdf_url = effective_pdf_url
         run.prompt_id = use_prompt_id
         run.prompt_version_id = use_prompt_version_id
@@ -242,6 +247,7 @@ class QueueCoordinator:
             pdf_urls=normalized_urls,
             title=title,
             provider=use_provider,
+            model=use_model,
             prompt_id=use_prompt_id,
             prompt_version_id=use_prompt_version_id,
         )
@@ -464,6 +470,7 @@ class QueueCoordinator:
                 "pdf_urls": payload.pdf_urls,
                 "title": payload.title,
                 "provider": payload.provider,
+                "model": payload.model,
                 "prompt_id": payload.prompt_id,
                 "prompt_version_id": payload.prompt_version_id,
             }
@@ -484,6 +491,7 @@ class QueueCoordinator:
             pdf_urls=data.get("pdf_urls") if isinstance(data.get("pdf_urls"), list) else None,
             title=str(data.get("title") or ""),
             provider=str(data.get("provider") or "openai"),
+            model=(str(data.get("model")).strip() if data.get("model") else None),
             prompt_id=data.get("prompt_id"),
             prompt_version_id=data.get("prompt_version_id"),
         )

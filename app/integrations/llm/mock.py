@@ -10,11 +10,19 @@ from .base import DocumentInput, LLMCapabilities, LLMProvider
 class MockProvider:
     """Mock provider that returns deterministic demo data."""
 
+    def __init__(
+        self,
+        model: Optional[str] = None,
+        provider_name: Optional[str] = None,
+    ) -> None:
+        self._model = (model or "mock-model").strip() or "mock-model"
+        self._provider_name = (provider_name or "mock").lower()
+
     def name(self) -> str:
-        return "mock"
+        return self._provider_name
     
     def model_name(self) -> str:
-        return "mock-demo"
+        return self._model
 
     def capabilities(self) -> LLMCapabilities:
         return LLMCapabilities(

@@ -8,6 +8,7 @@ from sqlmodel import Session, func, select
 
 from ...config import settings
 from ...db import get_session
+from ...integrations.llm import ProviderSelectionError, resolve_provider_selection
 from ...persistence.models import ExtractionEntity, ExtractionRun, Paper, RunStatus
 from ...persistence.repository import PromptRepository
 from ...prompts import build_system_prompt
@@ -168,6 +169,7 @@ async def get_paper_extractions(
 async def force_reextract(
     paper_id: int,
     provider: Optional[str] = None,
+    model: Optional[str] = None,
     session: Session = Depends(get_session),
 ) -> ForceReextractResponse:
     """Force re-extraction of a paper by creating a new run."""
@@ -202,7 +204,20 @@ async def force_reextract(
             message="Extraction already queued for this paper",
         )
 
-    use_provider = provider or (latest_run.model_provider if latest_run else None) or settings.LLM_PROVIDER
+    try:
+        selection = resolve_provider_selection(
+            provider=provider or (latest_run.model_provider if latest_run else settings.LLM_PROVIDER),
+            model=model or (latest_run.model_name if latest_run else None),
+        )
+    except ProviderSelectionError as exc:
+        raise HTTPException(
+            status_code=400,
+            detail={
+                "code": "bad_request",
+                "message": str(exc),
+                "details": exc.details,
+            },
+        ) from exc
 
     prompt_id = latest_run.prompt_id if latest_run and latest_run.prompt_id else None
     if not prompt_id:
@@ -215,7 +230,8 @@ async def force_reextract(
     new_run = ExtractionRun(
         paper_id=paper.id,
         status=RunStatus.QUEUED.value,
-        model_provider=use_provider,
+        model_provider=selection.provider_id,
+        model_name=selection.model_id,
         pdf_url=pdf_url,
         prompt_id=prompt_id,
     )

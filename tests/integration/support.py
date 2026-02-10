@@ -88,6 +88,7 @@ class ApiIntegrationTestCase(unittest.TestCase):
         *,
         run_id: int,
         pdf_url: str,
+        model: Optional[str] = None,
         status: Union[str, QueueJobStatus] = QueueJobStatus.QUEUED.value,
         attempt: int = 0,
         available_at=None,
@@ -105,6 +106,7 @@ class ApiIntegrationTestCase(unittest.TestCase):
                 "pdf_url": pdf_url,
                 "title": "test",
                 "provider": "mock",
+                "model": model or "mock-model",
             }
             job = QueueJob(
                 run_id=run_id,

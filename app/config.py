@@ -32,6 +32,19 @@ class Settings:
 	DEEPSEEK_API_KEY: str | None = os.getenv("DEEPSEEK_API_KEY")
 	DEEPSEEK_MODEL: str = os.getenv("DEEPSEEK_MODEL", "deepseek-chat")
 
+	# Gemini
+	GEMINI_API_KEY: str | None = os.getenv("GEMINI_API_KEY")
+	GEMINI_MODEL: str = os.getenv("GEMINI_MODEL", "gemini-2.5-flash")
+
+	# OpenRouter
+	OPENROUTER_API_KEY: str | None = os.getenv("OPENROUTER_API_KEY")
+	OPENROUTER_MODEL: str = os.getenv("OPENROUTER_MODEL", "openai/gpt-4o-mini")
+
+	# Provider catalog cache
+	PROVIDER_MODEL_CACHE_TTL_SECONDS: int = int(
+		os.getenv("PROVIDER_MODEL_CACHE_TTL_SECONDS", "900")
+	)
+
 	# OpenAI
 	OPENAI_API_KEY: str | None = os.getenv("OPENAI_API_KEY")
 	OPENAI_MODEL: str = os.getenv("OPENAI_MODEL", "gpt-4o")
@@ -73,12 +86,14 @@ class Settings:
 			"openai-mini",
 			"openai-nano",
 			"deepseek",
+			"gemini",
+			"openrouter",
 			"mock",
 		)
 		if self.LLM_PROVIDER not in allowed:
 			raise RuntimeError(
 				f"Unknown LLM_PROVIDER '{self.LLM_PROVIDER}'. "
-				"Expected one of: openai, openai-full, openai-mini, openai-nano, deepseek, mock."
+				"Expected one of: openai, openai-full, openai-mini, openai-nano, deepseek, gemini, openrouter, mock."
 			)
 		if self.QUEUE_ENGINE_VERSION not in {"v2"}:
 			raise RuntimeError(

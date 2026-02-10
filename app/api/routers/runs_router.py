@@ -330,6 +330,7 @@ async def followup_run(
             parent_run_id=run_id,
             instruction=req.instruction,
             provider_name=req.provider,
+            model_name=req.model,
         )
     except (ValueError, RuntimeError) as exc:
         raise HTTPException(status_code=400, detail=str(exc)) from exc
@@ -349,6 +350,7 @@ async def followup_run_stream(
             parent_run_id=run_id,
             instruction=req.instruction,
             provider_name=req.provider,
+            model_name=req.model,
         ):
             payload = json.dumps(event.get("data", {}))
             yield f"event: {event.get('event', 'message')}\n"
@@ -473,6 +475,7 @@ async def retry_run_with_source(
             run_id=run_id,
             source_url=req.source_url,
             provider=req.provider,
+            model=req.model,
             prompt_id=req.prompt_id,
             queue=queue,
             default_provider=settings.LLM_PROVIDER,
@@ -488,6 +491,7 @@ async def upload_run_file(
     file: Optional[UploadFile] = File(None),
     files: Optional[List[UploadFile]] = File(None),
     provider: Optional[str] = Form(None),
+    model: Optional[str] = Form(None),
     prompt_id: Optional[int] = Form(None),
     session: Session = Depends(get_session),
 ) -> ExtractResponse:
@@ -518,6 +522,7 @@ async def upload_run_file(
 
     use_prompt_id = prompt_id or run.prompt_id
     use_provider = provider or run.model_provider or settings.LLM_PROVIDER
+    use_model = model or run.model_name
     first_filename = file_payloads[0][1]
     if paper and paper.title:
         title = paper.title
@@ -533,6 +538,7 @@ async def upload_run_file(
             title=title,
             prompt_id=use_prompt_id,
             provider_name=use_provider,
+            model_name=use_model,
             baseline_case_id=run.baseline_case_id,
             baseline_dataset=run.baseline_dataset,
             parent_run_id=run.id,

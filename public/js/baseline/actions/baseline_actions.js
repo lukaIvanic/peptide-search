@@ -18,7 +18,8 @@ export const getBaselineLocalPdfSiInfo = (caseId) => api.getBaselineLocalPdfSiIn
 export const getBaselineLocalPdfSiUrl = (caseId, index = 0) => api.getBaselineLocalPdfSiUrl(caseId, index);
 export const resolveBaselineSource = (caseId, options = {}) => api.resolveBaselineSource(caseId, options);
 export const retryBaselineCase = (caseId, payload = {}) => api.retryBaselineCase(caseId, payload);
-export const uploadBaselinePdf = (caseId, file, provider, promptId) => api.uploadBaselinePdf(caseId, file, provider, promptId);
-export const enqueueBaselineAll = (provider = 'openai', promptId = null, dataset = null, force = false) =>
-  api.enqueueBaselineAll(provider, promptId, dataset, force);
-export const forceReextract = (paperId, provider) => api.forceReextract(paperId, provider);
+export const uploadBaselinePdf = (caseId, file, provider, promptId, model) =>
+  api.uploadBaselinePdf(caseId, file, provider, promptId, model);
+export const enqueueBaselineAll = (provider = 'openai', promptId = null, dataset = null, force = false, model = null) =>
+  api.enqueueBaselineAll(provider, promptId, dataset, force, model);
+export const forceReextract = (paperId, provider, model) => api.forceReextract(paperId, provider, model);

@@ -8,6 +8,7 @@ from pydantic import BaseModel, Field
 class RunRetryWithSourceRequest(BaseModel):
     source_url: Optional[str] = None
     provider: Optional[str] = None
+    model: Optional[str] = None
     prompt_id: Optional[int] = None
 
 

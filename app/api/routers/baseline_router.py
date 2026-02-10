@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import re
 from typing import Dict, List, Optional
 
 from fastapi import APIRouter, Depends, File, Form, HTTPException, Query, UploadFile
@@ -19,6 +20,7 @@ from ...baseline.loader import (
 )
 from ...config import settings
 from ...db import get_session
+from ...integrations.llm import ProviderSelectionError, resolve_provider_selection
 from ...persistence.models import (
     BaselineCaseRun,
     BatchRun,
@@ -95,7 +97,6 @@ from ...services.batch_metrics import (
     compute_match_rate,
     compute_wall_clock_time_ms,
     generate_batch_id,
-    get_model_name_for_provider,
 )
 from ...services.queue_coordinator import QueueCoordinator
 from ...services.queue_service import get_queue
@@ -115,9 +116,156 @@ PROCESSING_STATUSES = {
 }
 
 
+def _normalize_sequence(seq: Optional[str]) -> str:
+    if not seq:
+        return ""
+    return re.sub(r"[^A-Za-z]", "", str(seq)).upper()
+
+
+def _extract_sequences(raw_json: Optional[str]) -> set[str]:
+    values: set[str] = set()
+    if not raw_json:
+        return values
+    try:
+        payload = json.loads(raw_json)
+    except Exception:
+        return values
+
+    entities = payload.get("entities", []) if isinstance(payload, dict) else []
+    for entity in entities:
+        if not isinstance(entity, dict):
+            continue
+        peptide = entity.get("peptide") or {}
+        seq = peptide.get("sequence_one_letter", "") if isinstance(peptide, dict) else ""
+        normalized = _normalize_sequence(seq)
+        if normalized:
+            values.add(normalized)
+    return values
+
+
+def _compute_papers_all_matched_by_batch(
+    session: Session,
+    batches: List[BatchRun],
+) -> Dict[str, int]:
+    results = {
+        batch.batch_id: 0
+        for batch in batches
+        if batch.batch_id
+    }
+    if not results:
+        return results
+
+    store = BaselineStore(session)
+    datasets = sorted({batch.dataset for batch in batches if batch.dataset})
+    dataset_groups: Dict[str, Dict[str, Dict[str, str]]] = {}
+    dataset_case_to_paper: Dict[str, Dict[str, str]] = {}
+
+    for dataset in datasets:
+        groups: Dict[str, Dict[str, str]] = {}
+        case_to_paper: Dict[str, str] = {}
+        for case in store.list_cases(dataset):
+            case_id = case.get("id")
+            if not case_id:
+                continue
+            paper_key = case.get("paper_key") or f"case:{case_id}"
+            case_to_paper[case_id] = paper_key
+            sequence = _normalize_sequence(case.get("sequence"))
+            if not sequence:
+                continue
+            groups.setdefault(paper_key, {})[case_id] = sequence
+        dataset_groups[dataset] = groups
+        dataset_case_to_paper[dataset] = case_to_paper
+
+    if not any(dataset_groups.values()):
+        return results
+
+    batch_dataset = {
+        batch.batch_id: batch.dataset
+        for batch in batches
+        if batch.batch_id and batch.dataset
+    }
+
+    runs = session.exec(
+        select(ExtractionRun)
+        .where(ExtractionRun.batch_id.in_(list(batch_dataset.keys())))
+        .order_by(ExtractionRun.created_at.desc(), ExtractionRun.id.desc())
+    ).all()
+    if not runs:
+        return results
+
+    run_ids = [run.id for run in runs if run.id is not None]
+    run_case_links: Dict[int, List[str]] = {}
+    if run_ids:
+        rows = session.exec(
+            select(BaselineCaseRun.run_id, BaselineCaseRun.baseline_case_id)
+            .where(BaselineCaseRun.run_id.in_(run_ids))
+        ).all()
+        for run_id, case_id in rows:
+            if run_id is None or not case_id:
+                continue
+            run_case_links.setdefault(run_id, []).append(case_id)
+
+    latest_runs: Dict[tuple[str, str], ExtractionRun] = {}
+    for run in runs:
+        if not run.id or not run.batch_id:
+            continue
+        dataset = batch_dataset.get(run.batch_id)
+        if not dataset:
+            continue
+        case_to_paper = dataset_case_to_paper.get(dataset, {})
+        linked_case_ids = list(run_case_links.get(run.id, []))
+        if run.baseline_case_id and run.baseline_case_id not in linked_case_ids:
+            linked_case_ids.append(run.baseline_case_id)
+
+        paper_keys = {case_to_paper.get(case_id) for case_id in linked_case_ids}
+        for paper_key in paper_keys:
+            if not paper_key:
+                continue
+            latest_runs.setdefault((run.batch_id, paper_key), run)
+
+    for batch in batches:
+        if not batch.batch_id:
+            continue
+        expected_by_paper = dataset_groups.get(batch.dataset, {})
+        for paper_key, case_sequences in expected_by_paper.items():
+            expected = len(case_sequences)
+            if expected <= 0:
+                continue
+            run = latest_runs.get((batch.batch_id, paper_key))
+            if not run or run.status != RunStatus.STORED.value:
+                continue
+
+            extracted = _extract_sequences(run.raw_json)
+            if not extracted:
+                continue
+
+            matched = 0
+            for sequence in case_sequences.values():
+                if sequence in extracted:
+                    matched += 1
+            if matched >= expected:
+                results[batch.batch_id] = results.get(batch.batch_id, 0) + 1
+
+    return results
+
+
 def _ensure_baseline_editing_enabled() -> None:
     if not settings.BASELINE_EDITING_ENABLED:
         raise HTTPException(status_code=403, detail="Baseline editing is disabled")
+
+
+def _resolve_provider_selection_or_400(provider: Optional[str], model: Optional[str]):
+    try:
+        return resolve_provider_selection(provider=provider, model=model)
+    except ProviderSelectionError as exc:
+        raise HTTPException(
+            status_code=400,
+            detail={
+                "code": "bad_request",
+                "message": str(exc),
+                "details": exc.details,
+            },
+        ) from exc
 
 
 @router.get("/api/baseline/cases", response_model=BaselineCasesResponse)
@@ -425,10 +573,12 @@ async def upload_baseline_case(
     case_id: str,
     file: UploadFile = File(...),
     provider: Optional[str] = Form(None),
+    model: Optional[str] = Form(None),
     prompt_id: Optional[int] = Form(None),
     session: Session = Depends(get_session),
 ) -> RetryResponse:
     coordinator = QueueCoordinator()
+    selection = _resolve_provider_selection_or_400(provider or settings.LLM_PROVIDER, model)
     case_data = get_case(case_id)
     if not case_data:
         raise HTTPException(status_code=404, detail="Baseline case not found")
@@ -463,11 +613,11 @@ async def upload_baseline_case(
     paper_repo = PaperRepository(session)
     paper_id = paper_repo.upsert(meta)
 
-    use_provider = provider or settings.LLM_PROVIDER
     run = ExtractionRun(
         paper_id=paper_id,
         status=RunStatus.QUEUED.value,
-        model_provider=use_provider,
+        model_provider=selection.provider_id,
+        model_name=selection.model_id,
         pdf_url=upload_url,
         prompt_id=prompt_id,
     )
@@ -497,6 +647,7 @@ async def enqueue_baseline(
     req: BaselineEnqueueRequest,
     session: Session = Depends(get_session),
 ) -> BaselineEnqueueResponse:
+    selection = _resolve_provider_selection_or_400(req.provider, req.model)
     queue = get_queue()
     coordinator = QueueCoordinator()
     paper_repo = PaperRepository(session)
@@ -607,7 +758,8 @@ async def enqueue_baseline(
                 status=RunStatus.FAILED.value,
                 failure_reason="No source URL resolved for baseline case",
                 raw_json=json.dumps({"error": "No source URL resolved for baseline case"}),
-                model_provider=req.provider,
+                model_provider=selection.provider_id,
+                model_name=selection.model_id,
                 pdf_url=resolved_url,
                 prompt_id=req.prompt_id,
             )
@@ -638,7 +790,8 @@ async def enqueue_baseline(
         run = ExtractionRun(
             paper_id=paper_id,
             status=RunStatus.QUEUED.value,
-            model_provider=req.provider,
+            model_provider=selection.provider_id,
+            model_name=selection.model_id,
             pdf_url=resolved_url,
             prompt_id=req.prompt_id,
         )
@@ -765,6 +918,7 @@ async def list_batches(
     if dataset:
         stmt = stmt.where(BatchRun.dataset == dataset)
     batches = session.exec(stmt).all()
+    papers_all_matched = _compute_papers_all_matched_by_batch(session, batches)
     return BatchListResponse(
         batches=[
             BatchInfo(
@@ -784,6 +938,7 @@ async def list_batches(
                 matched_entities=b.matched_entities,
                 total_expected_entities=b.total_expected_entities,
                 match_rate=compute_match_rate(b),
+                papers_all_matched=papers_all_matched.get(b.batch_id, 0),
                 estimated_cost_usd=compute_batch_cost(b),
                 created_at=iso_z(b.created_at) or "",
             )
@@ -798,6 +953,7 @@ async def batch_enqueue(
     session: Session = Depends(get_session),
 ) -> BatchEnqueueResponse:
     """Create a batch and enqueue all papers from a dataset."""
+    selection = _resolve_provider_selection_or_400(req.provider, req.model)
     coordinator = QueueCoordinator()
     paper_repo = PaperRepository(session)
 
@@ -808,14 +964,14 @@ async def batch_enqueue(
         case.paper_key = get_case_paper_key(case)
         grouped_cases.setdefault(case.paper_key or f"case:{case.id}", []).append(case)
 
-    model_name = get_model_name_for_provider(req.provider)
+    model_name = selection.model_id
     batch_id = generate_batch_id(model_name)
 
     batch = BatchRun(
         batch_id=batch_id,
         label=req.label,
         dataset=req.dataset,
-        model_provider=req.provider,
+        model_provider=selection.provider_id,
         model_name=model_name,
         status=BatchStatus.RUNNING.value,
         total_papers=len(grouped_cases),
@@ -852,7 +1008,8 @@ async def batch_enqueue(
             failed_run = ExtractionRun(
                 status=RunStatus.FAILED.value,
                 failure_reason="No source URL resolved for baseline paper",
-                model_provider=req.provider,
+                model_provider=selection.provider_id,
+                model_name=selection.model_id,
                 prompt_id=req.prompt_id,
                 batch_id=batch_id,
                 baseline_dataset=req.dataset,
@@ -877,7 +1034,8 @@ async def batch_enqueue(
         run = ExtractionRun(
             paper_id=paper_id,
             status=RunStatus.QUEUED.value,
-            model_provider=req.provider,
+            model_provider=selection.provider_id,
+            model_name=selection.model_id,
             pdf_url=resolved_url,
             prompt_id=req.prompt_id,
             batch_id=batch_id,
@@ -895,7 +1053,8 @@ async def batch_enqueue(
                 paper_id=paper_id,
                 status=RunStatus.FAILED.value,
                 failure_reason="Source already queued for another active run",
-                model_provider=req.provider,
+                model_provider=selection.provider_id,
+                model_name=selection.model_id,
                 prompt_id=req.prompt_id,
                 batch_id=batch_id,
                 baseline_dataset=req.dataset,
@@ -936,6 +1095,7 @@ async def batch_retry(
             session=session,
             batch_id=req.batch_id,
             provider=req.provider,
+            model=req.model,
             queue=queue,
         )
     except ServiceError as exc:
@@ -952,6 +1112,7 @@ async def get_batch(
     batch = session.exec(stmt).first()
     if not batch:
         raise HTTPException(status_code=404, detail=f"Batch not found: {batch_id}")
+    papers_all_matched = _compute_papers_all_matched_by_batch(session, [batch]).get(batch.batch_id, 0)
     return BatchInfo(
         id=batch.id,
         batch_id=batch.batch_id,
@@ -969,6 +1130,7 @@ async def get_batch(
         matched_entities=batch.matched_entities,
         total_expected_entities=batch.total_expected_entities,
         match_rate=compute_match_rate(batch),
+        papers_all_matched=papers_all_matched,
         estimated_cost_usd=compute_batch_cost(batch),
         created_at=iso_z(batch.created_at) or "",
     )

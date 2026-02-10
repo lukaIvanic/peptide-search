@@ -7,6 +7,7 @@ from sqlmodel import Session
 
 from ...config import settings
 from ...db import get_session
+from ...integrations.llm import ProviderSelectionError, resolve_provider_selection
 from ...persistence.models import ExtractionRun, RunStatus
 from ...persistence.repository import PaperRepository
 from ...schemas import ExtractRequest, ExtractResponse, PaperMeta, UploadEnqueueResponse
@@ -35,9 +36,26 @@ async def extract_file(
     file: Optional[UploadFile] = File(None),
     files: Optional[List[UploadFile]] = File(None),
     title: Optional[str] = Form(None),
+    provider: Optional[str] = Form(None),
+    model: Optional[str] = Form(None),
     prompt_id: Optional[int] = Form(None),
     session: Session = Depends(get_session),
 ) -> UploadEnqueueResponse:
+    try:
+        selection = resolve_provider_selection(
+            provider=provider or settings.LLM_PROVIDER,
+            model=model,
+        )
+    except ProviderSelectionError as exc:
+        raise HTTPException(
+            status_code=400,
+            detail={
+                "code": "bad_request",
+                "message": str(exc),
+                "details": exc.details,
+            },
+        ) from exc
+
     upload_files = files or ([file] if file else [])
     if not upload_files:
         raise HTTPException(status_code=400, detail="No files provided")
@@ -85,11 +103,11 @@ async def extract_file(
     if not paper_id:
         raise HTTPException(status_code=400, detail="Unable to create paper record for upload")
 
-    use_provider = settings.LLM_PROVIDER
     run = ExtractionRun(
         paper_id=paper_id,
         status=RunStatus.QUEUED.value,
-        model_provider=use_provider,
+        model_provider=selection.provider_id,
+        model_name=selection.model_id,
         pdf_url=normalized_upload_urls[0],
         prompt_id=prompt_id,
     )

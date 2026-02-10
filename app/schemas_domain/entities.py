@@ -111,6 +111,7 @@ class ExtractRequest(BaseModel):
 class FollowupRequest(BaseModel):
     instruction: str
     provider: Optional[str] = None
+    model: Optional[str] = None
 
 
 class EditRunRequest(BaseModel):

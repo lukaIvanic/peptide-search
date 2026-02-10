@@ -42,8 +42,19 @@ async function request(path, opts = {}) {
             ...fetchOpts,
         });
         if (!res.ok) {
-            const err = await res.text();
-            throw new Error(err || res.statusText);
+            const raw = await res.text();
+            let message = raw || res.statusText;
+            try {
+                const payload = JSON.parse(raw);
+                if (payload?.error?.message) {
+                    message = payload.error.message;
+                } else if (payload?.detail) {
+                    message = typeof payload.detail === 'string' ? payload.detail : JSON.stringify(payload.detail);
+                }
+            } catch {
+                // Keep text fallback
+            }
+            throw new Error(message);
         }
         return res.json();
     } catch (err) {
@@ -72,8 +83,19 @@ async function requestForm(path, formData, opts = {}) {
             body: formData,
         });
         if (!res.ok) {
-            const err = await res.text();
-            throw new Error(err || res.statusText);
+            const raw = await res.text();
+            let message = raw || res.statusText;
+            try {
+                const payload = JSON.parse(raw);
+                if (payload?.error?.message) {
+                    message = payload.error.message;
+                } else if (payload?.detail) {
+                    message = typeof payload.detail === 'string' ? payload.detail : JSON.stringify(payload.detail);
+                }
+            } catch {
+                // Keep text fallback
+            }
+            throw new Error(message);
         }
         return res.json();
     } catch (err) {
@@ -128,6 +150,20 @@ export async function getHealth() {
 }
 
 /**
+ * Get the provider catalog and model capabilities.
+ */
+export async function getProviders() {
+    return request('/api/providers');
+}
+
+/**
+ * Refresh provider model discovery cache.
+ */
+export async function refreshProviders() {
+    return request('/api/providers/refresh', { method: 'POST' });
+}
+
+/**
  * Danger: delete all extracted runs and papers.
  */
 export async function clearExtractionData() {
@@ -147,10 +183,10 @@ export async function search(query, rows = 10) {
  * @param {object[]} papers - Papers to enqueue (with pdf_url, title, etc.)
  * @param {string} provider - Provider name (openai, mock)
  */
-export async function enqueue(papers, provider = 'openai', promptId = null) {
+export async function enqueue(papers, provider = 'openai', promptId = null, model = null) {
     return request('/api/enqueue', {
         method: 'POST',
-        body: JSON.stringify({ papers, provider, prompt_id: promptId }),
+        body: JSON.stringify({ papers, provider, model, prompt_id: promptId }),
     });
 }
 
@@ -221,11 +257,12 @@ export async function retryRunWithSource(runId, payload = {}) {
 /**
  * Upload PDFs for a run (creates a new run).
  */
-export async function uploadRunPdf(runId, files, provider, promptId) {
+export async function uploadRunPdf(runId, files, provider, promptId, model) {
     const formData = new FormData();
     const list = normalizeFiles(files);
     list.forEach((item) => formData.append('files', item));
     if (provider) formData.append('provider', provider);
+    if (model) formData.append('model', model);
     if (promptId !== undefined && promptId !== null) formData.append('prompt_id', String(promptId));
     return requestForm(`/api/runs/${runId}/upload`, formData, {
         method: 'POST',
@@ -396,11 +433,12 @@ export async function getBaselineLatestRun(caseId) {
 /**
  * Enqueue baseline cases (optionally dataset-filtered).
  */
-export async function enqueueBaselineAll(provider = 'openai', promptId = null, dataset = null, force = false) {
+export async function enqueueBaselineAll(provider = 'openai', promptId = null, dataset = null, force = false, model = null) {
     return request('/api/baseline/enqueue', {
         method: 'POST',
         body: JSON.stringify({
             provider,
+            model,
             prompt_id: promptId,
             dataset,
             force,
@@ -421,10 +459,11 @@ export async function retryBaselineCase(caseId, payload = {}) {
 /**
  * Upload a PDF for a baseline case (always linked to the case).
  */
-export async function uploadBaselinePdf(caseId, file, provider, promptId) {
+export async function uploadBaselinePdf(caseId, file, provider, promptId, model) {
     const formData = new FormData();
     formData.append('file', file);
     if (provider) formData.append('provider', provider);
+    if (model) formData.append('model', model);
     if (promptId !== undefined && promptId !== null) formData.append('prompt_id', String(promptId));
     return requestForm(`/api/baseline/cases/${encodeURIComponent(caseId)}/upload`, formData, {
         method: 'POST',
@@ -462,10 +501,10 @@ export async function retryFailedRuns(filters = {}) {
  * @param {string} instruction - Follow-up instruction
  * @param {string} [provider] - Optional provider override
  */
-export async function followupRun(runId, instruction, provider) {
+export async function followupRun(runId, instruction, provider, model) {
     return request(`/api/runs/${runId}/followup`, {
         method: 'POST',
-        body: JSON.stringify({ instruction, provider }),
+        body: JSON.stringify({ instruction, provider, model }),
     });
 }
 
@@ -580,9 +619,13 @@ export async function activatePrompt(promptId) {
  * @param {number} paperId - The paper ID
  * @param {string} [provider] - Optional provider override
  */
-export async function forceReextract(paperId, provider) {
-    const url = provider 
-        ? `/api/papers/${paperId}/force-reextract?provider=${encodeURIComponent(provider)}`
+export async function forceReextract(paperId, provider, model) {
+    const params = new URLSearchParams();
+    if (provider) params.set('provider', provider);
+    if (model) params.set('model', model);
+    const query = params.toString();
+    const url = query
+        ? `/api/papers/${paperId}/force-reextract?${query}`
         : `/api/papers/${paperId}/force-reextract`;
     return request(url, {
         method: 'POST',
@@ -633,12 +676,14 @@ export async function extract(body) {
 /**
  * Upload PDF files for extraction.
  */
-export async function extractFile(files, promptId, title) {
+export async function extractFile(files, promptId, title, provider, model) {
     const formData = new FormData();
     const list = normalizeFiles(files);
     list.forEach((item) => formData.append('files', item));
     if (title) formData.append('title', title);
     if (promptId) formData.append('prompt_id', String(promptId));
+    if (provider) formData.append('provider', provider);
+    if (model) formData.append('model', model);
 
     return requestForm('/api/extract-file', formData, { method: 'POST' });
 }
