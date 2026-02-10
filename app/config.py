@@ -25,8 +25,8 @@ class Settings:
 	DB_URL: str = os.getenv("DB_URL", "sqlite:///peptide_search.db")
 
 	# LLM provider selection: 'mock' | 'openai' | 'openai-full' | 'openai-mini' | 'openai-nano' | 'deepseek'
-	LLM_PROVIDER_RAW: str | None = os.getenv("LLM_PROVIDER")
-	LLM_PROVIDER: str | None = LLM_PROVIDER_RAW.lower() if LLM_PROVIDER_RAW else None
+	LLM_PROVIDER_RAW: str | None = os.getenv("LLM_PROVIDER", "mock")
+	LLM_PROVIDER: str | None = LLM_PROVIDER_RAW.lower() if LLM_PROVIDER_RAW else "mock"
 
 	# DeepSeek
 	DEEPSEEK_API_KEY: str | None = os.getenv("DEEPSEEK_API_KEY")
@@ -72,11 +72,6 @@ class Settings:
 			"deepseek",
 			"mock",
 		)
-		if not self.LLM_PROVIDER:
-			raise RuntimeError(
-				"LLM_PROVIDER is required. Set it to one of: "
-				"openai, openai-full, openai-mini, openai-nano, deepseek, mock."
-			)
 		if self.LLM_PROVIDER not in allowed:
 			raise RuntimeError(
 				f"Unknown LLM_PROVIDER '{self.LLM_PROVIDER}'. "
