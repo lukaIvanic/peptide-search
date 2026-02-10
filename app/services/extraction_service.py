@@ -5,7 +5,7 @@ import asyncio
 import json
 import logging
 import time
-from typing import Any, Dict, Optional, Tuple, Union, AsyncGenerator, List
+from typing import Any, Dict, Optional, Tuple, AsyncGenerator, List
 
 from sqlmodel import Session
 
@@ -18,9 +18,13 @@ from ..persistence.models import Paper, ExtractionRun, ExtractionEntity, RunStat
 from ..integrations.llm import (
     DocumentInput,
     InputType,
+    LLMProvider,
     OpenAIProvider,
-    DeepSeekProvider,
-    MockProvider,
+    ProviderSelection,
+    ProviderSelectionError,
+    create_provider,
+    resolve_provider_selection,
+    supported_provider_ids,
 )
 from ..integrations.document import DocumentExtractor, fetch_and_extract_text
 from ..persistence.repository import PaperRepository, ExtractionRepository, PromptRepository
@@ -54,7 +58,7 @@ def _resolve_system_prompt(
 
 
 def _extract_usage(
-    provider: Union[OpenAIProvider, DeepSeekProvider, MockProvider],
+    provider: LLMProvider,
 ) -> Dict[str, Optional[int]]:
     usage = provider.get_last_usage()
     if not usage:
@@ -132,41 +136,45 @@ def _persist_failed_run(
     return run.id
 
 
-def _build_provider(name: str) -> Union[OpenAIProvider, DeepSeekProvider, MockProvider]:
-    key = name.lower().strip()
-    if key in {"openai", "openai-full"}:
-        return OpenAIProvider(provider_name="openai", model=settings.OPENAI_MODEL)
-    if key == "openai-mini":
-        return OpenAIProvider(provider_name="openai-mini", model=settings.OPENAI_MODEL_MINI)
-    if key == "openai-nano":
-        return OpenAIProvider(provider_name="openai-nano", model=settings.OPENAI_MODEL_NANO)
-    if key == "deepseek":
-        return DeepSeekProvider()
-    if key == "mock":
-        return MockProvider()
-    raise RuntimeError(
-        f"Unknown LLM provider '{name}'. Expected one of: "
-        "openai, openai-full, openai-mini, openai-nano, deepseek, mock."
+def _provider_error_message(exc: ProviderSelectionError) -> str:
+    return (
+        f"{exc} Supported providers: {', '.join(supported_provider_ids())}. "
+        "See /api/providers for available providers and models."
     )
 
 
-def get_provider() -> Union[OpenAIProvider, DeepSeekProvider, MockProvider]:
-    """Get the configured LLM provider."""
-    if not settings.LLM_PROVIDER:
-        raise RuntimeError(
-            "LLM_PROVIDER is not set. Set it to one of: "
-            "openai, openai-full, openai-mini, openai-nano, deepseek, mock."
+def resolve_provider_and_model(
+    provider_name: Optional[str] = None,
+    model_name: Optional[str] = None,
+    *,
+    default_provider: Optional[str] = None,
+) -> ProviderSelection:
+    try:
+        return resolve_provider_selection(
+            provider=provider_name,
+            model=model_name,
+            default_provider=default_provider or settings.LLM_PROVIDER,
+            require_enabled=True,
         )
-    return _build_provider(settings.LLM_PROVIDER)
+    except ProviderSelectionError as exc:
+        raise RuntimeError(_provider_error_message(exc)) from exc
 
 
-def get_provider_by_name(name: Optional[str]) -> Union[OpenAIProvider, DeepSeekProvider, MockProvider]:
-    """Get an LLM provider by explicit name, or use the configured provider."""
-    if name is None:
-        return get_provider()
-    if not str(name).strip():
-        raise RuntimeError("Provider name cannot be empty.")
-    return _build_provider(str(name))
+def get_provider(
+    model_name: Optional[str] = None,
+) -> LLMProvider:
+    """Get the configured LLM provider."""
+    selection = resolve_provider_and_model(provider_name=settings.LLM_PROVIDER, model_name=model_name)
+    return create_provider(selection)
+
+
+def get_provider_by_name(
+    name: Optional[str],
+    model_name: Optional[str] = None,
+) -> LLMProvider:
+    """Get an LLM provider by explicit name/model, or use configured defaults."""
+    selection = resolve_provider_and_model(provider_name=name, model_name=model_name)
+    return create_provider(selection)
 
 
 def _should_force_text_extraction(url: Optional[str]) -> bool:
@@ -202,7 +210,7 @@ def _build_metadata_hint(meta: PaperMeta) -> str:
 
 async def _resolve_document_input(
     req: ExtractRequest,
-    provider: Union[OpenAIProvider, DeepSeekProvider, MockProvider],
+    provider: LLMProvider,
 ) -> Tuple[DocumentInput, Optional[str]]:
     """
     Resolve the request into a DocumentInput for the provider.
@@ -259,6 +267,7 @@ async def run_extraction(
     session: Session,
     req: ExtractRequest,
     provider_name: Optional[str] = None,
+    model_name: Optional[str] = None,
     baseline_case_id: Optional[str] = None,
     baseline_dataset: Optional[str] = None,
     parent_run_id: Optional[int] = None,
@@ -268,7 +277,7 @@ async def run_extraction(
     
     Returns (extraction_id, paper_id, payload).
     """
-    provider = get_provider_by_name(provider_name)
+    provider = get_provider_by_name(provider_name, model_name=model_name)
     (
         system_prompt,
         resolved_prompt_id,
@@ -442,6 +451,7 @@ async def run_extraction_from_file(
     title: Optional[str] = None,
     prompt_id: Optional[int] = None,
     provider_name: Optional[str] = None,
+    model_name: Optional[str] = None,
     baseline_case_id: Optional[str] = None,
     baseline_dataset: Optional[str] = None,
     parent_run_id: Optional[int] = None,
@@ -457,6 +467,7 @@ async def run_extraction_from_file(
         title=title,
         prompt_id=prompt_id,
         provider_name=provider_name,
+        model_name=model_name,
         baseline_case_id=baseline_case_id,
         baseline_dataset=baseline_dataset,
         parent_run_id=parent_run_id,
@@ -469,6 +480,7 @@ async def run_extraction_from_files(
     title: Optional[str] = None,
     prompt_id: Optional[int] = None,
     provider_name: Optional[str] = None,
+    model_name: Optional[str] = None,
     baseline_case_id: Optional[str] = None,
     baseline_dataset: Optional[str] = None,
     parent_run_id: Optional[int] = None,
@@ -481,7 +493,7 @@ async def run_extraction_from_files(
     if not files:
         raise ValueError("No files provided")
 
-    provider = get_provider_by_name(provider_name)
+    provider = get_provider_by_name(provider_name, model_name=model_name)
     capabilities = provider.capabilities()
     
     (
@@ -646,6 +658,7 @@ async def run_queued_extraction(
     pdf_url: str,
     pdf_urls: Optional[List[str]] = None,
     provider: str = "openai",
+    model: Optional[str] = None,
     prompt_id: Optional[int] = None,
     prompt_version_id: Optional[int] = None,
 ) -> Dict[str, Any]:
@@ -669,7 +682,7 @@ async def run_queued_extraction(
         Exception: If extraction fails
     """
     # Get provider instance
-    llm_provider = get_provider_by_name(provider)
+    llm_provider = get_provider_by_name(provider, model_name=model)
     
     (
         system_prompt,
@@ -881,6 +894,7 @@ async def run_followup(
     parent_run_id: int,
     instruction: str,
     provider_name: Optional[str] = None,
+    model_name: Optional[str] = None,
 ) -> Tuple[int, Optional[int], ExtractionPayload]:
     """
     Run a follow-up extraction using prior run context.
@@ -901,7 +915,8 @@ async def run_followup(
 
     # Provider selection: request override > prior run provider > default
     resolved_provider = provider_name or parent_run.model_provider or settings.LLM_PROVIDER
-    provider = get_provider_by_name(resolved_provider)
+    resolved_model = model_name or parent_run.model_name
+    provider = get_provider_by_name(resolved_provider, model_name=resolved_model)
 
     (
         system_prompt,
@@ -1024,6 +1039,7 @@ async def run_followup_stream(
     parent_run_id: int,
     instruction: str,
     provider_name: Optional[str] = None,
+    model_name: Optional[str] = None,
 ) -> AsyncGenerator[Dict[str, Any], None]:
     """
     Stream a follow-up extraction using prior run context.
@@ -1047,7 +1063,8 @@ async def run_followup_stream(
         parent_payload = {}
 
     resolved_provider = provider_name or parent_run.model_provider or settings.LLM_PROVIDER
-    provider = get_provider_by_name(resolved_provider)
+    resolved_model = model_name or parent_run.model_name
+    provider = get_provider_by_name(resolved_provider, model_name=resolved_model)
 
     (
         system_prompt,

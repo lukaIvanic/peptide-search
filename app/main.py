@@ -16,6 +16,7 @@ from .api.routers import (
     extraction_router,
     metadata_router,
     papers_router,
+    providers_router,
     runs_router,
     search_router,
     system_router,
@@ -113,6 +114,7 @@ def create_app() -> FastAPI:
             return FileResponse(static_dir / "topbar_animations.html")
 
     app.include_router(system_router)
+    app.include_router(providers_router)
     app.include_router(search_router)
     app.include_router(extraction_router)
     app.include_router(papers_router)

@@ -3,7 +3,7 @@
 	<head>
 		<meta charset="UTF-8" />
 		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
-		<title>Batch Overview - Peptide Literature Extractor</title>
+		<title>Evaluation Overview - Peptide Literature Extractor</title>
 		<link rel="preconnect" href="https://fonts.googleapis.com">
 		<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 		<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -16,14 +16,14 @@
 			<div class="brand">
 				<div class="logo"></div>
 				<div>
-					<div class="title">Batch Overview</div>
-					<div class="subtitle">Manage extraction batches and compare results</div>
+					<div class="title">Evaluation Overview</div>
+					<div class="subtitle">Manage extraction runs and compare evaluation results</div>
 				</div>
 			</div>
 			<nav class="nav">
 				<a href="/" class="nav-link">Dashboard</a>
 				<a href="/entities" class="nav-link">Entity Explorer</a>
-				<a href="/baseline" class="nav-link active">Batches</a>
+				<a href="/baseline" class="nav-link active">Evaluation</a>
 				<a href="/help" class="nav-link">Help</a>
 			</nav>
 		</header>
@@ -33,13 +33,13 @@
 			<section class="sw-card p-4">
 				<div class="flex flex-wrap items-center justify-between gap-3">
 					<div class="flex items-center gap-3">
-						<h2 class="section-title">Extraction Batches</h2>
+						<h2 class="section-title">Evaluation Runs</h2>
 						<span id="batchCount" class="sw-chip sw-kicker text-[10px] text-slate-500"></span>
 					</div>
 					<div class="flex items-center gap-3">
 						<span id="statusMessage" class="text-[11px] text-slate-500"></span>
 						<button id="newBatchBtn" class="sw-btn sw-btn--primary sw-btn--sm" type="button">
-							New Batch
+							New Run
 						</button>
 					</div>
 				</div>
@@ -53,27 +53,50 @@
 			<!-- Empty state -->
 			<section id="emptyState" class="hidden">
 				<div class="sw-card p-8 text-center">
-					<div class="sw-empty text-slate-500 mb-4">No batches yet</div>
-					<p class="text-sm text-slate-400 mb-4">Create a batch to run extractions on the self-assembly dataset.</p>
+					<div class="sw-empty text-slate-500 mb-4">No evaluation runs yet</div>
+					<p class="text-sm text-slate-400 mb-4">Create a run to evaluate extraction quality on the self-assembly dataset.</p>
 					<button id="emptyNewBatchBtn" class="sw-btn sw-btn--primary" type="button">
-						Create First Batch
+						Create First Run
 					</button>
 				</div>
 			</section>
 
 			<!-- Provider analytics -->
 			<section id="providerAccuracySection" class="sw-card p-4">
-				<div class="flex flex-wrap items-center justify-between gap-2">
-					<h3 class="section-title">Average Accuracy by Provider</h3>
-					<span id="providerAccuracySummary" class="text-[11px] text-slate-500"></span>
+				<div class="provider-accuracy-head">
+					<div class="provider-accuracy-head__title">
+						<h3 class="section-title">Provider Ranking</h3>
+						<span id="providerAccuracySummary" class="text-[11px] text-slate-500"></span>
+					</div>
+					<div id="providerMetricControls" class="provider-accuracy-controls">
+						<select
+							id="providerMetricSelect"
+							class="provider-accuracy-menu"
+							aria-label="Select provider ranking metric"
+						></select>
+					</div>
 				</div>
 				<div id="providerAccuracyChart" class="provider-accuracy-chart mt-3">
 					<div id="providerAccuracyState" class="provider-accuracy-chart__state text-[11px] text-slate-500">
-						Loading latest scored batches...
+						Loading latest scored evaluation runs...
 					</div>
 					<div id="providerAccuracyPlot" class="provider-accuracy-chart__plot">
 						<div class="sw-empty text-xs text-slate-500">Loading provider analytics...</div>
 					</div>
+				</div>
+			</section>
+
+			<section id="evaluationDangerZone" class="sw-card p-4 border border-rose-200">
+				<div class="flex flex-wrap items-center justify-between gap-3">
+					<div>
+						<h3 class="section-title text-rose-700">Danger Zone</h3>
+						<p class="text-xs text-slate-600 mt-1">
+							Reset baseline defaults for all evaluations. This removes local baseline edits across the app.
+						</p>
+					</div>
+					<button id="resetBaselineDefaultsBtn" class="sw-btn sw-btn--danger sw-btn--sm" type="button">
+						<span class="sw-btn__label">Reset Baseline Data</span>
+					</button>
 				</div>
 			</section>
 		</main>
@@ -83,10 +106,10 @@
 			<div class="fixed inset-0 bg-black/50 backdrop-blur-sm" id="modalBackdrop"></div>
 			<div class="fixed inset-0 flex items-center justify-center p-4">
 				<div class="sw-card p-6 w-full max-w-md relative">
-					<h3 class="section-title mb-4">Create New Batch</h3>
+					<h3 class="section-title mb-4">Create New Evaluation Run</h3>
 					<form id="newBatchForm" class="space-y-4">
 						<div>
-							<label class="sw-kicker text-[10px] text-slate-500 block mb-1">Batch Name (optional)</label>
+							<label class="sw-kicker text-[10px] text-slate-500 block mb-1">Run Name (optional)</label>
 							<input id="batchName" type="text" placeholder="e.g., Prompt v2 experiment"
 								class="sw-input w-full" />
 						</div>
@@ -100,6 +123,10 @@
 							</select>
 						</div>
 						<div>
+							<label class="sw-kicker text-[10px] text-slate-500 block mb-1">Custom model ID (optional)</label>
+							<input id="batchCustomModel" type="text" class="sw-input w-full" placeholder="Use provider default" />
+						</div>
+						<div>
 							<label class="sw-kicker text-[10px] text-slate-500 block mb-1">Prompt</label>
 							<select id="batchPrompt" class="sw-select w-full">
 								<option value="">Default (active prompt)</option>
@@ -108,7 +135,7 @@
 						<div class="flex items-center justify-end gap-3 pt-2">
 							<button type="button" id="cancelBatchBtn" class="sw-btn sw-btn--ghost">Cancel</button>
 							<button type="submit" id="submitBatchBtn" class="sw-btn sw-btn--primary">
-								<span class="sw-btn__label">Start Batch</span>
+								<span class="sw-btn__label">Start Run</span>
 							</button>
 						</div>
 					</form>
@@ -116,6 +143,6 @@
 			</div>
 		</div>
 
-		<script type="module" src="/static/batch-overview.js?v=2026-02-10"></script>
+		<script type="module" src="/static/batch-overview.js?v=2026-02-10-2"></script>
 	</body>
 </html>

@@ -24,7 +24,7 @@
 			<nav class="nav">
 				<a href="/" class="nav-link">Dashboard</a>
 				<a href="/entities" class="nav-link">Entity Explorer</a>
-				<a href="/baseline" class="nav-link">Baseline</a>
+				<a href="/baseline" class="nav-link">Evaluation</a>
 				<a href="/help" class="nav-link">Help</a>
 				<button id="startTourBtn" class="nav-link" type="button">Start tour</button>
 			</nav>
@@ -64,6 +64,11 @@
 								<option value="openai-nano">OpenAI - Nano</option>
 								<option value="mock">Mock (Demo)</option>
 							</select>
+						</div>
+						<div class="flex items-center gap-2">
+							<label class="sw-kicker text-[10px] text-slate-500">Model:</label>
+							<input id="providerModelInput" type="text" placeholder="Default model"
+								class="sw-input sw-input--sm min-w-[11rem]" />
 						</div>
 						<button id="searchBtn" class="sw-btn sw-btn--primary" type="button">
 							Search

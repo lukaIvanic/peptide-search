@@ -3,11 +3,12 @@ from __future__ import annotations
 import json
 from typing import List
 
-from fastapi import APIRouter, Depends, Query
+from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy import or_
 from sqlmodel import Session, select
 
 from ...db import get_session
+from ...integrations.llm import ProviderSelectionError, resolve_provider_selection
 from ...persistence.models import ExtractionRun, Paper, RunStatus
 from ...schemas import EnqueueRequest, EnqueueResponse, EnqueuedRun, SearchItem, SearchResponse
 from ...services.queue_coordinator import QueueCoordinator
@@ -91,6 +92,18 @@ async def enqueue_papers(
     session: Session = Depends(get_session),
 ) -> EnqueueResponse:
     """Enqueue papers for batch extraction."""
+    try:
+        selection = resolve_provider_selection(provider=req.provider, model=req.model)
+    except ProviderSelectionError as exc:
+        raise HTTPException(
+            status_code=400,
+            detail={
+                "code": "bad_request",
+                "message": str(exc),
+                "details": exc.details,
+            },
+        ) from exc
+
     queue = get_queue()
     coordinator = QueueCoordinator()
     runs: List[EnqueuedRun] = []
@@ -166,7 +179,8 @@ async def enqueue_papers(
         run = ExtractionRun(
             paper_id=paper.id,
             status=RunStatus.QUEUED.value,
-            model_provider=req.provider,
+            model_provider=selection.provider_id,
+            model_name=selection.model_id,
             pdf_url=item.pdf_url,
             prompt_id=req.prompt_id,
         )

@@ -35,6 +35,7 @@ class QueueItem:
     title: str
     pdf_urls: Optional[List[str]] = None
     provider: str = "openai"
+    model: Optional[str] = None
     force: bool = False
     prompt_id: Optional[int] = None
     prompt_version_id: Optional[int] = None
@@ -168,6 +169,7 @@ class ExtractionQueue:
                 run=run,
                 title=item.title,
                 provider=item.provider,
+                model=item.model,
                 pdf_url=item.pdf_url,
                 pdf_urls=item.pdf_urls,
                 prompt_id=item.prompt_id,
@@ -220,6 +222,7 @@ class ExtractionQueue:
                 pdf_url=payload.pdf_url,
                 pdf_urls=payload.pdf_urls,
                 provider=payload.provider,
+                model=payload.model,
                 prompt_id=payload.prompt_id,
                 prompt_version_id=payload.prompt_version_id,
             )

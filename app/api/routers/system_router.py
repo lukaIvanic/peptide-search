@@ -10,6 +10,7 @@ from sqlmodel import Session
 
 from ...config import settings
 from ...db import get_session
+from ...integrations.llm import resolve_provider_selection
 from ...persistence.models import ActiveSourceLock, ExtractionEntity, ExtractionRun, Paper, QueueJob
 from ...schemas import ClearExtractionsResponse, HealthResponse
 from ...services.queue_service import get_broadcaster, start_queue, stop_queue
@@ -19,12 +20,20 @@ router = APIRouter(tags=["system"])
 
 @router.get("/api/health", response_model=HealthResponse)
 async def health() -> HealthResponse:
-    model = None
-    if settings.LLM_PROVIDER == "openai":
-        model = settings.OPENAI_MODEL
-    elif settings.LLM_PROVIDER == "deepseek":
-        model = settings.DEEPSEEK_MODEL
-    return HealthResponse(status="ok", provider=settings.LLM_PROVIDER, model=model)
+    try:
+        selection = resolve_provider_selection(
+            provider=settings.LLM_PROVIDER,
+            model=None,
+            default_provider=settings.LLM_PROVIDER,
+            require_enabled=False,
+        )
+        return HealthResponse(
+            status="ok",
+            provider=selection.provider_id,
+            model=selection.model_id,
+        )
+    except Exception:
+        return HealthResponse(status="ok", provider=settings.LLM_PROVIDER or "unknown", model=None)
 
 
 @router.post("/api/admin/clear-extractions", response_model=ClearExtractionsResponse)

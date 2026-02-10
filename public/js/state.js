@@ -33,6 +33,8 @@ const defaultState = {
     provider: 'openai',
     model: null,
     selectedProvider: 'openai',
+    selectedModel: '',
+    providerCatalog: [],
 
     // Prompt selection
     prompts: [],
@@ -116,6 +118,22 @@ export function setSelectedProvider(provider) {
 
 export function getSelectedProvider() {
     return appStore.get('selectedProvider');
+}
+
+export function setSelectedModel(model) {
+    appStore.set({ selectedModel: model || '' });
+}
+
+export function getSelectedModel() {
+    return appStore.get('selectedModel') || '';
+}
+
+export function setProviderCatalog(catalog) {
+    appStore.set({ providerCatalog: Array.isArray(catalog) ? catalog : [] });
+}
+
+export function getProviderCatalog() {
+    return appStore.get('providerCatalog') || [];
 }
 
 // --- Prompt Actions ---

@@ -1,5 +1,6 @@
 import * as api from '../../api.js';
 
 export const getHealth = () => api.getHealth();
-export const createSSEConnection = (handlers) => api.createSSEConnection(handlers);
-export const extractFile = (files, promptId, title) => api.extractFile(files, promptId, title);
+export const createSSEConnection = (onMessage, onError) => api.createSSEConnection(onMessage, onError);
+export const extractFile = (files, promptId, title, provider, model) =>
+    api.extractFile(files, promptId, title, provider, model);

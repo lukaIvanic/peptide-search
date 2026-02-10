@@ -62,6 +62,7 @@ class BatchRun(SQLModel, table=True):
     total_time_ms: int = 0
     matched_entities: int = 0  # count of extracted sequences matching baseline
     total_expected_entities: int = 0  # count of baseline entities checked
+    metrics_stale: bool = Field(default=False, index=True)
     created_at: datetime = Field(default_factory=utc_now, nullable=False)
     completed_at: Optional[datetime] = Field(default=None)  # when batch finished (for wall-clock time)
 
@@ -159,6 +160,41 @@ class ActiveSourceLock(SQLModel, table=True):
     source_fingerprint: str = Field(primary_key=True)
     run_id: int = Field(foreign_key="extraction_run.id", index=True)
     created_at: datetime = Field(default_factory=utc_now, nullable=False)
+
+
+class BaselineDataset(SQLModel, table=True):
+    """Editable baseline dataset metadata."""
+
+    __tablename__ = "baseline_dataset"
+
+    id: str = Field(primary_key=True)
+    label: Optional[str] = Field(default=None)
+    description: Optional[str] = Field(default=None)
+    source_file: Optional[str] = Field(default=None)
+    original_count: int = Field(default=0)
+    created_at: datetime = Field(default_factory=utc_now, nullable=False)
+    updated_at: datetime = Field(default_factory=utc_now, nullable=False)
+
+
+class BaselineCase(SQLModel, table=True):
+    """Editable baseline case row (DB-canonical runtime baseline)."""
+
+    __tablename__ = "baseline_case"
+
+    id: str = Field(primary_key=True)
+    dataset_id: str = Field(foreign_key="baseline_dataset.id", index=True)
+    sequence: Optional[str] = Field(default=None)
+    n_terminal: Optional[str] = Field(default=None)
+    c_terminal: Optional[str] = Field(default=None)
+    labels_json: str = Field(default="[]")
+    doi: Optional[str] = Field(default=None, index=True)
+    pubmed_id: Optional[str] = Field(default=None, index=True)
+    paper_url: Optional[str] = Field(default=None)
+    pdf_url: Optional[str] = Field(default=None)
+    metadata_json: str = Field(default="{}")
+    source_unverified: bool = Field(default=False)
+    created_at: datetime = Field(default_factory=utc_now, nullable=False)
+    updated_at: datetime = Field(default_factory=utc_now, nullable=False)
 
 
 class BaselineCaseRun(SQLModel, table=True):

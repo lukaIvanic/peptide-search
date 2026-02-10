@@ -987,6 +987,51 @@ body.theme-synthwave {
 	gap: 10px;
 }
 
+.theme-synthwave .provider-accuracy-head {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	justify-content: space-between;
+	gap: 10px 14px;
+}
+
+.theme-synthwave .provider-accuracy-head__title {
+	display: flex;
+	flex-direction: column;
+	gap: 4px;
+}
+
+.theme-synthwave .provider-accuracy-controls {
+	display: flex;
+	align-items: center;
+	justify-content: flex-end;
+}
+
+.theme-synthwave .provider-accuracy-menu {
+	appearance: none;
+	background: transparent;
+	border: 0;
+	border-bottom: 1px solid #cfd9ff;
+	border-radius: 0;
+	color: #334155;
+	font-family: "Plus Jakarta Sans", sans-serif;
+	font-size: 12px;
+	font-weight: 600;
+	letter-spacing: 0.01em;
+	padding: 2px 18px 3px 2px;
+	min-width: 150px;
+	line-height: 1.2;
+	box-shadow: none;
+	background-image:
+		linear-gradient(45deg, transparent 50%, #64748b 50%),
+		linear-gradient(135deg, #64748b 50%, transparent 50%);
+	background-position:
+		calc(100% - 11px) calc(50% + 1px),
+		calc(100% - 7px) calc(50% + 1px);
+	background-size: 4px 4px, 4px 4px;
+	background-repeat: no-repeat;
+}
+
 .theme-synthwave .provider-accuracy-chart__state {
 	min-height: 16px;
 	line-height: 1.35;
@@ -1105,6 +1150,16 @@ body.theme-synthwave {
 }
 
 @media (max-width: 720px) {
+	.theme-synthwave .provider-accuracy-controls {
+		width: 100%;
+		justify-content: flex-start;
+	}
+
+	.theme-synthwave .provider-accuracy-menu {
+		width: 100%;
+		min-width: 0;
+	}
+
 	.theme-synthwave .provider-accuracy-chart__plot {
 		padding: 10px 8px 8px;
 		border-radius: 14px;

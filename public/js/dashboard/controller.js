@@ -19,6 +19,10 @@ import {
     isPaperSelected,
     setSelectedProvider,
     getSelectedProvider,
+    setSelectedModel,
+    getSelectedModel,
+    setProviderCatalog,
+    getProviderCatalog,
     setPrompts,
     setSelectedPrompt,
     getSelectedPrompt,
@@ -89,6 +93,66 @@ const CREATE_PROMPT_OPTION = '__create__';
 
 const BLOCKING_ERROR_ID = 'blockingError';
 
+function getProviderDefaults(providerId) {
+    const catalog = getProviderCatalog();
+    const row = catalog.find((item) => item.provider_id === providerId);
+    return {
+        label: row?.label || providerId,
+        defaultModel: row?.default_model || '',
+    };
+}
+
+function hydrateProviderSelectors() {
+    const select = $('#providerSelect');
+    const modelInput = $('#providerModelInput');
+    const catalog = getProviderCatalog().filter((item) => item.enabled);
+    if (!select || !catalog.length) {
+        return;
+    }
+
+    const previous = getSelectedProvider() || select.value;
+    const oldDefault = getProviderDefaults(previous).defaultModel;
+    const previousModel = getSelectedModel();
+
+    select.innerHTML = '';
+    for (const item of catalog) {
+        const option = document.createElement('option');
+        option.value = item.provider_id;
+        option.textContent = item.label || item.provider_id;
+        option.dataset.defaultModel = item.default_model || '';
+        select.appendChild(option);
+    }
+
+    const selected = catalog.some((item) => item.provider_id === previous)
+        ? previous
+        : catalog[0].provider_id;
+    select.value = selected;
+    setSelectedProvider(selected);
+
+    const nextDefault = getProviderDefaults(selected).defaultModel;
+    if (modelInput) {
+        modelInput.placeholder = nextDefault ? `Default: ${nextDefault}` : 'Custom model (optional)';
+        if (!previousModel || previousModel === oldDefault) {
+            modelInput.value = nextDefault || '';
+            setSelectedModel(nextDefault || '');
+        } else {
+            setSelectedModel(previousModel);
+        }
+    } else if (!getSelectedModel()) {
+        setSelectedModel(nextDefault || '');
+    }
+}
+
+async function loadProviderCatalog() {
+    try {
+        const payload = await api.getProviders();
+        setProviderCatalog(payload.providers || []);
+        hydrateProviderSelectors();
+    } catch (err) {
+        console.error('Failed to load providers:', err);
+    }
+}
+
 function showBlockingError(title, message, detail) {
     let overlay = document.querySelector(`#${BLOCKING_ERROR_ID}`);
     if (!overlay) {
@@ -137,6 +201,8 @@ function appendCreatePromptOption(select) {
 
 // Initialize application
 export async function initDashboard() {
+    await loadProviderCatalog();
+
     // Load provider info
     try {
         const health = await api.getHealth();
@@ -752,8 +818,29 @@ function initEventHandlers() {
     
     // Provider selector
     $('#providerSelect').addEventListener('change', (e) => {
-        setSelectedProvider(e.target.value);
+        const nextProvider = e.target.value;
+        setSelectedProvider(nextProvider);
+        const modelInput = $('#providerModelInput');
+        if (modelInput) {
+            const defaults = getProviderDefaults(nextProvider);
+            modelInput.placeholder = defaults.defaultModel
+                ? `Default: ${defaults.defaultModel}`
+                : 'Custom model (optional)';
+            modelInput.value = defaults.defaultModel || '';
+            setSelectedModel(modelInput.value);
+        }
     });
+    $('#providerModelInput')?.addEventListener('input', (e) => {
+        setSelectedModel((e.target.value || '').trim());
+    });
+    const providerSelect = $('#providerSelect');
+    if (providerSelect?.value) {
+        setSelectedProvider(providerSelect.value);
+    }
+    const modelInput = $('#providerModelInput');
+    if (modelInput) {
+        setSelectedModel((modelInput.value || '').trim());
+    }
     
     // Start batch extraction
     $('#startBatchBtn').addEventListener('click', handleStartBatch);
@@ -1065,6 +1152,7 @@ async function handleStartBatch() {
     if (papers.length === 0) return;
     
     const provider = getSelectedProvider();
+    const model = (getSelectedModel() || '').trim() || null;
     const promptId = getSelectedPrompt();
     const resolvedPromptId = promptId ? promptId : null;
     
@@ -1081,7 +1169,7 @@ async function handleStartBatch() {
     }));
     
     try {
-        const result = await api.enqueue(enqueueItems, provider, resolvedPromptId);
+        const result = await api.enqueue(enqueueItems, provider, resolvedPromptId, model);
         console.log('Enqueue result:', result);
         
         const selectedKeys = new Set(papers.map(p => p.pdf_url || p.url));
@@ -1249,7 +1337,12 @@ async function handleResolveRunSource(runId) {
 async function handleRetryRunWithResolved(runId, sourceUrl) {
     try {
         const provider = getSelectedProvider();
-        const result = await api.retryRunWithSource(runId, { source_url: sourceUrl, provider });
+        const model = (getSelectedModel() || '').trim() || null;
+        const result = await api.retryRunWithSource(runId, {
+            source_url: sourceUrl,
+            provider,
+            model,
+        });
         console.log('Retry with source result:', result);
         const current = { ...(appStore.get('resolvedRunSources') || {}) };
         delete current[runId];
@@ -1268,7 +1361,8 @@ async function handleRetryRunWithResolved(runId, sourceUrl) {
 async function handleUploadRunFile(runId, files) {
     try {
         const provider = getSelectedProvider();
-        await api.uploadRunPdf(runId, files, provider);
+        const model = (getSelectedModel() || '').trim() || null;
+        await api.uploadRunPdf(runId, files, provider, null, model);
         const paperId = appStore.get('drawerPaperId');
         if (paperId) {
             await loadPaperDetails(paperId);
@@ -1289,12 +1383,14 @@ async function handleDashboardUpload(files) {
         return;
     }
     const promptId = getSelectedPrompt();
+    const provider = getSelectedProvider();
+    const model = (getSelectedModel() || '').trim() || null;
     const title = list.length === 1 ? list[0].name.replace(/\.pdf$/i, '') : null;
     const label = list.length === 1 ? 'Uploading PDF...' : `Uploading ${list.length} PDFs...`;
     setSearchStatus(label, true);
     
     try {
-        await api.extractFile(list, promptId, title);
+        await api.extractFile(list, promptId, title, provider, model);
         await refreshPapers();
         const doneLabel = list.length === 1
             ? 'PDF uploaded. Extraction queued.'
@@ -1674,7 +1770,9 @@ async function loadFailureSummary() {
 
 async function handleForceReextract(paperId) {
     try {
-        const result = await api.forceReextract(paperId);
+        const provider = getSelectedProvider();
+        const model = (getSelectedModel() || '').trim() || null;
+        const result = await api.forceReextract(paperId, provider, model);
         console.log('Force re-extract result:', result);
         
         // Refresh the drawer to show new run

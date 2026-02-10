@@ -3,13 +3,13 @@
 	<head>
 		<meta charset="UTF-8" />
 		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
-		<title>Baseline Benchmark - Peptide Literature Extractor</title>
+		<title>Evaluation Details - Peptide Literature Extractor</title>
 		<link rel="preconnect" href="https://fonts.googleapis.com">
 		<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 		<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
 		<script src="https://cdn.tailwindcss.com"></script>
 		<link rel="stylesheet" href="/static/styles.css?v=2026-02-09" />
-		<script src="/static/app_config.js?v=2026-02-09"></script>
+		<script src="/static/app_config.js?v=2026-02-10-3"></script>
 	</head>
 	<body class="theme-synthwave baseline-page min-h-screen flex flex-col">
 		<header class="topbar">
@@ -20,76 +20,19 @@
 				</a>
 				<div class="logo"></div>
 				<div>
-				<div class="title" id="pageTitle">Batch Details</div>
+				<div class="title" id="pageTitle">Evaluation Details</div>
 				<div class="subtitle" id="pageSubtitle">Compare expected entities by paper against extraction runs</div>
 				</div>
 			</div>
 			<nav class="nav">
 				<a href="/" class="nav-link">Dashboard</a>
 				<a href="/entities" class="nav-link">Entity Explorer</a>
-				<a href="/baseline" class="nav-link active">Batches</a>
+				<a href="/baseline" class="nav-link active">Evaluation</a>
 				<a href="/help" class="nav-link">Help</a>
 			</nav>
 		</header>
 
 		<main class="max-w-7xl w-full flex-1 mx-auto px-6 py-6 space-y-6">
-			<section class="sw-card p-3">
-				<div class="flex flex-wrap items-center gap-3 text-[11px] text-slate-600 w-full">
-					<!-- Hidden in single-batch mode -->
-					<label id="datasetFilterLabel" class="flex items-center gap-2 flex-1 min-w-[180px] hidden">
-						<span class="sw-kicker text-[10px] text-slate-500">Dataset</span>
-						<select id="datasetFilter" class="sw-select sw-select--sm w-full">
-							<option value="">All datasets</option>
-						</select>
-					</label>
-					<!-- Hidden in single-batch mode -->
-					<label id="batchFilterLabel" class="flex items-center gap-2 min-w-[160px] hidden">
-						<span class="sw-kicker text-[10px] text-slate-500">Batch</span>
-						<select id="batchFilter" class="sw-select sw-select--sm w-full">
-							<option value="">All runs</option>
-						</select>
-					</label>
-					<div class="flex items-center gap-2 flex-[2] min-w-[220px]">
-						<input id="caseSearch" type="text" placeholder="Search DOI, sequence, or ID"
-							class="sw-input sw-input--sm w-full" />
-						<button id="searchBtn" class="sw-btn sw-btn--sm sw-btn--ghost" type="button">
-							Search
-						</button>
-					</div>
-					<label class="flex items-center gap-2 min-w-[160px]">
-						<span class="sw-kicker text-[10px] text-slate-500">Provider</span>
-						<select id="baselineProvider" class="sw-select sw-select--sm w-full">
-							<option value="openai">OpenAI - Full</option>
-							<option value="openai-mini">OpenAI - Mini</option>
-							<option value="openai-nano" selected>OpenAI - Nano</option>
-							<option value="mock">Mock (Demo)</option>
-						</select>
-					</label>
-					<label class="flex items-center gap-2 min-w-[180px]">
-						<span class="sw-kicker text-[10px] text-slate-500">PDF status</span>
-						<select id="pdfStatusFilter" class="sw-select sw-select--sm w-full">
-							<option value="all">All</option>
-							<option value="manual">Manual PDF required</option>
-							<option value="available">PDF available</option>
-						</select>
-					</label>
-					<button id="runBaselineBtn" class="sw-btn sw-btn--primary sw-btn--sm" type="button">
-						Run benchmark
-					</button>
-					<!-- Hidden in single-batch mode -->
-					<button id="runAllBtn" class="sw-btn sw-btn--sm sw-btn--accent hidden" type="button" title="Run all papers with local PDFs">
-						Run All
-					</button>
-					<button id="retryAllFailedBtn" class="sw-btn sw-btn--sm sw-btn--ghost hidden" type="button" title="Retry all failed extractions in current batch">
-						Retry Failed
-					</button>
-					<button id="resolveBaselineBtn" class="sw-btn sw-btn--sm sw-btn--ghost" type="button">
-						Find PDFs
-					</button>
-					<span id="baselineStatus" class="sw-chip text-[10px] text-slate-500"></span>
-				</div>
-			</section>
-
 			<!-- Batch summary panel (shown when batch selected) -->
 			<section id="batchSummary" class="sw-card p-3 hidden">
 				<div class="flex flex-wrap items-center gap-4 text-[11px] text-slate-600">
@@ -104,6 +47,10 @@
 					<div class="flex items-center gap-2">
 						<span class="sw-kicker text-[10px] text-slate-500">Progress</span>
 						<span id="batchProgress" class="sw-chip"></span>
+					</div>
+					<div class="flex items-center gap-2">
+						<span class="sw-kicker text-[10px] text-slate-500">Recompute</span>
+						<span id="baselineRecomputeStatus" class="sw-chip text-[10px] text-slate-500">Idle</span>
 					</div>
 					<div class="flex items-center gap-2">
 						<span class="sw-kicker text-[10px] text-slate-500">Match Rate</span>
@@ -126,9 +73,21 @@
 
 			<section class="grid grid-cols-1 lg:grid-cols-3 gap-6">
 				<div class="sw-card p-4 lg:col-span-1">
-					<div class="flex items-center justify-between mb-3">
-						<div class="section-title">Papers</div>
-						<span id="caseCount" class="sw-chip sw-kicker text-[10px] text-slate-500"></span>
+					<div class="flex flex-wrap items-start justify-between gap-3 mb-3">
+						<div class="space-y-2">
+							<div class="flex items-center gap-2">
+								<div class="section-title">Papers</div>
+								<span id="caseCount" class="sw-chip sw-kicker text-[10px] text-slate-500"></span>
+							</div>
+							<span id="baselineStatus" class="sw-chip text-[10px] text-slate-500"></span>
+						</div>
+						<div class="flex items-center gap-2 min-w-[220px] w-full sm:w-auto">
+							<input id="caseSearch" type="text" placeholder="Search DOI, sequence, or ID"
+								class="sw-input sw-input--sm w-full sm:w-[240px]" />
+							<button id="searchBtn" class="sw-btn sw-btn--sm sw-btn--ghost" type="button">
+								Search
+							</button>
+						</div>
 					</div>
 					<div id="baselineList" class="list list--synth max-h-[70vh] overflow-y-auto"></div>
 				</div>
@@ -136,7 +95,7 @@
 				<div class="lg:col-span-2">
 					<div class="sw-card p-4 space-y-3">
 						<div class="flex flex-wrap items-center gap-3 text-xs text-slate-600">
-							<div class="section-title">Baseline analysis</div>
+							<div class="section-title">Evaluation analysis</div>
 							<span id="analysisHint" class="sw-chip text-[10px] text-slate-500">Successful runs in current filter</span>
 						</div>
 						<div id="baselineAnalysis" class="space-y-3 text-xs text-slate-600">
@@ -163,7 +122,7 @@
 						</div>
 						<div class="grid grid-cols-1 lg:grid-cols-2 gap-0 border border-slate-200 overflow-hidden divide-y lg:divide-y-0 lg:divide-x divide-slate-200">
 							<div class="p-4">
-								<div class="section-title mb-2">Baseline</div>
+								<div class="section-title mb-2">Expected</div>
 								<div id="baselineDetail" class="space-y-3 text-xs text-slate-600"></div>
 							</div>
 							<div class="p-4">
@@ -176,6 +135,75 @@
 			</section>
 		</main>
 
-		<script type="module" src="/static/baseline.js?v=2026-02-09"></script>
+		<div id="baselineCaseModal" class="fixed inset-0 z-50 hidden">
+			<div id="baselineCaseModalBackdrop" class="fixed inset-0 bg-black/50 backdrop-blur-sm"></div>
+			<div class="fixed inset-0 flex items-center justify-center p-4">
+				<div class="sw-card p-4 w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+					<div class="flex items-center justify-between mb-3">
+						<div class="section-title" id="baselineCaseModalTitle">Edit Evaluation Case</div>
+						<button id="baselineCaseModalClose" class="sw-btn sw-btn--sm sw-btn--ghost" type="button">Close</button>
+					</div>
+					<form id="baselineCaseForm" class="space-y-3">
+						<div class="grid grid-cols-1 md:grid-cols-2 gap-3 text-xs">
+							<label class="flex flex-col gap-1">
+								<span class="sw-kicker text-[10px] text-slate-500">Case ID</span>
+								<input id="baselineCaseId" class="sw-input sw-input--sm" />
+							</label>
+							<label class="flex flex-col gap-1">
+								<span class="sw-kicker text-[10px] text-slate-500">Dataset</span>
+								<input id="baselineCaseDataset" class="sw-input sw-input--sm" />
+							</label>
+							<label class="md:col-span-2 flex flex-col gap-1">
+								<span class="sw-kicker text-[10px] text-slate-500">Sequence</span>
+								<input id="baselineCaseSequence" class="sw-input sw-input--sm" />
+							</label>
+							<label class="flex flex-col gap-1">
+								<span class="sw-kicker text-[10px] text-slate-500">N-terminal</span>
+								<input id="baselineCaseNTerminal" class="sw-input sw-input--sm" />
+							</label>
+							<label class="flex flex-col gap-1">
+								<span class="sw-kicker text-[10px] text-slate-500">C-terminal</span>
+								<input id="baselineCaseCTerminal" class="sw-input sw-input--sm" />
+							</label>
+							<label class="md:col-span-2 flex flex-col gap-1">
+								<span class="sw-kicker text-[10px] text-slate-500">Labels (comma separated)</span>
+								<input id="baselineCaseLabels" class="sw-input sw-input--sm" />
+							</label>
+							<label class="md:col-span-2 flex flex-col gap-1">
+								<span class="sw-kicker text-[10px] text-slate-500">DOI</span>
+								<input id="baselineCaseDoi" class="sw-input sw-input--sm" />
+							</label>
+							<label class="flex flex-col gap-1">
+								<span class="sw-kicker text-[10px] text-slate-500">PubMed ID</span>
+								<input id="baselineCasePubmedId" class="sw-input sw-input--sm" />
+							</label>
+							<label class="flex flex-col gap-1">
+								<span class="sw-kicker text-[10px] text-slate-500">PDF URL</span>
+								<input id="baselineCasePdfUrl" class="sw-input sw-input--sm" />
+							</label>
+							<label class="md:col-span-2 flex flex-col gap-1">
+								<span class="sw-kicker text-[10px] text-slate-500">Paper URL</span>
+								<input id="baselineCasePaperUrl" class="sw-input sw-input--sm" />
+							</label>
+							<label class="md:col-span-2 flex flex-col gap-1">
+								<span class="sw-kicker text-[10px] text-slate-500">Metadata (JSON object)</span>
+								<textarea id="baselineCaseMetadata" class="sw-input sw-input--sm min-h-[96px]"></textarea>
+							</label>
+							<label class="md:col-span-2 flex items-center gap-2 text-xs">
+								<input id="baselineCaseUnverified" type="checkbox" />
+								<span>Source unverified</span>
+							</label>
+						</div>
+						<div id="baselineCaseModalError" class="text-xs text-red-500 hidden"></div>
+						<div class="flex justify-end gap-2 pt-2">
+							<button id="baselineCaseDeleteBtn" class="sw-btn sw-btn--sm sw-btn--ghost text-red-500" type="button">Delete Case</button>
+							<button id="baselineCaseSaveBtn" class="sw-btn sw-btn--sm sw-btn--primary" type="submit">Save</button>
+						</div>
+					</form>
+				</div>
+			</div>
+		</div>
+
+		<script type="module" src="/static/baseline.js?v=2026-02-10-3"></script>
 	</body>
 </html>

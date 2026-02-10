@@ -30,6 +30,7 @@ class BaselineCase(BaseModel):
     id: str
     dataset: str
     paper_key: Optional[str] = None
+    updated_at: Optional[str] = None
     sequence: Optional[str] = None
     n_terminal: Optional[str] = None
     c_terminal: Optional[str] = None
@@ -62,6 +63,7 @@ class BaselineEnqueuedRun(BaseModel):
 
 class BaselineEnqueueRequest(BaseModel):
     provider: str = "openai"
+    model: Optional[str] = None
     prompt_id: Optional[int] = None
     force: bool = False
     dataset: Optional[str] = None
@@ -99,7 +101,63 @@ class LocalPdfSiInfoResponse(BaseModel):
 class BaselineRetryRequest(BaseModel):
     source_url: Optional[str] = None
     provider: Optional[str] = None
+    model: Optional[str] = None
     prompt_id: Optional[int] = None
+
+
+class BaselineCaseCreateRequest(BaseModel):
+    id: str
+    dataset: str
+    sequence: Optional[str] = None
+    n_terminal: Optional[str] = None
+    c_terminal: Optional[str] = None
+    labels: List[str] = Field(default_factory=list)
+    doi: Optional[str] = None
+    pubmed_id: Optional[str] = None
+    paper_url: Optional[str] = None
+    pdf_url: Optional[str] = None
+    source_unverified: bool = False
+    metadata: Dict[str, Any] = Field(default_factory=dict)
+
+
+class BaselineCaseUpdateRequest(BaseModel):
+    expected_updated_at: str
+    dataset: Optional[str] = None
+    sequence: Optional[str] = None
+    n_terminal: Optional[str] = None
+    c_terminal: Optional[str] = None
+    labels: Optional[List[str]] = None
+    doi: Optional[str] = None
+    pubmed_id: Optional[str] = None
+    paper_url: Optional[str] = None
+    pdf_url: Optional[str] = None
+    source_unverified: Optional[bool] = None
+    metadata: Optional[Dict[str, Any]] = None
+
+
+class BaselineCaseDeleteRequest(BaseModel):
+    expected_updated_at: str
+
+
+class BaselineDeleteResponse(BaseModel):
+    status: str
+    deleted_cases: int
+
+
+class BaselineResetResponse(BaseModel):
+    status: str
+    deleted_cases: int
+    inserted_cases: int
+    total_cases: int
+
+
+class BaselineRecomputeStatusResponse(BaseModel):
+    running: bool
+    queued: bool
+    stale_batches: int
+    processing_batches: int
+    last_started_at: Optional[str] = None
+    last_finished_at: Optional[str] = None
 
 
 class BaselineShadowSeedRequest(BaseModel):
@@ -120,6 +178,7 @@ class BatchEnqueueRequest(BaseModel):
     dataset: str
     label: Optional[str] = None
     provider: str = "openai-nano"
+    model: Optional[str] = None
     prompt_id: Optional[int] = None
     force: bool = False
 
@@ -143,6 +202,7 @@ class BatchInfo(BaseModel):
     matched_entities: int = 0
     total_expected_entities: int = 0
     match_rate: Optional[float] = None
+    papers_all_matched: int = 0
     estimated_cost_usd: Optional[float] = None
     created_at: str
 
@@ -167,6 +227,7 @@ class BatchRetryRequest(BaseModel):
 
     batch_id: str
     provider: Optional[str] = None
+    model: Optional[str] = None
 
 
 class BatchRetryResponse(BaseModel):

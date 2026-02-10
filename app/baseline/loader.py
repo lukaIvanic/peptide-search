@@ -7,6 +7,11 @@ from pathlib import Path
 from typing import Dict, List, Optional
 from urllib.parse import urlparse
 
+from sqlmodel import Session
+
+from ..db import engine
+from ..services.baseline_store import BaselineStore
+
 
 BASELINE_DIR = Path(__file__).resolve().parent / "data"
 LOCAL_PDFS_PATH = BASELINE_DIR / "local_pdfs.json"
@@ -184,11 +189,59 @@ def is_local_pdf_unverified(doi: Optional[str]) -> bool:
 
 
 @lru_cache(maxsize=1)
-def load_index() -> Dict:
+def _load_index_backup() -> Dict:
     index_path = BASELINE_DIR / "index.json"
     if not index_path.exists():
         return {"schema_version": "v1", "datasets": [], "total_cases": 0}
     return json.loads(index_path.read_text(encoding="utf-8"))
+
+
+@lru_cache(maxsize=32)
+def _load_dataset_backup(dataset_id: str) -> List[Dict]:
+    dataset_path = BASELINE_DIR / f"{dataset_id}.json"
+    if not dataset_path.exists():
+        return []
+    return json.loads(dataset_path.read_text(encoding="utf-8"))
+
+
+def load_backup_index() -> Dict:
+    return _load_index_backup()
+
+
+def load_backup_dataset(dataset_id: str) -> List[Dict]:
+    return _load_dataset_backup(dataset_id)
+
+
+def _db_has_cases() -> bool:
+    try:
+        with Session(engine) as session:
+            return BaselineStore(session).has_cases()
+    except Exception:
+        return False
+
+
+def load_index() -> Dict:
+    if _db_has_cases():
+        with Session(engine) as session:
+            store = BaselineStore(session)
+            datasets = store.list_datasets()
+            return {
+                "schema_version": "v1-db",
+                "generated_at": None,
+                "datasets": [
+                    {
+                        "id": row["id"],
+                        "label": row.get("label"),
+                        "description": row.get("description"),
+                        "source_file": row.get("source_file"),
+                        "count": row.get("count", 0),
+                        "file": f"{row['id']}.json",
+                    }
+                    for row in datasets
+                ],
+                "total_cases": sum(int(row.get("count", 0)) for row in datasets),
+            }
+    return _load_index_backup()
 
 
 def list_dataset_ids() -> List[str]:
@@ -196,26 +249,31 @@ def list_dataset_ids() -> List[str]:
     return [entry.get("id") for entry in index.get("datasets", []) if entry.get("id")]
 
 
-@lru_cache(maxsize=32)
 def load_dataset(dataset_id: str) -> List[Dict]:
-    dataset_path = BASELINE_DIR / f"{dataset_id}.json"
-    if not dataset_path.exists():
-        return []
-    return json.loads(dataset_path.read_text(encoding="utf-8"))
+    if _db_has_cases():
+        with Session(engine) as session:
+            return BaselineStore(session).list_cases(dataset_id)
+    return _load_dataset_backup(dataset_id)
 
 
 def list_cases(dataset: Optional[str] = None) -> List[Dict]:
+    if _db_has_cases():
+        with Session(engine) as session:
+            return BaselineStore(session).list_cases(dataset)
     if dataset:
-        return load_dataset(dataset)
+        return _load_dataset_backup(dataset)
     cases: List[Dict] = []
     for dataset_id in list_dataset_ids():
-        cases.extend(load_dataset(dataset_id))
+        cases.extend(_load_dataset_backup(dataset_id))
     return cases
 
 
 def get_case(case_id: str) -> Optional[Dict]:
+    if _db_has_cases():
+        with Session(engine) as session:
+            return BaselineStore(session).get_case(case_id)
     for dataset_id in list_dataset_ids():
-        for case in load_dataset(dataset_id):
+        for case in _load_dataset_backup(dataset_id):
             if case.get("id") == case_id:
                 return case
     return None
