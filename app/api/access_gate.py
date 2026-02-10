@@ -43,16 +43,26 @@ def _parse_basic_auth(header_value: str | None) -> tuple[str, str] | None:
 class AccessGateMiddleware(BaseHTTPMiddleware):
     """App-wide HTTP Basic auth gate for demo deployments."""
 
-    def __init__(self, app, *, username: str, password: str) -> None:
+    def __init__(
+        self,
+        app,
+        *,
+        username: str,
+        password: str,
+        public_paths: tuple[str, ...] = ("/api/health",),
+    ) -> None:
         super().__init__(app)
         self._username = username
         self._password = password
+        self._public_paths = public_paths
 
     async def dispatch(
         self,
         request: Request,
         call_next: Callable[[Request], Response],
     ) -> Response:
+        if request.url.path in self._public_paths:
+            return await call_next(request)
         credentials = _parse_basic_auth(request.headers.get("Authorization"))
         if credentials is None:
             return _unauthorized_response()

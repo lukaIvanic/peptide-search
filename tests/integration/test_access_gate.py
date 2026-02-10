@@ -44,6 +44,12 @@ class AccessGateEnabledTests(ApiIntegrationTestCase):
         payload = response.json()
         self.assertEqual(payload["status"], "ok")
 
+    def test_health_is_public_for_platform_health_checks(self) -> None:
+        response = self.client.get("/api/health")
+        self.assertEqual(response.status_code, 200)
+        payload = response.json()
+        self.assertEqual(payload["status"], "ok")
+
     def test_stream_requires_auth_when_gate_enabled(self) -> None:
         response = self.client.get("/api/stream")
         self.assertEqual(response.status_code, 401)

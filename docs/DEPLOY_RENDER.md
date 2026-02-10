@@ -52,6 +52,8 @@ After deploy, run these checks:
 4. Restart/redeploy service and verify data still exists (persistent disk check).
 5. Confirm `/api/stream` connects with auth and live updates continue.
 
+Note: `/api/health` remains intentionally public so Render health checks can pass when the access gate is enabled.
+
 ## 5. Demo-Day Quick Checks
 
 1. Verify provider key is valid (no authentication failures from provider).
