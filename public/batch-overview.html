@@ -8,8 +8,8 @@
 		<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 		<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
 		<script src="https://cdn.tailwindcss.com"></script>
-		<link rel="stylesheet" href="/static/styles.css?v=2026-02-09" />
-		<script src="/static/app_config.js?v=2026-02-09"></script>
+		<link rel="stylesheet" href="/static/styles.css?v=2026-02-10" />
+		<script src="/static/app_config.js?v=2026-02-10"></script>
 	</head>
 	<body class="theme-synthwave min-h-screen flex flex-col">
 		<header class="topbar">
@@ -60,6 +60,22 @@
 					</button>
 				</div>
 			</section>
+
+			<!-- Provider analytics -->
+			<section id="providerAccuracySection" class="sw-card p-4">
+				<div class="flex flex-wrap items-center justify-between gap-2">
+					<h3 class="section-title">Average Accuracy by Provider</h3>
+					<span id="providerAccuracySummary" class="text-[11px] text-slate-500"></span>
+				</div>
+				<div id="providerAccuracyChart" class="provider-accuracy-chart mt-3">
+					<div id="providerAccuracyState" class="provider-accuracy-chart__state text-[11px] text-slate-500">
+						Loading latest scored batches...
+					</div>
+					<div id="providerAccuracyPlot" class="provider-accuracy-chart__plot">
+						<div class="sw-empty text-xs text-slate-500">Loading provider analytics...</div>
+					</div>
+				</div>
+			</section>
 		</main>
 
 		<!-- New Batch Modal -->
@@ -100,6 +116,6 @@
 			</div>
 		</div>
 
-		<script type="module" src="/static/batch-overview.js?v=2026-02-09"></script>
+		<script type="module" src="/static/batch-overview.js?v=2026-02-10"></script>
 	</body>
 </html>

@@ -980,6 +980,163 @@ body.theme-synthwave {
 	font-style: italic;
 }
 
+/* Provider accuracy chart */
+.theme-synthwave .provider-accuracy-chart {
+	display: flex;
+	flex-direction: column;
+	gap: 10px;
+}
+
+.theme-synthwave .provider-accuracy-chart__state {
+	min-height: 16px;
+	line-height: 1.35;
+	color: #6b7280;
+}
+
+.theme-synthwave .provider-accuracy-chart__plot {
+	padding: 12px 12px 10px;
+	border-radius: 18px;
+	border: 1px solid #dbe4ff;
+	background:
+		radial-gradient(circle at 12% 8%, rgba(56, 189, 248, 0.14), transparent 32%),
+		radial-gradient(circle at 96% 0%, rgba(244, 114, 182, 0.12), transparent 36%),
+		linear-gradient(180deg, #fbfdff 0%, #f4f8ff 100%);
+	overflow: hidden;
+}
+
+.theme-synthwave .provider-accuracy-svg {
+	display: block;
+	width: 100%;
+	height: auto;
+}
+
+.theme-synthwave .provider-accuracy-axis {
+	stroke: #c7d2fe;
+	stroke-width: 1.4;
+}
+
+.theme-synthwave .provider-accuracy-grid {
+	stroke: #e2e8ff;
+	stroke-width: 1;
+}
+
+.theme-synthwave .provider-accuracy-tick {
+	stroke: #a5b4fc;
+	stroke-width: 1.2;
+}
+
+.theme-synthwave .provider-accuracy-tick-label {
+	fill: #64748b;
+	font-family: "Plus Jakarta Sans", sans-serif;
+	font-size: 10px;
+	font-weight: 600;
+	letter-spacing: 0.02em;
+}
+
+.theme-synthwave .provider-accuracy-label {
+	fill: #1f2937;
+	font-family: "Nunito", sans-serif;
+	font-size: 12px;
+	font-weight: 700;
+}
+
+.theme-synthwave .provider-accuracy-meta {
+	fill: #64748b;
+	font-family: "Plus Jakarta Sans", sans-serif;
+	font-size: 10px;
+	font-weight: 600;
+}
+
+.theme-synthwave .provider-accuracy-rail {
+	fill: #e5eaff;
+}
+
+.theme-synthwave .provider-accuracy-fill {
+	transform-origin: left center;
+	transform-box: fill-box;
+	filter: drop-shadow(0 1px 3px rgba(99, 102, 241, 0.25));
+}
+
+.theme-synthwave .provider-accuracy-fill.is-animated {
+	transition: transform 450ms cubic-bezier(0.2, 0.75, 0.24, 1);
+	will-change: transform;
+}
+
+.theme-synthwave .provider-accuracy-marker {
+	fill: #ffffff;
+	stroke: #4f46e5;
+	stroke-width: 1.8;
+}
+
+.theme-synthwave .provider-accuracy-value {
+	fill: #1f2937;
+	font-family: "Plus Jakarta Sans", sans-serif;
+	font-size: 11px;
+	font-weight: 700;
+}
+
+.theme-synthwave .provider-accuracy-skeleton {
+	display: flex;
+	flex-direction: column;
+	gap: 12px;
+	padding: 2px 2px 4px;
+}
+
+.theme-synthwave .provider-accuracy-skeleton__row {
+	display: flex;
+	flex-direction: column;
+	gap: 8px;
+}
+
+.theme-synthwave .provider-accuracy-skeleton__label {
+	width: 112px;
+	height: 10px;
+	border-radius: 999px;
+	background: linear-gradient(90deg, #e5eaff, #f1f5ff);
+	animation: providerAccuracyPulse 1.2s ease-in-out infinite;
+}
+
+.theme-synthwave .provider-accuracy-skeleton__rail {
+	height: 10px;
+	width: 100%;
+	border-radius: 999px;
+	background: linear-gradient(90deg, #e9eeff, #f3f6ff);
+	animation: providerAccuracyPulse 1.2s ease-in-out infinite;
+}
+
+@media (max-width: 720px) {
+	.theme-synthwave .provider-accuracy-chart__plot {
+		padding: 10px 8px 8px;
+		border-radius: 14px;
+	}
+
+	.theme-synthwave .provider-accuracy-skeleton__label {
+		width: 86px;
+	}
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.theme-synthwave .provider-accuracy-fill.is-animated {
+		transition: none;
+	}
+
+	.theme-synthwave .provider-accuracy-skeleton__label,
+	.theme-synthwave .provider-accuracy-skeleton__rail {
+		animation: none;
+	}
+}
+
+@keyframes providerAccuracyPulse {
+	0%,
+	100% {
+		opacity: 0.55;
+	}
+
+	50% {
+		opacity: 1;
+	}
+}
+
 @keyframes spin {
 	to {
 		transform: rotate(360deg);

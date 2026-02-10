@@ -26,12 +26,34 @@ const STATUS_LABELS = {
 	failed: 'Failed',
 };
 
+const SCORED_BATCH_STATUSES = new Set(['completed', 'partial', 'failed']);
+const SVG_NS = 'http://www.w3.org/2000/svg';
+
 const state = {
 	batches: [],
 	prompts: [],
 	activePromptId: null,
 	sseConnection: null,
+	providerChartState: 'loading',
+	providerChartError: '',
+	providerChartHasAnimated: false,
 };
+
+let chartResizeTimer = null;
+
+function normalizeProviderKey(provider) {
+	return (provider || 'unknown').toString().trim().toLowerCase();
+}
+
+function formatProviderName(provider) {
+	const key = normalizeProviderKey(provider);
+	if (key === 'openai') return 'OpenAI Full';
+	if (key === 'openai-mini') return 'OpenAI Mini';
+	if (key === 'openai-nano') return 'OpenAI Nano';
+	if (key === 'deepseek') return 'DeepSeek';
+	if (key === 'mock') return 'Mock';
+	return provider || 'Unknown';
+}
 
 function formatDuration(ms) {
 	if (!ms) return '0s';
@@ -81,6 +103,337 @@ function formatDate(isoString) {
 function getProgressPercent(batch) {
 	if (!batch.total_papers) return 0;
 	return ((batch.completed + batch.failed) / batch.total_papers) * 100;
+}
+
+function formatCount(value) {
+	return Number(value || 0).toLocaleString('en-US');
+}
+
+function selectScoredBatches(batches) {
+	return batches.filter((batch) => {
+		const status = (batch.status || '').toLowerCase();
+		const expected = Number(batch.total_expected_entities || 0);
+		return SCORED_BATCH_STATUSES.has(status) && expected > 0;
+	});
+}
+
+function computeProviderAccuracyRows(scoredBatches) {
+	const grouped = new Map();
+	for (const batch of scoredBatches) {
+		const expected = Number(batch.total_expected_entities || 0);
+		const matched = Math.max(0, Number(batch.matched_entities || 0));
+		if (!expected) continue;
+
+		const provider = normalizeProviderKey(batch.model_provider || 'unknown');
+		if (!grouped.has(provider)) {
+			grouped.set(provider, {
+				provider,
+				providerLabel: formatProviderName(provider),
+				matched: 0,
+				expected: 0,
+				batches: 0,
+			});
+		}
+		const row = grouped.get(provider);
+		row.matched += matched;
+		row.expected += expected;
+		row.batches += 1;
+	}
+
+	return Array.from(grouped.values())
+		.map((row) => ({
+			...row,
+			accuracy: row.expected ? row.matched / row.expected : 0,
+		}))
+		.sort((a, b) => {
+			if (b.accuracy !== a.accuracy) return b.accuracy - a.accuracy;
+			return b.expected - a.expected;
+		});
+}
+
+function truncateLabel(value, maxLength) {
+	if (!value || value.length <= maxLength) return value;
+	return `${value.slice(0, Math.max(1, maxLength - 1))}\u2026`;
+}
+
+function buildProviderChartModel(rows, containerWidth) {
+	const width = Math.max(320, Math.floor(containerWidth || 720));
+	const compact = width < 720;
+	const leftPad = compact ? 122 : 198;
+	const rightPad = compact ? 96 : 138;
+	const rowHeight = compact ? 46 : 54;
+	const barHeight = compact ? 10 : 12;
+	const topPad = 24;
+	const bottomPad = 44;
+	const plotWidth = Math.max(120, width - leftPad - rightPad);
+	const axisY = topPad + rows.length * rowHeight + 8;
+	const ticks = [0, 0.25, 0.5, 0.75, 1].map((value) => ({
+		value,
+		x: leftPad + plotWidth * value,
+		label: `${Math.round(value * 100)}%`,
+	}));
+	const chartRows = rows.map((row, index) => {
+		const accuracy = Math.max(0, Math.min(1, row.accuracy || 0));
+		const yTop = topPad + index * rowHeight;
+		const yCenter = yTop + (compact ? 16 : 18);
+		const batchesLabel = row.batches === 1 ? '1 batch' : `${row.batches} batches`;
+
+		return {
+			...row,
+			providerLabel: compact ? truncateLabel(row.providerLabel, 13) : row.providerLabel,
+			accuracy,
+			percentLabel: `${(accuracy * 100).toFixed(1)}%`,
+			metaLabel: compact
+				? `${formatCount(row.matched)}/${formatCount(row.expected)} · ${row.batches}b`
+				: `${formatCount(row.matched)}/${formatCount(row.expected)} matched · ${batchesLabel}`,
+			yTop,
+			yCenter,
+			barX: leftPad,
+			barY: yCenter - barHeight / 2,
+			barWidth: plotWidth * accuracy,
+			barHeight,
+			markerX: leftPad + plotWidth * accuracy,
+		};
+	});
+
+	return {
+		width,
+		height: axisY + bottomPad,
+		compact,
+		leftPad,
+		plotWidth,
+		axisY,
+		ticks,
+		rows: chartRows,
+	};
+}
+
+function createSvgNode(tagName, attrs = {}) {
+	const node = document.createElementNS(SVG_NS, tagName);
+	for (const [key, value] of Object.entries(attrs)) {
+		node.setAttribute(key, String(value));
+	}
+	return node;
+}
+
+function renderProviderChartSkeleton(container) {
+	const skeleton = el('div', 'provider-accuracy-skeleton', '');
+	for (let idx = 0; idx < 3; idx += 1) {
+		const row = el('div', 'provider-accuracy-skeleton__row', '');
+		row.appendChild(el('div', 'provider-accuracy-skeleton__label', ''));
+		row.appendChild(el('div', 'provider-accuracy-skeleton__rail', ''));
+		skeleton.appendChild(row);
+	}
+	container.appendChild(skeleton);
+}
+
+function renderProviderAccuracySvg(container, model, options = {}) {
+	const { animate = false } = options;
+	const animatedFills = [];
+	const svg = createSvgNode('svg', {
+		class: 'provider-accuracy-svg',
+		viewBox: `0 0 ${model.width} ${model.height}`,
+		role: 'img',
+		'aria-label': 'Average accuracy by model provider',
+	});
+	svg.style.width = '100%';
+	svg.style.height = 'auto';
+
+	const defs = createSvgNode('defs');
+	const gradient = createSvgNode('linearGradient', {
+		id: 'providerAccuracyGradient',
+		x1: '0%',
+		y1: '0%',
+		x2: '100%',
+		y2: '0%',
+	});
+	gradient.appendChild(createSvgNode('stop', { offset: '0%', 'stop-color': '#38bdf8' }));
+	gradient.appendChild(createSvgNode('stop', { offset: '100%', 'stop-color': '#f472b6' }));
+	defs.appendChild(gradient);
+	svg.appendChild(defs);
+
+	const guideTop = model.rows.length ? model.rows[0].yTop - 3 : 18;
+	for (const tick of model.ticks) {
+		svg.appendChild(
+			createSvgNode('line', {
+				class: 'provider-accuracy-grid',
+				x1: tick.x,
+				y1: guideTop,
+				x2: tick.x,
+				y2: model.axisY,
+			}),
+		);
+		svg.appendChild(
+			createSvgNode('line', {
+				class: 'provider-accuracy-tick',
+				x1: tick.x,
+				y1: model.axisY,
+				x2: tick.x,
+				y2: model.axisY + 6,
+			}),
+		);
+		const tickLabel = createSvgNode('text', {
+			class: 'provider-accuracy-tick-label',
+			x: tick.x,
+			y: model.axisY + 20,
+			'text-anchor': 'middle',
+		});
+		tickLabel.textContent = tick.label;
+		svg.appendChild(tickLabel);
+	}
+
+	svg.appendChild(
+		createSvgNode('line', {
+			class: 'provider-accuracy-axis',
+			x1: model.leftPad,
+			y1: model.axisY,
+			x2: model.leftPad + model.plotWidth,
+			y2: model.axisY,
+		}),
+	);
+
+	for (const row of model.rows) {
+		const label = createSvgNode('text', {
+			class: 'provider-accuracy-label',
+			x: 10,
+			y: row.yCenter + 4,
+		});
+		label.textContent = row.providerLabel;
+		svg.appendChild(label);
+
+		const meta = createSvgNode('text', {
+			class: 'provider-accuracy-meta',
+			x: 10,
+			y: row.yCenter + 19,
+		});
+		meta.textContent = row.metaLabel;
+		svg.appendChild(meta);
+
+		svg.appendChild(
+			createSvgNode('rect', {
+				class: 'provider-accuracy-rail',
+				x: row.barX,
+				y: row.barY,
+				width: model.plotWidth,
+				height: row.barHeight,
+				rx: row.barHeight / 2,
+				ry: row.barHeight / 2,
+			}),
+		);
+
+		const fill = createSvgNode('rect', {
+			class: `provider-accuracy-fill${animate ? ' is-animated' : ''}`,
+			x: row.barX,
+			y: row.barY,
+			width: row.barWidth,
+			height: row.barHeight,
+			rx: row.barHeight / 2,
+			ry: row.barHeight / 2,
+			fill: 'url(#providerAccuracyGradient)',
+		});
+		if (animate) {
+			fill.style.transform = 'scaleX(0)';
+			animatedFills.push(fill);
+		}
+		svg.appendChild(fill);
+
+		svg.appendChild(
+			createSvgNode('circle', {
+				class: 'provider-accuracy-marker',
+				cx: row.markerX,
+				cy: row.yCenter,
+				r: model.compact ? 3.5 : 4.5,
+			}),
+		);
+
+		const value = createSvgNode('text', {
+			class: 'provider-accuracy-value',
+			x: model.leftPad + model.plotWidth + 8,
+			y: row.yCenter + 4,
+		});
+		value.textContent = row.percentLabel;
+		svg.appendChild(value);
+	}
+
+	container.appendChild(svg);
+	if (animate && animatedFills.length) {
+		requestAnimationFrame(() => {
+			requestAnimationFrame(() => {
+				for (const fill of animatedFills) {
+					fill.style.transform = 'scaleX(1)';
+				}
+			});
+		});
+	}
+}
+
+function renderProviderAccuracyChart() {
+	const container = $('#providerAccuracyChart');
+	const plotMount = $('#providerAccuracyPlot');
+	const summary = $('#providerAccuracySummary');
+	const stateText = $('#providerAccuracyState');
+	if (!container || !plotMount) return;
+	plotMount.innerHTML = '';
+
+	const isLoading = state.providerChartState === 'loading';
+	const isError = state.providerChartState === 'error';
+	if (isLoading && !state.batches.length) {
+		if (summary) summary.textContent = 'Loading provider analytics...';
+		if (stateText) stateText.textContent = 'Loading latest scored batches...';
+		renderProviderChartSkeleton(plotMount);
+		return;
+	}
+
+	const scoredBatches = selectScoredBatches(state.batches);
+	const rows = computeProviderAccuracyRows(scoredBatches);
+
+	if (!rows.length) {
+		if (summary) summary.textContent = 'No scored batches yet';
+		if (stateText) {
+			stateText.textContent = isError
+				? 'Analytics refresh failed. Showing fallback state.'
+				: 'Only completed, partial, and failed batches with expected entities are included.';
+		}
+		plotMount.appendChild(
+			el(
+				'div',
+				'sw-empty text-xs text-slate-500',
+				state.batches.length
+					? 'None of the current batches have scored expected entities yet.'
+					: 'No batches available yet. Start a batch to populate analytics.',
+			),
+		);
+		return;
+	}
+
+	const totalMatched = rows.reduce((sum, row) => sum + row.matched, 0);
+	const totalExpected = rows.reduce((sum, row) => sum + row.expected, 0);
+	if (summary) {
+		summary.textContent = `${rows.length} provider${rows.length === 1 ? '' : 's'} · ${formatCount(totalMatched)}/${formatCount(totalExpected)} matched · weighted by expected entities`;
+	}
+	if (stateText) {
+		stateText.textContent = isError
+			? 'Live refresh hit an error. Displaying last available analytics.'
+			: 'Includes completed, partial, and failed batches with expected entities > 0.';
+	}
+
+	const model = buildProviderChartModel(rows, plotMount.clientWidth || container.clientWidth || 720);
+	const prefersReducedMotion =
+		typeof window !== 'undefined' &&
+		typeof window.matchMedia === 'function' &&
+		window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+	const shouldAnimate = !state.providerChartHasAnimated && !prefersReducedMotion;
+
+	renderProviderAccuracySvg(plotMount, model, { animate: shouldAnimate });
+	state.providerChartHasAnimated = true;
+}
+
+function queueProviderChartRerender() {
+	if (chartResizeTimer) clearTimeout(chartResizeTimer);
+	chartResizeTimer = setTimeout(() => {
+		chartResizeTimer = null;
+		renderProviderAccuracyChart();
+	}, 120);
 }
 
 function renderBatchCard(batch) {
@@ -190,6 +543,7 @@ function renderBatchGrid() {
 		grid.classList.add('hidden');
 		emptyState?.classList.remove('hidden');
 		if (countEl) countEl.textContent = '0 batches';
+		renderProviderAccuracyChart();
 		return;
 	}
 
@@ -207,6 +561,7 @@ function renderBatchGrid() {
 	for (const batch of sorted) {
 		grid.appendChild(renderBatchCard(batch));
 	}
+	renderProviderAccuracyChart();
 }
 
 function updateBatchCard(batchId, updates) {
@@ -226,12 +581,22 @@ function updateBatchCard(batchId, updates) {
 async function loadBatches() {
 	try {
 		updateStatus('Loading batches...');
+		if (!state.batches.length) {
+			state.providerChartState = 'loading';
+			state.providerChartError = '';
+			renderProviderAccuracyChart();
+		}
 		const response = await api.get('/api/baseline/batches');
 		state.batches = response.batches || [];
+		state.providerChartState = 'ready';
+		state.providerChartError = '';
 		renderBatchGrid();
 		updateStatus('');
 	} catch (err) {
 		console.error('Failed to load batches:', err);
+		state.providerChartState = 'error';
+		state.providerChartError = err?.message || 'Failed to load provider analytics';
+		renderProviderAccuracyChart();
 		updateStatus(`Error: ${err.message}`);
 	}
 }
@@ -368,6 +733,8 @@ async function deleteBatch(batchId, batchLabel) {
 
 		// Remove from state and re-render
 		state.batches = state.batches.filter(b => b.batch_id !== batchId);
+		state.providerChartState = 'ready';
+		state.providerChartError = '';
 		renderBatchGrid();
 	} catch (err) {
 		console.error('Failed to delete batch:', err);
@@ -421,6 +788,9 @@ async function processPendingBatchUpdates() {
 	try {
 		const response = await api.get('/api/baseline/batches');
 		const fetchedBatches = response.batches || [];
+		state.providerChartState = 'ready';
+		state.providerChartError = '';
+		let shouldRenderGrid = false;
 
 		for (const batchId of batchIds) {
 			const updatedBatch = fetchedBatches.find(b => b.batch_id === batchId);
@@ -440,17 +810,27 @@ async function processPendingBatchUpdates() {
 					existingCard.replaceWith(newCard);
 				} else {
 					// New batch card - re-render grid
-					renderBatchGrid();
+					shouldRenderGrid = true;
 				}
 			}
 		}
+
+		if (shouldRenderGrid) {
+			renderBatchGrid();
+		} else {
+			renderProviderAccuracyChart();
+		}
 	} catch (err) {
+		state.providerChartState = 'error';
+		state.providerChartError = err?.message || 'Failed to refresh provider analytics';
+		renderProviderAccuracyChart();
 		console.error('Failed to update batches:', err);
 	}
 }
 
 function init() {
 	// Load data
+	renderProviderAccuracyChart();
 	loadBatches();
 	loadPrompts();
 
@@ -478,6 +858,8 @@ function init() {
 			closeNewBatchModal();
 		}
 	});
+
+	window.addEventListener('resize', queueProviderChartRerender);
 }
 
 // Initialize on DOM ready

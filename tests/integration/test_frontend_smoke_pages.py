@@ -15,10 +15,12 @@ class FrontendSmokePagesTests(ApiIntegrationTestCase):
         response = self.client.get("/baseline")
         self.assertEqual(response.status_code, 200)
         text = response.text
-        self.assertTrue(
-            ("Extraction Batches" in text and 'id="batchGrid"' in text)
-            or ("Baseline Benchmark" in text and 'id="baselineList"' in text)
-        )
+        has_batches_view = "Extraction Batches" in text and 'id="batchGrid"' in text
+        has_legacy_view = "Baseline Benchmark" in text and 'id="baselineList"' in text
+        self.assertTrue(has_batches_view or has_legacy_view)
+        if has_batches_view:
+            self.assertIn('id="providerAccuracyChart"', text)
+            self.assertIn('id="providerAccuracyPlot"', text)
 
     def test_baseline_detail_page_loads(self) -> None:
         response = self.client.get("/baseline/test-batch")
