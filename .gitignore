@@ -27,3 +27,7 @@ papers/
 
 .DS_Store
 Thumbs.db
+
+# Local assistant/tooling metadata
+.claude/
+CLAUDE.md
