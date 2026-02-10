@@ -1,5 +1,5 @@
 /**
- * Batch Overview page - displays batch cards and handles batch creation.
+ * Evaluation overview page - displays run cards and handles run creation.
  */
 import * as api from './js/api.js';
 import { $, el, fmt } from './js/renderers.js';
@@ -176,7 +176,7 @@ function buildProviderChartModel(rows, containerWidth) {
 		const accuracy = Math.max(0, Math.min(1, row.accuracy || 0));
 		const yTop = topPad + index * rowHeight;
 		const yCenter = yTop + (compact ? 16 : 18);
-		const batchesLabel = row.batches === 1 ? '1 batch' : `${row.batches} batches`;
+		const batchesLabel = row.batches === 1 ? '1 run' : `${row.batches} runs`;
 
 		return {
 			...row,
@@ -379,7 +379,7 @@ function renderProviderAccuracyChart() {
 	const isError = state.providerChartState === 'error';
 	if (isLoading && !state.batches.length) {
 		if (summary) summary.textContent = 'Loading provider analytics...';
-		if (stateText) stateText.textContent = 'Loading latest scored batches...';
+		if (stateText) stateText.textContent = 'Loading latest scored evaluation runs...';
 		renderProviderChartSkeleton(plotMount);
 		return;
 	}
@@ -388,19 +388,19 @@ function renderProviderAccuracyChart() {
 	const rows = computeProviderAccuracyRows(scoredBatches);
 
 	if (!rows.length) {
-		if (summary) summary.textContent = 'No scored batches yet';
+		if (summary) summary.textContent = 'No scored evaluation runs yet';
 		if (stateText) {
 			stateText.textContent = isError
 				? 'Analytics refresh failed. Showing fallback state.'
-				: 'Only completed, partial, and failed batches with expected entities are included.';
+				: 'Only completed, partial, and failed runs with expected entities are included.';
 		}
 		plotMount.appendChild(
 			el(
 				'div',
 				'sw-empty text-xs text-slate-500',
 				state.batches.length
-					? 'None of the current batches have scored expected entities yet.'
-					: 'No batches available yet. Start a batch to populate analytics.',
+					? 'None of the current runs have scored expected entities yet.'
+					: 'No runs available yet. Start a run to populate analytics.',
 			),
 		);
 		return;
@@ -414,7 +414,7 @@ function renderProviderAccuracyChart() {
 	if (stateText) {
 		stateText.textContent = isError
 			? 'Live refresh hit an error. Displaying last available analytics.'
-			: 'Includes completed, partial, and failed batches with expected entities > 0.';
+			: 'Includes completed, partial, and failed runs with expected entities > 0.';
 	}
 
 	const model = buildProviderChartModel(rows, plotMount.clientWidth || container.clientWidth || 720);
@@ -512,7 +512,7 @@ function renderBatchCard(batch) {
 	// Delete button
 	const deleteBtn = el('button', 'sw-btn sw-btn--sm sw-btn--ghost text-[10px] text-rose-500 hover:text-rose-600');
 	deleteBtn.innerHTML = '<span class="sw-btn__label">Delete</span>';
-	deleteBtn.title = 'Delete this batch';
+	deleteBtn.title = 'Delete this run';
 	deleteBtn.addEventListener('click', async (e) => {
 		e.preventDefault();
 		e.stopPropagation();
@@ -542,14 +542,14 @@ function renderBatchGrid() {
 	if (!state.batches.length) {
 		grid.classList.add('hidden');
 		emptyState?.classList.remove('hidden');
-		if (countEl) countEl.textContent = '0 batches';
+		if (countEl) countEl.textContent = '0 runs';
 		renderProviderAccuracyChart();
 		return;
 	}
 
 	grid.classList.remove('hidden');
 	emptyState?.classList.add('hidden');
-	if (countEl) countEl.textContent = `${state.batches.length} batch${state.batches.length !== 1 ? 'es' : ''}`;
+	if (countEl) countEl.textContent = `${state.batches.length} run${state.batches.length !== 1 ? 's' : ''}`;
 
 	// Sort by created_at descending (newest first)
 	const sorted = [...state.batches].sort((a, b) => {
@@ -580,7 +580,7 @@ function updateBatchCard(batchId, updates) {
 
 async function loadBatches() {
 	try {
-		updateStatus('Loading batches...');
+		updateStatus('Loading evaluation runs...');
 		if (!state.batches.length) {
 			state.providerChartState = 'loading';
 			state.providerChartError = '';
@@ -662,7 +662,7 @@ async function createBatch(name, model, promptId) {
 			if (label) label.textContent = 'Creating...';
 		}
 
-		updateStatus('Creating batch...');
+		updateStatus('Creating evaluation run...');
 
 		const response = await api.post('/api/baseline/batch-enqueue', {
 			dataset: 'self_assembly',
@@ -671,7 +671,7 @@ async function createBatch(name, model, promptId) {
 			prompt_id: promptId ? parseInt(promptId, 10) : null,
 		});
 
-		updateStatus(`Batch created: ${response.enqueued} papers queued`);
+		updateStatus(`Run created: ${response.enqueued} papers queued`);
 		closeNewBatchModal();
 
 		// Reload batches to show the new one
@@ -682,7 +682,7 @@ async function createBatch(name, model, promptId) {
 	} finally {
 		if (submitBtn) {
 			submitBtn.disabled = false;
-			if (label) label.textContent = 'Start Batch';
+			if (label) label.textContent = 'Start Run';
 		}
 	}
 }
@@ -720,16 +720,16 @@ async function retryBatchFailed(batchId, button) {
 
 async function deleteBatch(batchId, batchLabel) {
 	// Confirm deletion
-	if (!confirm(`Delete batch "${batchLabel}"?\n\nThis will permanently delete the batch and all its extraction runs.`)) {
+	if (!confirm(`Delete run "${batchLabel}"?\n\nThis will permanently delete the run and all its extraction results.`)) {
 		return;
 	}
 
 	try {
-		updateStatus('Deleting batch...');
+		updateStatus('Deleting run...');
 
 		await api.del(`/api/baseline/batch/${encodeURIComponent(batchId)}`);
 
-		updateStatus('Batch deleted');
+		updateStatus('Run deleted');
 
 		// Remove from state and re-render
 		state.batches = state.batches.filter(b => b.batch_id !== batchId);
@@ -739,6 +739,40 @@ async function deleteBatch(batchId, batchLabel) {
 	} catch (err) {
 		console.error('Failed to delete batch:', err);
 		updateStatus(`Error: ${err.message}`);
+	}
+}
+
+async function resetBaselineDefaults(button) {
+	const confirmed = window.confirm(
+		'Reset baseline defaults for all evaluations?\n\nThis removes all local baseline edits and cannot be undone.',
+	);
+	if (!confirmed) return;
+
+	const label = button?.querySelector('.sw-btn__label');
+	const originalLabel = label?.textContent || 'Reset Baseline Data';
+	try {
+		if (button) {
+			button.disabled = true;
+		}
+		if (label) {
+			label.textContent = 'Resetting...';
+		}
+		updateStatus('Resetting baseline data...');
+		const response = await api.resetBaselineDefaults();
+		await loadBatches();
+		updateStatus(
+			`Baseline reset complete (${formatCount(response.total_cases)} cases loaded, ${formatCount(response.deleted_cases)} replaced).`,
+		);
+	} catch (err) {
+		console.error('Failed to reset baseline defaults:', err);
+		updateStatus(`Error: ${err.message}`);
+	} finally {
+		if (button) {
+			button.disabled = false;
+		}
+		if (label) {
+			label.textContent = originalLabel;
+		}
 	}
 }
 
@@ -853,6 +887,9 @@ function init() {
 	$('#emptyNewBatchBtn')?.addEventListener('click', openNewBatchModal);
 	$('#cancelBatchBtn')?.addEventListener('click', closeNewBatchModal);
 	$('#modalBackdrop')?.addEventListener('click', closeNewBatchModal);
+	$('#resetBaselineDefaultsBtn')?.addEventListener('click', async () => {
+		await resetBaselineDefaults($('#resetBaselineDefaultsBtn'));
+	});
 
 	// Form submission
 	$('#newBatchForm')?.addEventListener('submit', async (e) => {

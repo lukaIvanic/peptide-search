@@ -32,7 +32,6 @@ const state = {
 	search: '',
 	selectedPaperKey: null, // Changed from selectedId to track paper group
 	provider: 'openai-nano',
-	pdfStatusFilter: 'all',
 	resolvedSource: null,
 	stagedFile: null,
 	runPayloadCache: new Map(),
@@ -193,7 +192,7 @@ function fillBaselineModalFields(caseData) {
 	const unverifiedInput = $('#baselineCaseUnverified');
 	const deleteButton = $('#baselineCaseDeleteBtn');
 
-	if (modalTitle) modalTitle.textContent = 'Edit Baseline Case';
+	if (modalTitle) modalTitle.textContent = 'Edit Evaluation Case';
 	if (idInput) {
 		idInput.value = caseData?.id || '';
 		idInput.readOnly = true;
@@ -214,7 +213,7 @@ function fillBaselineModalFields(caseData) {
 
 async function openEditBaselineCaseModal(caseId) {
 	if (!state.baselineEditEnabled) {
-		updateStatus('Baseline editing is disabled.');
+		updateStatus('Evaluation editing is disabled.');
 		return;
 	}
 	if (!caseId) return;
@@ -227,7 +226,7 @@ async function openEditBaselineCaseModal(caseId) {
 		showBaselineModalError('');
 		setBaselineModalOpen(true);
 	} catch (err) {
-		updateStatus(err.message || 'Failed to load baseline case');
+		updateStatus(err.message || 'Failed to load evaluation case');
 	} finally {
 		setBaselineModalBusy(false);
 	}
@@ -236,7 +235,7 @@ async function openEditBaselineCaseModal(caseId) {
 async function deleteBaselineCaseFromUi(caseItem, expectedUpdatedAt = null) {
 	if (!caseItem?.id) return false;
 	if (!state.baselineEditEnabled) {
-		updateStatus('Baseline editing is disabled.');
+		updateStatus('Evaluation editing is disabled.');
 		return false;
 	}
 	const expected = expectedUpdatedAt || caseItem.updated_at;
@@ -244,18 +243,18 @@ async function deleteBaselineCaseFromUi(caseItem, expectedUpdatedAt = null) {
 		updateStatus('Case is missing updated_at; refresh and try again.');
 		return false;
 	}
-	const confirmed = window.confirm(`Delete baseline case "${caseItem.id}"?`);
+	const confirmed = window.confirm(`Delete evaluation case "${caseItem.id}"?`);
 	if (!confirmed) return false;
 	try {
 		await api.deleteBaselineCase(caseItem.id, expected);
-		updateStatus('Baseline case deleted. Recomputing batch metrics...');
+		updateStatus('Evaluation case deleted. Recomputing run metrics...');
 		await Promise.all([loadCases(), loadBatches(), refreshRecomputeStatus()]);
 		if (state.selectedPaperKey) {
 			await loadPaperDetails(state.selectedPaperKey);
 		}
 		return true;
 	} catch (err) {
-		updateStatus(err.message || 'Failed to delete baseline case');
+		updateStatus(err.message || 'Failed to delete evaluation case');
 		return false;
 	}
 }
@@ -263,14 +262,14 @@ async function deleteBaselineCaseFromUi(caseItem, expectedUpdatedAt = null) {
 async function deletePaperGroupFromUi(paperGroup) {
 	if (!paperGroup?.key) return;
 	if (!state.baselineEditEnabled) {
-		updateStatus('Baseline editing is disabled.');
+		updateStatus('Evaluation editing is disabled.');
 		return;
 	}
-	const confirmed = window.confirm(`Delete all baseline cases for this paper (${paperGroup.cases.length} entities)?`);
+	const confirmed = window.confirm(`Delete all evaluation cases for this paper (${paperGroup.cases.length} entities)?`);
 	if (!confirmed) return;
 	try {
 		await api.deleteBaselinePaper(paperGroup.key);
-		updateStatus('Paper removed from baseline. Recomputing batch metrics...');
+		updateStatus('Paper removed from evaluation. Recomputing run metrics...');
 		await Promise.all([loadCases(), loadBatches(), refreshRecomputeStatus()]);
 		if (state.selectedPaperKey) {
 			await loadPaperDetails(state.selectedPaperKey);
@@ -280,56 +279,17 @@ async function deletePaperGroupFromUi(paperGroup) {
 	}
 }
 
-function clearSelectedComparisonPanels() {
-	state.selectedPaperKey = null;
-	state.resolvedSource = null;
-	state.stagedFile = null;
-	renderBaselineDetail(null, null, null);
-	renderExtractionDetail(null, null, null);
-	renderSelectedPaperStrip(null, null);
-	const hint = $('#comparisonHint');
-	if (hint) {
-		hint.textContent = 'Select a paper, then run with local PDF';
-	}
-}
-
-async function resetBaselineToDefaults() {
-	if (!state.baselineEditEnabled) {
-		updateStatus('Baseline editing is disabled.');
-		return;
-	}
-	const resetButton = $('#resetBaselineBtn');
-	const confirmed = window.confirm(
-		'Reset baseline to backup defaults? This removes all live baseline edits.'
-	);
-	if (!confirmed) return;
-	setButtonLoading(resetButton, true, 'Resetting...');
-	try {
-		updateStatus('Resetting baseline to default dataset...');
-		const response = await api.resetBaselineDefaults();
-		clearSelectedComparisonPanels();
-		await Promise.all([loadCases(), loadBatches(), refreshRecomputeStatus()]);
-		updateStatus(
-			`Baseline reset complete (${response.total_cases} cases loaded, ${response.deleted_cases} deleted).`
-		);
-	} catch (err) {
-		updateStatus(err.message || 'Failed to reset baseline');
-	} finally {
-		setButtonLoading(resetButton, false);
-	}
-}
-
 async function onBaselineCaseModalSubmit(event) {
 	event.preventDefault();
 	if (!state.baselineEditEnabled) {
-		updateStatus('Baseline editing is disabled.');
+		updateStatus('Evaluation editing is disabled.');
 		return;
 	}
 	try {
 		showBaselineModalError('');
 		setBaselineModalBusy(true);
 		if (!state.baselineModal.caseId) {
-			throw new Error('No baseline case selected for editing.');
+			throw new Error('No evaluation case selected for editing.');
 		}
 		const payload = getModalPayloadFromForm();
 		const response = await api.updateBaselineCase(state.baselineModal.caseId, {
@@ -346,7 +306,7 @@ async function onBaselineCaseModalSubmit(event) {
 			source_unverified: payload.source_unverified,
 			metadata: payload.metadata,
 		});
-		updateStatus('Baseline case updated. Recomputing batch metrics...');
+		updateStatus('Evaluation case updated. Recomputing run metrics...');
 		closeBaselineCaseModal();
 		if (response?.paper_key) {
 			state.selectedPaperKey = response.paper_key;
@@ -747,7 +707,7 @@ function renderSelectedPaperStrip(paperGroup, runPayload) {
 		if (openLocalBtn && firstCase) {
 			openLocalBtn.addEventListener('click', () => {
 				if (!firstCase.id) {
-					updateStatus('No baseline case selected.');
+					updateStatus('No evaluation case selected.');
 					return;
 				}
 				updateStatus('Opening local PDF...');
@@ -829,9 +789,6 @@ function renderDatasetOptions() {
 }
 
 function renderCounts(paperCount, entityCount) {
-	const total = state.cases.length;
-	const baselineCount = $('#baselineCount');
-	if (baselineCount) baselineCount.textContent = total ? `${total} entities` : '';
 	const caseCount = $('#caseCount');
 	if (caseCount) {
 		if (paperCount !== undefined) {
@@ -863,14 +820,6 @@ function filterCases() {
 			.join(' ')
 			.toLowerCase();
 		if (query && !haystack.includes(query)) return false;
-		const pdfFilter = state.pdfStatusFilter;
-		if (pdfFilter === 'manual') {
-			return Boolean(getManualPdfStatus(item));
-		}
-		if (pdfFilter === 'available') {
-			const hasPdf = Boolean(getPreferredPdfUrl(item));
-			return hasPdf && !getManualPdfStatus(item);
-		}
 		return true;
 	});
 }
@@ -1969,7 +1918,7 @@ function renderExtractedEntities(rawJson, paperComparison) {
 		entityHeader.appendChild(el('span', 'sw-kicker text-[10px] text-slate-500', `#${index + 1}`));
 		entityHeader.appendChild(el('div', 'text-xs font-medium text-slate-900', entity.type || 'entity'));
 		if (isMatched) {
-			entityHeader.appendChild(el('span', 'sw-chip sw-chip--success text-[9px]', 'Matched baseline'));
+			entityHeader.appendChild(el('span', 'sw-chip sw-chip--success text-[9px]', 'Matched expected'));
 		}
 		card.appendChild(entityHeader);
 		
@@ -2092,15 +2041,15 @@ function renderBaselineFixPanel(caseItem, runPayload, localAvailable = false) {
 			setButtonsDisabled(true);
 			setButtonLoading(retryBtn, true, 'Retrying...');
 			try {
-				updateStatus('Re-queueing baseline case...');
+				updateStatus('Re-queueing evaluation case...');
 				await api.retryBaselineCase(caseItem.id, { provider: state.provider });
 				state.resolvedSource = null;
 				state.stagedFile = null;
 				await loadCaseDetails(caseItem.id);
 				await loadCases();
-				updateStatus('Baseline case re-queued.');
+				updateStatus('Evaluation case re-queued.');
 			} catch (err) {
-				updateStatus(err.message || 'Failed to retry baseline case');
+				updateStatus(err.message || 'Failed to retry evaluation case');
 			} finally {
 				setButtonLoading(retryBtn, false);
 				setButtonsDisabled(false);
@@ -2206,7 +2155,7 @@ function renderBaselineFixPanel(caseItem, runPayload, localAvailable = false) {
 				state.stagedFile = null;
 				await loadCaseDetails(caseItem.id);
 				await loadCases();
-				updateStatus(staged ? 'PDF uploaded and extraction started.' : 'Baseline case re-queued.');
+				updateStatus(staged ? 'PDF uploaded and extraction started.' : 'Evaluation case re-queued.');
 			} catch (err) {
 				updateStatus(err.message || 'Failed to start extraction');
 			} finally {
@@ -2313,7 +2262,7 @@ async function selectCase(caseId) {
 
 async function loadCases() {
 	try {
-		updateStatus('Loading baseline cases...');
+		updateStatus('Loading evaluation papers...');
 		const data = await api.getBaselineCases(state.filterDataset);
 		state.cases = data.cases || [];
 		state.datasets = data.datasets || [];
@@ -2357,7 +2306,7 @@ async function loadCases() {
 		}
 		updateStatus('');
 	} catch (err) {
-		updateStatus(err.message || 'Failed to load baseline cases');
+		updateStatus(err.message || 'Failed to load evaluation papers');
 	}
 }
 
@@ -2421,7 +2370,7 @@ function updateBatchSummary() {
 	if (state.singleBatchMode) {
 		const titleEl = $('#pageTitle');
 		const subtitleEl = $('#pageSubtitle');
-		if (titleEl) titleEl.textContent = batch.label || 'Batch Details';
+		if (titleEl) titleEl.textContent = batch.label || 'Evaluation Details';
 		if (subtitleEl) {
 			const matchInfo = batch.match_rate !== null && batch.match_rate !== undefined
 				? ` | Match rate: ${(batch.match_rate * 100).toFixed(0)}%`
@@ -2471,97 +2420,6 @@ function updateBatchSummary() {
 			costEl.textContent = batch.estimated_cost_usd < 0.01 ? '<$0.01' : `$${batch.estimated_cost_usd.toFixed(2)}`;
 		} else {
 			costEl.textContent = 'N/A';
-		}
-	}
-}
-
-async function enqueueBaselineRuns() {
-	const runButton = $('#runBaselineBtn');
-	if (runButton) {
-		runButton.disabled = true;
-		runButton.classList.add('opacity-60', 'cursor-not-allowed');
-	}
-	try {
-		const dataset = state.filterDataset || null;
-		const provider = state.provider || 'openai';
-		updateStatus(dataset ? `Enqueuing ${dataset} (${provider})...` : `Enqueuing baseline (${provider})...`);
-		const response = await api.enqueueBaselineAll(provider, null, dataset, false);
-		const enqueued = response?.enqueued ?? 0;
-		const skipped = response?.skipped ?? 0;
-		const total = response?.total ?? (enqueued + skipped);
-		const summary = `Enqueued ${enqueued} of ${total} cases${skipped ? ` (${skipped} skipped)` : ''}.`;
-		updateStatus(summary);
-		await loadCases();
-	} catch (err) {
-		updateStatus(err.message || 'Failed to enqueue baseline benchmark');
-	} finally {
-		if (runButton) {
-			runButton.disabled = false;
-			runButton.classList.remove('opacity-60', 'cursor-not-allowed');
-		}
-	}
-}
-
-async function resolveBaselineSourcesBulk() {
-	const resolveButton = $('#resolveBaselineBtn');
-	const cases = filterCases();
-	if (!cases.length) {
-		updateStatus('No baseline cases in the current filter.');
-		return;
-	}
-	const targets = cases.filter((item) => !item?.pdf_url);
-	const skipped = cases.length - targets.length;
-	if (!targets.length) {
-		updateStatus('All filtered cases already have PDF links.');
-		return;
-	}
-	if (resolveButton) {
-		setButtonLoading(resolveButton, true, 'Finding PDFs...');
-	}
-	let completed = 0;
-	let found = 0;
-	let notFound = 0;
-	let errors = 0;
-	const total = targets.length;
-	const reportProgress = () => {
-		updateStatus(`Resolving PDFs: ${completed}/${total}...`);
-	};
-	reportProgress();
-	try {
-		await mapWithConcurrency(targets, 6, async (caseItem) => {
-			try {
-				const result = await api.resolveBaselineSource(caseItem.id);
-				if (result?.found) {
-					const resolvedUrl = result.pdf_url || result.url;
-					if (resolvedUrl) {
-						caseItem.pdf_url = resolvedUrl;
-					}
-					state.manualPdfReasons.delete(caseItem.id);
-					found += 1;
-				} else {
-					state.manualPdfReasons.set(caseItem.id, MANUAL_PDF_REASON_NO_OA);
-					notFound += 1;
-				}
-			} catch (err) {
-				state.manualPdfReasons.set(caseItem.id, MANUAL_PDF_REASON_NO_OA);
-				errors += 1;
-			} finally {
-				completed += 1;
-				reportProgress();
-			}
-		});
-		const failures = notFound + errors;
-		const summaryParts = [`Resolved ${found} of ${total}`];
-		if (failures) summaryParts.push(`${failures} need manual PDF`);
-		if (skipped) summaryParts.push(`${skipped} skipped`);
-		updateStatus(`${summaryParts.join('. ')}.`);
-		renderCaseList({ skipAnalysis: true });
-		if (state.selectedPaperKey) {
-			await loadPaperDetails(state.selectedPaperKey);
-		}
-	} finally {
-		if (resolveButton) {
-			setButtonLoading(resolveButton, false);
 		}
 	}
 }
@@ -2655,36 +2513,6 @@ function initEventHandlers() {
 		});
 	}
 
-	const pdfStatusFilter = $('#pdfStatusFilter');
-	if (pdfStatusFilter) {
-		state.pdfStatusFilter = pdfStatusFilter.value || 'all';
-		pdfStatusFilter.addEventListener('change', (event) => {
-			state.pdfStatusFilter = event.target.value || 'all';
-			renderCaseList();
-		});
-	}
-
-	const runButton = $('#runBaselineBtn');
-	if (runButton) {
-		runButton.addEventListener('click', () => {
-			enqueueBaselineRuns();
-		});
-	}
-
-	const resetBaselineButton = $('#resetBaselineBtn');
-	if (resetBaselineButton) {
-		resetBaselineButton.addEventListener('click', () => {
-			resetBaselineToDefaults();
-		});
-	}
-
-	const resolveButton = $('#resolveBaselineBtn');
-	if (resolveButton) {
-		resolveButton.addEventListener('click', () => {
-			resolveBaselineSourcesBulk();
-		});
-	}
-
 	// Batch controls
 	const batchFilter = $('#batchFilter');
 	if (batchFilter) {
@@ -2737,13 +2565,8 @@ export async function initBaseline() {
 		// Update page title
 		const titleEl = $('#pageTitle');
 		const subtitleEl = $('#pageSubtitle');
-		if (titleEl) titleEl.textContent = 'Batch Details';
-		if (subtitleEl) subtitleEl.textContent = `Viewing batch: ${urlBatchId}`;
-	} else {
-		// Legacy mode - show all batches (should redirect to overview)
-		// Keep dropdowns visible for backward compatibility
-		$('#datasetFilterLabel')?.classList.remove('hidden');
-		$('#batchFilterLabel')?.classList.remove('hidden');
+		if (titleEl) titleEl.textContent = 'Evaluation Details';
+		if (subtitleEl) subtitleEl.textContent = `Viewing evaluation run: ${urlBatchId}`;
 	}
 
 	initEventHandlers();
