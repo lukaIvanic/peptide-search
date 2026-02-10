@@ -23,7 +23,17 @@ export function getBatchIdFromUrl(pathname = window.location.pathname) {
 
 export function normalizeSequence(seq) {
     if (!seq) return '';
-    return String(seq).replace(/\s+/g, '').toUpperCase();
+    let normalized = String(seq).replace(/\s+/g, '').toUpperCase();
+    // Expand numbered amino acids like A12 → AAAAAAAAAAAA
+    // Pattern: single letter followed by digits (e.g., A12, G5, R3)
+    normalized = normalized.replace(/([A-Z])(\d+)/g, (match, letter, count) => {
+        const n = parseInt(count, 10);
+        if (n > 0 && n <= 100) { // sanity limit
+            return letter.repeat(n);
+        }
+        return match; // leave unchanged if invalid
+    });
+    return normalized;
 }
 
 export function normalizeDoiVersion(doi) {

@@ -222,7 +222,8 @@
     "main": [
       "Peptide LLM/Datasets/downloaded_papers/SS/SS_0032.pdf"
     ],
-    "supplementary": []
+    "supplementary": [],
+    "verified": false
   },
   "10.1529/biophysj.106.088542": {
     "main": [
@@ -412,7 +413,8 @@
     "main": [
       "Peptide LLM/Datasets/downloaded_papers/SS/SS_0060.pdf"
     ],
-    "supplementary": []
+    "supplementary": [],
+    "verified": false
   },
   "10.1126/science.1093783": {
     "main": [
@@ -456,7 +458,8 @@
     ],
     "supplementary": [
       "Peptide LLM/Datasets/downloaded_papers/SS_SI/SS_0066_SI.pdf"
-    ]
+    ],
+    "verified": false
   },
   "10.1039/B719868J": {
     "main": [
@@ -500,7 +503,8 @@
     "main": [
       "Peptide LLM/Datasets/downloaded_papers/SS/SS_0060.pdf"
     ],
-    "supplementary": []
+    "supplementary": [],
+    "verified": false
   },
   "10.1006/jmbi.1999.3422": {
     "main": [
@@ -522,7 +526,8 @@
     ],
     "supplementary": [
       "Peptide LLM/Datasets/downloaded_papers/SS_SI/SS_0064_SI.pdf"
-    ]
+    ],
+    "verified": false
   },
   "10.21203/rs.3.rs-109949": {
     "main": [

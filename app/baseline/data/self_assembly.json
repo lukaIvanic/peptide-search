@@ -4,7 +4,7 @@
     "dataset": "self_assembly",
     "sequence": "QEIARLEQEIARLEYEIARLE",
     "n_terminal": null,
-    "c_terminal": null,
+    "c_terminal": "amidation",
     "labels": [
       "self-assembly"
     ],
@@ -39,8 +39,8 @@
     "id": "self_assembly:pos:3",
     "dataset": "self_assembly",
     "sequence": "KLDLKLDLKLDL",
-    "n_terminal": null,
-    "c_terminal": null,
+    "n_terminal": "acetylation",
+    "c_terminal": "amidation",
     "labels": [
       "self-assembly"
     ],
@@ -57,8 +57,8 @@
     "id": "self_assembly:pos:4",
     "dataset": "self_assembly",
     "sequence": "QMAVHV",
-    "n_terminal": null,
-    "c_terminal": null,
+    "n_terminal": "acetylation",
+    "c_terminal": "amidation",
     "labels": [
       "self-assembly"
     ],
@@ -76,7 +76,7 @@
     "dataset": "self_assembly",
     "sequence": "VKVKVKVRVP'PTRVKVKVKV",
     "n_terminal": null,
-    "c_terminal": null,
+    "c_terminal": "amidation",
     "labels": [
       "self-assembly"
     ],
@@ -94,7 +94,7 @@
     "dataset": "self_assembly",
     "sequence": "VKVKVRVRVP'PTRVRVKVKV",
     "n_terminal": null,
-    "c_terminal": null,
+    "c_terminal": "amidation",
     "labels": [
       "self-assembly"
     ],
@@ -112,7 +112,7 @@
     "dataset": "self_assembly",
     "sequence": "VKVRVRVRVP'PTRVRVRVKV",
     "n_terminal": null,
-    "c_terminal": null,
+    "c_terminal": "amidation",
     "labels": [
       "self-assembly"
     ],
@@ -130,7 +130,7 @@
     "dataset": "self_assembly",
     "sequence": "VRVRVRVRVP'PTRVRVRVRV",
     "n_terminal": null,
-    "c_terminal": null,
+    "c_terminal": "amidation",
     "labels": [
       "self-assembly"
     ],
@@ -201,8 +201,8 @@
     "id": "self_assembly:pos:12",
     "dataset": "self_assembly",
     "sequence": "RADARADFRADARADA",
-    "n_terminal": null,
-    "c_terminal": null,
+    "n_terminal": "acetylation",
+    "c_terminal": "amidation",
     "labels": [
       "self-assembly"
     ],
@@ -219,8 +219,8 @@
     "id": "self_assembly:pos:13",
     "dataset": "self_assembly",
     "sequence": "RADFRADARADARADA",
-    "n_terminal": null,
-    "c_terminal": null,
+    "n_terminal": "acetylation",
+    "c_terminal": "amidation",
     "labels": [
       "self-assembly"
     ],
@@ -327,8 +327,8 @@
     "id": "self_assembly:pos:19",
     "dataset": "self_assembly",
     "sequence": "VVVVVVK",
-    "n_terminal": null,
-    "c_terminal": null,
+    "n_terminal": "acetylation",
+    "c_terminal": "amidation",
     "labels": [
       "self-assembly"
     ],
@@ -345,8 +345,8 @@
     "id": "self_assembly:pos:20",
     "dataset": "self_assembly",
     "sequence": "FFSGHFDFF",
-    "n_terminal": null,
-    "c_terminal": null,
+    "n_terminal": "acetylation",
+    "c_terminal": "amidation",
     "labels": [
       "self-assembly"
     ],
@@ -363,8 +363,8 @@
     "id": "self_assembly:pos:21",
     "dataset": "self_assembly",
     "sequence": "FGFHFSFDF",
-    "n_terminal": null,
-    "c_terminal": null,
+    "n_terminal": "acetylation",
+    "c_terminal": "amidation",
     "labels": [
       "self-assembly"
     ],
@@ -381,7 +381,7 @@
     "id": "self_assembly:pos:22",
     "dataset": "self_assembly",
     "sequence": "AAVVLLLW",
-    "n_terminal": null,
+    "n_terminal": "acetylation",
     "c_terminal": null,
     "labels": [
       "self-assembly"
@@ -525,8 +525,8 @@
     "id": "self_assembly:pos:30",
     "dataset": "self_assembly",
     "sequence": "AEAEAEAEAKAKAKAK",
-    "n_terminal": null,
-    "c_terminal": null,
+    "n_terminal": "acetylation",
+    "c_terminal": "amidation",
     "labels": [
       "self-assembly"
     ],
@@ -543,8 +543,8 @@
     "id": "self_assembly:pos:31",
     "dataset": "self_assembly",
     "sequence": "AEAEAKAKAEAEAKAK",
-    "n_terminal": null,
-    "c_terminal": null,
+    "n_terminal": "acetylation",
+    "c_terminal": "amidation",
     "labels": [
       "self-assembly"
     ],
@@ -561,7 +561,7 @@
     "id": "self_assembly:pos:32",
     "dataset": "self_assembly",
     "sequence": "AAVVLLLWEE",
-    "n_terminal": null,
+    "n_terminal": "acetylation",
     "c_terminal": null,
     "labels": [
       "self-assembly"
@@ -579,7 +579,7 @@
     "id": "self_assembly:pos:33",
     "dataset": "self_assembly",
     "sequence": "AAVVLLLWEEEEEEE",
-    "n_terminal": null,
+    "n_terminal": "acetylation",
     "c_terminal": null,
     "labels": [
       "self-assembly"
@@ -597,8 +597,8 @@
     "id": "self_assembly:pos:34",
     "dataset": "self_assembly",
     "sequence": "KKSLSLSLSLSLSLKK",
-    "n_terminal": null,
-    "c_terminal": null,
+    "n_terminal": "acetylation",
+    "c_terminal": "amidation",
     "labels": [
       "self-assembly"
     ],
@@ -615,8 +615,8 @@
     "id": "self_assembly:pos:35",
     "dataset": "self_assembly",
     "sequence": "EFFAAE",
-    "n_terminal": null,
-    "c_terminal": null,
+    "n_terminal": "acetylation",
+    "c_terminal": "amidation",
     "labels": [
       "self-assembly"
     ],
@@ -633,8 +633,8 @@
     "id": "self_assembly:pos:36",
     "dataset": "self_assembly",
     "sequence": "KFFAAK",
-    "n_terminal": null,
-    "c_terminal": null,
+    "n_terminal": "acetylation",
+    "c_terminal": "amidation",
     "labels": [
       "self-assembly"
     ],
@@ -651,8 +651,8 @@
     "id": "self_assembly:pos:37",
     "dataset": "self_assembly",
     "sequence": "WVNAKQYWRILKRRW",
-    "n_terminal": null,
-    "c_terminal": null,
+    "n_terminal": "acetylation",
+    "c_terminal": "amidation",
     "labels": [
       "self-assembly"
     ],
@@ -669,8 +669,8 @@
     "id": "self_assembly:pos:38",
     "dataset": "self_assembly",
     "sequence": "YVNAKQYYRILKRRY",
-    "n_terminal": null,
-    "c_terminal": null,
+    "n_terminal": "acetylation",
+    "c_terminal": "amidation",
     "labels": [
       "self-assembly"
     ],
@@ -723,8 +723,8 @@
     "id": "self_assembly:pos:41",
     "dataset": "self_assembly",
     "sequence": "IIIIIIKK",
-    "n_terminal": null,
-    "c_terminal": null,
+    "n_terminal": "acetylation",
+    "c_terminal": "amidation",
     "labels": [
       "self-assembly"
     ],
@@ -741,8 +741,8 @@
     "id": "self_assembly:pos:42",
     "dataset": "self_assembly",
     "sequence": "LLLLLLKK",
-    "n_terminal": null,
-    "c_terminal": null,
+    "n_terminal": "acetylation",
+    "c_terminal": "amidation",
     "labels": [
       "self-assembly"
     ],
@@ -759,8 +759,8 @@
     "id": "self_assembly:pos:43",
     "dataset": "self_assembly",
     "sequence": "GAVILRR",
-    "n_terminal": null,
-    "c_terminal": null,
+    "n_terminal": "acetylation",
+    "c_terminal": "amidation",
     "labels": [
       "self-assembly"
     ],
@@ -777,7 +777,7 @@
     "id": "self_assembly:pos:44",
     "dataset": "self_assembly",
     "sequence": "GGGGDD",
-    "n_terminal": null,
+    "n_terminal": "acetylation",
     "c_terminal": null,
     "labels": [
       "self-assembly"
@@ -795,7 +795,7 @@
     "id": "self_assembly:pos:45",
     "dataset": "self_assembly",
     "sequence": "GGGGGGDD",
-    "n_terminal": null,
+    "n_terminal": "acetylation",
     "c_terminal": null,
     "labels": [
       "self-assembly"
@@ -813,7 +813,7 @@
     "id": "self_assembly:pos:46",
     "dataset": "self_assembly",
     "sequence": "GGGGGGGGDD",
-    "n_terminal": null,
+    "n_terminal": "acetylation",
     "c_terminal": null,
     "labels": [
       "self-assembly"
@@ -831,7 +831,7 @@
     "id": "self_assembly:pos:47",
     "dataset": "self_assembly",
     "sequence": "GGGGGGGGGGDD",
-    "n_terminal": null,
+    "n_terminal": "acetylation",
     "c_terminal": null,
     "labels": [
       "self-assembly"
@@ -1101,8 +1101,8 @@
     "id": "self_assembly:pos:62",
     "dataset": "self_assembly",
     "sequence": "RATARAEARATARAEA",
-    "n_terminal": null,
-    "c_terminal": null,
+    "n_terminal": "acetylation",
+    "c_terminal": "amidation",
     "labels": [
       "self-assembly"
     ],
@@ -2308,7 +2308,7 @@
     "dataset": "self_assembly",
     "sequence": "DFY",
     "n_terminal": null,
-    "c_terminal": null,
+    "c_terminal": "amidation",
     "labels": [
       "self-assembly"
     ],
@@ -3098,9 +3098,9 @@
   {
     "id": "self_assembly:pos:173",
     "dataset": "self_assembly",
-    "sequence": "QQEFQWQFRQQ",
-    "n_terminal": null,
-    "c_terminal": null,
+    "sequence": "QQRFEWEFEQQ",
+    "n_terminal": "acetylation",
+    "c_terminal": "amidation",
     "labels": [
       "self-assembly"
     ],
@@ -3117,8 +3117,8 @@
     "id": "self_assembly:pos:174",
     "dataset": "self_assembly",
     "sequence": "RADARADARADARADA",
-    "n_terminal": null,
-    "c_terminal": null,
+    "n_terminal": "acetylation",
+    "c_terminal": "amidation",
     "labels": [
       "self-assembly"
     ],
@@ -3135,8 +3135,8 @@
     "id": "self_assembly:pos:175",
     "dataset": "self_assembly",
     "sequence": "RARADADARARADADA",
-    "n_terminal": null,
-    "c_terminal": null,
+    "n_terminal": "acetylation",
+    "c_terminal": "amidation",
     "labels": [
       "self-assembly"
     ],
@@ -3225,8 +3225,8 @@
     "id": "self_assembly:pos:180",
     "dataset": "self_assembly",
     "sequence": "AAKAAAKAAAKAAAKA",
-    "n_terminal": null,
-    "c_terminal": null,
+    "n_terminal": "acetylation",
+    "c_terminal": "amidation",
     "labels": [
       "self-assembly"
     ],
@@ -3279,8 +3279,8 @@
     "id": "self_assembly:pos:183",
     "dataset": "self_assembly",
     "sequence": "GYGYGYG",
-    "n_terminal": null,
-    "c_terminal": null,
+    "n_terminal": "acetylation",
+    "c_terminal": "amidation",
     "labels": [
       "self-assembly"
     ],
@@ -3297,8 +3297,8 @@
     "id": "self_assembly:pos:184",
     "dataset": "self_assembly",
     "sequence": "NYNNYN",
-    "n_terminal": null,
-    "c_terminal": null,
+    "n_terminal": "acetylation",
+    "c_terminal": "amidation",
     "labels": [
       "self-assembly"
     ],
@@ -3315,8 +3315,8 @@
     "id": "self_assembly:pos:185",
     "dataset": "self_assembly",
     "sequence": "NYNYNYN",
-    "n_terminal": null,
-    "c_terminal": null,
+    "n_terminal": "acetylation",
+    "c_terminal": "amidation",
     "labels": [
       "self-assembly"
     ],
@@ -3333,8 +3333,8 @@
     "id": "self_assembly:pos:186",
     "dataset": "self_assembly",
     "sequence": "QYQQYQ",
-    "n_terminal": null,
-    "c_terminal": null,
+    "n_terminal": "acetylation",
+    "c_terminal": "amidation",
     "labels": [
       "self-assembly"
     ],
@@ -3351,8 +3351,8 @@
     "id": "self_assembly:pos:187",
     "dataset": "self_assembly",
     "sequence": "QYQYQYQ",
-    "n_terminal": null,
-    "c_terminal": null,
+    "n_terminal": "acetylation",
+    "c_terminal": "amidation",
     "labels": [
       "self-assembly"
     ],
@@ -3369,8 +3369,8 @@
     "id": "self_assembly:pos:188",
     "dataset": "self_assembly",
     "sequence": "SYSSYS",
-    "n_terminal": null,
-    "c_terminal": null,
+    "n_terminal": "acetylation",
+    "c_terminal": "amidation",
     "labels": [
       "self-assembly"
     ],
@@ -3387,8 +3387,8 @@
     "id": "self_assembly:pos:189",
     "dataset": "self_assembly",
     "sequence": "SYSYSYS",
-    "n_terminal": null,
-    "c_terminal": null,
+    "n_terminal": "acetylation",
+    "c_terminal": "amidation",
     "labels": [
       "self-assembly"
     ],
@@ -3747,8 +3747,8 @@
     "id": "self_assembly:pos:209",
     "dataset": "self_assembly",
     "sequence": "VVVVVVKK",
-    "n_terminal": null,
-    "c_terminal": null,
+    "n_terminal": "acetylation",
+    "c_terminal": "amidation",
     "labels": [
       "self-assembly"
     ],
@@ -3764,7 +3764,7 @@
   {
     "id": "self_assembly:pos:210",
     "dataset": "self_assembly",
-    "sequence": "FKFEFKFE",
+    "sequence": "FEFKFEFK",
     "n_terminal": null,
     "c_terminal": null,
     "labels": [
@@ -3782,7 +3782,7 @@
   {
     "id": "self_assembly:pos:211",
     "dataset": "self_assembly",
-    "sequence": "FKFEFKFEFKFE",
+    "sequence": "FEFEFKFK",
     "n_terminal": null,
     "c_terminal": null,
     "labels": [
@@ -3801,8 +3801,8 @@
     "id": "self_assembly:pos:212",
     "dataset": "self_assembly",
     "sequence": "AAAAAAK",
-    "n_terminal": null,
-    "c_terminal": null,
+    "n_terminal": "acetylation",
+    "c_terminal": "amidation",
     "labels": [
       "self-assembly"
     ],
@@ -3818,7 +3818,7 @@
   {
     "id": "self_assembly:pos:213",
     "dataset": "self_assembly",
-    "sequence": "IIIK",
+    "sequence": "AAAAAAK",
     "n_terminal": null,
     "c_terminal": null,
     "labels": [
@@ -3999,8 +3999,8 @@
     "id": "self_assembly:pos:223",
     "dataset": "self_assembly",
     "sequence": "RATARAEFRATARAEA",
-    "n_terminal": null,
-    "c_terminal": null,
+    "n_terminal": "acetylation",
+    "c_terminal": "amidation",
     "labels": [
       "self-assembly"
     ],
@@ -4017,7 +4017,7 @@
     "id": "self_assembly:pos:224",
     "dataset": "self_assembly",
     "sequence": "LLLLLLDD",
-    "n_terminal": null,
+    "n_terminal": "acetylation",
     "c_terminal": null,
     "labels": [
       "self-assembly"
@@ -4035,7 +4035,7 @@
     "id": "self_assembly:pos:225",
     "dataset": "self_assembly",
     "sequence": "VVVVVVD",
-    "n_terminal": null,
+    "n_terminal": "acetylation",
     "c_terminal": null,
     "labels": [
       "self-assembly"
@@ -4053,7 +4053,7 @@
     "id": "self_assembly:pos:226",
     "dataset": "self_assembly",
     "sequence": "VVVVVVDD",
-    "n_terminal": null,
+    "n_terminal": "acetylation",
     "c_terminal": null,
     "labels": [
       "self-assembly"
@@ -4071,7 +4071,7 @@
     "id": "self_assembly:pos:227",
     "dataset": "self_assembly",
     "sequence": "AAAAAAD",
-    "n_terminal": null,
+    "n_terminal": "acetylation",
     "c_terminal": null,
     "labels": [
       "self-assembly"
@@ -4089,7 +4089,7 @@
     "id": "self_assembly:pos:228",
     "dataset": "self_assembly",
     "sequence": "AIVAGD",
-    "n_terminal": null,
+    "n_terminal": "acetylation",
     "c_terminal": null,
     "labels": [
       "self-assembly"
@@ -4107,7 +4107,7 @@
     "id": "self_assembly:pos:229",
     "dataset": "self_assembly",
     "sequence": "AIVAGS",
-    "n_terminal": null,
+    "n_terminal": "acetylation",
     "c_terminal": null,
     "labels": [
       "self-assembly"
@@ -4125,7 +4125,7 @@
     "id": "self_assembly:pos:230",
     "dataset": "self_assembly",
     "sequence": "AIVAGT",
-    "n_terminal": null,
+    "n_terminal": "acetylation",
     "c_terminal": null,
     "labels": [
       "self-assembly"
@@ -4143,7 +4143,7 @@
     "id": "self_assembly:pos:231",
     "dataset": "self_assembly",
     "sequence": "IID",
-    "n_terminal": null,
+    "n_terminal": "acetylation",
     "c_terminal": null,
     "labels": [
       "self-assembly"
@@ -4161,7 +4161,7 @@
     "id": "self_assembly:pos:232",
     "dataset": "self_assembly",
     "sequence": "ILVAGD",
-    "n_terminal": null,
+    "n_terminal": "acetylation",
     "c_terminal": null,
     "labels": [
       "self-assembly"
@@ -4179,7 +4179,7 @@
     "id": "self_assembly:pos:233",
     "dataset": "self_assembly",
     "sequence": "ILVAGS",
-    "n_terminal": null,
+    "n_terminal": "acetylation",
     "c_terminal": null,
     "labels": [
       "self-assembly"
@@ -4197,7 +4197,7 @@
     "id": "self_assembly:pos:234",
     "dataset": "self_assembly",
     "sequence": "IVAD",
-    "n_terminal": null,
+    "n_terminal": "acetylation",
     "c_terminal": null,
     "labels": [
       "self-assembly"
@@ -4215,7 +4215,7 @@
     "id": "self_assembly:pos:235",
     "dataset": "self_assembly",
     "sequence": "IVD",
-    "n_terminal": null,
+    "n_terminal": "acetylation",
     "c_terminal": null,
     "labels": [
       "self-assembly"
@@ -4233,7 +4233,7 @@
     "id": "self_assembly:pos:236",
     "dataset": "self_assembly",
     "sequence": "LAVAGD",
-    "n_terminal": null,
+    "n_terminal": "acetylation",
     "c_terminal": null,
     "labels": [
       "self-assembly"
@@ -4251,7 +4251,7 @@
     "id": "self_assembly:pos:237",
     "dataset": "self_assembly",
     "sequence": "LIVAAD",
-    "n_terminal": null,
+    "n_terminal": "acetylation",
     "c_terminal": null,
     "labels": [
       "self-assembly"
@@ -4269,7 +4269,7 @@
     "id": "self_assembly:pos:238",
     "dataset": "self_assembly",
     "sequence": "LIVAD",
-    "n_terminal": null,
+    "n_terminal": "acetylation",
     "c_terminal": null,
     "labels": [
       "self-assembly"
@@ -4287,7 +4287,7 @@
     "id": "self_assembly:pos:239",
     "dataset": "self_assembly",
     "sequence": "LIVAGD",
-    "n_terminal": null,
+    "n_terminal": "acetylation",
     "c_terminal": null,
     "labels": [
       "self-assembly"
@@ -4305,7 +4305,7 @@
     "id": "self_assembly:pos:240",
     "dataset": "self_assembly",
     "sequence": "LIVAGE",
-    "n_terminal": null,
+    "n_terminal": "acetylation",
     "c_terminal": null,
     "labels": [
       "self-assembly"
@@ -4323,8 +4323,8 @@
     "id": "self_assembly:pos:241",
     "dataset": "self_assembly",
     "sequence": "LIVAGK",
-    "n_terminal": null,
-    "c_terminal": null,
+    "n_terminal": "acetylation",
+    "c_terminal": "amidation",
     "labels": [
       "self-assembly"
     ],
@@ -4341,7 +4341,7 @@
     "id": "self_assembly:pos:242",
     "dataset": "self_assembly",
     "sequence": "LIVAGS",
-    "n_terminal": null,
+    "n_terminal": "acetylation",
     "c_terminal": null,
     "labels": [
       "self-assembly"
@@ -4359,7 +4359,7 @@
     "id": "self_assembly:pos:243",
     "dataset": "self_assembly",
     "sequence": "LIVAGT",
-    "n_terminal": null,
+    "n_terminal": "acetylation",
     "c_terminal": null,
     "labels": [
       "self-assembly"
@@ -4376,7 +4376,7 @@
   {
     "id": "self_assembly:pos:244",
     "dataset": "self_assembly",
-    "sequence": "FFKLVFF",
+    "sequence": "KLVFF",
     "n_terminal": null,
     "c_terminal": null,
     "labels": [
@@ -4413,8 +4413,8 @@
     "id": "self_assembly:pos:246",
     "dataset": "self_assembly",
     "sequence": "KASAKAEAKAEAKASA",
-    "n_terminal": null,
-    "c_terminal": null,
+    "n_terminal": "acetylation",
+    "c_terminal": "amidation",
     "labels": [
       "self-assembly"
     ],
@@ -4431,8 +4431,8 @@
     "id": "self_assembly:pos:247",
     "dataset": "self_assembly",
     "sequence": "SAEAKAEAKAEASAEA",
-    "n_terminal": null,
-    "c_terminal": null,
+    "n_terminal": "acetylation",
+    "c_terminal": "amidation",
     "labels": [
       "self-assembly"
     ],
@@ -6475,7 +6475,7 @@
     "dataset": "self_assembly",
     "sequence": "VKVKVKVK",
     "n_terminal": null,
-    "c_terminal": null,
+    "c_terminal": "amidation",
     "labels": [
       "non-self-assembly"
     ],
