@@ -310,11 +310,12 @@ export async function getFailedRuns(filters = {}) {
 }
 
 /**
- * List baseline cases (optionally filter by dataset).
+ * List baseline cases (optionally filter by dataset and batch_id).
  */
-export async function getBaselineCases(dataset) {
+export async function getBaselineCases(dataset, batchId = null) {
     const params = new URLSearchParams();
     if (dataset) params.set('dataset', dataset);
+    if (batchId) params.set('batch_id', batchId);
     const query = params.toString();
     return request(query ? `/api/baseline/cases?${query}` : '/api/baseline/cases');
 }
@@ -426,8 +427,12 @@ export function getBaselineLocalPdfSiUrl(caseId, index = 0) {
 /**
  * Get the latest run for a baseline case.
  */
-export async function getBaselineLatestRun(caseId) {
-    return request(`/api/baseline/cases/${encodeURIComponent(caseId)}/latest-run`);
+export async function getBaselineLatestRun(caseId, batchId = null) {
+    const params = new URLSearchParams();
+    if (batchId) params.set('batch_id', batchId);
+    const query = params.toString();
+    const suffix = query ? `?${query}` : '';
+    return request(`/api/baseline/cases/${encodeURIComponent(caseId)}/latest-run${suffix}`);
 }
 
 /**

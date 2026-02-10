@@ -4,8 +4,23 @@
 import * as api from './js/api.js';
 import { $, el } from './js/renderers.js';
 
-// Model pricing per 1M tokens (approximate)
+// Model pricing per 1M tokens (approximate, excludes cached-input discounts).
 const MODEL_PRICING = {
+	'gpt-5.2': { input: 1.75, output: 14.00 },
+	'gpt-5-mini': { input: 0.25, output: 2.00 },
+	'gpt-5-nano': { input: 0.05, output: 0.40 },
+	'moonshotai/kimi-k2.5': { input: 0.45, output: 2.25 },
+	'kimi-k2.5': { input: 0.45, output: 2.25 },
+	'gemini-3-pro-preview': { input: 2.00, output: 12.00 },
+	'google/gemini-3-pro-preview': { input: 2.00, output: 12.00 },
+	'gemini-3-flash': { input: 0.50, output: 3.00 },
+	'gemini-3-flash-preview': { input: 0.50, output: 3.00 },
+	'google/gemini-3-flash': { input: 0.50, output: 3.00 },
+	'google/gemini-3-flash-preview': { input: 0.50, output: 3.00 },
+	'gemini-2.5-pro': { input: 1.25, output: 10.00 },
+	'google/gemini-2.5-pro': { input: 1.25, output: 10.00 },
+	'z-ai/glm-4.7': { input: 0.40, output: 1.50 },
+	'glm-4.7': { input: 0.40, output: 1.50 },
 	'gpt-4o': { input: 2.50, output: 10.00 },
 	'gpt-4o-mini': { input: 0.15, output: 0.60 },
 	'gpt-4.1-nano': { input: 0.10, output: 0.40 },
@@ -26,7 +41,8 @@ const STATUS_LABELS = {
 	failed: 'Failed',
 };
 
-const SCORED_BATCH_STATUSES = new Set(['completed', 'partial', 'failed']);
+const RANKABLE_BATCH_STATUSES = new Set(['running', 'completed', 'partial', 'failed']);
+const BASELINE_ACCURACY_TARGET = 368;
 const DEFAULT_PROVIDER_METRIC = 'accuracy';
 const PROVIDER_METRIC_STORAGE_KEY = 'peptide.evaluation.chart.metric';
 const SVG_NS = 'http://www.w3.org/2000/svg';
@@ -77,6 +93,15 @@ function normalizeProviderKey(provider) {
 	return (provider || 'unknown').toString().trim().toLowerCase();
 }
 
+function normalizeModelKey(modelName) {
+	return (modelName || '').toString().trim().toLowerCase();
+}
+
+function getModelPricing(modelName) {
+	const key = normalizeModelKey(modelName);
+	return MODEL_PRICING[key] || null;
+}
+
 function formatProviderName(provider) {
 	const key = normalizeProviderKey(provider);
 	const descriptor = (state.providers || []).find(
@@ -91,6 +116,14 @@ function formatProviderName(provider) {
 	if (key === 'deepseek') return 'DeepSeek';
 	if (key === 'mock') return 'Mock';
 	return provider || 'Unknown';
+}
+
+function getBatchModelLabel(batch) {
+	const modelName = (batch.model_name || '').toString().trim();
+	if (modelName) return modelName;
+	const provider = (batch.model_provider || '').toString().trim();
+	if (provider) return `${formatProviderName(provider)} (default)`;
+	return 'Unknown model';
 }
 
 function formatDuration(ms) {
@@ -113,10 +146,8 @@ function formatTokens(count) {
 }
 
 function formatCost(batch) {
-	const pricing = MODEL_PRICING[batch.model_name] || MODEL_PRICING['gpt-4.1-nano'];
-	const inputCost = (batch.total_input_tokens / 1_000_000) * pricing.input;
-	const outputCost = (batch.total_output_tokens / 1_000_000) * pricing.output;
-	const total = inputCost + outputCost;
+	const total = getBatchEstimatedCostUsd(batch);
+	if (!Number.isFinite(total)) return 'n/a';
 	if (total < 0.01) return '<$0.01';
 	return `$${total.toFixed(2)}`;
 }
@@ -232,8 +263,8 @@ function initProviderMetricControls() {
 function getBatchEstimatedCostUsd(batch) {
 	const directCost = Number(batch.estimated_cost_usd);
 	if (Number.isFinite(directCost) && directCost >= 0) return directCost;
-	const pricing = MODEL_PRICING[batch.model_name] || MODEL_PRICING['gpt-4.1-nano'];
-	if (!pricing) return 0;
+	const pricing = getModelPricing(batch.model_name);
+	if (!pricing) return null;
 	const inputCost = (Number(batch.total_input_tokens || 0) / 1_000_000) * pricing.input;
 	const outputCost = (Number(batch.total_output_tokens || 0) / 1_000_000) * pricing.output;
 	return Math.max(0, inputCost + outputCost);
@@ -241,42 +272,63 @@ function getBatchEstimatedCostUsd(batch) {
 
 function selectFinishedBatches(batches) {
 	return batches.filter((batch) => {
-		const status = (batch.status || '').toLowerCase();
+		const status = (batch.status || '').toString().trim().toLowerCase();
+		const model = (batch.model_name || '').toString().trim();
 		const provider = (batch.model_provider || '').toString().trim();
-		return SCORED_BATCH_STATUSES.has(status) && provider;
+		const isRankable =
+			RANKABLE_BATCH_STATUSES.has(status) ||
+			status.includes('partial') ||
+			status.includes('completed') ||
+			status.includes('failed');
+		return isRankable && (model || provider);
 	});
 }
 
 function aggregateProviderStats(finishedBatches) {
 	const grouped = new Map();
 	for (const batch of finishedBatches) {
+		const modelRaw = (batch.model_name || '').toString().trim();
 		const providerRaw = (batch.model_provider || '').toString().trim();
-		if (!providerRaw) continue;
-		const expected = Number(batch.total_expected_entities || 0);
+		if (!modelRaw && !providerRaw) continue;
 		const matched = Math.max(0, Number(batch.matched_entities || 0));
 		const papersAllMatched = Math.max(0, Number(batch.papers_all_matched || 0));
-		const provider = normalizeProviderKey(providerRaw);
-		if (!grouped.has(provider)) {
-			grouped.set(provider, {
-				provider,
-				providerLabel: formatProviderName(provider),
+		const totalPapers = Math.max(0, Number(batch.total_papers || 0));
+		const accuracyExpected = BASELINE_ACCURACY_TARGET;
+		const modelKey = modelRaw
+			? normalizeModelKey(modelRaw)
+			: `provider:${normalizeProviderKey(providerRaw)}`;
+		if (!grouped.has(modelKey)) {
+			grouped.set(modelKey, {
+				modelKey,
+				providerLabel: getBatchModelLabel(batch),
 				matched: 0,
 				expected: 0,
-				papersAllMatched: 0,
+				accuracyRuns: 0,
+				accuracyTarget: BASELINE_ACCURACY_TARGET,
+				papersAllMatchedBest: 0,
+				papersTargetMax: 0,
 				papersAllMatchedSamples: 0,
 				cost: 0,
+				costSamples: 0,
 				timeMs: 0,
 				batches: 0,
 			});
 		}
-		const row = grouped.get(provider);
+		const row = grouped.get(modelKey);
 		row.matched += matched;
-		row.expected += Math.max(0, expected);
+		row.expected += accuracyExpected;
+		row.accuracyRuns += 1;
+		row.papersTargetMax = Math.max(row.papersTargetMax, totalPapers);
 		if (Number.isFinite(Number(batch.papers_all_matched))) {
-			row.papersAllMatched += papersAllMatched;
+			const capped = totalPapers > 0 ? Math.min(papersAllMatched, totalPapers) : papersAllMatched;
+			row.papersAllMatchedBest = Math.max(row.papersAllMatchedBest, capped);
 			row.papersAllMatchedSamples += 1;
 		}
-		row.cost += getBatchEstimatedCostUsd(batch);
+		const batchCost = getBatchEstimatedCostUsd(batch);
+		if (Number.isFinite(batchCost)) {
+			row.cost += batchCost;
+			row.costSamples += 1;
+		}
 		row.timeMs += Math.max(0, Number(batch.total_time_ms || 0));
 		row.batches += 1;
 	}
@@ -287,11 +339,11 @@ function aggregateProviderStats(finishedBatches) {
 function computeMetricValue(row, metric) {
 	switch (metric.id) {
 		case 'accuracy':
-			return row.expected > 0 ? row.matched / row.expected : null;
+			return row.accuracyRuns > 0 ? row.matched / (row.accuracyRuns * row.accuracyTarget) : null;
 		case 'papers_all_matched':
-			return row.papersAllMatchedSamples > 0 ? Number(row.papersAllMatched || 0) : null;
+			return row.papersAllMatchedSamples > 0 ? Number(row.papersAllMatchedBest || 0) : null;
 		case 'total_cost':
-			return Number(row.cost || 0);
+			return row.costSamples > 0 ? Number(row.cost || 0) : null;
 		case 'total_time':
 			return Number(row.timeMs || 0);
 		default:
@@ -301,14 +353,16 @@ function computeMetricValue(row, metric) {
 
 function buildMetricMetaLabel(row, metric, compact) {
 	switch (metric.id) {
-		case 'accuracy':
+		case 'accuracy': {
+			const avgMatched = row.accuracyRuns > 0 ? row.matched / row.accuracyRuns : 0;
 			return compact
-				? `${formatCount(row.matched)}/${formatCount(row.expected)} · ${row.batches}r`
-				: `${formatCount(row.matched)}/${formatCount(row.expected)} matched · ${row.batches} run${row.batches === 1 ? '' : 's'}`;
+				? `${formatCount(Math.round(avgMatched))}/${formatCount(row.accuracyTarget)} avg · ${row.batches}r`
+				: `${formatCount(Math.round(avgMatched))}/${formatCount(row.accuracyTarget)} avg matched · ${row.batches} run${row.batches === 1 ? '' : 's'}`;
+		}
 		case 'papers_all_matched':
 			return compact
-				? `${formatCount(row.papersAllMatched)} papers · ${row.batches}r`
-				: `${formatCount(row.papersAllMatched)} papers fully matched · ${row.batches} run${row.batches === 1 ? '' : 's'}`;
+				? `${formatCount(row.papersAllMatchedBest)}/${formatCount(row.papersTargetMax)} papers · ${row.batches}r`
+				: `${formatCount(row.papersAllMatchedBest)}/${formatCount(row.papersTargetMax)} papers fully matched · ${row.batches} run${row.batches === 1 ? '' : 's'}`;
 		case 'total_cost':
 			return compact
 				? `${formatCurrency(row.cost)} total · ${row.batches}r`
@@ -322,12 +376,14 @@ function buildMetricMetaLabel(row, metric, compact) {
 	}
 }
 
-function formatMetricValue(metric, value) {
+function formatMetricValue(metric, value, row = null) {
 	switch (metric.id) {
 		case 'accuracy':
 			return formatPercent(value, 1);
 		case 'papers_all_matched':
-			return formatCount(value);
+			return row?.papersTargetMax > 0
+				? `${formatCount(value)}/${formatCount(row.papersTargetMax)}`
+				: formatCount(value);
 		case 'total_cost':
 			return formatCurrency(value);
 		case 'total_time':
@@ -378,13 +434,14 @@ function computeProviderMetricRows(finishedBatches, metric) {
 		(acc, row) => {
 			acc.matched += row.matched;
 			acc.expected += row.expected;
-			acc.papersAllMatched += row.papersAllMatched;
+			acc.papersAllMatched += row.papersAllMatchedBest;
+			acc.papersTargetMax = Math.max(acc.papersTargetMax, row.papersTargetMax || 0);
 			acc.cost += row.cost;
 			acc.timeMs += row.timeMs;
 			acc.runs += row.batches;
 			return acc;
 		},
-		{ matched: 0, expected: 0, papersAllMatched: 0, cost: 0, timeMs: 0, runs: 0 },
+		{ matched: 0, expected: 0, papersAllMatched: 0, papersTargetMax: 0, cost: 0, timeMs: 0, runs: 0 },
 	);
 
 	return { rows, totals };
@@ -406,6 +463,23 @@ function buildAxisTicks(metric, maxValue) {
 		return {
 			max: 1,
 			values,
+		};
+	}
+
+	if (metric.id === 'papers_all_matched') {
+		const axisMax = Math.max(1, Math.round(maxValue || 0));
+		const tickValues = Array.from(
+			new Set([
+				0,
+				Math.round(axisMax * 0.25),
+				Math.round(axisMax * 0.5),
+				Math.round(axisMax * 0.75),
+				axisMax,
+			]),
+		).sort((a, b) => a - b);
+		return {
+			max: axisMax,
+			values: tickValues,
 		};
 	}
 
@@ -434,7 +508,9 @@ function buildProviderChartModel(rows, metric, containerWidth) {
 	const bottomPad = 44;
 	const plotWidth = Math.max(120, width - leftPad - rightPad);
 	const axisY = topPad + rows.length * rowHeight + 8;
-	const maxMetricValue = rows.reduce((max, row) => Math.max(max, row.metricValue), 0);
+	const maxMetricValue = metric.id === 'papers_all_matched'
+		? rows.reduce((max, row) => Math.max(max, Number(row.papersTargetMax || 0)), 0)
+		: rows.reduce((max, row) => Math.max(max, row.metricValue), 0);
 	const axis = buildAxisTicks(metric, maxMetricValue);
 	const ticks = axis.values.map((value) => ({
 		value,
@@ -450,7 +526,7 @@ function buildProviderChartModel(rows, metric, containerWidth) {
 			...row,
 			providerLabel: compact ? truncateLabel(row.providerLabel, 13) : row.providerLabel,
 			ratio,
-			valueLabel: formatMetricValue(metric, row.metricValue),
+			valueLabel: formatMetricValue(metric, row.metricValue, row),
 			metaLabel: buildMetricMetaLabel(row, metric, compact),
 			yTop,
 			yCenter,
@@ -501,7 +577,7 @@ function renderProviderAccuracySvg(container, model, metric, options = {}) {
 		class: 'provider-accuracy-svg',
 		viewBox: `0 0 ${model.width} ${model.height}`,
 		role: 'img',
-		'aria-label': `${metric.label} by provider chart`,
+		'aria-label': `${metric.label} by model chart`,
 	});
 	svg.style.width = '100%';
 	svg.style.height = 'auto';
@@ -634,27 +710,9 @@ function renderProviderAccuracySvg(container, model, metric, options = {}) {
 	}
 }
 
-function buildMetricSummary(metric, rows, totals) {
-	if (!rows.length) return 'No provider data';
-	switch (metric.id) {
-		case 'accuracy':
-			return `${rows.length} provider${rows.length === 1 ? '' : 's'} · ${formatCount(totals.matched)}/${formatCount(totals.expected)} matched`;
-		case 'papers_all_matched':
-			return `${rows.length} provider${rows.length === 1 ? '' : 's'} · ${formatCount(totals.papersAllMatched)} papers fully matched`;
-		case 'total_cost':
-			return `${rows.length} provider${rows.length === 1 ? '' : 's'} · ${formatCurrency(totals.cost)} total cost`;
-		case 'total_time':
-			return `${rows.length} provider${rows.length === 1 ? '' : 's'} · ${formatDuration(totals.timeMs)} total time`;
-		default:
-			return `${rows.length} providers`;
-	}
-}
-
 function renderProviderAccuracyChart() {
 	const container = $('#providerAccuracyChart');
 	const plotMount = $('#providerAccuracyPlot');
-	const summary = $('#providerAccuracySummary');
-	const stateText = $('#providerAccuracyState');
 	const metric = getMetricConfig(state.providerChartMetric);
 	if (!container || !plotMount) return;
 	plotMount.innerHTML = '';
@@ -662,49 +720,30 @@ function renderProviderAccuracyChart() {
 	const isLoading = state.providerChartState === 'loading';
 	const isError = state.providerChartState === 'error';
 	if (isLoading && !state.batches.length) {
-		if (summary) summary.textContent = 'Loading provider analytics...';
-		if (stateText) stateText.textContent = 'Loading latest scored evaluation runs...';
 		renderProviderChartSkeleton(plotMount);
 		return;
 	}
 
 	const finishedBatches = selectFinishedBatches(state.batches);
-	const { rows, totals } = computeProviderMetricRows(finishedBatches, metric);
+	const { rows } = computeProviderMetricRows(finishedBatches, metric);
 	const papersAllMatchedMissing =
 		metric.id === 'papers_all_matched' &&
 		finishedBatches.length > 0 &&
 		finishedBatches.every((batch) => !Number.isFinite(Number(batch.papers_all_matched)));
 
 	if (!rows.length) {
-		if (summary) summary.textContent = `No ${metric.label.toLowerCase()} data yet`;
-		if (stateText) {
-			stateText.textContent = papersAllMatchedMissing
-				? 'Papers Fully Matched requires refreshed backend analytics. Restart the server to load this metric.'
-				: isError
-					? 'Analytics refresh failed. Showing fallback state.'
-					: 'Only completed, partial, and failed runs are included.';
-		}
 		plotMount.appendChild(
 			el(
 				'div',
 				'sw-empty text-xs text-slate-500',
-				papersAllMatchedMissing
-					? 'Metric unavailable from the current API payload.'
-					: state.batches.length
-						? 'No providers have enough data for this metric yet.'
-						: 'No runs available yet. Start a run to populate analytics.',
-			),
-		);
-		return;
-	}
-
-	if (summary) {
-		summary.textContent = buildMetricSummary(metric, rows, totals);
-	}
-	if (stateText) {
-		stateText.textContent = isError
-			? 'Live refresh hit an error. Displaying last available analytics.'
-			: 'Includes completed, partial, and failed runs.';
+					papersAllMatchedMissing
+						? 'Metric unavailable from the current API payload.'
+						: state.batches.length
+							? 'No models have enough data for this metric yet.'
+							: 'No runs available yet. Start a run to populate analytics.',
+				),
+			);
+			return;
 	}
 
 	const model = buildProviderChartModel(rows, metric, plotMount.clientWidth || container.clientWidth || 720);
@@ -726,21 +765,137 @@ function queueProviderChartRerender() {
 	}, 120);
 }
 
+function getCardStatusColor(status) {
+	return STATUS_COLORS[status] || 'border-slate-400';
+}
+
+function getCardStatusChipClass(status) {
+	if (status === 'running') return 'sw-chip--processing';
+	if (status === 'completed') return 'sw-chip--success';
+	if (status === 'partial') return 'sw-chip--warning';
+	return 'sw-chip--error';
+}
+
+function getCardProgressFillClass(status) {
+	if (status === 'running') return 'bg-cyan-400';
+	if (status === 'completed') return 'bg-emerald-400';
+	if (status === 'partial') return 'bg-amber-400';
+	return 'bg-rose-400';
+}
+
+function applyBatchCardShellClass(card, batch) {
+	card.className = `sw-card p-4 min-h-[235px] hover:shadow-lg transition-shadow border-l-4 ${getCardStatusColor(batch.status)}`;
+}
+
+function renderRetryButton(slot, batch) {
+	if (!slot) return;
+	slot.innerHTML = '';
+	if (batch.failed <= 0 || batch.status === 'running') return;
+	const retryBtn = el('button', 'sw-btn sw-btn--sm sw-btn--ghost text-[10px]');
+	retryBtn.innerHTML = `<span class="sw-btn__label">Retry ${batch.failed}</span>`;
+	retryBtn.title = `Retry ${batch.failed} failed runs`;
+	retryBtn.addEventListener('click', async (e) => {
+		e.preventDefault();
+		e.stopPropagation();
+		await retryBatchFailed(batch.batch_id, retryBtn);
+	});
+	slot.appendChild(retryBtn);
+}
+
+function renderStopButton(slot, batch) {
+	if (!slot) return;
+	slot.innerHTML = '';
+	if (batch.status !== 'running') return;
+	const stopBtn = el('button', 'sw-btn sw-btn--sm sw-btn--ghost text-[10px] text-amber-600 hover:text-amber-700');
+	stopBtn.innerHTML = '<span class="sw-btn__label">Stop</span>';
+	stopBtn.title = 'Stop all in-progress requests for this run';
+	stopBtn.addEventListener('click', async (e) => {
+		e.preventDefault();
+		e.stopPropagation();
+		await stopBatchRun(batch.batch_id, batch.label || batch.batch_id, stopBtn);
+	});
+	slot.appendChild(stopBtn);
+}
+
+function patchBatchCardElement(card, batch) {
+	if (!card) return;
+	card.dataset.batchId = batch.batch_id;
+	applyBatchCardShellClass(card, batch);
+
+	const statusLabel = STATUS_LABELS[batch.status] || batch.status;
+	const progress = getProgressPercent(batch);
+
+	const titleLink = card.querySelector('[data-role="title-link"]');
+	if (titleLink) {
+		titleLink.textContent = batch.label || batch.batch_id;
+		titleLink.title = batch.batch_id;
+		titleLink.href = `/baseline/${encodeURIComponent(batch.batch_id)}`;
+	}
+
+	const statusBadge = card.querySelector('[data-role="status-badge"]');
+	if (statusBadge) {
+		statusBadge.className = `sw-chip text-[10px] ${getCardStatusChipClass(batch.status)}`;
+		statusBadge.textContent = statusLabel;
+	}
+
+	const progressFill = card.querySelector('[data-role="progress-fill"]');
+	if (progressFill) {
+		progressFill.className = `h-full transition-all duration-300 ${getCardProgressFillClass(batch.status)}`;
+		progressFill.style.width = `${progress}%`;
+	}
+
+	const completedText = card.querySelector('[data-role="progress-completed"]');
+	if (completedText) {
+		completedText.textContent = `${batch.completed}/${batch.total_papers} completed`;
+	}
+
+	const failedText = card.querySelector('[data-role="progress-failed"]');
+	if (failedText) {
+		failedText.textContent = batch.failed > 0 ? `${batch.failed} failed` : '';
+		failedText.classList.toggle('invisible', batch.failed <= 0);
+	}
+
+	const setStatValue = (role, text, highlight = false) => {
+		const node = card.querySelector(`[data-role="${role}"]`);
+		if (!node) return;
+		node.className = highlight ? 'text-emerald-600 font-medium' : 'text-slate-700';
+		node.textContent = text;
+	};
+	setStatValue('stat-match-rate', formatMatchRate(batch), batch.matched_entities > 0);
+	setStatValue('stat-cost', formatCost(batch));
+	setStatValue('stat-time', formatDuration(batch.total_time_ms));
+	setStatValue('stat-input', `${formatTokens(batch.total_input_tokens)}`);
+	setStatValue('stat-output', `${formatTokens(batch.total_output_tokens)}`);
+	setStatValue('stat-model', batch.model_name || batch.model_provider);
+
+	const createdAt = card.querySelector('[data-role="created-at"]');
+	if (createdAt) {
+		createdAt.textContent = formatDate(batch.created_at);
+	}
+
+	const retrySlot = card.querySelector('[data-role="retry-slot"]');
+	renderRetryButton(retrySlot, batch);
+	const stopSlot = card.querySelector('[data-role="stop-slot"]');
+	renderStopButton(stopSlot, batch);
+}
+
 function renderBatchCard(batch) {
 	const progress = getProgressPercent(batch);
-	const statusColor = STATUS_COLORS[batch.status] || 'border-slate-400';
 	const statusLabel = STATUS_LABELS[batch.status] || batch.status;
 
-	const card = el('div', `sw-card p-4 hover:shadow-lg transition-shadow border-l-4 ${statusColor}`);
+	const card = el('div', '');
 	card.dataset.batchId = batch.batch_id;
+	applyBatchCardShellClass(card, batch);
 
 	// Header row: name/id + status badge
 	const header = el('div', 'flex items-center justify-between mb-3');
 	const titleLink = el('a', 'font-semibold text-sm truncate flex-1 mr-2 hover:text-cyan-500 cursor-pointer', batch.label || batch.batch_id);
+	titleLink.dataset.role = 'title-link';
 	titleLink.title = batch.batch_id;
 	titleLink.href = `/baseline/${encodeURIComponent(batch.batch_id)}`;
 
-	const statusBadge = el('span', `sw-chip text-[10px] ${batch.status === 'running' ? 'sw-chip--processing' : batch.status === 'completed' ? 'sw-chip--success' : batch.status === 'partial' ? 'sw-chip--warning' : 'sw-chip--error'}`, statusLabel);
+	const statusBadge = el('span', `sw-chip text-[10px] ${getCardStatusChipClass(batch.status)}`, statusLabel);
+	statusBadge.dataset.role = 'status-badge';
 
 	header.appendChild(titleLink);
 	header.appendChild(statusBadge);
@@ -749,35 +904,40 @@ function renderBatchCard(batch) {
 	// Progress bar
 	const progressWrapper = el('div', 'mb-3');
 	const progressBar = el('div', 'h-2 bg-slate-200 rounded-full overflow-hidden');
-	const progressFill = el('div', `h-full transition-all duration-300 ${batch.status === 'running' ? 'bg-cyan-400' : batch.status === 'completed' ? 'bg-emerald-400' : batch.status === 'partial' ? 'bg-amber-400' : 'bg-rose-400'}`);
+	const progressFill = el('div', `h-full transition-all duration-300 ${getCardProgressFillClass(batch.status)}`);
+	progressFill.dataset.role = 'progress-fill';
 	progressFill.style.width = `${progress}%`;
 	progressBar.appendChild(progressFill);
 	progressWrapper.appendChild(progressBar);
 
 	const progressText = el('div', 'flex justify-between text-[10px] text-slate-500 mt-1');
-	progressText.appendChild(el('span', '', `${batch.completed}/${batch.total_papers} completed`));
-	if (batch.failed > 0) {
-		progressText.appendChild(el('span', 'text-rose-500', `${batch.failed} failed`));
-	}
+	const completedSpan = el('span', '', `${batch.completed}/${batch.total_papers} completed`);
+	completedSpan.dataset.role = 'progress-completed';
+	const failedSpan = el('span', `text-rose-500 ${batch.failed > 0 ? '' : 'invisible'}`, batch.failed > 0 ? `${batch.failed} failed` : '');
+	failedSpan.dataset.role = 'progress-failed';
+	progressText.appendChild(completedSpan);
+	progressText.appendChild(failedSpan);
 	progressWrapper.appendChild(progressText);
 	card.appendChild(progressWrapper);
 
 	// Stats grid - 3 columns for more info
 	const statsGrid = el('div', 'grid grid-cols-3 gap-2 text-[11px]');
 
-	const addStat = (label, value, highlight = false) => {
+	const addStat = (label, value, highlight = false, role = '') => {
 		const stat = el('div', 'flex flex-col');
 		stat.appendChild(el('span', 'sw-kicker text-[10px] text-slate-400', label));
-		stat.appendChild(el('span', highlight ? 'text-emerald-600 font-medium' : 'text-slate-700', value));
+		const valueNode = el('span', highlight ? 'text-emerald-600 font-medium' : 'text-slate-700', value);
+		if (role) valueNode.dataset.role = role;
+		stat.appendChild(valueNode);
 		statsGrid.appendChild(stat);
 	};
 
-	addStat('Match Rate', formatMatchRate(batch), batch.matched_entities > 0);
-	addStat('Cost', formatCost(batch));
-	addStat('Time', formatDuration(batch.total_time_ms));
-	addStat('Input', `${formatTokens(batch.total_input_tokens)}`);
-	addStat('Output', `${formatTokens(batch.total_output_tokens)}`);
-	addStat('Model', batch.model_name || batch.model_provider);
+	addStat('Match Rate', formatMatchRate(batch), batch.matched_entities > 0, 'stat-match-rate');
+	addStat('Cost', formatCost(batch), false, 'stat-cost');
+	addStat('Time', formatDuration(batch.total_time_ms), false, 'stat-time');
+	addStat('Input', `${formatTokens(batch.total_input_tokens)}`, false, 'stat-input');
+	addStat('Output', `${formatTokens(batch.total_output_tokens)}`, false, 'stat-output');
+	addStat('Model', batch.model_name || batch.model_provider, false, 'stat-model');
 
 	card.appendChild(statsGrid);
 
@@ -785,19 +945,14 @@ function renderBatchCard(batch) {
 	const actionsRow = el('div', 'flex items-center justify-between mt-3 pt-3 border-t border-slate-200');
 
 	const leftActions = el('div', 'flex items-center gap-2');
-
-	// Retry Failed button (only if there are failed runs)
-	if (batch.failed > 0 && batch.status !== 'running') {
-		const retryBtn = el('button', 'sw-btn sw-btn--sm sw-btn--ghost text-[10px]');
-		retryBtn.innerHTML = `<span class="sw-btn__label">Retry ${batch.failed}</span>`;
-		retryBtn.title = `Retry ${batch.failed} failed runs`;
-		retryBtn.addEventListener('click', async (e) => {
-			e.preventDefault();
-			e.stopPropagation();
-			await retryBatchFailed(batch.batch_id, retryBtn);
-		});
-		leftActions.appendChild(retryBtn);
-	}
+	const stopSlot = el('div', 'flex items-center gap-2');
+	stopSlot.dataset.role = 'stop-slot';
+	leftActions.appendChild(stopSlot);
+	renderStopButton(stopSlot, batch);
+	const retrySlot = el('div', 'flex items-center gap-2');
+	retrySlot.dataset.role = 'retry-slot';
+	leftActions.appendChild(retrySlot);
+	renderRetryButton(retrySlot, batch);
 
 	// Delete button
 	const deleteBtn = el('button', 'sw-btn sw-btn--sm sw-btn--ghost text-[10px] text-rose-500 hover:text-rose-600');
@@ -813,7 +968,9 @@ function renderBatchCard(batch) {
 	actionsRow.appendChild(leftActions);
 
 	// Date on the right
-	actionsRow.appendChild(el('span', 'text-[10px] text-slate-500', formatDate(batch.created_at)));
+	const dateNode = el('span', 'text-[10px] text-slate-500', formatDate(batch.created_at));
+	dateNode.dataset.role = 'created-at';
+	actionsRow.appendChild(dateNode);
 
 	card.appendChild(actionsRow);
 
@@ -860,11 +1017,10 @@ function updateBatchCard(batchId, updates) {
 
 	Object.assign(batch, updates);
 
-	// Re-render just that card
+	// Patch just that card in place (avoid scroll jumps from replacing nodes).
 	const existingCard = document.querySelector(`[data-batch-id="${batchId}"]`);
 	if (existingCard) {
-		const newCard = renderBatchCard(batch);
-		existingCard.replaceWith(newCard);
+		patchBatchCardElement(existingCard, batch);
 	}
 }
 
@@ -885,7 +1041,7 @@ async function loadBatches() {
 	} catch (err) {
 		console.error('Failed to load batches:', err);
 		state.providerChartState = 'error';
-		state.providerChartError = err?.message || 'Failed to load provider analytics';
+		state.providerChartError = err?.message || 'Failed to load model analytics';
 		renderProviderAccuracyChart();
 		updateStatus(`Error: ${err.message}`);
 	}
@@ -939,20 +1095,55 @@ function closeNewBatchModal() {
 		// Reset form
 		const form = $('#newBatchForm');
 		if (form) form.reset();
-		syncBatchModelHint();
+		renderBatchModelOptions({ preserveSelection: false });
 	}
 }
 
-function syncBatchModelHint() {
-	const select = $('#batchModel');
-	const input = $('#batchCustomModel');
-	if (!select || !input) return;
-	const descriptor = (state.providers || []).find((item) => item.provider_id === select.value);
-	const defaultModel = descriptor?.default_model || '';
-	input.placeholder = defaultModel ? `Default: ${defaultModel}` : 'Use provider default';
-	if (!input.value) {
-		input.value = defaultModel || '';
+function shouldRefreshProviderCatalog(catalog = []) {
+	if (!Array.isArray(catalog) || !catalog.length) return false;
+	for (const item of catalog) {
+		if (!item?.enabled) continue;
+		if (item.provider_id !== 'gemini' && item.provider_id !== 'openrouter') continue;
+		const models = item.curated_models || [];
+		if (models.length <= 1) return true;
 	}
+	return false;
+}
+
+function renderBatchModelOptions({ preserveSelection = true } = {}) {
+	const select = $('#batchModel');
+	const modelSelect = $('#batchProviderModel');
+	if (!select || !modelSelect) return;
+	const descriptor = (state.providers || []).find((item) => item.provider_id === select.value);
+	const models = [];
+	const seen = new Set();
+	for (const candidate of [descriptor?.default_model, ...(descriptor?.curated_models || [])]) {
+		const model = (candidate || '').trim();
+		if (!model || seen.has(model)) continue;
+		seen.add(model);
+		models.push(model);
+	}
+
+	const previous = preserveSelection ? (modelSelect.value || '') : '';
+	modelSelect.innerHTML = '';
+
+	if (!models.length) {
+		const fallback = document.createElement('option');
+		fallback.value = '';
+		fallback.textContent = 'Provider default';
+		modelSelect.appendChild(fallback);
+		modelSelect.value = '';
+		return;
+	}
+
+	for (const model of models) {
+		const option = document.createElement('option');
+		option.value = model;
+		option.textContent = model;
+		modelSelect.appendChild(option);
+	}
+
+	modelSelect.value = previous && models.includes(previous) ? previous : models[0];
 }
 
 function renderBatchProviderOptions() {
@@ -971,20 +1162,25 @@ function renderBatchProviderOptions() {
 	select.value = enabled.some((item) => item.provider_id === previous)
 		? previous
 		: enabled[0].provider_id;
-	syncBatchModelHint();
+	renderBatchModelOptions({ preserveSelection: true });
 }
 
 async function loadProviders() {
 	try {
-		const payload = await api.get('/api/providers');
-		state.providers = payload.providers || [];
+		const payload = await api.getProviders();
+		let providers = payload.providers || [];
+		if (shouldRefreshProviderCatalog(providers)) {
+			const refreshed = await api.refreshProviders();
+			providers = refreshed.providers || providers;
+		}
+		state.providers = providers;
 		renderBatchProviderOptions();
 	} catch (err) {
 		console.error('Failed to load provider catalog:', err);
 	}
 }
 
-async function createBatch(name, model, promptId, customModel) {
+async function createBatch(name, model, promptId, modelId) {
 	const submitBtn = $('#submitBatchBtn');
 	const label = submitBtn?.querySelector('.sw-btn__label');
 
@@ -1000,7 +1196,7 @@ async function createBatch(name, model, promptId, customModel) {
 			dataset: 'self_assembly',
 			label: name || null,
 			provider: model,
-			model: customModel || null,
+			model: modelId || null,
 			prompt_id: promptId ? parseInt(promptId, 10) : null,
 		});
 
@@ -1042,6 +1238,39 @@ async function retryBatchFailed(batchId, button) {
 		await loadBatches();
 	} catch (err) {
 		console.error('Failed to retry batch:', err);
+		updateStatus(`Error: ${err.message}`);
+	} finally {
+		if (button) {
+			button.disabled = false;
+			if (label) label.textContent = originalText;
+		}
+	}
+}
+
+async function stopBatchRun(batchId, batchLabel, button) {
+	if (!confirm(`Stop run "${batchLabel}"?\n\nThis cancels all queued/in-progress requests for this run.`)) {
+		return;
+	}
+
+	const label = button?.querySelector('.sw-btn__label');
+	const originalText = label?.textContent || 'Stop';
+
+	try {
+		if (button) {
+			button.disabled = true;
+			if (label) label.textContent = 'Stopping...';
+		}
+
+		updateStatus('Stopping run...');
+
+		const response = await api.post('/api/baseline/batch-stop', {
+			batch_id: batchId,
+		});
+
+		updateStatus(`Stopped ${response.cancelled_runs} runs (${response.cancelled_jobs} queue jobs).`);
+		await loadBatches();
+	} catch (err) {
+		console.error('Failed to stop batch:', err);
 		updateStatus(`Error: ${err.message}`);
 	} finally {
 		if (button) {
@@ -1149,6 +1378,13 @@ function queueBatchUpdate(batchId) {
 	}, 500);
 }
 
+function renderBatchGridPreservingScroll() {
+	const x = window.scrollX;
+	const y = window.scrollY;
+	renderBatchGrid();
+	window.scrollTo(x, y);
+}
+
 async function processPendingBatchUpdates() {
 	if (pendingBatchUpdates.size === 0) return;
 
@@ -1164,7 +1400,7 @@ async function processPendingBatchUpdates() {
 
 		if (batchIds.includes('__baseline_recompute__')) {
 			state.batches = fetchedBatches;
-			renderBatchGrid();
+			renderBatchGridPreservingScroll();
 			return;
 		}
 
@@ -1184,8 +1420,7 @@ async function processPendingBatchUpdates() {
 				// Re-render that card
 				const existingCard = document.querySelector(`[data-batch-id="${batchId}"]`);
 				if (existingCard) {
-					const newCard = renderBatchCard(updatedBatch);
-					existingCard.replaceWith(newCard);
+					patchBatchCardElement(existingCard, updatedBatch);
 				} else {
 					// New batch card - re-render grid
 					shouldRenderGrid = true;
@@ -1194,13 +1429,13 @@ async function processPendingBatchUpdates() {
 		}
 
 		if (shouldRenderGrid) {
-			renderBatchGrid();
+			renderBatchGridPreservingScroll();
 		} else {
 			renderProviderAccuracyChart();
 		}
 	} catch (err) {
 		state.providerChartState = 'error';
-		state.providerChartError = err?.message || 'Failed to refresh provider analytics';
+		state.providerChartError = err?.message || 'Failed to refresh model analytics';
 		renderProviderAccuracyChart();
 		console.error('Failed to update batches:', err);
 	}
@@ -1222,8 +1457,8 @@ function init() {
 	$('#emptyNewBatchBtn')?.addEventListener('click', openNewBatchModal);
 	$('#cancelBatchBtn')?.addEventListener('click', closeNewBatchModal);
 	$('#modalBackdrop')?.addEventListener('click', closeNewBatchModal);
-	$('#batchModel')?.addEventListener('change', syncBatchModelHint);
-	syncBatchModelHint();
+	$('#batchModel')?.addEventListener('change', () => renderBatchModelOptions({ preserveSelection: false }));
+	renderBatchModelOptions({ preserveSelection: true });
 	$('#resetBaselineDefaultsBtn')?.addEventListener('click', async () => {
 		await resetBaselineDefaults($('#resetBaselineDefaultsBtn'));
 	});
@@ -1233,9 +1468,9 @@ function init() {
 		e.preventDefault();
 		const name = $('#batchName')?.value?.trim() || '';
 		const model = $('#batchModel')?.value || 'openai-nano';
-		const customModel = $('#batchCustomModel')?.value?.trim() || null;
+		const selectedModel = $('#batchProviderModel')?.value?.trim() || null;
 		const promptId = $('#batchPrompt')?.value || null;
-		await createBatch(name, model, promptId, customModel);
+		await createBatch(name, model, promptId, selectedModel);
 	});
 
 	// Keyboard escape to close modal

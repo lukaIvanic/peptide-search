@@ -87,7 +87,12 @@ def _descriptors() -> Dict[str, ProviderDescriptor]:
             ),
             default_model=settings.OPENAI_MODEL,
             curated_models=_unique_non_empty(
-                [settings.OPENAI_MODEL, settings.OPENAI_MODEL_MINI, settings.OPENAI_MODEL_NANO]
+                [
+                    settings.OPENAI_MODEL,
+                    settings.OPENAI_MODEL_MINI,
+                    settings.OPENAI_MODEL_NANO,
+                    "gpt-5.2",
+                ]
             ),
             supports_custom_model=True,
             supports_model_discovery=False,
@@ -130,7 +135,19 @@ def _descriptors() -> Dict[str, ProviderDescriptor]:
                 supports_json_mode=True,
             ),
             default_model=settings.OPENROUTER_MODEL,
-            curated_models=_unique_non_empty([settings.OPENROUTER_MODEL]),
+            curated_models=_unique_non_empty(
+                [
+                    settings.OPENROUTER_MODEL,
+                    "moonshotai/kimi-k2.5",
+                    "moonshotai/kimi-k2",
+                    "z-ai/glm-4.7",
+                    "z-ai/glm-4.7-flash",
+                    "minimax/minimax-m2.1",
+                    "minimax/minimax-m2",
+                    "qwen/qwen3-coder-flash",
+                    "meta-llama/llama-3.3-70b-instruct",
+                ]
+            ),
             supports_custom_model=True,
             supports_model_discovery=True,
         ),

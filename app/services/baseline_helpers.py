@@ -240,7 +240,11 @@ def get_source_keys(case: BaselineCase, resolved_url: Optional[str]) -> List[str
     return keys
 
 
-def get_latest_baseline_run(session: Session, case_id: str) -> Optional[ExtractionRun]:
+def get_latest_baseline_run(
+    session: Session,
+    case_id: str,
+    batch_id: Optional[str] = None,
+) -> Optional[ExtractionRun]:
     stmt = (
         select(ExtractionRun)
         .join(BaselineCaseRun, BaselineCaseRun.run_id == ExtractionRun.id)
@@ -248,6 +252,8 @@ def get_latest_baseline_run(session: Session, case_id: str) -> Optional[Extracti
         .order_by(ExtractionRun.created_at.desc())
         .limit(1)
     )
+    if batch_id:
+        stmt = stmt.where(ExtractionRun.batch_id == batch_id)
     run = session.exec(stmt).first()
     if run:
         return run
@@ -257,12 +263,15 @@ def get_latest_baseline_run(session: Session, case_id: str) -> Optional[Extracti
         .order_by(ExtractionRun.created_at.desc())
         .limit(1)
     )
+    if batch_id:
+        stmt = stmt.where(ExtractionRun.batch_id == batch_id)
     return session.exec(stmt).first()
 
 
 def get_latest_baseline_runs(
     session: Session,
     case_ids: List[str],
+    batch_id: Optional[str] = None,
 ) -> dict[str, BaselineRunSummary]:
     latest_by_case: dict[str, BaselineRunSummary] = {}
     if not case_ids:
@@ -274,6 +283,8 @@ def get_latest_baseline_runs(
         .where(BaselineCaseRun.baseline_case_id.in_(case_ids))
         .order_by(ExtractionRun.created_at.desc())
     )
+    if batch_id:
+        stmt = stmt.where(ExtractionRun.batch_id == batch_id)
     for case_id, run in session.exec(stmt).all():
         if case_id not in latest_by_case:
             latest_by_case[case_id] = build_baseline_run_summary(run)
@@ -285,6 +296,8 @@ def get_latest_baseline_runs(
             .where(ExtractionRun.baseline_case_id.in_(missing))
             .order_by(ExtractionRun.created_at.desc())
         )
+        if batch_id:
+            stmt = stmt.where(ExtractionRun.batch_id == batch_id)
         for run in session.exec(stmt).all():
             case_id = run.baseline_case_id
             if case_id and case_id not in latest_by_case:

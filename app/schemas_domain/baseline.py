@@ -238,6 +238,20 @@ class BatchRetryResponse(BaseModel):
     skipped: int
 
 
+class BatchStopRequest(BaseModel):
+    """Request to stop all in-progress runs in a batch."""
+
+    batch_id: str
+
+
+class BatchStopResponse(BaseModel):
+    """Response from batch stop."""
+
+    batch_id: str
+    cancelled_runs: int
+    cancelled_jobs: int
+
+
 class DeleteBatchResponse(BaseModel):
     status: str
     deleted_runs: int

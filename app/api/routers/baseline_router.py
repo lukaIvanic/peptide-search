@@ -56,6 +56,8 @@ from ...schemas import (
     BatchListResponse,
     BatchRetryRequest,
     BatchRetryResponse,
+    BatchStopRequest,
+    BatchStopResponse,
     DeleteBatchResponse,
     ExtractionPayload,
     LocalPdfInfoResponse,
@@ -99,7 +101,7 @@ from ...services.batch_metrics import (
     generate_batch_id,
 )
 from ...services.queue_coordinator import QueueCoordinator
-from ...services.queue_service import get_queue
+from ...services.queue_service import get_broadcaster, get_queue
 from ...services.serializers import iso_z
 from ...services.upload_store import store_upload
 from ...services.view_builders import build_run_payload
@@ -271,12 +273,13 @@ def _resolve_provider_selection_or_400(provider: Optional[str], model: Optional[
 @router.get("/api/baseline/cases", response_model=BaselineCasesResponse)
 async def list_baseline_cases(
     dataset: Optional[str] = Query(None),
+    batch_id: Optional[str] = Query(None),
     session: Session = Depends(get_session),
 ) -> BaselineCasesResponse:
     cases_raw = list_cases(dataset)
     datasets = baseline_dataset_infos(dataset)
     case_ids = [case.get("id") for case in cases_raw if case.get("id")]
-    latest_by_case = get_latest_baseline_runs(session, case_ids)
+    latest_by_case = get_latest_baseline_runs(session, case_ids, batch_id=batch_id)
 
     cases: List[BaselineCaseSummary] = []
     for case_data in cases_raw:
@@ -444,9 +447,10 @@ async def get_baseline_recompute_status() -> BaselineRecomputeStatusResponse:
 @router.get("/api/baseline/cases/{case_id}/latest-run", response_model=RunPayloadResponse)
 async def get_baseline_latest_run(
     case_id: str,
+    batch_id: Optional[str] = Query(None),
     session: Session = Depends(get_session),
 ) -> RunPayloadResponse:
-    run = get_latest_baseline_run(session, case_id)
+    run = get_latest_baseline_run(session, case_id, batch_id=batch_id)
     if not run:
         raise HTTPException(status_code=404, detail="No runs for baseline case")
     paper = session.get(Paper, run.paper_id) if run.paper_id else None
@@ -1100,6 +1104,109 @@ async def batch_retry(
         )
     except ServiceError as exc:
         raise HTTPException(status_code=exc.status_code, detail=exc.detail) from exc
+
+
+@router.post("/api/baseline/batch-stop", response_model=BatchStopResponse)
+async def batch_stop(
+    req: BatchStopRequest,
+    session: Session = Depends(get_session),
+) -> BatchStopResponse:
+    """Stop all in-progress runs in a batch and mark them cancelled."""
+    batch = session.exec(select(BatchRun).where(BatchRun.batch_id == req.batch_id)).first()
+    if not batch:
+        raise HTTPException(status_code=404, detail=f"Batch not found: {req.batch_id}")
+
+    runs = session.exec(select(ExtractionRun).where(ExtractionRun.batch_id == req.batch_id)).all()
+    run_ids = [run.id for run in runs if run.id is not None]
+    if not run_ids:
+        return BatchStopResponse(batch_id=req.batch_id, cancelled_runs=0, cancelled_jobs=0)
+
+    active_runs = [run for run in runs if run.status in PROCESSING_STATUSES]
+    active_run_ids = [run.id for run in active_runs if run.id is not None]
+    cancelled_jobs = 0
+    now = utc_now()
+
+    case_links: Dict[int, List[str]] = {}
+    if active_run_ids:
+        linked_rows = session.exec(
+            select(BaselineCaseRun.run_id, BaselineCaseRun.baseline_case_id).where(
+                BaselineCaseRun.run_id.in_(active_run_ids)
+            )
+        ).all()
+        for run_id, case_id in linked_rows:
+            if run_id is None or not case_id:
+                continue
+            case_links.setdefault(run_id, []).append(case_id)
+
+        job_update = session.exec(
+            update(QueueJob)
+            .where(QueueJob.run_id.in_(active_run_ids))
+            .where(QueueJob.status.in_([QueueJobStatus.QUEUED.value, QueueJobStatus.CLAIMED.value]))
+            .values(
+                status=QueueJobStatus.CANCELLED.value,
+                claimed_by=None,
+                claim_token=None,
+                claimed_at=None,
+                finished_at=now,
+                updated_at=now,
+            )
+        )
+        cancelled_jobs = int(job_update.rowcount or 0)
+        session.exec(delete(ActiveSourceLock).where(ActiveSourceLock.run_id.in_(active_run_ids)))
+
+        for run in active_runs:
+            run.status = RunStatus.CANCELLED.value
+            run.failure_reason = "Cancelled by user"
+            session.add(run)
+
+    # Recompute aggregate progress so the batch exits running state if all runs have settled.
+    completed_count = sum(1 for run in runs if run.status == RunStatus.STORED.value)
+    terminal_failed_count = sum(
+        1
+        for run in runs
+        if run.status in {RunStatus.FAILED.value, RunStatus.CANCELLED.value}
+    )
+    batch.completed = completed_count
+    batch.failed = terminal_failed_count
+    if batch.completed + batch.failed >= batch.total_papers:
+        if batch.failed == 0:
+            batch.status = BatchStatus.COMPLETED.value
+        elif batch.completed == 0:
+            batch.status = BatchStatus.FAILED.value
+        else:
+            batch.status = BatchStatus.PARTIAL.value
+        batch.completed_at = now
+    else:
+        batch.status = BatchStatus.RUNNING.value
+    batch.metrics_stale = True
+    session.add(batch)
+    session.commit()
+
+    if active_runs:
+        broadcaster = get_broadcaster()
+        for run in active_runs:
+            linked_case_ids = list(case_links.get(run.id or -1, []))
+            if run.baseline_case_id and run.baseline_case_id not in linked_case_ids:
+                linked_case_ids.append(run.baseline_case_id)
+            await broadcaster.broadcast(
+                "run_status",
+                {
+                    "run_id": run.id,
+                    "paper_id": run.paper_id,
+                    "status": RunStatus.CANCELLED.value,
+                    "failure_reason": run.failure_reason,
+                    "baseline_case_id": run.baseline_case_id,
+                    "baseline_case_ids": linked_case_ids,
+                    "baseline_dataset": run.baseline_dataset,
+                    "batch_id": run.batch_id,
+                },
+            )
+
+    return BatchStopResponse(
+        batch_id=req.batch_id,
+        cancelled_runs=len(active_runs),
+        cancelled_jobs=cancelled_jobs,
+    )
 
 
 @router.get("/api/baseline/batch/{batch_id}", response_model=BatchInfo)
