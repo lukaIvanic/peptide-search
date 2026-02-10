@@ -203,6 +203,18 @@ def normalize_case_doi(value: Optional[str]) -> Optional[str]:
     return re.sub(r"/v\d+$", "", normalized)
 
 
+def get_case_paper_key(case: BaselineCase) -> str:
+    """Stable paper identity key used for UI grouping and batch totals."""
+    normalized_doi = normalize_doi(case.doi)
+    if normalized_doi:
+        return f"doi:{normalized_doi}"
+    if case.pubmed_id:
+        return f"pubmed:{case.pubmed_id.strip()}"
+    if case.paper_url:
+        return f"url:{case.paper_url.strip()}"
+    return f"case:{case.id}"
+
+
 def get_source_key(case: BaselineCase, resolved_url: Optional[str]) -> Optional[str]:
     source_url = resolved_url or case.pdf_url or case.paper_url
     if source_url:

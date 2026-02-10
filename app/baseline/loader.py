@@ -167,6 +167,22 @@ def resolve_all_local_pdf_paths(doi: Optional[str]) -> List[Path]:
     return resolved_paths
 
 
+def is_local_pdf_unverified(doi: Optional[str]) -> bool:
+    """Return True when local PDF mapping explicitly marks DOI as unverified."""
+    normalized_doi = normalize_doi(doi)
+    if not normalized_doi:
+        return False
+    mapping = load_local_pdf_mapping()
+    entry = mapping.get(normalized_doi)
+    if not entry:
+        base_doi = re.sub(r"/v\d+$", "", normalized_doi)
+        if base_doi != normalized_doi:
+            entry = mapping.get(base_doi)
+    if not entry:
+        return False
+    return entry.get("verified") is False
+
+
 @lru_cache(maxsize=1)
 def load_index() -> Dict:
     index_path = BASELINE_DIR / "index.json"

@@ -2,6 +2,7 @@ import unittest
 
 from app.schemas import BaselineCase, SearchItem
 from app.services.baseline_helpers import (
+    get_case_paper_key,
     normalize_case_doi,
     get_source_key,
     get_source_keys,
@@ -38,6 +39,17 @@ class BaselineHelperTests(unittest.TestCase):
         keys = get_source_keys(case, None)
         self.assertIn("doi:10.1/abc", keys)
         self.assertIn("pubmed:12345", keys)
+
+    def test_get_case_paper_key_preserves_doi_version(self):
+        case = BaselineCase(
+            id="c1",
+            dataset="self_assembly",
+            doi="10.21203/rs.3.rs-109949/v13",
+        )
+        self.assertEqual(
+            get_case_paper_key(case),
+            "doi:10.21203/rs.3.rs-109949/v13",
+        )
 
     def test_select_baseline_result_uses_exact_doi_match(self):
         results = [

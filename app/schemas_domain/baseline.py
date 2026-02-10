@@ -29,9 +29,11 @@ class BaselineRunSummary(BaseModel):
 class BaselineCase(BaseModel):
     id: str
     dataset: str
+    paper_key: Optional[str] = None
     sequence: Optional[str] = None
     n_terminal: Optional[str] = None
     c_terminal: Optional[str] = None
+    source_unverified: bool = False
     labels: List[str] = Field(default_factory=list)
     doi: Optional[str] = None
     pubmed_id: Optional[str] = None

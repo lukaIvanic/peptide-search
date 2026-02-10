@@ -8,7 +8,13 @@ from fastapi.responses import FileResponse
 from sqlalchemy import delete, update
 from sqlmodel import Session, select
 
-from ...baseline.loader import get_case, list_cases, resolve_all_local_pdf_paths, resolve_local_pdf_path
+from ...baseline.loader import (
+    get_case,
+    is_local_pdf_unverified,
+    list_cases,
+    resolve_all_local_pdf_paths,
+    resolve_local_pdf_path,
+)
 from ...config import settings
 from ...db import get_session
 from ...persistence.models import (
@@ -53,6 +59,7 @@ from ...services.baseline_helpers import (
     baseline_dataset_infos,
     baseline_title,
     build_baseline_run_summary,
+    get_case_paper_key,
     get_latest_baseline_run,
     get_latest_baseline_runs,
     get_latest_run_for_cases,
@@ -102,6 +109,8 @@ async def list_baseline_cases(
     cases: List[BaselineCaseSummary] = []
     for case_data in cases_raw:
         case = BaselineCase(**case_data)
+        case.paper_key = get_case_paper_key(case)
+        case.source_unverified = is_local_pdf_unverified(case.doi)
         cases.append(
             BaselineCaseSummary(
                 **case.model_dump(),
@@ -126,6 +135,8 @@ async def get_baseline_case(
         raise HTTPException(status_code=404, detail="Baseline case not found")
     run = get_latest_baseline_run(session, case_id)
     case = BaselineCase(**case_data)
+    case.paper_key = get_case_paper_key(case)
+    case.source_unverified = is_local_pdf_unverified(case.doi)
     return BaselineCaseSummary(
         **case.model_dump(),
         latest_run=build_baseline_run_summary(run) if run else None,
@@ -640,6 +651,13 @@ async def batch_enqueue(
     coordinator = QueueCoordinator()
     paper_repo = PaperRepository(session)
 
+    cases_raw = list_cases(req.dataset)
+    grouped_cases: Dict[str, List[BaselineCase]] = {}
+    for case_data in cases_raw:
+        case = BaselineCase(**case_data)
+        case.paper_key = get_case_paper_key(case)
+        grouped_cases.setdefault(case.paper_key or f"case:{case.id}", []).append(case)
+
     model_name = get_model_name_for_provider(req.provider)
     batch_id = generate_batch_id(model_name)
 
@@ -650,7 +668,7 @@ async def batch_enqueue(
         model_provider=req.provider,
         model_name=model_name,
         status=BatchStatus.RUNNING.value,
-        total_papers=0,
+        total_papers=len(grouped_cases),
         completed=0,
         failed=0,
     )
@@ -658,45 +676,49 @@ async def batch_enqueue(
     session.commit()
     session.refresh(batch)
 
-    cases_raw = list_cases(req.dataset)
-    cases = [BaselineCase(**case_data) for case_data in cases_raw]
-
     runs_enqueued = 0
-    cases_enqueued = 0
-    local_upload_cache: Dict[str, str] = {}
+    immediate_failed = 0
+    local_upload_cache: Dict[str, object] = {}
 
-    entries: List[dict] = []
-    for case in cases:
-        source = await resolve_baseline_source(case, local_upload_cache)
-        resolved_url = source.pdf_url if source and source.pdf_url else (source.url if source else None)
-        source_key = get_source_key(case, resolved_url)
-        entries.append(
-            {
-                "case": case,
-                "source": source,
-                "resolved_url": resolved_url,
-                "source_key": source_key,
-            }
-        )
-
-    grouped: dict[str, List[dict]] = {}
-    for entry in entries:
-        group_key = entry["source_key"] or f"case:{entry['case'].id}"
-        grouped.setdefault(group_key, []).append(entry)
-
-    for group_entries in grouped.values():
-        case_ids = [entry["case"].id for entry in group_entries]
-        resolved_url = next((entry["resolved_url"] for entry in group_entries if entry["resolved_url"]), None)
-        source = next((entry["source"] for entry in group_entries if entry["source"]), None)
-        case = group_entries[0]["case"]
+    for paper_cases in grouped_cases.values():
+        case_ids = [case.id for case in paper_cases]
+        representative_case = paper_cases[0]
+        source = None
+        resolved_url = None
+        for case in paper_cases:
+            candidate_source = await resolve_baseline_source(case, local_upload_cache)
+            candidate_url = (
+                candidate_source.pdf_url
+                if candidate_source and candidate_source.pdf_url
+                else (candidate_source.url if candidate_source else None)
+            )
+            if candidate_url:
+                source = candidate_source
+                resolved_url = candidate_url
+                representative_case = case
+                break
 
         if not resolved_url:
+            failed_run = ExtractionRun(
+                status=RunStatus.FAILED.value,
+                failure_reason="No source URL resolved for baseline paper",
+                model_provider=req.provider,
+                prompt_id=req.prompt_id,
+                batch_id=batch_id,
+                baseline_dataset=req.dataset,
+            )
+            session.add(failed_run)
+            session.commit()
+            session.refresh(failed_run)
+            link_cases_to_run(session, case_ids, failed_run.id)
+            batch.failed += 1
+            immediate_failed += 1
             continue
 
         meta = PaperMeta(
-            title=(source.title if source else None) or baseline_title(case),
-            doi=(source.doi if source else None) or case.doi,
-            url=(source.url if source else None) or case.paper_url,
+            title=(source.title if source else None) or baseline_title(representative_case),
+            doi=(source.doi if source else None) or representative_case.doi,
+            url=(source.url if source else None) or representative_case.paper_url,
             source=source.source if source else "baseline",
             year=source.year if source else None,
             authors=source.authors if source and source.authors else [],
@@ -709,29 +731,47 @@ async def batch_enqueue(
             pdf_url=resolved_url,
             prompt_id=req.prompt_id,
             batch_id=batch_id,
+            baseline_dataset=req.dataset,
         )
         all_pdf_urls = source.pdf_urls if source and source.pdf_urls else None
         result = coordinator.enqueue_new_run(
             session,
             run=run,
-            title=meta.title or baseline_title(case),
+            title=meta.title or baseline_title(representative_case),
             pdf_urls=all_pdf_urls,
         )
         if not result.enqueued:
+            failed_run = ExtractionRun(
+                paper_id=paper_id,
+                status=RunStatus.FAILED.value,
+                failure_reason="Source already queued for another active run",
+                model_provider=req.provider,
+                prompt_id=req.prompt_id,
+                batch_id=batch_id,
+                baseline_dataset=req.dataset,
+                pdf_url=resolved_url,
+            )
+            session.add(failed_run)
+            session.commit()
+            session.refresh(failed_run)
+            link_cases_to_run(session, case_ids, failed_run.id)
+            batch.failed += 1
+            immediate_failed += 1
             continue
         link_cases_to_run(session, case_ids, result.run_id)
         runs_enqueued += 1
-        cases_enqueued += len(case_ids)
 
-    batch.total_papers = runs_enqueued
+    if runs_enqueued == 0 and batch.total_papers > 0 and batch.failed >= batch.total_papers:
+        batch.status = BatchStatus.FAILED.value
+        batch.completed_at = utc_now()
     session.add(batch)
     session.commit()
 
     return BatchEnqueueResponse(
         batch_id=batch_id,
-        total_papers=len(cases_raw),
+        total_papers=batch.total_papers,
         enqueued=runs_enqueued,
-        skipped=len(cases_raw) - cases_enqueued,
+        skipped=immediate_failed,
     )
 
 

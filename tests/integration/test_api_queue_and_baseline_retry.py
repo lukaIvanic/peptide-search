@@ -166,6 +166,91 @@ class ApiQueueAndBaselineRetryTests(ApiIntegrationTestCase):
             self.assertEqual(batch.status, BatchStatus.RUNNING.value)
             self.assertEqual(batch.failed, 0)
 
+    def test_batch_enqueue_uses_canonical_paper_count_and_records_unresolved_papers(self) -> None:
+        fake_cases = [
+            {
+                "id": "case-a-1",
+                "dataset": "self_assembly",
+                "sequence": "AAAA",
+                "doi": "10.1000/demo-paper/v1",
+                "labels": [],
+                "metadata": {},
+            },
+            {
+                "id": "case-a-2",
+                "dataset": "self_assembly",
+                "sequence": "BBBB",
+                "doi": "10.1000/demo-paper/v1",
+                "labels": [],
+                "metadata": {},
+            },
+            {
+                "id": "case-b-1",
+                "dataset": "self_assembly",
+                "sequence": "CCCC",
+                "doi": "10.1000/demo-paper/v2",
+                "labels": [],
+                "metadata": {},
+            },
+            {
+                "id": "case-c-1",
+                "dataset": "self_assembly",
+                "sequence": "DDDD",
+                "doi": "10.1000/missing-paper",
+                "labels": [],
+                "metadata": {},
+            },
+        ]
+
+        async def fake_resolve(case, local_upload_cache=None, local_only=False):
+            if case.id == "case-c-1":
+                return None
+            slug = (case.doi or case.id).replace("/", "_")
+            return SearchItem(
+                title=f"Paper {case.id}",
+                doi=case.doi,
+                url=f"https://example.org/{slug}",
+                pdf_url=f"https://example.org/{slug}.pdf",
+                source="pmc",
+                year=2024,
+                authors=[],
+            )
+
+        with patch("app.api.routers.baseline_router.list_cases", return_value=fake_cases), patch(
+            "app.api.routers.baseline_router.resolve_baseline_source",
+            new=AsyncMock(side_effect=fake_resolve),
+        ):
+            response = self.client.post(
+                "/api/baseline/batch-enqueue",
+                json={"dataset": "self_assembly", "provider": "mock"},
+            )
+
+        self.assertEqual(response.status_code, 200)
+        payload = response.json()
+        self.assertEqual(payload["total_papers"], 3)
+        self.assertEqual(payload["enqueued"], 2)
+        self.assertEqual(payload["skipped"], 1)
+
+        with Session(self.db_module.engine) as session:
+            batch = session.exec(select(BatchRun).where(BatchRun.batch_id == payload["batch_id"])).first()
+            self.assertIsNotNone(batch)
+            self.assertEqual(batch.total_papers, 3)
+            self.assertEqual(batch.failed, 1)
+
+            failed_runs = session.exec(
+                select(ExtractionRun)
+                .where(ExtractionRun.batch_id == payload["batch_id"])
+                .where(ExtractionRun.status == RunStatus.FAILED.value)
+            ).all()
+            self.assertEqual(len(failed_runs), 1)
+            self.assertIn("No source URL resolved", failed_runs[0].failure_reason or "")
+
+            linked_case_ids = session.exec(
+                select(BaselineCaseRun.baseline_case_id)
+                .where(BaselineCaseRun.run_id == failed_runs[0].id)
+            ).all()
+            self.assertEqual(linked_case_ids, ["case-c-1"])
+
     def test_delete_batch_removes_runs_queue_jobs_and_locks(self) -> None:
         batch_id = "delete_batch_cleanup"
         paper_id = self.create_paper(doi="10.1000/delete-batch", url="https://example.org/delete-batch")

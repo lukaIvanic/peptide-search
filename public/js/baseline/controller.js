@@ -20,7 +20,6 @@ import {
 	mean,
 	median,
 	normalizeDoiToUrl,
-	normalizeDoiVersion,
 	normalizeSequence,
 } from './domain/formatters.js';
 
@@ -342,6 +341,9 @@ function renderSelectedPaperStrip(paperGroup, runPayload) {
 		
 		// Entity count
 		meta.appendChild(el('span', 'sw-chip sw-chip--info text-[10px]', `${paperGroup.cases.length} expected entities`));
+		if (paperGroup.source_unverified) {
+			meta.appendChild(el('span', 'sw-chip sw-chip--warning text-[10px]', 'Unverified source'));
+		}
 		
 		const doiUrl = normalizeDoiToUrl(paperGroup.doi);
 		const pdfUrl = getPreferredPdfUrl(paperGroup, runPayload);
@@ -447,6 +449,7 @@ function renderSelectedCaseStrip(caseItem, runPayload) {
 		pubmed_id: caseItem.pubmed_id,
 		paper_url: caseItem.paper_url,
 		pdf_url: caseItem.pdf_url,
+		source_unverified: Boolean(caseItem.source_unverified),
 		dataset: caseItem.dataset,
 		cases: [caseItem],
 	};
@@ -551,9 +554,10 @@ function filterCases() {
 }
 
 function getPaperKey(caseItem) {
-	// Use DOI as primary key, fallback to pubmed_id, paper_url, or case id
-	const normalizedDoi = normalizeDoiVersion(caseItem.doi);
-	return normalizedDoi || caseItem.pubmed_id || caseItem.paper_url || caseItem.id;
+	// Prefer backend-provided paper identity; fallback stays deterministic.
+	if (caseItem.paper_key) return caseItem.paper_key;
+	if (caseItem.doi) return String(caseItem.doi).trim();
+	return caseItem.pubmed_id || caseItem.paper_url || caseItem.id;
 }
 
 function groupCasesByPaper(cases) {
@@ -567,12 +571,14 @@ function groupCasesByPaper(cases) {
 				pubmed_id: caseItem.pubmed_id,
 				paper_url: caseItem.paper_url,
 				pdf_url: caseItem.pdf_url,
+				source_unverified: Boolean(caseItem.source_unverified),
 				dataset: caseItem.dataset,
 				cases: [],
 			});
 		}
 		const group = groups.get(key);
 		group.cases.push(caseItem);
+		group.source_unverified = group.source_unverified || Boolean(caseItem.source_unverified);
 		// Take the first available pdf_url from any case
 		if (!group.pdf_url && caseItem.pdf_url) {
 			group.pdf_url = caseItem.pdf_url;
@@ -1014,6 +1020,9 @@ function renderCaseList({ skipAnalysis = false } = {}) {
 		if (hasLocalPdf) {
 			metaRow.appendChild(el('span', 'sw-chip sw-chip--success text-[9px]', 'Local PDF'));
 		}
+		if (paperGroup.source_unverified) {
+			metaRow.appendChild(el('span', 'sw-chip sw-chip--warning text-[9px]', 'Unverified source'));
+		}
 		
 		// Check if any case needs manual PDF
 		const needsManualPdf = paperGroup.cases.some(c => getManualPdfStatus(c));
@@ -1092,6 +1101,7 @@ function renderBaselineDetail(paperGroupOrCase, comparison, runPayload = null) {
 		pubmed_id: paperGroupOrCase.pubmed_id,
 		paper_url: paperGroupOrCase.paper_url,
 		pdf_url: paperGroupOrCase.pdf_url,
+		source_unverified: Boolean(paperGroupOrCase.source_unverified),
 		dataset: paperGroupOrCase.dataset,
 		cases: [paperGroupOrCase],
 	};
@@ -1149,6 +1159,7 @@ function renderBaselineDetail(paperGroupOrCase, comparison, runPayload = null) {
 	}
 	const sourceFlags = getSourceFlags(paperGroup);
 	addRow('Source fields', sourceFlags.length ? sourceFlags.join(', ') : 'None', true);
+	addRow('Source verification', paperGroup.source_unverified ? 'Unverified' : 'Verified', true);
 	container.appendChild(meta);
 
 	// Expected entities section
@@ -1327,6 +1338,7 @@ function renderExtractionDetail(runPayload, paperGroupOrCase, comparison) {
 		pubmed_id: paperGroupOrCase.pubmed_id,
 		paper_url: paperGroupOrCase.paper_url,
 		pdf_url: paperGroupOrCase.pdf_url,
+		source_unverified: Boolean(paperGroupOrCase.source_unverified),
 		dataset: paperGroupOrCase.dataset,
 		cases: [paperGroupOrCase],
 	};
