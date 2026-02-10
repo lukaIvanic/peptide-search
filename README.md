@@ -52,6 +52,11 @@ If you need maximum stability (no hot reloads), use:
 .\scripts\dev_server_no_reload.ps1
 ```
 
+macOS/Linux quick restart:
+```bash
+./scripts/restart_server.sh
+```
+
 6) Open the UI:
 - Navigate to `http://localhost:8000` in your browser.
 
@@ -181,4 +186,3 @@ For a managed demo deployment with persistent SQLite storage and optional access
 - Add additional providers (e.g., Anthropic, Claude) via the same interface.
 - Add filters and advanced search on the UI (e.g., pH, morphology, labels).
 - Add batch extraction from the web UI with progress tracking.
-

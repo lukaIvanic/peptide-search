@@ -8,12 +8,41 @@ from ..persistence.models import BatchRun
 from ..time_utils import utc_now
 
 
-MODEL_PRICING = {
-    settings.OPENAI_MODEL: {"input": 2.50, "output": 10.00},
-    settings.OPENAI_MODEL_MINI: {"input": 0.15, "output": 0.60},
-    settings.OPENAI_MODEL_NANO: {"input": 0.10, "output": 0.40},
+# Prices are USD per 1M tokens. Cached-input discounts are not applied here yet.
+_BASE_MODEL_PRICING = {
+    "gpt-5.2": {"input": 1.75, "output": 14.00},
+    "gpt-5-mini": {"input": 0.25, "output": 2.00},
+    "gpt-5-nano": {"input": 0.05, "output": 0.40},
+    "moonshotai/kimi-k2.5": {"input": 0.45, "output": 2.25},
+    "kimi-k2.5": {"input": 0.45, "output": 2.25},
+    "gemini-3-pro-preview": {"input": 2.00, "output": 12.00},
+    "google/gemini-3-pro-preview": {"input": 2.00, "output": 12.00},
+    "gemini-3-flash": {"input": 0.50, "output": 3.00},
+    "gemini-3-flash-preview": {"input": 0.50, "output": 3.00},
+    "google/gemini-3-flash": {"input": 0.50, "output": 3.00},
+    "google/gemini-3-flash-preview": {"input": 0.50, "output": 3.00},
+    "gemini-2.5-pro": {"input": 1.25, "output": 10.00},
+    "google/gemini-2.5-pro": {"input": 1.25, "output": 10.00},
+    "z-ai/glm-4.7": {"input": 0.40, "output": 1.50},
+    "glm-4.7": {"input": 0.40, "output": 1.50},
+    "gpt-4o": {"input": 2.50, "output": 10.00},
+    "gpt-4o-mini": {"input": 0.15, "output": 0.60},
+    "gpt-4.1-nano": {"input": 0.10, "output": 0.40},
     "mock-model": {"input": 0, "output": 0},
 }
+MODEL_PRICING = {
+    key.strip().lower(): value
+    for key, value in _BASE_MODEL_PRICING.items()
+}
+if settings.OPENAI_MODEL:
+    MODEL_PRICING.setdefault(
+        settings.OPENAI_MODEL.strip().lower(),
+        MODEL_PRICING["gpt-4o"],
+    )
+if settings.OPENAI_MODEL_MINI:
+    MODEL_PRICING[settings.OPENAI_MODEL_MINI.strip().lower()] = MODEL_PRICING["gpt-5-mini"]
+if settings.OPENAI_MODEL_NANO:
+    MODEL_PRICING[settings.OPENAI_MODEL_NANO.strip().lower()] = MODEL_PRICING["gpt-5-nano"]
 
 
 def generate_batch_id(model_name: str) -> str:
@@ -39,7 +68,8 @@ def get_model_name_for_provider(provider: str) -> str:
 
 
 def compute_batch_cost(batch: BatchRun) -> Optional[float]:
-    pricing = MODEL_PRICING.get(batch.model_name, MODEL_PRICING.get(settings.OPENAI_MODEL_NANO))
+    model_key = (batch.model_name or "").strip().lower()
+    pricing = MODEL_PRICING.get(model_key)
     if not pricing:
         return None
     input_cost = (batch.total_input_tokens / 1_000_000) * pricing["input"]

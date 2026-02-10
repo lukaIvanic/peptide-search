@@ -21,6 +21,7 @@ from ..persistence.models import (
 )
 from ..time_utils import utc_now
 from .queue_coordinator import ClaimedJob, QueueCoordinator
+from .queue_errors import RunCancelledError
 
 logger = logging.getLogger(__name__)
 
@@ -236,6 +237,15 @@ class ExtractionQueue:
                     claim_token=claimed.claim_token,
                     status=QueueJobStatus.DONE,
                 )
+        except RunCancelledError as exc:
+            await self._update_run_status(run_id, RunStatus.CANCELLED, failure_reason=str(exc))
+            with session_scope() as session:
+                self.coordinator.finish_job(
+                    session,
+                    job_id=claimed.id,
+                    claim_token=claimed.claim_token,
+                    status=QueueJobStatus.CANCELLED,
+                )
         except Exception as exc:
             error_msg = str(exc)
             await self._update_run_status(run_id, RunStatus.FAILED, failure_reason=error_msg)
@@ -257,13 +267,16 @@ class ExtractionQueue:
             run = session.get(ExtractionRun, run_id)
             if not run:
                 return
+            # Respect explicit cancellation; do not allow worker status updates to resurrect the run.
+            if run.status == RunStatus.CANCELLED.value and status != RunStatus.CANCELLED:
+                return
             run.status = status.value
             if failure_reason:
                 run.failure_reason = failure_reason
             session.add(run)
             session.commit()
 
-            if run.batch_id and status in (RunStatus.STORED, RunStatus.FAILED):
+            if run.batch_id and status in (RunStatus.STORED, RunStatus.FAILED, RunStatus.CANCELLED):
                 self._update_batch_counters(session, run, status)
 
             stmt = select(BaselineCaseRun.baseline_case_id).where(BaselineCaseRun.run_id == run_id)
@@ -303,6 +316,8 @@ class ExtractionQueue:
             batch.matched_entities += matched
             batch.total_expected_entities += expected
         elif status == RunStatus.FAILED:
+            batch.failed += 1
+        elif status == RunStatus.CANCELLED:
             batch.failed += 1
 
         if batch.completed + batch.failed >= batch.total_papers:

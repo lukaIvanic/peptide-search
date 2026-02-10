@@ -23,7 +23,11 @@
     "main": [
       "Peptide LLM/Datasets/downloaded_papers/SS/SS_0004.pdf"
     ],
-    "supplementary": []
+    "supplementary": [
+      "Peptide LLM/Datasets/downloaded_papers/SS_SI/SS_0004_extracted/nested/Disclosure-Diaz-Espinoza.pdf",
+      "Peptide LLM/Datasets/downloaded_papers/SS_SI/SS_0004_extracted/nested/Disclosure-Monasterio.pdf",
+      "Peptide LLM/Datasets/downloaded_papers/SS_SI/SS_0004_extracted/nested/Disclosure-Nova.pdf"
+    ]
   },
   "10.1016/j.biomaterials.2012.08.046": {
     "main": [
@@ -222,7 +226,11 @@
     "main": [
       "Peptide LLM/Datasets/downloaded_papers/SS/SS_0032.pdf"
     ],
-    "supplementary": [],
+    "supplementary": [
+      "Peptide LLM/Datasets/downloaded_papers/SS_SI/SS_0032_extracted/41467_2021_24597_MOESM1_ESM.pdf",
+      "Peptide LLM/Datasets/downloaded_papers/SS_SI/SS_0032_extracted/41467_2021_24597_MOESM2_ESM.pdf",
+      "Peptide LLM/Datasets/downloaded_papers/SS_SI/SS_0032_extracted/41467_2021_24597_MOESM3_ESM.pdf"
+    ],
     "verified": false
   },
   "10.1529/biophysj.106.088542": {
@@ -533,24 +541,40 @@
     "main": [
       "Peptide LLM/Datasets/downloaded_papers/SS/SS_0032.pdf"
     ],
-    "supplementary": []
+    "supplementary": [
+      "Peptide LLM/Datasets/downloaded_papers/SS_SI/SS_0032_extracted/41467_2021_24597_MOESM1_ESM.pdf",
+      "Peptide LLM/Datasets/downloaded_papers/SS_SI/SS_0032_extracted/41467_2021_24597_MOESM2_ESM.pdf",
+      "Peptide LLM/Datasets/downloaded_papers/SS_SI/SS_0032_extracted/41467_2021_24597_MOESM3_ESM.pdf"
+    ]
   },
   "10.21203/rs.3.rs-109949/v1": {
     "main": [
       "Peptide LLM/Datasets/downloaded_papers/SS/SS_0032.pdf"
     ],
-    "supplementary": []
+    "supplementary": [
+      "Peptide LLM/Datasets/downloaded_papers/SS_SI/SS_0032_extracted/41467_2021_24597_MOESM1_ESM.pdf",
+      "Peptide LLM/Datasets/downloaded_papers/SS_SI/SS_0032_extracted/41467_2021_24597_MOESM2_ESM.pdf",
+      "Peptide LLM/Datasets/downloaded_papers/SS_SI/SS_0032_extracted/41467_2021_24597_MOESM3_ESM.pdf"
+    ]
   },
   "10.21203/rs.3.rs-109949/v10": {
     "main": [
       "Peptide LLM/Datasets/downloaded_papers/SS/SS_0032.pdf"
     ],
-    "supplementary": []
+    "supplementary": [
+      "Peptide LLM/Datasets/downloaded_papers/SS_SI/SS_0032_extracted/41467_2021_24597_MOESM1_ESM.pdf",
+      "Peptide LLM/Datasets/downloaded_papers/SS_SI/SS_0032_extracted/41467_2021_24597_MOESM2_ESM.pdf",
+      "Peptide LLM/Datasets/downloaded_papers/SS_SI/SS_0032_extracted/41467_2021_24597_MOESM3_ESM.pdf"
+    ]
   },
   "10.21203/rs.3.rs-109949/v13": {
     "main": [
       "Peptide LLM/Datasets/downloaded_papers/SS/SS_0032.pdf"
     ],
-    "supplementary": []
+    "supplementary": [
+      "Peptide LLM/Datasets/downloaded_papers/SS_SI/SS_0032_extracted/41467_2021_24597_MOESM1_ESM.pdf",
+      "Peptide LLM/Datasets/downloaded_papers/SS_SI/SS_0032_extracted/41467_2021_24597_MOESM2_ESM.pdf",
+      "Peptide LLM/Datasets/downloaded_papers/SS_SI/SS_0032_extracted/41467_2021_24597_MOESM3_ESM.pdf"
+    ]
   }
 }

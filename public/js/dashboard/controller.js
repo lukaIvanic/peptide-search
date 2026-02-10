@@ -93,26 +93,58 @@ const CREATE_PROMPT_OPTION = '__create__';
 
 const BLOCKING_ERROR_ID = 'blockingError';
 
-function getProviderDefaults(providerId) {
+function getProviderModels(providerId) {
     const catalog = getProviderCatalog();
     const row = catalog.find((item) => item.provider_id === providerId);
-    return {
-        label: row?.label || providerId,
-        defaultModel: row?.default_model || '',
-    };
+    const seen = new Set();
+    const models = [];
+    for (const candidate of [row?.default_model, ...(row?.curated_models || [])]) {
+        const model = (candidate || '').trim();
+        if (!model || seen.has(model)) continue;
+        seen.add(model);
+        models.push(model);
+    }
+    return models;
+}
+
+function hydrateProviderModelSelect(providerId, preserveSelection = true) {
+    const modelSelect = $('#providerModelSelect');
+    if (!modelSelect) return;
+
+    const models = getProviderModels(providerId);
+    const previous = preserveSelection ? (getSelectedModel() || modelSelect.value || '') : '';
+
+    modelSelect.innerHTML = '';
+    if (!models.length) {
+        const fallback = document.createElement('option');
+        fallback.value = '';
+        fallback.textContent = 'Provider default';
+        modelSelect.appendChild(fallback);
+        modelSelect.value = '';
+        setSelectedModel('');
+        return;
+    }
+
+    for (const model of models) {
+        const option = document.createElement('option');
+        option.value = model;
+        option.textContent = model;
+        modelSelect.appendChild(option);
+    }
+
+    const next = previous && models.includes(previous) ? previous : models[0];
+    modelSelect.value = next;
+    setSelectedModel(next);
 }
 
 function hydrateProviderSelectors() {
     const select = $('#providerSelect');
-    const modelInput = $('#providerModelInput');
     const catalog = getProviderCatalog().filter((item) => item.enabled);
     if (!select || !catalog.length) {
         return;
     }
 
     const previous = getSelectedProvider() || select.value;
-    const oldDefault = getProviderDefaults(previous).defaultModel;
-    const previousModel = getSelectedModel();
 
     select.innerHTML = '';
     for (const item of catalog) {
@@ -128,25 +160,29 @@ function hydrateProviderSelectors() {
         : catalog[0].provider_id;
     select.value = selected;
     setSelectedProvider(selected);
+    hydrateProviderModelSelect(selected, true);
+}
 
-    const nextDefault = getProviderDefaults(selected).defaultModel;
-    if (modelInput) {
-        modelInput.placeholder = nextDefault ? `Default: ${nextDefault}` : 'Custom model (optional)';
-        if (!previousModel || previousModel === oldDefault) {
-            modelInput.value = nextDefault || '';
-            setSelectedModel(nextDefault || '');
-        } else {
-            setSelectedModel(previousModel);
-        }
-    } else if (!getSelectedModel()) {
-        setSelectedModel(nextDefault || '');
+function shouldRefreshProviderCatalog(catalog = []) {
+    if (!Array.isArray(catalog) || !catalog.length) return false;
+    for (const item of catalog) {
+        if (!item?.enabled) continue;
+        if (item.provider_id !== 'gemini' && item.provider_id !== 'openrouter') continue;
+        const models = item.curated_models || [];
+        if (models.length <= 1) return true;
     }
+    return false;
 }
 
 async function loadProviderCatalog() {
     try {
         const payload = await api.getProviders();
-        setProviderCatalog(payload.providers || []);
+        let providers = payload.providers || [];
+        if (shouldRefreshProviderCatalog(providers)) {
+            const refreshed = await api.refreshProviders();
+            providers = refreshed.providers || providers;
+        }
+        setProviderCatalog(providers);
         hydrateProviderSelectors();
     } catch (err) {
         console.error('Failed to load providers:', err);
@@ -820,26 +856,19 @@ function initEventHandlers() {
     $('#providerSelect').addEventListener('change', (e) => {
         const nextProvider = e.target.value;
         setSelectedProvider(nextProvider);
-        const modelInput = $('#providerModelInput');
-        if (modelInput) {
-            const defaults = getProviderDefaults(nextProvider);
-            modelInput.placeholder = defaults.defaultModel
-                ? `Default: ${defaults.defaultModel}`
-                : 'Custom model (optional)';
-            modelInput.value = defaults.defaultModel || '';
-            setSelectedModel(modelInput.value);
-        }
+        hydrateProviderModelSelect(nextProvider, false);
     });
-    $('#providerModelInput')?.addEventListener('input', (e) => {
+    $('#providerModelSelect')?.addEventListener('change', (e) => {
         setSelectedModel((e.target.value || '').trim());
     });
     const providerSelect = $('#providerSelect');
     if (providerSelect?.value) {
         setSelectedProvider(providerSelect.value);
+        hydrateProviderModelSelect(providerSelect.value, true);
     }
-    const modelInput = $('#providerModelInput');
-    if (modelInput) {
-        setSelectedModel((modelInput.value || '').trim());
+    const modelSelect = $('#providerModelSelect');
+    if (modelSelect) {
+        setSelectedModel((modelSelect.value || '').trim());
     }
     
     // Start batch extraction

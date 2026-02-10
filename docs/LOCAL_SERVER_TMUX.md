@@ -6,6 +6,32 @@ Use this when you want the app running in the background reliably.
 
 `peptide-search`
 
+## Quick Refresh (recommended)
+
+Use the restart helper when changes do not appear in the app:
+
+```bash
+cd /Users/lukaivanic/projects/peptide-search
+./scripts/restart_server.sh
+```
+
+This will:
+- stop the current `uvicorn` process for this app (including stale PID cases),
+- start a fresh one with `.env` loaded,
+- wait for `/api/health` before returning.
+
+## Manual Refresh Sequence
+
+If you want to run it manually:
+
+```bash
+cd /Users/lukaivanic/projects/peptide-search
+pkill -f ".venv/bin/uvicorn app.main:app --host 127.0.0.1 --port 8000" || true
+set -a; [ -f .env ] && source .env; set +a
+nohup .venv/bin/uvicorn app.main:app --host 127.0.0.1 --port 8000 >/tmp/peptide-search-server.log 2>&1 &
+curl -i http://127.0.0.1:8000/api/health
+```
+
 ## Start (detached)
 
 ```bash

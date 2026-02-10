@@ -28,6 +28,7 @@ from ..integrations.llm import (
 )
 from ..integrations.document import DocumentExtractor, fetch_and_extract_text
 from ..persistence.repository import PaperRepository, ExtractionRepository, PromptRepository
+from .queue_errors import RunCancelledError
 from .upload_store import is_upload_url, pop_upload
 
 logger = logging.getLogger(__name__)
@@ -696,6 +697,8 @@ async def run_queued_extraction(
         run = session.get(ExtractionRun, run_id)
         if not run:
             raise RuntimeError(f"Run {run_id} not found")
+        if run.status == RunStatus.CANCELLED.value:
+            raise RunCancelledError("Run cancelled by user")
         prompt_id = prompt_id or run.prompt_id
         prompt_version_id = prompt_version_id or run.prompt_version_id
         (
@@ -810,6 +813,8 @@ async def run_queued_extraction(
         with session_scope() as session:
             run = session.get(ExtractionRun, run_id)
             if run:
+                if run.status == RunStatus.CANCELLED.value:
+                    raise RunCancelledError("Run cancelled by user")
                 run.raw_json = json.dumps({"error": error_msg})
                 run.prompts_json = prompts_json
                 run.model_provider = llm_provider.name()
@@ -825,6 +830,10 @@ async def run_queued_extraction(
         raise
 
     extraction_time_ms = int((time.monotonic() - extraction_start_time) * 1000)
+    with session_scope() as session:
+        run = session.get(ExtractionRun, run_id)
+        if run and run.status == RunStatus.CANCELLED.value:
+            raise RunCancelledError("Run cancelled by user")
 
     usage = _extract_usage(llm_provider)
     
@@ -836,6 +845,8 @@ async def run_queued_extraction(
         with session_scope() as session:
             run = session.get(ExtractionRun, run_id)
             if run:
+                if run.status == RunStatus.CANCELLED.value:
+                    raise RunCancelledError("Run cancelled by user")
                 run.raw_json = raw_json_text
                 run.comment = None
                 run.model_provider = llm_provider.name()
@@ -856,7 +867,9 @@ async def run_queued_extraction(
         run = session.get(ExtractionRun, run_id)
         if not run:
             raise RuntimeError(f"Run {run_id} not found")
-        
+        if run.status == RunStatus.CANCELLED.value:
+            raise RunCancelledError("Run cancelled by user")
+
         # Update run with results
         run.raw_json = payload.model_dump_json()
         run.comment = payload.comment

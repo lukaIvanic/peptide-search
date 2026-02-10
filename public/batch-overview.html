@@ -61,27 +61,23 @@
 				</div>
 			</section>
 
-			<!-- Provider analytics -->
+			<!-- Model analytics -->
 			<section id="providerAccuracySection" class="sw-card p-4">
 				<div class="provider-accuracy-head">
 					<div class="provider-accuracy-head__title">
-						<h3 class="section-title">Provider Ranking</h3>
-						<span id="providerAccuracySummary" class="text-[11px] text-slate-500"></span>
+						<h3 class="section-title">Model Ranking</h3>
 					</div>
 					<div id="providerMetricControls" class="provider-accuracy-controls">
 						<select
 							id="providerMetricSelect"
 							class="provider-accuracy-menu"
-							aria-label="Select provider ranking metric"
+							aria-label="Select model ranking metric"
 						></select>
 					</div>
 				</div>
 				<div id="providerAccuracyChart" class="provider-accuracy-chart mt-3">
-					<div id="providerAccuracyState" class="provider-accuracy-chart__state text-[11px] text-slate-500">
-						Loading latest scored evaluation runs...
-					</div>
 					<div id="providerAccuracyPlot" class="provider-accuracy-chart__plot">
-						<div class="sw-empty text-xs text-slate-500">Loading provider analytics...</div>
+						<div class="sw-empty text-xs text-slate-500">Loading model analytics...</div>
 					</div>
 				</div>
 			</section>
@@ -123,8 +119,8 @@
 							</select>
 						</div>
 						<div>
-							<label class="sw-kicker text-[10px] text-slate-500 block mb-1">Custom model ID (optional)</label>
-							<input id="batchCustomModel" type="text" class="sw-input w-full" placeholder="Use provider default" />
+							<label class="sw-kicker text-[10px] text-slate-500 block mb-1">Model</label>
+							<select id="batchProviderModel" class="sw-select w-full"></select>
 						</div>
 						<div>
 							<label class="sw-kicker text-[10px] text-slate-500 block mb-1">Prompt</label>
@@ -143,6 +139,6 @@
 			</div>
 		</div>
 
-		<script type="module" src="/static/batch-overview.js?v=2026-02-10-2"></script>
+		<script type="module" src="/static/batch-overview.js?v=2026-02-10-10"></script>
 	</body>
 </html>

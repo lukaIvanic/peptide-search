@@ -929,13 +929,14 @@ async function mapWithConcurrency(items, limit, worker) {
 async function fetchLatestRunPayload(caseItem) {
 	if (!caseItem?.id) return null;
 	const runId = caseItem.latest_run?.run_id || null;
+	const cacheKey = `${caseItem.id}::${state.filterBatchId || ''}`;
 	const cached = state.runPayloadCache.get(caseItem.id);
-	if (cached && cached.runId === runId) {
+	if (cached && cached.runId === runId && cached.cacheKey === cacheKey) {
 		return cached.payload;
 	}
 	try {
-		const payload = await api.getBaselineLatestRun(caseItem.id);
-		state.runPayloadCache.set(caseItem.id, { runId, payload });
+		const payload = await api.getBaselineLatestRun(caseItem.id, state.filterBatchId || null);
+		state.runPayloadCache.set(caseItem.id, { runId, cacheKey, payload });
 		return payload;
 	} catch (err) {
 		return null;
@@ -2190,7 +2191,7 @@ async function loadPaperDetails(paperKey) {
 		// Load run payload from the first case (they share the same run via DOI)
 		const firstCase = paperGroup.cases[0];
 		const runPayloadPromise = firstCase?.latest_run
-			? api.getBaselineLatestRun(firstCase.id)
+			? api.getBaselineLatestRun(firstCase.id, state.filterBatchId || null)
 			: Promise.resolve(null);
 		const localInfoPromise = firstCase?.id
 			? api.getBaselineLocalPdfInfo(firstCase.id).catch(() => null)
@@ -2263,7 +2264,7 @@ async function selectCase(caseId) {
 async function loadCases() {
 	try {
 		updateStatus('Loading evaluation papers...');
-		const data = await api.getBaselineCases(state.filterDataset);
+		const data = await api.getBaselineCases(state.filterDataset, state.filterBatchId || null);
 		state.cases = data.cases || [];
 		state.datasets = data.datasets || [];
 		const caseIdSet = new Set(state.cases.map((item) => item.id));
@@ -2516,10 +2517,10 @@ function initEventHandlers() {
 	// Batch controls
 	const batchFilter = $('#batchFilter');
 	if (batchFilter) {
-		batchFilter.addEventListener('change', (event) => {
+		batchFilter.addEventListener('change', async (event) => {
 			state.filterBatchId = event.target.value || '';
 			updateBatchSummary();
-			renderCaseList();  // Re-render with batch filter
+			await loadCases();
 		});
 	}
 
