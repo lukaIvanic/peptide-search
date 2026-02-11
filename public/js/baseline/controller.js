@@ -56,6 +56,52 @@ function updateStatus(message) {
 	if (status) status.textContent = message || '';
 }
 
+function getErrorMessage(err, fallback = 'Unexpected error') {
+	if (err && typeof err.message === 'string' && err.message.trim()) {
+		return err.message.trim();
+	}
+	return fallback;
+}
+
+async function openLocalPdfTab(caseId) {
+	if (!caseId) {
+		updateStatus('No evaluation case selected.');
+		return;
+	}
+	try {
+		updateStatus('Checking local PDF availability...');
+		const info = await api.getBaselineLocalPdfInfo(caseId);
+		if (!info?.found) {
+			updateStatus('No local PDF found for this paper.');
+			return;
+		}
+		window.open(api.getBaselineLocalPdfUrl(caseId), '_blank', 'noopener');
+		updateStatus('Opened local PDF.');
+	} catch (err) {
+		updateStatus(getErrorMessage(err, 'Failed to open local PDF'));
+	}
+}
+
+async function openLocalSiPdfTab(caseId, index = 0) {
+	if (!caseId) {
+		updateStatus('No evaluation case selected.');
+		return;
+	}
+	try {
+		updateStatus('Checking supplementary PDF availability...');
+		const info = await api.getBaselineLocalPdfSiInfo(caseId);
+		const count = Math.max(0, Number(info?.count || 0));
+		if (!info?.found || count <= index) {
+			updateStatus('No supplementary PDF found for this paper.');
+			return;
+		}
+		window.open(api.getBaselineLocalPdfSiUrl(caseId, index), '_blank', 'noopener');
+		updateStatus('Opened supplementary PDF.');
+	} catch (err) {
+		updateStatus(getErrorMessage(err, 'Failed to open supplementary PDF'));
+	}
+}
+
 function getRecomputeChip() {
 	return $('#baselineRecomputeStatus');
 }
@@ -705,14 +751,8 @@ function renderSelectedPaperStrip(paperGroup, runPayload) {
 		}
 
 		if (openLocalBtn && firstCase) {
-			openLocalBtn.addEventListener('click', () => {
-				if (!firstCase.id) {
-					updateStatus('No evaluation case selected.');
-					return;
-				}
-				updateStatus('Opening local PDF...');
-				const url = api.getBaselineLocalPdfUrl(firstCase.id);
-				window.open(url, '_blank', 'noopener');
+			openLocalBtn.addEventListener('click', async () => {
+				await openLocalPdfTab(firstCase.id);
 			});
 		}
 	}
@@ -1714,8 +1754,8 @@ function renderExtractionDetail(runPayload, paperGroupOrCase, comparison) {
 		if (isLocalPdfAvailable(paperGroup, runPayload)) {
 			const mainPdfBtn = el('button', 'sw-btn sw-btn--sm sw-btn--secondary');
 			mainPdfBtn.appendChild(el('span', 'sw-btn__label', '📄 View Main PDF'));
-			mainPdfBtn.addEventListener('click', () => {
-				window.open(api.getBaselineLocalPdfUrl(firstCase.id), '_blank');
+			mainPdfBtn.addEventListener('click', async () => {
+				await openLocalPdfTab(firstCase.id);
 			});
 			pdfButtonsRow.appendChild(mainPdfBtn);
 			hasButtons = true;
@@ -1740,8 +1780,8 @@ function renderExtractionDetail(runPayload, paperGroupOrCase, comparison) {
 						const shortName = filename.length > 20 ? filename.substring(0, 17) + '...' : filename;
 						siPdfBtn.appendChild(el('span', 'sw-btn__label', `📎 ${shortName}`));
 						siPdfBtn.title = filename;
-						siPdfBtn.addEventListener('click', () => {
-							window.open(api.getBaselineLocalPdfSiUrl(firstCase.id, i), '_blank');
+						siPdfBtn.addEventListener('click', async () => {
+							await openLocalSiPdfTab(firstCase.id, i);
 						});
 						pdfButtonsRow.appendChild(siPdfBtn);
 					}
@@ -1751,8 +1791,9 @@ function renderExtractionDetail(runPayload, paperGroupOrCase, comparison) {
 					container.insertBefore(pdfButtonsRow, container.children[1] || null);
 				}
 			}
-		}).catch(() => {
-			// Silently ignore errors fetching SI info
+		}).catch((err) => {
+			console.error('Failed to load supplementary PDF info:', err);
+			updateStatus(getErrorMessage(err, 'Failed to load supplementary PDF info'));
 		});
 
 		if (hasButtons) {
@@ -2194,16 +2235,23 @@ async function loadPaperDetails(paperKey) {
 			? api.getBaselineLatestRun(firstCase.id, state.filterBatchId || null)
 			: Promise.resolve(null);
 		const localInfoPromise = firstCase?.id
-			? api.getBaselineLocalPdfInfo(firstCase.id).catch(() => null)
+			? api.getBaselineLocalPdfInfo(firstCase.id).catch((err) => ({
+				found: false,
+				error: getErrorMessage(err, 'Failed to check local PDF availability'),
+			}))
 			: Promise.resolve(null);
 		const [runPayload, localInfo] = await Promise.all([runPayloadPromise, localInfoPromise]);
 		
-		if (localInfo && firstCase?.id) {
-			if (localInfo.found) {
+		if (firstCase?.id) {
+			if (localInfo?.found) {
 				state.localPdfFileByCaseId.set(firstCase.id, true);
 				state.localPdfByCaseId.set(firstCase.id, true);
 			} else {
 				state.localPdfFileByCaseId.delete(firstCase.id);
+			}
+			if (localInfo?.error) {
+				console.error('Local PDF availability check failed:', localInfo.error);
+				updateStatus(localInfo.error);
 			}
 		}
 
