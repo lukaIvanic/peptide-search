@@ -24,3 +24,4 @@ echo "[reliability] Running quick API smoke subset..."
 "$PYTHON_BIN" -m unittest discover -s tests/integration -p 'test_ui_api_contracts.py'
 
 echo "[reliability] All reliability checks passed."
+echo "[reliability] For low-impact queue hardening checks use: ./scripts/run_queue_reliability_safe.sh all"

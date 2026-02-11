@@ -13,7 +13,14 @@ from ..config import settings
 from ..db import session_scope
 from ..prompts import build_system_prompt, build_user_prompt, build_followup_prompt
 from ..schemas import ExtractRequest, ExtractionPayload, PaperMeta
-from ..persistence.models import Paper, ExtractionRun, ExtractionEntity, RunStatus
+from ..persistence.models import (
+    Paper,
+    ExtractionRun,
+    ExtractionEntity,
+    QueueJob,
+    QueueJobStatus,
+    RunStatus,
+)
 
 from ..integrations.llm import (
     DocumentInput,
@@ -88,6 +95,22 @@ def _apply_usage_to_run(run: ExtractionRun, usage: Optional[Dict[str, Optional[i
         run.reasoning_tokens = usage.get("reasoning_tokens")
     if usage.get("total_tokens") is not None:
         run.total_tokens = usage.get("total_tokens")
+
+
+def _is_queue_claim_active(
+    session: Session,
+    *,
+    claim_job_id: Optional[int],
+    claim_token: Optional[str],
+) -> bool:
+    if not claim_job_id or not claim_token:
+        return True
+    job = session.get(QueueJob, claim_job_id)
+    return bool(
+        job
+        and job.status == QueueJobStatus.CLAIMED.value
+        and job.claim_token == claim_token
+    )
 
 
 def _persist_failed_run(
@@ -662,6 +685,8 @@ async def run_queued_extraction(
     model: Optional[str] = None,
     prompt_id: Optional[int] = None,
     prompt_version_id: Optional[int] = None,
+    claim_job_id: Optional[int] = None,
+    claim_token: Optional[str] = None,
 ) -> Dict[str, Any]:
     """
     Run extraction for a queued item.
@@ -697,6 +722,12 @@ async def run_queued_extraction(
         run = session.get(ExtractionRun, run_id)
         if not run:
             raise RuntimeError(f"Run {run_id} not found")
+        if not _is_queue_claim_active(
+            session,
+            claim_job_id=claim_job_id,
+            claim_token=claim_token,
+        ):
+            raise RunCancelledError("Queue claim lost")
         if run.status == RunStatus.CANCELLED.value:
             raise RunCancelledError("Run cancelled by user")
         prompt_id = prompt_id or run.prompt_id
@@ -813,6 +844,12 @@ async def run_queued_extraction(
         with session_scope() as session:
             run = session.get(ExtractionRun, run_id)
             if run:
+                if not _is_queue_claim_active(
+                    session,
+                    claim_job_id=claim_job_id,
+                    claim_token=claim_token,
+                ):
+                    raise RunCancelledError("Queue claim lost")
                 if run.status == RunStatus.CANCELLED.value:
                     raise RunCancelledError("Run cancelled by user")
                 run.raw_json = json.dumps({"error": error_msg})
@@ -832,6 +869,12 @@ async def run_queued_extraction(
     extraction_time_ms = int((time.monotonic() - extraction_start_time) * 1000)
     with session_scope() as session:
         run = session.get(ExtractionRun, run_id)
+        if run and not _is_queue_claim_active(
+            session,
+            claim_job_id=claim_job_id,
+            claim_token=claim_token,
+        ):
+            raise RunCancelledError("Queue claim lost")
         if run and run.status == RunStatus.CANCELLED.value:
             raise RunCancelledError("Run cancelled by user")
 
@@ -845,6 +888,12 @@ async def run_queued_extraction(
         with session_scope() as session:
             run = session.get(ExtractionRun, run_id)
             if run:
+                if not _is_queue_claim_active(
+                    session,
+                    claim_job_id=claim_job_id,
+                    claim_token=claim_token,
+                ):
+                    raise RunCancelledError("Queue claim lost")
                 if run.status == RunStatus.CANCELLED.value:
                     raise RunCancelledError("Run cancelled by user")
                 run.raw_json = raw_json_text
@@ -867,6 +916,12 @@ async def run_queued_extraction(
         run = session.get(ExtractionRun, run_id)
         if not run:
             raise RuntimeError(f"Run {run_id} not found")
+        if not _is_queue_claim_active(
+            session,
+            claim_job_id=claim_job_id,
+            claim_token=claim_token,
+        ):
+            raise RunCancelledError("Queue claim lost")
         if run.status == RunStatus.CANCELLED.value:
             raise RunCancelledError("Run cancelled by user")
 

@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import asyncio
+import contextlib
 import json
 import logging
 from dataclasses import dataclass
@@ -25,6 +26,11 @@ from .queue_errors import RunCancelledError
 
 logger = logging.getLogger(__name__)
 _RUN_TERMINAL_STATUSES = (RunStatus.STORED, RunStatus.FAILED, RunStatus.CANCELLED)
+_RUN_TERMINAL_STATUS_VALUES = {status.value for status in _RUN_TERMINAL_STATUSES}
+
+
+class ClaimLostError(RuntimeError):
+    """Raised when a worker no longer owns the queue claim."""
 
 
 @dataclass
@@ -101,6 +107,7 @@ class ExtractionQueue:
         self.broadcaster = broadcaster or SSEBroadcaster()
         self.coordinator = coordinator or QueueCoordinator()
         self._workers: List[asyncio.Task] = []
+        self._recovery_task: Optional[asyncio.Task] = None
         self._active_runs: Dict[int, ClaimedJob] = {}
         self._running = False
         self._lock = asyncio.Lock()
@@ -113,21 +120,18 @@ class ExtractionQueue:
         if self._running:
             return
         self._running = True
+        stale_after = self._claim_timeout_seconds()
+        heartbeat_seconds = self._claim_heartbeat_seconds()
+        if stale_after > 0 and heartbeat_seconds >= stale_after:
+            logger.warning(
+                "QUEUE_CLAIM_HEARTBEAT_SECONDS (%s) should be lower than "
+                "QUEUE_CLAIM_TIMEOUT_SECONDS (%s) to avoid stale claim recovery races.",
+                heartbeat_seconds,
+                stale_after,
+            )
 
-        stale_after = int(getattr(settings, "QUEUE_CLAIM_TIMEOUT_SECONDS", 300))
-        max_attempts = int(getattr(settings, "QUEUE_MAX_ATTEMPTS", 3))
-        with session_scope() as session:
-            recovery = self.coordinator.recover_stale_claims(
-                session,
-                stale_after_seconds=stale_after,
-                max_attempts=max_attempts,
-            )
-        if recovery.requeued or recovery.failed:
-            logger.info(
-                "Recovered stale queue claims: requeued=%s failed=%s",
-                recovery.requeued,
-                recovery.failed,
-            )
+        await self._recover_stale_claims_once()
+        self._recovery_task = asyncio.create_task(self._stale_recovery_loop())
 
         if self.concurrency <= 0:
             logger.info("Queue started in passive mode (concurrency=%s)", self.concurrency)
@@ -140,6 +144,10 @@ class ExtractionQueue:
 
     async def stop(self) -> None:
         self._running = False
+        if self._recovery_task:
+            self._recovery_task.cancel()
+            await asyncio.gather(self._recovery_task, return_exceptions=True)
+            self._recovery_task = None
         for task in self._workers:
             task.cancel()
         if self._workers:
@@ -211,9 +219,32 @@ class ExtractionQueue:
         payload = claimed.payload
 
         logger.info("%s processing run %s", worker_name, run_id)
-        await self._update_run_status(run_id, RunStatus.FETCHING)
+        heartbeat_stop = asyncio.Event()
+        claim_lost = asyncio.Event()
+        heartbeat_task = asyncio.create_task(
+            self._claim_heartbeat_loop(
+                claimed=claimed,
+                stop_event=heartbeat_stop,
+                claim_lost=claim_lost,
+                worker_name=worker_name,
+            )
+        )
 
         try:
+            await self._ensure_claim_active_or_raise(
+                claimed=claimed,
+                claim_lost=claim_lost,
+                worker_name=worker_name,
+                stage="before-fetching",
+            )
+            await self._update_run_status(run_id, RunStatus.FETCHING)
+
+            await self._ensure_claim_active_or_raise(
+                claimed=claimed,
+                claim_lost=claim_lost,
+                worker_name=worker_name,
+                stage="before-provider",
+            )
             await self._update_run_status(run_id, RunStatus.PROVIDER)
             if not self._extract_callback:
                 raise RuntimeError("No extraction callback configured")
@@ -227,15 +258,39 @@ class ExtractionQueue:
                 model=payload.model,
                 prompt_id=payload.prompt_id,
                 prompt_version_id=payload.prompt_version_id,
+                claim_job_id=claimed.id,
+                claim_token=claimed.claim_token,
+            )
+
+            await self._ensure_claim_active_or_raise(
+                claimed=claimed,
+                claim_lost=claim_lost,
+                worker_name=worker_name,
+                stage="after-provider",
             )
             await self._update_run_status(run_id, RunStatus.VALIDATING)
             await self._update_run_status(run_id, RunStatus.STORED)
+
+            await self._ensure_claim_active_or_raise(
+                claimed=claimed,
+                claim_lost=claim_lost,
+                worker_name=worker_name,
+                stage="before-finish",
+            )
             self._finish_claimed_job(claimed, QueueJobStatus.DONE)
             logger.info(
                 "%s finished run %s successfully (attempt=%s)",
                 worker_name,
                 run_id,
                 claimed.attempt,
+            )
+        except ClaimLostError as exc:
+            logger.warning(
+                "%s lost claim for run %s (attempt=%s): %s",
+                worker_name,
+                run_id,
+                claimed.attempt,
+                exc,
             )
         except RunCancelledError as exc:
             await self._update_run_status(run_id, RunStatus.CANCELLED, failure_reason=str(exc))
@@ -258,6 +313,10 @@ class ExtractionQueue:
                 claimed.attempt,
                 error_msg,
             )
+        finally:
+            heartbeat_stop.set()
+            with contextlib.suppress(Exception):
+                await heartbeat_task
 
     def _finish_claimed_job(self, claimed: ClaimedJob, status: QueueJobStatus) -> None:
         try:
@@ -287,6 +346,11 @@ class ExtractionQueue:
             run = session.get(ExtractionRun, run_id)
             if not run:
                 return
+            previous_status = run.status
+
+            # Terminal statuses are sticky for queue workers.
+            if previous_status in _RUN_TERMINAL_STATUS_VALUES and previous_status != status.value:
+                return
             # Respect explicit cancellation; do not allow worker status updates to resurrect the run.
             if run.status == RunStatus.CANCELLED.value and status != RunStatus.CANCELLED:
                 return
@@ -296,7 +360,11 @@ class ExtractionQueue:
             session.add(run)
             session.commit()
 
-            if run.batch_id and status in _RUN_TERMINAL_STATUSES:
+            entered_terminal = (
+                status in _RUN_TERMINAL_STATUSES
+                and previous_status not in _RUN_TERMINAL_STATUS_VALUES
+            )
+            if run.batch_id and entered_terminal:
                 self._update_batch_counters(session, run, status)
 
             stmt = select(BaselineCaseRun.baseline_case_id).where(BaselineCaseRun.run_id == run_id)
@@ -317,6 +385,104 @@ class ExtractionQueue:
                     "batch_id": run.batch_id,
                 },
             )
+
+    async def _recover_stale_claims_once(self) -> None:
+        stale_after = self._claim_timeout_seconds()
+        max_attempts = int(getattr(settings, "QUEUE_MAX_ATTEMPTS", 3))
+        with session_scope() as session:
+            recovery = self.coordinator.recover_stale_claims(
+                session,
+                stale_after_seconds=stale_after,
+                max_attempts=max_attempts,
+            )
+        if recovery.requeued or recovery.failed:
+            logger.info(
+                "Recovered stale queue claims: requeued=%s failed=%s",
+                recovery.requeued,
+                recovery.failed,
+            )
+
+    async def _stale_recovery_loop(self) -> None:
+        interval = max(5, int(getattr(settings, "QUEUE_RECOVERY_INTERVAL_SECONDS", 30)))
+        while self._running:
+            try:
+                await asyncio.sleep(interval)
+                if not self._running:
+                    return
+                await self._recover_stale_claims_once()
+            except asyncio.CancelledError:
+                return
+            except Exception:
+                logger.exception("Stale claim recovery loop failed.")
+
+    async def _claim_heartbeat_loop(
+        self,
+        *,
+        claimed: ClaimedJob,
+        stop_event: asyncio.Event,
+        claim_lost: asyncio.Event,
+        worker_name: str,
+    ) -> None:
+        interval = self._claim_heartbeat_seconds()
+        while self._running and not stop_event.is_set() and not claim_lost.is_set():
+            try:
+                await asyncio.wait_for(stop_event.wait(), timeout=interval)
+                return
+            except asyncio.TimeoutError:
+                pass
+
+            try:
+                with session_scope() as session:
+                    refreshed = self.coordinator.heartbeat_claim(
+                        session,
+                        job_id=claimed.id,
+                        claim_token=claimed.claim_token,
+                    )
+                if not refreshed:
+                    claim_lost.set()
+                    logger.warning(
+                        "%s claim heartbeat rejected for run %s (job=%s, attempt=%s)",
+                        worker_name,
+                        claimed.run_id,
+                        claimed.id,
+                        claimed.attempt,
+                    )
+                    return
+            except Exception:
+                logger.exception(
+                    "%s claim heartbeat failed for run %s (job=%s)",
+                    worker_name,
+                    claimed.run_id,
+                    claimed.id,
+                )
+
+    async def _ensure_claim_active_or_raise(
+        self,
+        *,
+        claimed: ClaimedJob,
+        claim_lost: asyncio.Event,
+        worker_name: str,
+        stage: str,
+    ) -> None:
+        if claim_lost.is_set():
+            raise ClaimLostError("claim lease was lost")
+        with session_scope() as session:
+            active = self.coordinator.is_claim_active(
+                session,
+                job_id=claimed.id,
+                claim_token=claimed.claim_token,
+            )
+        if not active:
+            claim_lost.set()
+            raise ClaimLostError(f"claim inactive at stage={stage} worker={worker_name}")
+
+    @staticmethod
+    def _claim_timeout_seconds() -> int:
+        return max(0, int(getattr(settings, "QUEUE_CLAIM_TIMEOUT_SECONDS", 300)))
+
+    @staticmethod
+    def _claim_heartbeat_seconds() -> int:
+        return max(1, int(getattr(settings, "QUEUE_CLAIM_HEARTBEAT_SECONDS", 30)))
 
     def _update_batch_counters(self, session, run: ExtractionRun, status: RunStatus) -> None:
         stmt = select(BatchRun).where(BatchRun.batch_id == run.batch_id)

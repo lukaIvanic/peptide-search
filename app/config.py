@@ -65,6 +65,8 @@ class Settings:
 	# Queue settings
 	QUEUE_CONCURRENCY: int = int(os.getenv("QUEUE_CONCURRENCY", "128"))
 	QUEUE_CLAIM_TIMEOUT_SECONDS: int = int(os.getenv("QUEUE_CLAIM_TIMEOUT_SECONDS", "300"))
+	QUEUE_CLAIM_HEARTBEAT_SECONDS: int = int(os.getenv("QUEUE_CLAIM_HEARTBEAT_SECONDS", "30"))
+	QUEUE_RECOVERY_INTERVAL_SECONDS: int = int(os.getenv("QUEUE_RECOVERY_INTERVAL_SECONDS", "30"))
 	QUEUE_MAX_ATTEMPTS: int = int(os.getenv("QUEUE_MAX_ATTEMPTS", "3"))
 	QUEUE_ENGINE_VERSION: str = os.getenv("QUEUE_ENGINE_VERSION", "v2")
 
@@ -102,6 +104,12 @@ class Settings:
 			raise RuntimeError(
 				f"Unsupported QUEUE_ENGINE_VERSION '{self.QUEUE_ENGINE_VERSION}'. Expected: v2."
 			)
+		if self.QUEUE_CLAIM_TIMEOUT_SECONDS < 0:
+			raise RuntimeError("QUEUE_CLAIM_TIMEOUT_SECONDS must be >= 0.")
+		if self.QUEUE_CLAIM_HEARTBEAT_SECONDS <= 0:
+			raise RuntimeError("QUEUE_CLAIM_HEARTBEAT_SECONDS must be > 0.")
+		if self.QUEUE_RECOVERY_INTERVAL_SECONDS <= 0:
+			raise RuntimeError("QUEUE_RECOVERY_INTERVAL_SECONDS must be > 0.")
 		if self.ACCESS_GATE_ENABLED and (
 			not self.ACCESS_GATE_USERNAME or not self.ACCESS_GATE_PASSWORD
 		):

@@ -403,6 +403,98 @@ class QueueEngineCoordinatorTests(ApiIntegrationTestCase):
             lock = session.exec(select(ActiveSourceLock).where(ActiveSourceLock.run_id == run.id)).first()
             self.assertIsNone(lock)
 
+    def test_heartbeat_claim_refreshes_claimed_at_for_active_claim(self) -> None:
+        coordinator = QueueCoordinator()
+        source_url = "https://example.org/heartbeat-active.pdf"
+        paper_id = self.create_paper(title="Heartbeat active")
+        run = self.create_run_row(
+            paper_id=paper_id,
+            status=RunStatus.QUEUED.value,
+            model_provider="mock",
+            pdf_url=source_url,
+        )
+        job_id = self.create_queue_job(
+            run_id=run.id,
+            pdf_url=source_url,
+            status=QueueJobStatus.CLAIMED.value,
+            claim_token="heartbeat-token",
+            claimed_by="worker-hb",
+            claimed_at=utc_now() - timedelta(minutes=5),
+        )
+
+        with Session(self.db_module.engine) as session:
+            before = session.get(QueueJob, job_id)
+            self.assertIsNotNone(before)
+            before_claimed_at = before.claimed_at
+            self.assertTrue(
+                coordinator.is_claim_active(
+                    session,
+                    job_id=job_id,
+                    claim_token="heartbeat-token",
+                )
+            )
+
+            refreshed = coordinator.heartbeat_claim(
+                session,
+                job_id=job_id,
+                claim_token="heartbeat-token",
+            )
+            self.assertTrue(refreshed)
+            after = session.get(QueueJob, job_id)
+            self.assertIsNotNone(after)
+            self.assertIsNotNone(after.claimed_at)
+            self.assertIsNotNone(before_claimed_at)
+            self.assertGreater(after.claimed_at, before_claimed_at)
+
+    def test_heartbeat_claim_rejects_wrong_or_inactive_claim(self) -> None:
+        coordinator = QueueCoordinator()
+        source_url = "https://example.org/heartbeat-inactive.pdf"
+        paper_id = self.create_paper(title="Heartbeat inactive")
+        run = self.create_run_row(
+            paper_id=paper_id,
+            status=RunStatus.QUEUED.value,
+            model_provider="mock",
+            pdf_url=source_url,
+        )
+        job_id = self.create_queue_job(
+            run_id=run.id,
+            pdf_url=source_url,
+            status=QueueJobStatus.CLAIMED.value,
+            claim_token="correct-token",
+            claimed_by="worker-hb",
+            claimed_at=utc_now(),
+        )
+
+        with Session(self.db_module.engine) as session:
+            self.assertFalse(
+                coordinator.is_claim_active(
+                    session,
+                    job_id=job_id,
+                    claim_token="wrong-token",
+                )
+            )
+            self.assertFalse(
+                coordinator.heartbeat_claim(
+                    session,
+                    job_id=job_id,
+                    claim_token="wrong-token",
+                )
+            )
+
+            job = session.get(QueueJob, job_id)
+            self.assertIsNotNone(job)
+            job.status = QueueJobStatus.QUEUED.value
+            session.add(job)
+            session.commit()
+
+            self.assertFalse(
+                coordinator.heartbeat_claim(
+                    session,
+                    job_id=job_id,
+                    claim_token="correct-token",
+                )
+            )
+
     def test_recover_stale_claims_zero_timeout_requeues_all_claimed(self) -> None:
         coordinator = QueueCoordinator()
         run_ids: list[int] = []

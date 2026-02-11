@@ -9,7 +9,7 @@ from urllib.parse import urlparse
 
 from sqlmodel import Session
 
-from ..db import engine
+from .. import db
 from ..services.baseline_store import BaselineStore
 
 
@@ -214,7 +214,7 @@ def load_backup_dataset(dataset_id: str) -> List[Dict]:
 
 def _db_has_cases() -> bool:
     try:
-        with Session(engine) as session:
+        with Session(db.engine) as session:
             return BaselineStore(session).has_cases()
     except Exception:
         return False
@@ -222,7 +222,7 @@ def _db_has_cases() -> bool:
 
 def load_index() -> Dict:
     if _db_has_cases():
-        with Session(engine) as session:
+        with Session(db.engine) as session:
             store = BaselineStore(session)
             datasets = store.list_datasets()
             return {
@@ -251,14 +251,14 @@ def list_dataset_ids() -> List[str]:
 
 def load_dataset(dataset_id: str) -> List[Dict]:
     if _db_has_cases():
-        with Session(engine) as session:
+        with Session(db.engine) as session:
             return BaselineStore(session).list_cases(dataset_id)
     return _load_dataset_backup(dataset_id)
 
 
 def list_cases(dataset: Optional[str] = None) -> List[Dict]:
     if _db_has_cases():
-        with Session(engine) as session:
+        with Session(db.engine) as session:
             return BaselineStore(session).list_cases(dataset)
     if dataset:
         return _load_dataset_backup(dataset)
@@ -270,7 +270,7 @@ def list_cases(dataset: Optional[str] = None) -> List[Dict]:
 
 def get_case(case_id: str) -> Optional[Dict]:
     if _db_has_cases():
-        with Session(engine) as session:
+        with Session(db.engine) as session:
             return BaselineStore(session).get_case(case_id)
     for dataset_id in list_dataset_ids():
         for case in _load_dataset_backup(dataset_id):
