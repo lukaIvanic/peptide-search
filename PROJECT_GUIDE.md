@@ -253,6 +253,41 @@ Queue reliability profiles (resource-safe on macOS):
    7. `RELIABILITY_RANDOM_STEP_DELAY_SECONDS` (default `0.02`, delay after each randomized step)
    8. `RELIABILITY_RANDOM_SCENARIO_COOLDOWN_SECONDS` (default `0.25`, delay between randomized scenarios)
 
+### Reliability Report Output
+
+You can emit a machine-readable JSON report by setting `RELIABILITY_REPORT_PATH`:
+
+```bash
+RELIABILITY_REPORT_PATH=/tmp/queue_reliability_report.json ./scripts/run_queue_reliability_safe.sh all
+```
+
+Example report fields:
+
+```json
+{
+  "mode": "all",
+  "smoke_status": 0,
+  "deep_status": 0,
+  "deep_skipped": 0,
+  "started_at": "2026-02-11T19:10:40Z",
+  "finished_at": "2026-02-11T19:11:12Z",
+  "elapsed_seconds": 32,
+  "smoke_elapsed_seconds": 2,
+  "deterministic_elapsed_seconds": 12,
+  "randomized_elapsed_seconds": 16,
+  "timeout_occurred": false,
+  "load_avg_at_deep_check": 1.52,
+  "throttle_settings": {
+    "cooldown_seconds": 1,
+    "random_seeds": "11,29,47,73,101",
+    "random_steps": 40,
+    "random_scenarios": 50,
+    "step_delay_seconds": 0.02,
+    "scenario_cooldown_seconds": 0.25
+  }
+}
+```
+
 Postgres contract checks (optional, read-only):
 
 1. Export a test DB URL:

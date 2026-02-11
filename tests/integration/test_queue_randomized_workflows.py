@@ -93,6 +93,10 @@ class QueueRandomizedWorkflowTests(ApiIntegrationTestCase):
             return default
         return max(0.0, value)
 
+    @staticmethod
+    def _progress_every_env() -> int:
+        return QueueRandomizedWorkflowTests._int_env("RELIABILITY_PROGRESS_EVERY", 1)
+
     def _reset_scenario_state(self) -> None:
         with Session(self.db_module.engine) as session:
             session.exec(delete(ActiveSourceLock))
@@ -382,6 +386,7 @@ class QueueRandomizedWorkflowTests(ApiIntegrationTestCase):
         seeds = self._seed_list_env()
         steps = self._int_env("RELIABILITY_RANDOM_STEPS", 40)
         scenarios = self._int_env("RELIABILITY_RANDOM_SCENARIOS", 50)
+        progress_every = self._progress_every_env()
         step_delay_s = self._float_env("RELIABILITY_RANDOM_STEP_DELAY_SECONDS", 0.02)
         scenario_cooldown_s = self._float_env(
             "RELIABILITY_RANDOM_SCENARIO_COOLDOWN_SECONDS",
@@ -391,6 +396,11 @@ class QueueRandomizedWorkflowTests(ApiIntegrationTestCase):
         for seed in seeds:
             rng = random.Random(seed)
             for scenario in range(scenarios):
+                scenario_number = scenario + 1
+                if scenario_number % progress_every == 0:
+                    print(
+                        f"[queue-randomized-progress] seed={seed} scenario={scenario_number}/{scenarios}"
+                    )
                 self._reset_scenario_state()
                 self._ensure_batch_fixture(rng, seed, scenario)
                 self._assert_invariants(f"seed={seed} scenario={scenario} step=bootstrap")
