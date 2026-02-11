@@ -376,6 +376,46 @@ class QueueCoordinator:
 
         session.commit()
 
+    def heartbeat_claim(
+        self,
+        session: Session,
+        *,
+        job_id: int,
+        claim_token: str,
+    ) -> bool:
+        """Refresh claimed_at for an active claim lease."""
+        now = utc_now()
+        result = session.exec(
+            update(QueueJob)
+            .where(QueueJob.id == job_id)
+            .where(QueueJob.status == QueueJobStatus.CLAIMED.value)
+            .where(QueueJob.claim_token == claim_token)
+            .values(
+                claimed_at=now,
+                updated_at=now,
+            )
+        )
+        if result.rowcount != 1:
+            session.rollback()
+            return False
+        session.commit()
+        return True
+
+    def is_claim_active(
+        self,
+        session: Session,
+        *,
+        job_id: int,
+        claim_token: str,
+    ) -> bool:
+        """Check whether the caller still owns the active claim token."""
+        job = session.get(QueueJob, job_id)
+        return bool(
+            job
+            and job.status == QueueJobStatus.CLAIMED.value
+            and job.claim_token == claim_token
+        )
+
     def recover_stale_claims(
         self,
         session: Session,

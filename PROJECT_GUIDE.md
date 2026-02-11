@@ -140,8 +140,10 @@ Queue/runtime:
 
 1. `QUEUE_CONCURRENCY` (current default in `env.example`: `1024`)
 2. `QUEUE_CLAIM_TIMEOUT_SECONDS`
-3. `QUEUE_MAX_ATTEMPTS`
-4. `QUEUE_ENGINE_VERSION` (`v2`)
+3. `QUEUE_CLAIM_HEARTBEAT_SECONDS`
+4. `QUEUE_RECOVERY_INTERVAL_SECONDS`
+5. `QUEUE_MAX_ATTEMPTS`
+6. `QUEUE_ENGINE_VERSION` (`v2`)
 
 Deploy bootstrap:
 
@@ -220,6 +222,7 @@ Strategy:
 1. Unit tests for pure logic/helpers.
 2. Integration API tests with isolated DB and deterministic queue behavior.
 3. Smoke-level UI/API contract checks.
+4. Queue reliability profiles: lightweight smoke gate first, then deep queue-only invariants/randomized workflows.
 
 High-risk areas to keep covered:
 
@@ -234,6 +237,56 @@ Fast checks before pushing:
 2. `alembic upgrade head` on a clean DB.
 3. Targeted integration tests for changed API paths.
 4. Full local reliability suite: `./scripts/test_local_reliability.sh`
+
+Queue reliability profiles (resource-safe on macOS):
+
+1. Smoke only (1-minute gate): `./scripts/run_queue_reliability_safe.sh smoke`
+2. Deep only (deterministic + randomized queue workflows): `./scripts/run_queue_reliability_safe.sh deep`
+3. Layered default (smoke then deep): `./scripts/run_queue_reliability_safe.sh all`
+4. Runtime knobs:
+   1. `RELIABILITY_SMOKE_TIMEOUT_SECONDS` (default `60`)
+   2. `RELIABILITY_MAX_LOAD_AVG` (default `12`)
+   3. `RELIABILITY_COOLDOWN_SECONDS` (default `15`)
+   4. `RELIABILITY_RANDOM_SEEDS` (default `11,29,47,73,101`)
+   5. `RELIABILITY_RANDOM_STEPS` (default `40`)
+   6. `RELIABILITY_RANDOM_SCENARIOS` (default `50`)
+   7. `RELIABILITY_RANDOM_STEP_DELAY_SECONDS` (default `0.02`, delay after each randomized step)
+   8. `RELIABILITY_RANDOM_SCENARIO_COOLDOWN_SECONDS` (default `0.25`, delay between randomized scenarios)
+
+### Reliability Report Output
+
+You can emit a machine-readable JSON report by setting `RELIABILITY_REPORT_PATH`:
+
+```bash
+RELIABILITY_REPORT_PATH=/tmp/queue_reliability_report.json ./scripts/run_queue_reliability_safe.sh all
+```
+
+Example report fields:
+
+```json
+{
+  "mode": "all",
+  "smoke_status": 0,
+  "deep_status": 0,
+  "deep_skipped": 0,
+  "started_at": "2026-02-11T19:10:40Z",
+  "finished_at": "2026-02-11T19:11:12Z",
+  "elapsed_seconds": 32,
+  "smoke_elapsed_seconds": 2,
+  "deterministic_elapsed_seconds": 12,
+  "randomized_elapsed_seconds": 16,
+  "timeout_occurred": false,
+  "load_avg_at_deep_check": 1.52,
+  "throttle_settings": {
+    "cooldown_seconds": 1,
+    "random_seeds": "11,29,47,73,101",
+    "random_steps": 40,
+    "random_scenarios": 50,
+    "step_delay_seconds": 0.02,
+    "scenario_cooldown_seconds": 0.25
+  }
+}
+```
 
 Postgres contract checks (optional, read-only):
 
