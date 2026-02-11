@@ -1,5 +1,6 @@
 """Alembic migration environment configuration."""
 from logging.config import fileConfig
+import os
 import sys
 from pathlib import Path
 
@@ -19,6 +20,13 @@ from app.persistence import models as _models  # noqa: F401
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.
 config = context.config
+
+# Preserve explicit URLs passed through app.db._build_alembic_config() while
+# still allowing CLI alembic commands to honor DB_URL at runtime.
+explicit_db_url = config.get_main_option("app.explicit_db_url")
+runtime_db_url = os.getenv("DB_URL")
+if explicit_db_url != "1" and runtime_db_url:
+    config.set_main_option("sqlalchemy.url", runtime_db_url)
 
 # Interpret the config file for Python logging.
 # This line sets up loggers basically.

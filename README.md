@@ -5,15 +5,17 @@ Interactive prototype to search open-access scientific literature (PubMed Centra
 ### Project goal (high level)
 This repository is the **automatic literature → structured data extraction** component of a broader effort to capture **peptide** knowledge (especially **self-assembling / hydrogel-forming peptides**) in a form that researchers and downstream modeling workflows can use.
 
-For a longer write-up (goal, scope, your role in the group project, and similar/prior projects), see `documentation.md`.
+For the complete technical and operational reference, see `PROJECT_GUIDE.md`.
 
 ### Features
 - Search via PubMed Central (PMC), Europe PMC, arXiv, and Semantic Scholar (open-access sources).
 - Paste a PDF/article URL for on-the-fly text extraction (PDF parsed with `pypdf`; HTML parsed with `BeautifulSoup`).
 - Modular LLM providers:
   - Mock provider (no API key) for demos.
-  - OpenAI provider (Responses API; supports direct PDF URL + PDF upload).
-  - DeepSeek provider (OpenAI-compatible chat completions API; text-only).
+  - OpenAI provider.
+  - DeepSeek provider.
+  - Gemini provider.
+  - OpenRouter provider.
 - Extraction prompt includes domain definitions from `Peptide LLM/definitions_for_llms.md`.
 - Structured JSON output validated by Pydantic; key fields persisted in SQLite.
 - Simple Tailwind-based web UI.
@@ -40,8 +42,8 @@ pip install -r requirements.txt
 
 4) Configure environment
 - Copy `.env.example` to `.env` and adjust values as needed:
-  - `LLM_PROVIDER` is required (one of `openai`, `openai-full`, `openai-mini`, `openai-nano`, `deepseek`, `mock`).
-  - To use DeepSeek, set `LLM_PROVIDER=deepseek` and `DEEPSEEK_API_KEY=...`.
+  - `LLM_PROVIDER` is required (one of `openai`, `openai-full`, `openai-mini`, `openai-nano`, `deepseek`, `gemini`, `openrouter`, `mock`).
+  - Set the matching provider API key env var(s).
 
 5) Run the server:
 ```powershell
@@ -171,15 +173,11 @@ alembic current
 
 ### Architecture
 
-See `ARCHITECTURE.md` for detailed documentation of:
-- Module boundaries and responsibilities
-- Data flow diagrams
-- Database schema
-- Configuration options
+See `PROJECT_GUIDE.md` for architecture, workflows, operations, deployment, and testing.
 
 ### Deployment (Render)
 
-For a managed demo deployment with persistent SQLite storage and optional access gate, see `docs/DEPLOY_RENDER.md`.
+For deployment details (persistent disk + DB bootstrap), see `PROJECT_GUIDE.md`.
 
 ### Roadmap (optional)
 - Improve PDF text extraction (layout parsing, figure/table handling).

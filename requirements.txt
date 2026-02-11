@@ -5,6 +5,7 @@ python-dotenv
 sqlmodel
 pydantic
 sqlalchemy
+psycopg2-binary
 pypdf
 beautifulsoup4
 lxml
@@ -12,4 +13,3 @@ alembic
 typer
 python-multipart
 openai
-

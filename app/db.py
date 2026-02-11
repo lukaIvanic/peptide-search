@@ -6,6 +6,7 @@ from alembic import command
 from alembic.config import Config
 from alembic.script import ScriptDirectory
 from sqlalchemy import inspect, text
+from sqlalchemy.engine import make_url
 from sqlmodel import Session, create_engine
 
 from .config import settings
@@ -14,7 +15,18 @@ from .config import settings
 from .persistence import models as _models  # noqa: F401
 
 
-engine = create_engine(settings.DB_URL, echo=False)
+def _create_engine(db_url: str):
+    parsed = make_url(db_url)
+    kwargs: dict = {"echo": False}
+    if parsed.get_backend_name().startswith("postgresql"):
+        kwargs["pool_pre_ping"] = True
+        kwargs["pool_recycle"] = 1800
+    elif parsed.get_backend_name() == "sqlite":
+        kwargs["connect_args"] = {"check_same_thread": False}
+    return create_engine(db_url, **kwargs)
+
+
+engine = _create_engine(settings.DB_URL)
 
 
 def _project_root() -> Path:
@@ -28,6 +40,7 @@ def _build_alembic_config(db_url: Optional[str] = None) -> Config:
         str(_project_root() / "app" / "persistence" / "migrations"),
     )
     cfg.set_main_option("sqlalchemy.url", db_url or str(engine.url))
+    cfg.set_main_option("app.explicit_db_url", "1")
     return cfg
 
 
@@ -64,6 +77,16 @@ def assert_schema_current() -> None:
                 f"Current revision: {current or 'none'}, required head: {required_head}. "
                 "Run: alembic upgrade head"
             )
+
+
+def ping_database() -> bool:
+    """Cheap liveness check used by health monitoring paths."""
+    try:
+        with engine.connect() as conn:
+            conn.execute(text("SELECT 1"))
+        return True
+    except Exception:
+        return False
 
 
 def init_db() -> None:

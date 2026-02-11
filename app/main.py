@@ -40,17 +40,29 @@ def create_app() -> FastAPI:
         ensure_runtime_defaults()
         backfill_failed_runs()
         reconcile_orphan_run_states()
-        await start_queue()
-        from .services.extraction_service import run_queued_extraction
+        try:
+            await start_queue()
+            from .services.extraction_service import run_queued_extraction
 
-        queue = get_queue()
-        queue.set_extract_callback(run_queued_extraction)
+            queue = get_queue()
+            queue.set_extract_callback(run_queued_extraction)
+        except Exception:
+            logger.exception("Application startup failed during queue initialization.")
+            try:
+                await stop_queue()
+            except Exception:
+                logger.exception("Queue cleanup failed after startup error.")
+            raise
         logger.info("Application started")
         try:
             yield
         finally:
-            await stop_queue()
-            logger.info("Application shutdown")
+            try:
+                await stop_queue()
+                logger.info("Application shutdown")
+            except Exception:
+                logger.exception("Application shutdown encountered queue stop errors.")
+                raise
 
     app = FastAPI(title=settings.APP_NAME, lifespan=lifespan)
     register_error_handlers(app)

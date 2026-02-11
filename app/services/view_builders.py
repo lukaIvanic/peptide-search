@@ -61,6 +61,7 @@ def build_run_payload(run: ExtractionRun, paper: Optional[Paper]) -> dict:
             "id": run.id,
             "paper_id": run.paper_id,
             "parent_run_id": run.parent_run_id,
+            "batch_id": run.batch_id,
             "baseline_case_id": run.baseline_case_id,
             "baseline_dataset": run.baseline_dataset,
             "status": run.status,

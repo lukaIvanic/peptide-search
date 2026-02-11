@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import asyncio
 import json
+import logging
 
 from fastapi import APIRouter, Depends
 from fastapi.responses import StreamingResponse
@@ -9,17 +10,20 @@ from sqlalchemy import delete
 from sqlmodel import Session
 
 from ...config import settings
-from ...db import get_session
+from ...db import get_session, ping_database
 from ...integrations.llm import resolve_provider_selection
 from ...persistence.models import ActiveSourceLock, ExtractionEntity, ExtractionRun, Paper, QueueJob
 from ...schemas import ClearExtractionsResponse, HealthResponse
 from ...services.queue_service import get_broadcaster, start_queue, stop_queue
 
 router = APIRouter(tags=["system"])
+logger = logging.getLogger(__name__)
 
 
 @router.get("/api/health", response_model=HealthResponse)
 async def health() -> HealthResponse:
+    if not ping_database():
+        logger.warning("Health check database ping failed.")
     try:
         selection = resolve_provider_selection(
             provider=settings.LLM_PROVIDER,

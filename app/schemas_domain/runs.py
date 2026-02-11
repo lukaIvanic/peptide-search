@@ -101,6 +101,7 @@ class RunPayloadRun(BaseModel):
     id: int
     paper_id: Optional[int] = None
     parent_run_id: Optional[int] = None
+    batch_id: Optional[str] = None
     baseline_case_id: Optional[str] = None
     baseline_dataset: Optional[str] = None
     status: str

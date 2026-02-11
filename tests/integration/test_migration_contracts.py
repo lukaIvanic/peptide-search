@@ -1,3 +1,4 @@
+import os
 import tempfile
 import unittest
 from pathlib import Path
@@ -51,6 +52,38 @@ class MigrationContractTests(unittest.TestCase):
         message = str(ctx.exception)
         self.assertIn("not initialized with Alembic", message)
         self.assertIn("alembic upgrade head", message)
+
+    def test_run_migrations_uses_explicit_db_url_over_environment_override(self) -> None:
+        env_db_path = Path(self.temp_dir.name) / "env_override.db"
+        env_engine = create_engine(f"sqlite:///{env_db_path}", echo=False)
+        old_env_db_url = os.environ.get("DB_URL")
+        try:
+            os.environ["DB_URL"] = str(env_engine.url)
+            db_module.run_migrations(db_url=str(self.engine.url))
+        finally:
+            if old_env_db_url is None:
+                os.environ.pop("DB_URL", None)
+            else:
+                os.environ["DB_URL"] = old_env_db_url
+
+        with self.engine.connect() as conn:
+            version_table = conn.execute(
+                text(
+                    "SELECT name FROM sqlite_master "
+                    "WHERE type='table' AND name='alembic_version'"
+                )
+            ).fetchone()
+        self.assertIsNotNone(version_table)
+
+        with env_engine.connect() as conn:
+            env_version_table = conn.execute(
+                text(
+                    "SELECT name FROM sqlite_master "
+                    "WHERE type='table' AND name='alembic_version'"
+                )
+            ).fetchone()
+        self.assertIsNone(env_version_table)
+        env_engine.dispose()
 
 
 if __name__ == "__main__":
