@@ -71,6 +71,9 @@ class Settings:
 	# CORS
 	CORS_ORIGINS: str = os.getenv("CORS_ORIGINS", "")
 
+	# Observability
+	REQUEST_LOGGING_ENABLED: bool = _as_bool("REQUEST_LOGGING_ENABLED", True)
+
 	# Access gate
 	ACCESS_GATE_ENABLED: bool = _as_bool("ACCESS_GATE_ENABLED", False)
 	ACCESS_GATE_USERNAME: str = os.getenv("ACCESS_GATE_USERNAME", "")

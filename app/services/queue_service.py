@@ -231,22 +231,51 @@ class ExtractionQueue:
             await self._update_run_status(run_id, RunStatus.VALIDATING)
             await self._update_run_status(run_id, RunStatus.STORED)
             self._finish_claimed_job(claimed, QueueJobStatus.DONE)
+            logger.info(
+                "%s finished run %s successfully (attempt=%s)",
+                worker_name,
+                run_id,
+                claimed.attempt,
+            )
         except RunCancelledError as exc:
             await self._update_run_status(run_id, RunStatus.CANCELLED, failure_reason=str(exc))
             self._finish_claimed_job(claimed, QueueJobStatus.CANCELLED)
+            logger.warning(
+                "%s cancelled run %s (attempt=%s): %s",
+                worker_name,
+                run_id,
+                claimed.attempt,
+                exc,
+            )
         except Exception as exc:
             error_msg = str(exc)
             await self._update_run_status(run_id, RunStatus.FAILED, failure_reason=error_msg)
             self._finish_claimed_job(claimed, QueueJobStatus.FAILED)
+            logger.error(
+                "%s failed run %s (attempt=%s): %s",
+                worker_name,
+                run_id,
+                claimed.attempt,
+                error_msg,
+            )
 
     def _finish_claimed_job(self, claimed: ClaimedJob, status: QueueJobStatus) -> None:
-        with session_scope() as session:
-            self.coordinator.finish_job(
-                session,
-                job_id=claimed.id,
-                claim_token=claimed.claim_token,
-                status=status,
+        try:
+            with session_scope() as session:
+                self.coordinator.finish_job(
+                    session,
+                    job_id=claimed.id,
+                    claim_token=claimed.claim_token,
+                    status=status,
+                )
+        except Exception:
+            logger.exception(
+                "Failed to finalize queue job id=%s run_id=%s status=%s",
+                claimed.id,
+                claimed.run_id,
+                status.value,
             )
+            raise
 
     async def _update_run_status(
         self,

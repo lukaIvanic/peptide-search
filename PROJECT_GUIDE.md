@@ -154,6 +154,10 @@ Security/network:
 1. `ACCESS_GATE_ENABLED`, `ACCESS_GATE_USERNAME`, `ACCESS_GATE_PASSWORD`
 2. `CORS_ORIGINS`
 
+Observability:
+
+1. `REQUEST_LOGGING_ENABLED` (default `true`, emits request lifecycle logs and `X-Request-Id` response header)
+
 Prompt definitions:
 
 1. `INCLUDE_DEFINITIONS=true|false`
