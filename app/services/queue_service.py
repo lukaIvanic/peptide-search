@@ -24,6 +24,7 @@ from .queue_coordinator import ClaimedJob, QueueCoordinator
 from .queue_errors import RunCancelledError
 
 logger = logging.getLogger(__name__)
+_RUN_TERMINAL_STATUSES = (RunStatus.STORED, RunStatus.FAILED, RunStatus.CANCELLED)
 
 
 @dataclass
@@ -229,33 +230,23 @@ class ExtractionQueue:
             )
             await self._update_run_status(run_id, RunStatus.VALIDATING)
             await self._update_run_status(run_id, RunStatus.STORED)
-
-            with session_scope() as session:
-                self.coordinator.finish_job(
-                    session,
-                    job_id=claimed.id,
-                    claim_token=claimed.claim_token,
-                    status=QueueJobStatus.DONE,
-                )
+            self._finish_claimed_job(claimed, QueueJobStatus.DONE)
         except RunCancelledError as exc:
             await self._update_run_status(run_id, RunStatus.CANCELLED, failure_reason=str(exc))
-            with session_scope() as session:
-                self.coordinator.finish_job(
-                    session,
-                    job_id=claimed.id,
-                    claim_token=claimed.claim_token,
-                    status=QueueJobStatus.CANCELLED,
-                )
+            self._finish_claimed_job(claimed, QueueJobStatus.CANCELLED)
         except Exception as exc:
             error_msg = str(exc)
             await self._update_run_status(run_id, RunStatus.FAILED, failure_reason=error_msg)
-            with session_scope() as session:
-                self.coordinator.finish_job(
-                    session,
-                    job_id=claimed.id,
-                    claim_token=claimed.claim_token,
-                    status=QueueJobStatus.FAILED,
-                )
+            self._finish_claimed_job(claimed, QueueJobStatus.FAILED)
+
+    def _finish_claimed_job(self, claimed: ClaimedJob, status: QueueJobStatus) -> None:
+        with session_scope() as session:
+            self.coordinator.finish_job(
+                session,
+                job_id=claimed.id,
+                claim_token=claimed.claim_token,
+                status=status,
+            )
 
     async def _update_run_status(
         self,
@@ -276,7 +267,7 @@ class ExtractionQueue:
             session.add(run)
             session.commit()
 
-            if run.batch_id and status in (RunStatus.STORED, RunStatus.FAILED, RunStatus.CANCELLED):
+            if run.batch_id and status in _RUN_TERMINAL_STATUSES:
                 self._update_batch_counters(session, run, status)
 
             stmt = select(BaselineCaseRun.baseline_case_id).where(BaselineCaseRun.run_id == run_id)
@@ -315,9 +306,7 @@ class ExtractionQueue:
             matched, expected = self._compute_run_matches(session, run)
             batch.matched_entities += matched
             batch.total_expected_entities += expected
-        elif status == RunStatus.FAILED:
-            batch.failed += 1
-        elif status == RunStatus.CANCELLED:
+        elif status in (RunStatus.FAILED, RunStatus.CANCELLED):
             batch.failed += 1
 
         if batch.completed + batch.failed >= batch.total_papers:

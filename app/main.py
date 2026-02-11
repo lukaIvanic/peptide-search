@@ -33,6 +33,10 @@ from .services.runtime_maintenance import (
 logger = logging.getLogger(__name__)
 
 
+def _static_page_response(static_dir: Path, filename: str) -> FileResponse:
+    return FileResponse(static_dir / filename)
+
+
 def create_app() -> FastAPI:
     @asynccontextmanager
     async def lifespan(_: FastAPI):
@@ -88,42 +92,42 @@ def create_app() -> FastAPI:
 
         @app.get("/", include_in_schema=False)
         async def index() -> FileResponse:
-            return FileResponse(static_dir / "index.html")
+            return _static_page_response(static_dir, "index.html")
 
         @app.get("/runs/{run_id}", include_in_schema=False)
         async def run_detail(run_id: int) -> FileResponse:
-            return FileResponse(static_dir / "run.html")
+            return _static_page_response(static_dir, "run.html")
 
         @app.get("/runs/{run_id}/edit", include_in_schema=False)
         async def run_edit_page(run_id: int) -> FileResponse:
-            return FileResponse(static_dir / "run_editor.html")
+            return _static_page_response(static_dir, "run_editor.html")
 
         @app.get("/entities", include_in_schema=False)
         async def entities_page() -> FileResponse:
-            return FileResponse(static_dir / "entities.html")
+            return _static_page_response(static_dir, "entities.html")
 
         @app.get("/help", include_in_schema=False)
         async def help_page() -> FileResponse:
-            return FileResponse(static_dir / "help.html")
+            return _static_page_response(static_dir, "help.html")
 
         @app.get("/baseline", include_in_schema=False)
         async def baseline_overview_page() -> FileResponse:
             overview_path = static_dir / "batch-overview.html"
             if overview_path.exists():
                 return FileResponse(overview_path)
-            return FileResponse(static_dir / "baseline.html")
+            return _static_page_response(static_dir, "baseline.html")
 
         @app.get("/baseline/{batch_id}", include_in_schema=False)
         async def baseline_detail_page(batch_id: str) -> FileResponse:
-            return FileResponse(static_dir / "baseline.html")
+            return _static_page_response(static_dir, "baseline.html")
 
         @app.get("/topbar_animations.html", include_in_schema=False)
         async def topbar_animations_page() -> FileResponse:
-            return FileResponse(static_dir / "topbar_animations.html")
+            return _static_page_response(static_dir, "topbar_animations.html")
 
         @app.get("/topbar-animations", include_in_schema=False)
         async def topbar_animations_alias() -> FileResponse:
-            return FileResponse(static_dir / "topbar_animations.html")
+            return _static_page_response(static_dir, "topbar_animations.html")
 
     app.include_router(system_router)
     app.include_router(providers_router)
