@@ -1403,10 +1403,14 @@ async function handleRetryRunWithResolved(runId, sourceUrl) {
 }
 
 async function handleUploadRunFile(runId, files, provider, model) {
+    const list = Array.from(files || []);
+    const label = list.length === 1 ? 'Uploading PDF...' : `Uploading ${list.length} PDFs...`;
+    setSearchStatus(label, true);
     try {
         const resolvedProvider = provider || getSelectedProvider();
         const resolvedModel = (model || getSelectedModel() || '').trim() || null;
         await api.uploadRunPdf(runId, files, resolvedProvider, null, resolvedModel);
+        setSearchStatus('PDF uploaded. Extraction queued.');
         const paperId = appStore.get('drawerPaperId');
         if (paperId) {
             await loadPaperDetails(paperId);
@@ -1414,7 +1418,10 @@ async function handleUploadRunFile(runId, files, provider, model) {
         await refreshPapers();
     } catch (e) {
         console.error('Failed to upload PDF:', e);
+        setSearchStatus('Upload failed.');
         alert(e.message || 'Failed to upload PDF');
+    } finally {
+        setSearchStatus(document.querySelector('#searchStatus')?.textContent || '', false);
     }
 }
 

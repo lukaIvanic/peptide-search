@@ -266,6 +266,7 @@ export async function uploadRunPdf(runId, files, provider, promptId, model) {
     if (promptId !== undefined && promptId !== null) formData.append('prompt_id', String(promptId));
     return requestForm(`/api/runs/${runId}/upload`, formData, {
         method: 'POST',
+        timeoutMs: 120000, // 120s — large PDFs need more time than the default 30s
     });
 }
 
@@ -690,7 +691,7 @@ export async function extractFile(files, promptId, title, provider, model) {
     if (provider) formData.append('provider', provider);
     if (model) formData.append('model', model);
 
-    return requestForm('/api/extract-file', formData, { method: 'POST' });
+    return requestForm('/api/extract-file', formData, { method: 'POST', timeoutMs: 120000 });
 }
 
 /**

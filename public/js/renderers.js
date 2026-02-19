@@ -490,10 +490,23 @@ export function renderDrawer(paper, runs, options = {}) {
                 populateModels(providerSel.value);
                 providerSel.addEventListener('change', () => populateModels(providerSel.value));
 
-                // Upload-based runs: file is gone, must re-upload
+                // Retry button — works for all runs. For upload runs the file
+                // survives (read_upload, 24h TTL), so Retry will work unless
+                // the file has expired, in which case Upload & Retry is the fallback.
+                const retryBtn = el('button', 'sw-btn sw-btn--sm sw-btn--danger', 'Retry');
+                retryBtn.addEventListener('click', () => {
+                    const p = providerSel.value || null;
+                    const m = modelSel.value || null;
+                    drawerCallbacks.onRetry(run.id, p, m);
+                });
+                actionRow.appendChild(providerSel);
+                actionRow.appendChild(modelSel);
+                actionRow.appendChild(retryBtn);
+
+                // Upload & Retry — secondary option for upload runs (if file expired)
                 const isUploadRun = run.pdf_url && run.pdf_url.startsWith('upload://');
                 if (isUploadRun && drawerCallbacks.onUpload) {
-                    const uploadRetryBtn = el('button', 'sw-btn sw-btn--sm sw-btn--danger', 'Upload & Retry');
+                    const uploadRetryBtn = el('button', 'sw-btn sw-btn--sm sw-btn--ghost', 'Upload & Retry');
                     const fileInput2 = el('input', ''); fileInput2.style.cssText = 'position:absolute;left:-9999px;width:1px;height:1px;opacity:0;overflow:hidden;';
                     fileInput2.type = 'file';
                     fileInput2.accept = '.pdf';
@@ -506,20 +519,8 @@ export function renderDrawer(paper, runs, options = {}) {
                         const m = modelSel.value || null;
                         drawerCallbacks.onUpload(run.id, files, p, m);
                     });
-                    actionRow.appendChild(providerSel);
-                    actionRow.appendChild(modelSel);
                     actionRow.appendChild(uploadRetryBtn);
                     actionRow.appendChild(fileInput2);
-                } else {
-                    const retryBtn = el('button', 'sw-btn sw-btn--sm sw-btn--danger', 'Retry');
-                    retryBtn.addEventListener('click', () => {
-                        const p = providerSel.value || null;
-                        const m = modelSel.value || null;
-                        drawerCallbacks.onRetry(run.id, p, m);
-                    });
-                    actionRow.appendChild(providerSel);
-                    actionRow.appendChild(modelSel);
-                    actionRow.appendChild(retryBtn);
                 }
             }
             if (drawerCallbacks.onResolveSource) {
