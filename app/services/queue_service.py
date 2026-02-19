@@ -8,6 +8,33 @@ import logging
 from dataclasses import dataclass
 from typing import Any, Callable, Dict, List, Optional, Set
 
+try:
+    import psutil as _psutil
+    _PSUTIL_AVAILABLE = True
+except ImportError:
+    _psutil = None
+    _PSUTIL_AVAILABLE = False
+
+
+def _ram_mb() -> Optional[float]:
+    """Return current process RSS memory in MB, or None if psutil unavailable."""
+    if not _PSUTIL_AVAILABLE:
+        return None
+    try:
+        return _psutil.Process().memory_info().rss / (1024 * 1024)
+    except Exception:
+        return None
+
+
+def _system_ram_available_mb() -> Optional[float]:
+    """Return system-wide available RAM in MB, or None if psutil unavailable."""
+    if not _PSUTIL_AVAILABLE:
+        return None
+    try:
+        return _psutil.virtual_memory().available / (1024 * 1024)
+    except Exception:
+        return None
+
 from sqlmodel import select
 
 from ..config import settings
@@ -112,6 +139,8 @@ class ExtractionQueue:
         self._running = False
         self._lock = asyncio.Lock()
         self._extract_callback: Optional[Callable[..., Any]] = None
+        self.shard_count = int(getattr(settings, "QUEUE_SHARD_COUNT", 1) or 1)
+        self.shard_id = int(getattr(settings, "QUEUE_SHARD_ID", 0) or 0)
 
     def set_extract_callback(self, callback: Callable[..., Any]) -> None:
         self._extract_callback = callback
@@ -119,6 +148,8 @@ class ExtractionQueue:
     async def start(self) -> None:
         if self._running:
             return
+        if self.concurrency > 0 and not self._extract_callback:
+            raise RuntimeError("Queue extraction callback must be set before start().")
         self._running = True
         stale_after = self._claim_timeout_seconds()
         heartbeat_seconds = self._claim_heartbeat_seconds()
@@ -140,7 +171,12 @@ class ExtractionQueue:
         for index in range(self.concurrency):
             task = asyncio.create_task(self._worker(index))
             self._workers.append(task)
-        logger.info("Queue started with %s workers", self.concurrency)
+        logger.info(
+            "Queue started with %s workers (shard=%s/%s)",
+            self.concurrency,
+            self.shard_id,
+            self.shard_count,
+        )
 
     async def stop(self) -> None:
         self._running = False
@@ -192,13 +228,39 @@ class ExtractionQueue:
             stats = self.coordinator.queue_stats(session)
             return QueueStats(queued=stats["queued"], processing=stats["processing"])
 
+    async def diagnostics(self) -> Dict[str, Any]:
+        with session_scope() as session:
+            snapshot = self.coordinator.queue_health_snapshot(
+                session,
+                stale_after_seconds=self._claim_timeout_seconds(),
+            )
+        async with self._lock:
+            active_claims = len(self._active_runs)
+        snapshot.update(
+            {
+                "running": self._running,
+                "configured_concurrency": self.concurrency,
+                "worker_tasks": len(self._workers),
+                "active_claims": active_claims,
+                "claim_timeout_seconds": self._claim_timeout_seconds(),
+                "claim_heartbeat_seconds": self._claim_heartbeat_seconds(),
+                "recovery_interval_seconds": int(
+                    getattr(settings, "QUEUE_RECOVERY_INTERVAL_SECONDS", 30)
+                ),
+                "shard_count": self.shard_count,
+                "shard_id": self.shard_id,
+            }
+        )
+        return snapshot
+
     async def _worker(self, worker_id: int) -> None:
         worker_name = f"worker-{worker_id}"
         logger.info("%s started", worker_name)
         while self._running:
-            claimed: Optional[ClaimedJob] = None
-            with session_scope() as session:
-                claimed = self.coordinator.claim_next_job(session, worker_id=worker_name)
+            claimed: Optional[ClaimedJob] = await asyncio.to_thread(
+                self._claim_next_job_sync,
+                worker_name,
+            )
             if not claimed:
                 await asyncio.sleep(0.4)
                 continue
@@ -218,7 +280,13 @@ class ExtractionQueue:
         run_id = claimed.run_id
         payload = claimed.payload
 
-        logger.info("%s processing run %s", worker_name, run_id)
+        rss_before = _ram_mb()
+        avail_before = _system_ram_available_mb()
+        logger.info(
+            "%s processing run %s | ram_rss=%.1fMB ram_avail=%.1fMB",
+            worker_name, run_id,
+            rss_before or 0, avail_before or 0,
+        )
         heartbeat_stop = asyncio.Event()
         claim_lost = asyncio.Event()
         heartbeat_task = asyncio.create_task(
@@ -268,6 +336,15 @@ class ExtractionQueue:
                 worker_name=worker_name,
                 stage="after-provider",
             )
+            rss_after = _ram_mb()
+            avail_after = _system_ram_available_mb()
+            logger.info(
+                "%s finished extraction run %s | ram_rss=%.1fMB (delta=%.1fMB) ram_avail=%.1fMB",
+                worker_name, run_id,
+                rss_after or 0,
+                (rss_after or 0) - (rss_before or 0),
+                avail_after or 0,
+            )
             await self._update_run_status(run_id, RunStatus.VALIDATING)
             await self._update_run_status(run_id, RunStatus.STORED)
 
@@ -277,7 +354,7 @@ class ExtractionQueue:
                 worker_name=worker_name,
                 stage="before-finish",
             )
-            self._finish_claimed_job(claimed, QueueJobStatus.DONE)
+            await self._finish_claimed_job(claimed, QueueJobStatus.DONE)
             logger.info(
                 "%s finished run %s successfully (attempt=%s)",
                 worker_name,
@@ -294,7 +371,7 @@ class ExtractionQueue:
             )
         except RunCancelledError as exc:
             await self._update_run_status(run_id, RunStatus.CANCELLED, failure_reason=str(exc))
-            self._finish_claimed_job(claimed, QueueJobStatus.CANCELLED)
+            await self._finish_claimed_job(claimed, QueueJobStatus.CANCELLED)
             logger.warning(
                 "%s cancelled run %s (attempt=%s): %s",
                 worker_name,
@@ -305,7 +382,7 @@ class ExtractionQueue:
         except Exception as exc:
             error_msg = str(exc)
             await self._update_run_status(run_id, RunStatus.FAILED, failure_reason=error_msg)
-            self._finish_claimed_job(claimed, QueueJobStatus.FAILED)
+            await self._finish_claimed_job(claimed, QueueJobStatus.FAILED)
             logger.error(
                 "%s failed run %s (attempt=%s): %s",
                 worker_name,
@@ -318,15 +395,9 @@ class ExtractionQueue:
             with contextlib.suppress(Exception):
                 await heartbeat_task
 
-    def _finish_claimed_job(self, claimed: ClaimedJob, status: QueueJobStatus) -> None:
+    async def _finish_claimed_job(self, claimed: ClaimedJob, status: QueueJobStatus) -> None:
         try:
-            with session_scope() as session:
-                self.coordinator.finish_job(
-                    session,
-                    job_id=claimed.id,
-                    claim_token=claimed.claim_token,
-                    status=status,
-                )
+            await asyncio.to_thread(self._finish_claimed_job_sync, claimed, status)
         except Exception:
             logger.exception(
                 "Failed to finalize queue job id=%s run_id=%s status=%s",
@@ -336,24 +407,51 @@ class ExtractionQueue:
             )
             raise
 
+    def _finish_claimed_job_sync(self, claimed: ClaimedJob, status: QueueJobStatus) -> None:
+        try:
+            with session_scope() as session:
+                self.coordinator.finish_job(
+                    session,
+                    job_id=claimed.id,
+                    claim_token=claimed.claim_token,
+                    status=status,
+                )
+        except Exception:
+            raise
+
     async def _update_run_status(
         self,
         run_id: int,
         status: RunStatus,
         failure_reason: Optional[str] = None,
     ) -> None:
+        payload = await asyncio.to_thread(
+            self._update_run_status_sync,
+            run_id,
+            status,
+            failure_reason,
+        )
+        if payload:
+            await self.broadcaster.broadcast("run_status", payload)
+
+    def _update_run_status_sync(
+        self,
+        run_id: int,
+        status: RunStatus,
+        failure_reason: Optional[str] = None,
+    ) -> Optional[Dict[str, Any]]:
         with session_scope() as session:
             run = session.get(ExtractionRun, run_id)
             if not run:
-                return
+                return None
             previous_status = run.status
 
             # Terminal statuses are sticky for queue workers.
             if previous_status in _RUN_TERMINAL_STATUS_VALUES and previous_status != status.value:
-                return
+                return None
             # Respect explicit cancellation; do not allow worker status updates to resurrect the run.
             if run.status == RunStatus.CANCELLED.value and status != RunStatus.CANCELLED:
-                return
+                return None
             run.status = status.value
             if failure_reason:
                 run.failure_reason = failure_reason
@@ -372,34 +470,38 @@ class ExtractionQueue:
             if run.baseline_case_id and run.baseline_case_id not in linked_case_ids:
                 linked_case_ids.append(run.baseline_case_id)
 
-            await self.broadcaster.broadcast(
-                "run_status",
-                {
-                    "run_id": run_id,
-                    "paper_id": run.paper_id,
-                    "status": status.value,
-                    "failure_reason": failure_reason,
-                    "baseline_case_id": run.baseline_case_id,
-                    "baseline_case_ids": linked_case_ids,
-                    "baseline_dataset": run.baseline_dataset,
-                    "batch_id": run.batch_id,
-                },
-            )
+            return {
+                "run_id": run_id,
+                "paper_id": run.paper_id,
+                "status": status.value,
+                "failure_reason": failure_reason,
+                "baseline_case_id": run.baseline_case_id,
+                "baseline_case_ids": linked_case_ids,
+                "baseline_dataset": run.baseline_dataset,
+                "batch_id": run.batch_id,
+            }
 
     async def _recover_stale_claims_once(self) -> None:
         stale_after = self._claim_timeout_seconds()
         max_attempts = int(getattr(settings, "QUEUE_MAX_ATTEMPTS", 3))
-        with session_scope() as session:
-            recovery = self.coordinator.recover_stale_claims(
-                session,
-                stale_after_seconds=stale_after,
-                max_attempts=max_attempts,
-            )
+        recovery = await asyncio.to_thread(
+            self._recover_stale_claims_sync,
+            stale_after,
+            max_attempts,
+        )
         if recovery.requeued or recovery.failed:
             logger.info(
                 "Recovered stale queue claims: requeued=%s failed=%s",
                 recovery.requeued,
                 recovery.failed,
+            )
+
+    def _recover_stale_claims_sync(self, stale_after: int, max_attempts: int):
+        with session_scope() as session:
+            return self.coordinator.recover_stale_claims(
+                session,
+                stale_after_seconds=stale_after,
+                max_attempts=max_attempts,
             )
 
     async def _stale_recovery_loop(self) -> None:
@@ -432,12 +534,11 @@ class ExtractionQueue:
                 pass
 
             try:
-                with session_scope() as session:
-                    refreshed = self.coordinator.heartbeat_claim(
-                        session,
-                        job_id=claimed.id,
-                        claim_token=claimed.claim_token,
-                    )
+                refreshed = await asyncio.to_thread(
+                    self._heartbeat_claim_sync,
+                    claimed.id,
+                    claimed.claim_token,
+                )
                 if not refreshed:
                     claim_lost.set()
                     logger.warning(
@@ -456,6 +557,14 @@ class ExtractionQueue:
                     claimed.id,
                 )
 
+    def _heartbeat_claim_sync(self, job_id: int, claim_token: str) -> bool:
+        with session_scope() as session:
+            return self.coordinator.heartbeat_claim(
+                session,
+                job_id=job_id,
+                claim_token=claim_token,
+            )
+
     async def _ensure_claim_active_or_raise(
         self,
         *,
@@ -466,15 +575,31 @@ class ExtractionQueue:
     ) -> None:
         if claim_lost.is_set():
             raise ClaimLostError("claim lease was lost")
-        with session_scope() as session:
-            active = self.coordinator.is_claim_active(
-                session,
-                job_id=claimed.id,
-                claim_token=claimed.claim_token,
-            )
+        active = await asyncio.to_thread(
+            self._is_claim_active_sync,
+            claimed.id,
+            claimed.claim_token,
+        )
         if not active:
             claim_lost.set()
             raise ClaimLostError(f"claim inactive at stage={stage} worker={worker_name}")
+
+    def _is_claim_active_sync(self, job_id: int, claim_token: str) -> bool:
+        with session_scope() as session:
+            return self.coordinator.is_claim_active(
+                session,
+                job_id=job_id,
+                claim_token=claim_token,
+            )
+
+    def _claim_next_job_sync(self, worker_name: str) -> Optional[ClaimedJob]:
+        with session_scope() as session:
+            return self.coordinator.claim_next_job_for_shard(
+                session,
+                worker_id=worker_name,
+                shard_count=self.shard_count,
+                shard_id=self.shard_id,
+            )
 
     @staticmethod
     def _claim_timeout_seconds() -> int:

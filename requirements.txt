@@ -13,3 +13,4 @@ alembic
 typer
 python-multipart
 openai
+psutil
