@@ -257,10 +257,15 @@ class ExtractionQueue:
         worker_name = f"worker-{worker_id}"
         logger.info("%s started", worker_name)
         while self._running:
-            claimed: Optional[ClaimedJob] = await asyncio.to_thread(
-                self._claim_next_job_sync,
-                worker_name,
-            )
+            try:
+                claimed: Optional[ClaimedJob] = await asyncio.to_thread(
+                    self._claim_next_job_sync,
+                    worker_name,
+                )
+            except Exception as exc:
+                logger.warning("%s claim error (will retry): %s", worker_name, exc)
+                await asyncio.sleep(1.0)
+                continue
             if not claimed:
                 await asyncio.sleep(0.4)
                 continue
