@@ -599,11 +599,9 @@ class ExtractionQueue:
 
     def _claim_next_job_sync(self, worker_name: str) -> Optional[ClaimedJob]:
         with session_scope() as session:
-            return self.coordinator.claim_next_job_for_shard(
+            return self.coordinator.claim_next_job(
                 session,
                 worker_id=worker_name,
-                shard_count=self.shard_count,
-                shard_id=self.shard_id,
             )
 
     @staticmethod
