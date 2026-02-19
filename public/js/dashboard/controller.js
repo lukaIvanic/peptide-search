@@ -1402,14 +1402,21 @@ async function handleRetryRunWithResolved(runId, sourceUrl) {
     }
 }
 
-async function handleUploadRunFile(runId, files, provider, model) {
+async function handleUploadRunFile(runId, files, provider, model, paperTitle) {
     const list = Array.from(files || []);
     const label = list.length === 1 ? 'Uploading PDF...' : `Uploading ${list.length} PDFs...`;
     setSearchStatus(label, true);
     try {
         const resolvedProvider = provider || getSelectedProvider();
         const resolvedModel = (model || getSelectedModel() || '').trim() || null;
-        await api.uploadRunPdf(runId, files, resolvedProvider, null, resolvedModel);
+        const promptId = getSelectedPrompt();
+        if (paperTitle) {
+            // Use the standard extractFile flow (same as dashboard Upload PDF button)
+            // so a proper new run is created through the normal pipeline.
+            await api.extractFile(list, promptId, paperTitle, resolvedProvider, resolvedModel);
+        } else {
+            await api.uploadRunPdf(runId, files, resolvedProvider, null, resolvedModel);
+        }
         setSearchStatus('PDF uploaded. Extraction queued.');
         const paperId = appStore.get('drawerPaperId');
         if (paperId) {

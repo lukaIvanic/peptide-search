@@ -521,7 +521,10 @@ export function renderDrawer(paper, runs, options = {}) {
                         retryBtn.disabled = true;
                         const p = providerSel.value || null;
                         const m = modelSel.value || null;
-                        drawerCallbacks.onUpload(run.id, files, p, m);
+                        // Pass paper.title so the controller uses the standard extractFile
+                        // flow (same as the dashboard Upload PDF button) rather than the
+                        // special /api/runs/{id}/upload endpoint.
+                        drawerCallbacks.onUpload(run.id, files, p, m, paper.title);
                     });
                     actionRow.appendChild(uploadRetryBtn);
                     actionRow.appendChild(fileInput2);
