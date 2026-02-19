@@ -8,7 +8,7 @@ from pathlib import Path
 from typing import Optional, Tuple
 
 _UPLOAD_PREFIX = "upload://"
-_DEFAULT_TTL_SECONDS = 3600  # 1 hour
+_DEFAULT_TTL_SECONDS = int(os.environ.get("UPLOAD_TTL_SECONDS", str(24 * 3600)))  # 24h default
 
 # Use a configurable upload dir; default to a persistent path if available, else temp
 _UPLOAD_DIR: Optional[Path] = None
@@ -51,7 +51,8 @@ def store_upload(content: bytes, filename: str) -> str:
     return f"{_UPLOAD_PREFIX}{token}"
 
 
-def pop_upload(upload_url: str) -> Optional[Tuple[bytes, str]]:
+def read_upload(upload_url: str) -> Optional[Tuple[bytes, str]]:
+    """Read an uploaded file without deleting it. Returns (content, filename) or None if missing/expired."""
     if not upload_url.startswith(_UPLOAD_PREFIX):
         return None
     token = upload_url[len(_UPLOAD_PREFIX):]
@@ -67,16 +68,29 @@ def pop_upload(upload_url: str) -> Optional[Tuple[bytes, str]]:
         meta = meta_path.read_text(encoding="utf-8")
         expires_at_str, filename = meta.split("|", 1)
         if time.time() > int(expires_at_str):
-            # Expired — clean up and return None
             _remove_upload_files(token, upload_dir)
             return None
-
         content = bin_path.read_bytes()
-        _remove_upload_files(token, upload_dir)
         return (content, filename)
     except Exception:
         _remove_upload_files(token, upload_dir)
         return None
+
+
+def delete_upload(upload_url: str) -> None:
+    """Explicitly delete an uploaded file after it has been successfully processed."""
+    if not upload_url.startswith(_UPLOAD_PREFIX):
+        return
+    token = upload_url[len(_UPLOAD_PREFIX):]
+    _remove_upload_files(token, _get_upload_dir())
+
+
+# Backwards-compatible alias — reads AND deletes (old behaviour, kept for any callers that want it)
+def pop_upload(upload_url: str) -> Optional[Tuple[bytes, str]]:
+    result = read_upload(upload_url)
+    if result is not None:
+        delete_upload(upload_url)
+    return result
 
 
 def _remove_upload_files(token: str, upload_dir: Path) -> None:

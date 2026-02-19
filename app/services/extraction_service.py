@@ -7,7 +7,8 @@ import logging
 import time
 from typing import Any, Dict, Optional, Tuple, AsyncGenerator, List
 
-from sqlmodel import Session
+from sqlalchemy import delete, func
+from sqlmodel import Session, select
 
 from ..config import settings
 from ..db import session_scope
@@ -36,7 +37,7 @@ from ..integrations.llm import (
 from ..integrations.document import DocumentExtractor, fetch_and_extract_text
 from ..persistence.repository import PaperRepository, ExtractionRepository, PromptRepository
 from .queue_errors import RunCancelledError
-from .upload_store import is_upload_url, pop_upload
+from .upload_store import is_upload_url, read_upload
 
 logger = logging.getLogger(__name__)
 
@@ -707,9 +708,6 @@ async def run_queued_extraction(
     Raises:
         Exception: If extraction fails
     """
-    # Get provider instance
-    llm_provider = get_provider_by_name(provider, model_name=model)
-    
     (
         system_prompt,
         resolved_prompt_id,
@@ -747,6 +745,71 @@ async def run_queued_extraction(
             run.prompt_id = resolved_prompt_id
             run.prompt_version_id = resolved_prompt_version_id
             session.add(run)
+
+            # Replay idempotency guard: if results are already persisted for this run,
+            # reuse cached payload and avoid a duplicate provider call.
+            existing_entity_count = session.exec(
+                select(func.count(ExtractionEntity.id)).where(ExtractionEntity.run_id == run_id)
+            ).one()
+            cached_payload: Optional[ExtractionPayload] = None
+            if run.raw_json and run.status in {
+                RunStatus.PROVIDER.value,
+                RunStatus.VALIDATING.value,
+                RunStatus.STORED.value,
+            }:
+                try:
+                    cached_payload = ExtractionPayload.model_validate_json(run.raw_json)
+                except Exception:
+                    cached_payload = None
+
+            if cached_payload is not None:
+                cached_count = len(cached_payload.entities)
+                if int(existing_entity_count or 0) != cached_count:
+                    extraction_repo = ExtractionRepository(session)
+                    session.exec(delete(ExtractionEntity).where(ExtractionEntity.run_id == run_id))
+                    for entity_index, entity_data in enumerate(cached_payload.entities):
+                        entity = extraction_repo._entity_to_row(entity_data, run_id, entity_index)
+                        session.add(entity)
+                    run.comment = cached_payload.comment
+                    session.add(run)
+                    session.commit()
+                logger.warning(
+                    "Skipping provider replay for run %s (cached_entities=%s status=%s)",
+                    run_id,
+                    cached_count,
+                    run.status,
+                )
+                return {
+                    "run_id": run_id,
+                    "paper_id": paper_id,
+                    "entity_count": cached_count,
+                    "comment": run.comment if run.comment is not None else cached_payload.comment,
+                }
+            if (
+                run.raw_json
+                and int(existing_entity_count or 0) > 0
+                and run.status
+                in {
+                    RunStatus.PROVIDER.value,
+                    RunStatus.VALIDATING.value,
+                    RunStatus.STORED.value,
+                }
+            ):
+                logger.warning(
+                    "Skipping provider replay for run %s (existing_entities=%s status=%s)",
+                    run_id,
+                    int(existing_entity_count or 0),
+                    run.status,
+                )
+                return {
+                    "run_id": run_id,
+                    "paper_id": paper_id,
+                    "entity_count": int(existing_entity_count or 0),
+                    "comment": run.comment,
+                }
+
+    # Get provider instance
+    llm_provider = get_provider_by_name(provider, model_name=model)
     
     # Build document input - handle uploads and URLs
     capabilities = llm_provider.capabilities()
@@ -761,7 +824,7 @@ async def run_queued_extraction(
             raise RuntimeError("Multiple PDF files are only supported for uploaded files.")
         uploads: List[Tuple[bytes, str]] = []
         for upload_url in pdf_url_list:
-            upload = pop_upload(upload_url)
+            upload = read_upload(upload_url)
             if not upload:
                 raise RuntimeError("Uploaded file not found or expired. Please upload again.")
             uploads.append(upload)
@@ -781,7 +844,7 @@ async def run_queued_extraction(
         looks_like_pdf = DocumentExtractor.looks_like_pdf_url(pdf_url)
 
         if is_upload:
-            upload = pop_upload(pdf_url)
+            upload = read_upload(pdf_url)
             if not upload:
                 raise RuntimeError("Uploaded file not found or expired. Please upload again.")
             file_content, filename = upload
@@ -938,7 +1001,11 @@ async def run_queued_extraction(
         _apply_usage_to_run(run, usage)
         
         session.add(run)
-        
+
+        # Idempotency guard: if provider callback is re-entered for the same run, replace entities atomically
+        # instead of appending duplicates.
+        session.exec(delete(ExtractionEntity).where(ExtractionEntity.run_id == run_id))
+
         # Create entities
         extraction_repo = ExtractionRepository(session)
         for entity_index, entity_data in enumerate(payload.entities):
