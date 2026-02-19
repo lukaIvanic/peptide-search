@@ -515,6 +515,10 @@ export function renderDrawer(paper, runs, options = {}) {
                     fileInput2.addEventListener('change', () => {
                         const files = fileInput2.files;
                         if (!files || files.length === 0) return;
+                        // Give immediate visual feedback in the drawer
+                        uploadRetryBtn.disabled = true;
+                        uploadRetryBtn.textContent = 'Uploading…';
+                        retryBtn.disabled = true;
                         const p = providerSel.value || null;
                         const m = modelSel.value || null;
                         drawerCallbacks.onUpload(run.id, files, p, m);
@@ -538,6 +542,8 @@ export function renderDrawer(paper, runs, options = {}) {
                 fileInput.addEventListener('change', () => {
                     const files = fileInput.files;
                     if (!files || files.length === 0) return;
+                    uploadBtn.disabled = true;
+                    uploadBtn.textContent = 'Uploading…';
                     drawerCallbacks.onUpload(run.id, files);
                 });
                 actionRow.appendChild(uploadBtn);
