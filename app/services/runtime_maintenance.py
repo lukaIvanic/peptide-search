@@ -91,6 +91,17 @@ def cancel_stale_runs() -> None:
     reconcile_orphan_run_states()
 
 
+def purge_expired_uploads_on_startup() -> None:
+    """Clean up any expired upload files left over from previous runs."""
+    from .upload_store import purge_expired_uploads
+    try:
+        purged = purge_expired_uploads()
+        if purged:
+            logger.info("Purged %s expired upload files on startup", purged)
+    except Exception:
+        logger.exception("Failed to purge expired upload files on startup")
+
+
 def ensure_runtime_defaults() -> None:
     """Initialize runtime-managed defaults outside request GET paths."""
     with session_scope() as session:

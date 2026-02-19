@@ -52,7 +52,7 @@ class Settings:
 	OPENAI_MODEL_NANO: str = os.getenv("OPENAI_MODEL_NANO", "gpt-5-nano")
 
 	# Prompting config
-	MAX_TOKENS: int = int(os.getenv("MAX_TOKENS", "2000"))
+	MAX_TOKENS: int = int(os.getenv("MAX_TOKENS", "8192"))
 	TEMPERATURE: float = float(os.getenv("TEMPERATURE", "0.2"))
 
 	# Definitions file (in-project) to include in the prompt
@@ -68,6 +68,8 @@ class Settings:
 	QUEUE_CLAIM_HEARTBEAT_SECONDS: int = int(os.getenv("QUEUE_CLAIM_HEARTBEAT_SECONDS", "30"))
 	QUEUE_RECOVERY_INTERVAL_SECONDS: int = int(os.getenv("QUEUE_RECOVERY_INTERVAL_SECONDS", "30"))
 	QUEUE_MAX_ATTEMPTS: int = int(os.getenv("QUEUE_MAX_ATTEMPTS", "3"))
+	QUEUE_SHARD_COUNT: int = int(os.getenv("QUEUE_SHARD_COUNT", "1"))
+	QUEUE_SHARD_ID: int = int(os.getenv("QUEUE_SHARD_ID", "0"))
 	QUEUE_ENGINE_VERSION: str = os.getenv("QUEUE_ENGINE_VERSION", "v2")
 
 	# CORS
@@ -110,6 +112,14 @@ class Settings:
 			raise RuntimeError("QUEUE_CLAIM_HEARTBEAT_SECONDS must be > 0.")
 		if self.QUEUE_RECOVERY_INTERVAL_SECONDS <= 0:
 			raise RuntimeError("QUEUE_RECOVERY_INTERVAL_SECONDS must be > 0.")
+		if self.QUEUE_SHARD_COUNT <= 0:
+			raise RuntimeError("QUEUE_SHARD_COUNT must be > 0.")
+		if self.QUEUE_SHARD_ID < 0:
+			raise RuntimeError("QUEUE_SHARD_ID must be >= 0.")
+		if self.QUEUE_SHARD_ID >= self.QUEUE_SHARD_COUNT:
+			raise RuntimeError(
+				"QUEUE_SHARD_ID must be smaller than QUEUE_SHARD_COUNT."
+			)
 		if self.ACCESS_GATE_ENABLED and (
 			not self.ACCESS_GATE_USERNAME or not self.ACCESS_GATE_PASSWORD
 		):

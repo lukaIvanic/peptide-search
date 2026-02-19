@@ -29,6 +29,7 @@ from .services.queue_service import get_queue, start_queue, stop_queue
 from .services.runtime_maintenance import (
     backfill_failed_runs,
     ensure_runtime_defaults,
+    purge_expired_uploads_on_startup,
     reconcile_orphan_run_states,
 )
 
@@ -46,12 +47,13 @@ def create_app() -> FastAPI:
         ensure_runtime_defaults()
         backfill_failed_runs()
         reconcile_orphan_run_states()
+        purge_expired_uploads_on_startup()
         try:
-            await start_queue()
             from .services.extraction_service import run_queued_extraction
 
             queue = get_queue()
             queue.set_extract_callback(run_queued_extraction)
+            await start_queue()
         except Exception:
             logger.exception("Application startup failed during queue initialization.")
             try:
