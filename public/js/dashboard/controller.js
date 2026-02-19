@@ -1812,11 +1812,11 @@ async function loadFailureSummary() {
     }
 }
 
-async function handleForceReextract(paperId) {
+async function handleForceReextract(paperId, provider, model) {
     try {
-        const provider = getSelectedProvider();
-        const model = (getSelectedModel() || '').trim() || null;
-        const result = await api.forceReextract(paperId, provider, model);
+        const resolvedProvider = provider || getSelectedProvider();
+        const resolvedModel = (model || getSelectedModel() || '').trim() || null;
+        const result = await api.forceReextract(paperId, resolvedProvider, resolvedModel);
         console.log('Force re-extract result:', result);
         
         // Refresh the drawer to show new run

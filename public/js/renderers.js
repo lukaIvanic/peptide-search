@@ -338,9 +338,56 @@ export function renderDrawer(paper, runs, options = {}) {
     
     // Force Re-extract button (show if paper has stored status)
     if (paper.status === 'stored' && paper.id && drawerCallbacks.onForceReextract) {
-        const actionsRow = el('div', 'mt-4 flex gap-2');
+        const actionsRow = el('div', 'mt-4 flex flex-wrap items-center gap-2');
+
+        const catalog = options.providerCatalog || [];
+        const defaultProvider = options.selectedProvider || '';
+        const defaultModel = options.selectedModel || '';
+
+        // Provider select
+        const providerSel = el('select', 'sw-select sw-select--sm text-[11px]');
+        for (const p of catalog) {
+            const opt = document.createElement('option');
+            opt.value = p.provider_id;
+            opt.textContent = p.label || p.provider_id;
+            if (p.provider_id === defaultProvider) opt.selected = true;
+            providerSel.appendChild(opt);
+        }
+
+        // Model select
+        const modelSel = el('select', 'sw-select sw-select--sm text-[11px] min-w-[8rem]');
+        const populateModels = (providerId) => {
+            modelSel.innerHTML = '';
+            const row = catalog.find(p => p.provider_id === providerId);
+            const models = row ? [...new Set([row.default_model, ...(row.curated_models || [])].filter(Boolean))] : [];
+            if (!models.length) {
+                const opt = document.createElement('option');
+                opt.value = '';
+                opt.textContent = 'Default';
+                modelSel.appendChild(opt);
+            } else {
+                for (const m of models) {
+                    const opt = document.createElement('option');
+                    opt.value = m;
+                    opt.textContent = m;
+                    if (m === defaultModel) opt.selected = true;
+                    modelSel.appendChild(opt);
+                }
+                if (!modelSel.value && models[0]) modelSel.value = models[0];
+            }
+        };
+        populateModels(providerSel.value);
+        providerSel.addEventListener('change', () => populateModels(providerSel.value));
+
         const forceBtn = el('button', 'sw-btn sw-btn--sm sw-btn--primary', 'Force Re-extract');
-        forceBtn.addEventListener('click', () => drawerCallbacks.onForceReextract(paper.id));
+        forceBtn.addEventListener('click', () => {
+            const p = providerSel.value || null;
+            const m = modelSel.value || null;
+            drawerCallbacks.onForceReextract(paper.id, p, m);
+        });
+
+        actionsRow.appendChild(providerSel);
+        actionsRow.appendChild(modelSel);
         actionsRow.appendChild(forceBtn);
         header.appendChild(actionsRow);
     }
