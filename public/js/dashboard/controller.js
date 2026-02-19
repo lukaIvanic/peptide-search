@@ -1402,11 +1402,11 @@ async function handleRetryRunWithResolved(runId, sourceUrl) {
     }
 }
 
-async function handleUploadRunFile(runId, files) {
+async function handleUploadRunFile(runId, files, provider, model) {
     try {
-        const provider = getSelectedProvider();
-        const model = (getSelectedModel() || '').trim() || null;
-        await api.uploadRunPdf(runId, files, provider, null, model);
+        const resolvedProvider = provider || getSelectedProvider();
+        const resolvedModel = (model || getSelectedModel() || '').trim() || null;
+        await api.uploadRunPdf(runId, files, resolvedProvider, null, resolvedModel);
         const paperId = appStore.get('drawerPaperId');
         if (paperId) {
             await loadPaperDetails(paperId);

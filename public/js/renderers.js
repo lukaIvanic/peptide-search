@@ -490,16 +490,37 @@ export function renderDrawer(paper, runs, options = {}) {
                 populateModels(providerSel.value);
                 providerSel.addEventListener('change', () => populateModels(providerSel.value));
 
-                const retryBtn = el('button', 'sw-btn sw-btn--sm sw-btn--danger', 'Retry');
-                retryBtn.addEventListener('click', () => {
-                    const p = providerSel.value || null;
-                    const m = modelSel.value || null;
-                    drawerCallbacks.onRetry(run.id, p, m);
-                });
-
-                actionRow.appendChild(providerSel);
-                actionRow.appendChild(modelSel);
-                actionRow.appendChild(retryBtn);
+                // Upload-based runs: file is gone, must re-upload
+                const isUploadRun = run.pdf_url && run.pdf_url.startsWith('upload://');
+                if (isUploadRun && drawerCallbacks.onUpload) {
+                    const uploadRetryBtn = el('button', 'sw-btn sw-btn--sm sw-btn--danger', 'Upload & Retry');
+                    const fileInput2 = el('input', 'hidden');
+                    fileInput2.type = 'file';
+                    fileInput2.accept = '.pdf';
+                    fileInput2.multiple = true;
+                    uploadRetryBtn.addEventListener('click', () => fileInput2.click());
+                    fileInput2.addEventListener('change', () => {
+                        const files = fileInput2.files;
+                        if (!files || files.length === 0) return;
+                        const p = providerSel.value || null;
+                        const m = modelSel.value || null;
+                        drawerCallbacks.onUpload(run.id, files, p, m);
+                    });
+                    actionRow.appendChild(providerSel);
+                    actionRow.appendChild(modelSel);
+                    actionRow.appendChild(uploadRetryBtn);
+                    actionRow.appendChild(fileInput2);
+                } else {
+                    const retryBtn = el('button', 'sw-btn sw-btn--sm sw-btn--danger', 'Retry');
+                    retryBtn.addEventListener('click', () => {
+                        const p = providerSel.value || null;
+                        const m = modelSel.value || null;
+                        drawerCallbacks.onRetry(run.id, p, m);
+                    });
+                    actionRow.appendChild(providerSel);
+                    actionRow.appendChild(modelSel);
+                    actionRow.appendChild(retryBtn);
+                }
             }
             if (drawerCallbacks.onResolveSource) {
                 const resolveBtn = el('button', 'sw-btn sw-btn--sm sw-btn--ghost', 'Find OA PDF');
