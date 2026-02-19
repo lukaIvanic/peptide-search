@@ -494,7 +494,7 @@ export function renderDrawer(paper, runs, options = {}) {
                 const isUploadRun = run.pdf_url && run.pdf_url.startsWith('upload://');
                 if (isUploadRun && drawerCallbacks.onUpload) {
                     const uploadRetryBtn = el('button', 'sw-btn sw-btn--sm sw-btn--danger', 'Upload & Retry');
-                    const fileInput2 = el('input', 'hidden');
+                    const fileInput2 = el('input', ''); fileInput2.style.cssText = 'position:absolute;left:-9999px;width:1px;height:1px;opacity:0;overflow:hidden;';
                     fileInput2.type = 'file';
                     fileInput2.accept = '.pdf';
                     fileInput2.multiple = true;
@@ -529,7 +529,7 @@ export function renderDrawer(paper, runs, options = {}) {
             }
             if (drawerCallbacks.onUpload) {
                 const uploadBtn = el('button', 'sw-btn sw-btn--sm sw-btn--ghost', 'Upload PDF');
-                const fileInput = el('input', 'hidden');
+                const fileInput = el('input', ''); fileInput.style.cssText = 'position:absolute;left:-9999px;width:1px;height:1px;opacity:0;overflow:hidden;';
                 fileInput.type = 'file';
                 fileInput.accept = '.pdf';
                 fileInput.multiple = true;
