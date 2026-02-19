@@ -906,7 +906,12 @@ function initStateSubscriptions() {
             setDrawerOpen(state.drawerOpen);
         }
         if (state.drawerPaper !== prev.drawerPaper || state.drawerRuns !== prev.drawerRuns || state.resolvedRunSources !== prev.resolvedRunSources) {
-            renderDrawer(state.drawerPaper, state.drawerRuns, { resolvedSources: state.resolvedRunSources || {} });
+            renderDrawer(state.drawerPaper, state.drawerRuns, {
+                resolvedSources: state.resolvedRunSources || {},
+                providerCatalog: getProviderCatalog().filter(p => p.enabled),
+                selectedProvider: getSelectedProvider(),
+                selectedModel: getSelectedModel(),
+            });
         }
     });
 }
@@ -1319,17 +1324,27 @@ async function loadPaperDetails(paperId) {
     }
 }
 
-async function handleRetryRun(runId) {
+async function handleRetryRun(runId, provider, model) {
     try {
-        const result = await api.retryRun(runId);
+        let result;
+        if (provider) {
+            // Retry with a specific provider/model override
+            result = await api.retryRunWithSource(runId, {
+                source_url: null,
+                provider,
+                model: model || null,
+            });
+        } else {
+            result = await api.retryRun(runId);
+        }
         console.log('Retry result:', result);
-        
+
         // Refresh the drawer to show updated status
         const paperId = appStore.get('drawerPaperId');
         if (paperId) {
             await loadPaperDetails(paperId);
         }
-        
+
         // Refresh papers table
         await refreshPapers();
     } catch (e) {

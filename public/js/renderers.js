@@ -404,8 +404,54 @@ export function renderDrawer(paper, runs, options = {}) {
         if (run.status === 'failed' && run.id) {
             const actionRow = el('div', 'mt-2 flex flex-wrap items-center gap-2');
             if (drawerCallbacks.onRetry) {
+                const catalog = options.providerCatalog || [];
+                const defaultProvider = run.model_provider || options.selectedProvider || '';
+                const defaultModel = run.model_name || options.selectedModel || '';
+
+                // Provider select
+                const providerSel = el('select', 'sw-select sw-select--sm text-[11px]');
+                for (const p of catalog) {
+                    const opt = document.createElement('option');
+                    opt.value = p.provider_id;
+                    opt.textContent = p.label || p.provider_id;
+                    if (p.provider_id === defaultProvider) opt.selected = true;
+                    providerSel.appendChild(opt);
+                }
+
+                // Model select
+                const modelSel = el('select', 'sw-select sw-select--sm text-[11px] min-w-[8rem]');
+                const populateModels = (providerId) => {
+                    modelSel.innerHTML = '';
+                    const row = catalog.find(p => p.provider_id === providerId);
+                    const models = row ? [...new Set([row.default_model, ...(row.curated_models || [])].filter(Boolean))] : [];
+                    if (!models.length) {
+                        const opt = document.createElement('option');
+                        opt.value = '';
+                        opt.textContent = 'Default';
+                        modelSel.appendChild(opt);
+                    } else {
+                        for (const m of models) {
+                            const opt = document.createElement('option');
+                            opt.value = m;
+                            opt.textContent = m;
+                            if (m === defaultModel) opt.selected = true;
+                            modelSel.appendChild(opt);
+                        }
+                        if (!modelSel.value && models[0]) modelSel.value = models[0];
+                    }
+                };
+                populateModels(providerSel.value);
+                providerSel.addEventListener('change', () => populateModels(providerSel.value));
+
                 const retryBtn = el('button', 'sw-btn sw-btn--sm sw-btn--danger', 'Retry');
-                retryBtn.addEventListener('click', () => drawerCallbacks.onRetry(run.id));
+                retryBtn.addEventListener('click', () => {
+                    const p = providerSel.value || null;
+                    const m = modelSel.value || null;
+                    drawerCallbacks.onRetry(run.id, p, m);
+                });
+
+                actionRow.appendChild(providerSel);
+                actionRow.appendChild(modelSel);
                 actionRow.appendChild(retryBtn);
             }
             if (drawerCallbacks.onResolveSource) {
