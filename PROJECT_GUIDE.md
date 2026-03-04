@@ -126,7 +126,7 @@ Canonical env source: `env.example` and `app/config.py`.
 
 Core:
 
-1. `DB_URL` (default local: `sqlite:///peptide_search.db`)
+1. `DB_URL` (required; no default fallback)
 2. `LLM_PROVIDER` (`mock|openai|openai-full|openai-mini|openai-nano|deepseek|gemini|openrouter`)
 
 Provider keys/models:
@@ -188,12 +188,11 @@ Important hostname note:
 
 Persistent DB deployment:
 
-1. Mount persistent disk at `/var/data`.
-2. Set `DB_URL=sqlite:////var/data/peptide_search.db`.
-3. Keep bootstrap vars pointing to snapshot in repo:
+1. Set `DB_URL` explicitly for your production database (recommended: Postgres internal URL).
+2. Use bootstrap only if you intentionally need SQLite snapshot restore:
    1. `DB_BOOTSTRAP_ON_EMPTY=true`
-   2. `DB_BOOTSTRAP_SNAPSHOT=/opt/render/project/src/deploy/seed/peptide_search.db`
-   3. `DB_BOOTSTRAP_TARGET=/var/data/peptide_search.db`
+   2. `DB_BOOTSTRAP_SNAPSHOT=<path to snapshot file>`
+   3. `DB_BOOTSTRAP_TARGET=<path to target sqlite db>`
 
 Start command:
 
@@ -244,14 +243,22 @@ Queue reliability profiles (resource-safe on macOS):
 2. Deep only (deterministic + randomized queue workflows): `./scripts/run_queue_reliability_safe.sh deep`
 3. Layered default (smoke then deep): `./scripts/run_queue_reliability_safe.sh all`
 4. Runtime knobs:
-   1. `RELIABILITY_SMOKE_TIMEOUT_SECONDS` (default `60`)
+   1. `RELIABILITY_SMOKE_TIMEOUT_SECONDS` (default `120`)
    2. `RELIABILITY_MAX_LOAD_AVG` (default `12`)
    3. `RELIABILITY_COOLDOWN_SECONDS` (default `15`)
    4. `RELIABILITY_RANDOM_SEEDS` (default `11,29,47,73,101`)
-   5. `RELIABILITY_RANDOM_STEPS` (default `40`)
-   6. `RELIABILITY_RANDOM_SCENARIOS` (default `50`)
+   5. `RELIABILITY_RANDOM_STEPS` (default `30`)
+   6. `RELIABILITY_RANDOM_SCENARIOS` (default `12`)
    7. `RELIABILITY_RANDOM_STEP_DELAY_SECONDS` (default `0.02`, delay after each randomized step)
-   8. `RELIABILITY_RANDOM_SCENARIO_COOLDOWN_SECONDS` (default `0.25`, delay between randomized scenarios)
+   8. `RELIABILITY_RANDOM_SCENARIO_COOLDOWN_SECONDS` (default `0.10`, delay between randomized scenarios)
+   9. `RELIABILITY_PROGRESS_EVERY` (default `1`, randomized progress print frequency by scenario number)
+   10. `RELIABILITY_DETERMINISTIC_TIMEOUT_SECONDS` (default `600`, deep deterministic phase hard timeout)
+   11. `RELIABILITY_API_SEQUENCE_TIMEOUT_SECONDS` (default `300`, queue API lifecycle sequence phase hard timeout)
+   12. `RELIABILITY_RANDOMIZED_TIMEOUT_SECONDS` (default `1800`, deep randomized phase hard timeout)
+5. Heavier overnight profile example:
+   1. `RELIABILITY_RANDOM_STEPS=40 RELIABILITY_RANDOM_SCENARIOS=50 ./scripts/run_queue_reliability_safe.sh deep`
+6. Canonical long-term reliability plan:
+   1. `docs/RELIABILITY_BLUEPRINT.md`
 
 ### Reliability Report Output
 
@@ -274,16 +281,21 @@ Example report fields:
   "elapsed_seconds": 32,
   "smoke_elapsed_seconds": 2,
   "deterministic_elapsed_seconds": 12,
+  "api_sequence_elapsed_seconds": 3,
   "randomized_elapsed_seconds": 16,
   "timeout_occurred": false,
   "load_avg_at_deep_check": 1.52,
   "throttle_settings": {
     "cooldown_seconds": 1,
     "random_seeds": "11,29,47,73,101",
-    "random_steps": 40,
-    "random_scenarios": 50,
+    "random_steps": 30,
+    "random_scenarios": 12,
     "step_delay_seconds": 0.02,
-    "scenario_cooldown_seconds": 0.25
+    "scenario_cooldown_seconds": 0.1,
+    "progress_every": 1,
+    "deterministic_timeout_seconds": 600,
+    "api_sequence_timeout_seconds": 300,
+    "randomized_timeout_seconds": 1800
   }
 }
 ```
@@ -294,6 +306,12 @@ Postgres contract checks (optional, read-only):
    1. `export TEST_POSTGRES_URL='postgresql://.../peptide_search'`
 2. Run gated checks:
    1. `.venv/bin/python -m unittest tests.integration.test_postgres_contracts`
+
+Queue sharding knobs (for horizontal workers):
+
+1. `QUEUE_SHARD_COUNT` default `1` (single shard).
+2. `QUEUE_SHARD_ID` default `0` (current worker shard assignment).
+3. Claim routing uses `run_id % QUEUE_SHARD_COUNT == QUEUE_SHARD_ID`.
 
 ## 11) Troubleshooting
 

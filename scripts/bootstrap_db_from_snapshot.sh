@@ -2,8 +2,8 @@
 set -euo pipefail
 
 BOOTSTRAP_ON_EMPTY="${DB_BOOTSTRAP_ON_EMPTY:-false}"
-BOOTSTRAP_SNAPSHOT="${DB_BOOTSTRAP_SNAPSHOT:-/opt/render/project/src/deploy/seed/peptide_search.db}"
-BOOTSTRAP_TARGET="${DB_BOOTSTRAP_TARGET:-/var/data/peptide_search.db}"
+BOOTSTRAP_SNAPSHOT="${DB_BOOTSTRAP_SNAPSHOT:-}"
+BOOTSTRAP_TARGET="${DB_BOOTSTRAP_TARGET:-}"
 
 as_bool() {
   local raw="${1:-}"
@@ -19,6 +19,16 @@ fi
 if ! as_bool "$BOOTSTRAP_ON_EMPTY"; then
   echo "[bootstrap-db] Target DB missing but DB_BOOTSTRAP_ON_EMPTY is disabled; skipping bootstrap."
   exit 0
+fi
+
+if [[ -z "$BOOTSTRAP_SNAPSHOT" ]]; then
+  echo "[bootstrap-db] DB_BOOTSTRAP_SNAPSHOT is required when DB_BOOTSTRAP_ON_EMPTY is enabled."
+  exit 1
+fi
+
+if [[ -z "$BOOTSTRAP_TARGET" ]]; then
+  echo "[bootstrap-db] DB_BOOTSTRAP_TARGET is required when DB_BOOTSTRAP_ON_EMPTY is enabled."
+  exit 1
 fi
 
 if [[ ! -f "$BOOTSTRAP_SNAPSHOT" ]]; then
