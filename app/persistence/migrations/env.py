@@ -4,6 +4,7 @@ import os
 import sys
 from pathlib import Path
 
+from dotenv import load_dotenv
 from sqlalchemy import engine_from_config
 from sqlalchemy import pool
 from sqlmodel import SQLModel
@@ -13,6 +14,7 @@ from alembic import context
 # Add the project root to sys.path so we can import app modules
 project_root = Path(__file__).parent.parent.parent.parent
 sys.path.insert(0, str(project_root))
+load_dotenv(project_root / ".env")
 
 # Import all models to register them with SQLModel.metadata
 from app.persistence import models as _models  # noqa: F401
@@ -25,8 +27,14 @@ config = context.config
 # still allowing CLI alembic commands to honor DB_URL at runtime.
 explicit_db_url = config.get_main_option("app.explicit_db_url")
 runtime_db_url = os.getenv("DB_URL")
-if explicit_db_url != "1" and runtime_db_url:
-    config.set_main_option("sqlalchemy.url", runtime_db_url)
+if explicit_db_url != "1":
+    if runtime_db_url:
+        config.set_main_option("sqlalchemy.url", runtime_db_url)
+    else:
+        raise RuntimeError(
+            "DB_URL must be set for Alembic commands. "
+            "No fallback database URL is configured."
+        )
 
 # Interpret the config file for Python logging.
 # This line sets up loggers basically.

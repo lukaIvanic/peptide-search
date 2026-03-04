@@ -22,7 +22,7 @@ class Settings:
 	ENV: str = os.getenv("ENV", "development")
 
 	# Database
-	DB_URL: str = os.getenv("DB_URL", "sqlite:///peptide_search.db")
+	DB_URL: str | None = os.getenv("DB_URL")
 
 	# LLM provider selection: 'mock' | 'openai' | 'openai-full' | 'openai-mini' | 'openai-nano' | 'deepseek'
 	LLM_PROVIDER_RAW: str | None = os.getenv("LLM_PROVIDER", "mock")
@@ -87,6 +87,11 @@ class Settings:
 	BASELINE_EDITING_ENABLED: bool = _as_bool("BASELINE_EDITING_ENABLED", True)
 
 	def __init__(self) -> None:
+		if not self.DB_URL or not self.DB_URL.strip():
+			raise RuntimeError(
+				"DB_URL is required and must be set explicitly. "
+				"No fallback database URL is configured."
+			)
 		allowed = (
 			"openai",
 			"openai-full",
