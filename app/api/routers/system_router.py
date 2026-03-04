@@ -3,8 +3,9 @@ from __future__ import annotations
 import asyncio
 import json
 import logging
+from typing import Any
 
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.responses import StreamingResponse
 from sqlalchemy import delete
 from sqlmodel import Session
@@ -14,7 +15,7 @@ from ...db import get_session, ping_database
 from ...integrations.llm import resolve_provider_selection
 from ...persistence.models import ActiveSourceLock, ExtractionEntity, ExtractionRun, Paper, QueueJob
 from ...schemas import ClearExtractionsResponse, HealthResponse
-from ...services.queue_service import get_broadcaster, start_queue, stop_queue
+from ...services.queue_service import get_broadcaster, get_queue, start_queue, stop_queue
 
 router = APIRouter(tags=["system"])
 logger = logging.getLogger(__name__)
@@ -24,6 +25,10 @@ logger = logging.getLogger(__name__)
 async def health() -> HealthResponse:
     if not ping_database():
         logger.warning("Health check database ping failed.")
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="Database ping failed.",
+        )
     try:
         selection = resolve_provider_selection(
             provider=settings.LLM_PROVIDER,
@@ -38,6 +43,19 @@ async def health() -> HealthResponse:
         )
     except Exception:
         return HealthResponse(status="ok", provider=settings.LLM_PROVIDER or "unknown", model=None)
+
+
+@router.get("/api/queue/health")
+async def queue_health() -> dict[str, Any]:
+    """Queue-focused diagnostics for operational reliability checks."""
+    db_ok = ping_database()
+    queue = get_queue()
+    queue_snapshot = await queue.diagnostics()
+    return {
+        "status": "ok" if db_ok else "degraded",
+        "db_ok": db_ok,
+        "queue": queue_snapshot,
+    }
 
 
 @router.post("/api/admin/clear-extractions", response_model=ClearExtractionsResponse)

@@ -1,12 +1,13 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from datetime import timedelta
 import hashlib
 import json
 import secrets
 from typing import Any, Optional
 
-from sqlalchemy import delete, func, update
+from sqlalchemy import delete, func, text, update
 from sqlalchemy.exc import IntegrityError
 from sqlmodel import Session, select
 
@@ -302,14 +303,50 @@ class QueueCoordinator:
             )
 
     def claim_next_job(self, session: Session, *, worker_id: str) -> Optional[ClaimedJob]:
+        return self.claim_next_job_for_shard(
+            session,
+            worker_id=worker_id,
+            shard_count=1,
+            shard_id=0,
+        )
+
+    def claim_next_job_for_shard(
+        self,
+        session: Session,
+        *,
+        worker_id: str,
+        shard_count: int,
+        shard_id: int,
+    ) -> Optional[ClaimedJob]:
+        if shard_count <= 0:
+            raise ValueError("shard_count must be > 0")
+        if shard_id < 0:
+            raise ValueError("shard_id must be >= 0")
+        if shard_id >= shard_count:
+            raise ValueError("shard_id must be smaller than shard_count")
+
         now = utc_now()
+        if self._is_postgres_session(session):
+            claimed = self._claim_next_job_postgres(
+                session,
+                worker_id=worker_id,
+                now=now,
+                shard_count=shard_count,
+                shard_id=shard_id,
+            )
+            if claimed:
+                return claimed
+
         for _ in range(3):
-            job = session.exec(
+            query = (
                 select(QueueJob)
                 .where(QueueJob.status == QueueJobStatus.QUEUED.value)
                 .where(QueueJob.available_at <= now)
-                .order_by(QueueJob.available_at.asc(), QueueJob.id.asc())
-                .limit(1)
+            )
+            if shard_count > 1:
+                query = query.where((QueueJob.run_id % shard_count) == shard_id)
+            job = session.exec(
+                query.order_by(QueueJob.available_at.asc(), QueueJob.id.asc()).limit(1)
             ).first()
             if not job:
                 return None
@@ -343,6 +380,74 @@ class QueueCoordinator:
                 payload=payload,
             )
         return None
+
+    @staticmethod
+    def _is_postgres_session(session: Session) -> bool:
+        bind = session.get_bind()
+        if bind is None:
+            return False
+        dialect_name = (getattr(bind.dialect, "name", "") or "").lower()
+        return dialect_name.startswith("postgresql")
+
+    def _claim_next_job_postgres(
+        self,
+        session: Session,
+        *,
+        worker_id: str,
+        now,
+        shard_count: int,
+        shard_id: int,
+    ) -> Optional[ClaimedJob]:
+        token = secrets.token_hex(16)
+        shard_filter_sql = ""
+        if shard_count > 1:
+            shard_filter_sql = "AND mod(run_id, :shard_count) = :shard_id"
+        claim_stmt = text(
+            f"""
+            WITH next_job AS (
+                SELECT id
+                FROM queue_job
+                WHERE status = :queued_status
+                  AND available_at <= :now
+                  {shard_filter_sql}
+                ORDER BY available_at ASC, id ASC
+                FOR UPDATE SKIP LOCKED
+                LIMIT 1
+            )
+            UPDATE queue_job
+            SET status = :claimed_status,
+                claimed_by = :worker_id,
+                claim_token = :claim_token,
+                claimed_at = :now,
+                updated_at = :now
+            WHERE id IN (SELECT id FROM next_job)
+            RETURNING id, run_id, attempt, payload_json, claim_token
+            """
+        )
+        row = session.execute(
+            claim_stmt,
+            {
+                "queued_status": QueueJobStatus.QUEUED.value,
+                "claimed_status": QueueJobStatus.CLAIMED.value,
+                "worker_id": worker_id,
+                "claim_token": token,
+                "now": now,
+                "shard_count": shard_count,
+                "shard_id": shard_id,
+            },
+        ).mappings().first()
+        if not row:
+            return None
+
+        payload = self._load_payload(row.get("payload_json"))
+        session.commit()
+        return ClaimedJob(
+            id=int(row["id"]),
+            run_id=int(row["run_id"]),
+            claim_token=str(row["claim_token"]),
+            attempt=int(row.get("attempt") or 0),
+            payload=payload,
+        )
 
     def finish_job(
         self,
@@ -477,6 +582,55 @@ class QueueCoordinator:
             select(func.count(QueueJob.id)).where(QueueJob.status == QueueJobStatus.CLAIMED.value)
         ).one()
         return {"queued": int(queued or 0), "processing": int(processing or 0)}
+
+    def queue_health_snapshot(
+        self,
+        session: Session,
+        *,
+        stale_after_seconds: int,
+    ) -> dict[str, Any]:
+        now = utc_now()
+        cutoff = now
+        if stale_after_seconds > 0:
+            cutoff = now - timedelta(seconds=stale_after_seconds)
+
+        def _count_jobs(status: QueueJobStatus) -> int:
+            value = session.exec(
+                select(func.count(QueueJob.id)).where(QueueJob.status == status.value)
+            ).one()
+            return int(value or 0)
+
+        queued_jobs = _count_jobs(QueueJobStatus.QUEUED)
+        claimed_jobs = _count_jobs(QueueJobStatus.CLAIMED)
+        failed_jobs = _count_jobs(QueueJobStatus.FAILED)
+        cancelled_jobs = _count_jobs(QueueJobStatus.CANCELLED)
+        done_jobs = _count_jobs(QueueJobStatus.DONE)
+
+        stale_claimed_jobs = session.exec(
+            select(func.count(QueueJob.id))
+            .where(QueueJob.status == QueueJobStatus.CLAIMED.value)
+            .where(QueueJob.claimed_at.is_not(None))
+            .where(QueueJob.claimed_at <= cutoff)
+        ).one()
+
+        active_source_locks = session.exec(select(func.count(ActiveSourceLock.source_fingerprint))).one()
+        oldest_queued_at = session.exec(
+            select(func.min(QueueJob.available_at)).where(QueueJob.status == QueueJobStatus.QUEUED.value)
+        ).one()
+        oldest_queued_age_seconds: Optional[int] = None
+        if oldest_queued_at:
+            oldest_queued_age_seconds = max(0, int((now - oldest_queued_at).total_seconds()))
+
+        return {
+            "queued_jobs": queued_jobs,
+            "claimed_jobs": claimed_jobs,
+            "stale_claimed_jobs": int(stale_claimed_jobs or 0),
+            "failed_jobs": failed_jobs,
+            "cancelled_jobs": cancelled_jobs,
+            "done_jobs": done_jobs,
+            "active_source_locks": int(active_source_locks or 0),
+            "oldest_queued_age_seconds": oldest_queued_age_seconds,
+        }
 
     @classmethod
     def has_active_lock_for_urls(

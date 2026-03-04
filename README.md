@@ -6,6 +6,7 @@ Interactive prototype to search open-access scientific literature (PubMed Centra
 This repository is the **automatic literature → structured data extraction** component of a broader effort to capture **peptide** knowledge (especially **self-assembling / hydrogel-forming peptides**) in a form that researchers and downstream modeling workflows can use.
 
 For the complete technical and operational reference, see `PROJECT_GUIDE.md`.
+For queue/baseline production-hardening goals and status, see `docs/RELIABILITY_BLUEPRINT.md`.
 
 ### Features
 - Search via PubMed Central (PMC), Europe PMC, arXiv, and Semantic Scholar (open-access sources).

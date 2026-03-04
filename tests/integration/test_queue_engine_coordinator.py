@@ -310,6 +310,72 @@ class QueueEngineCoordinatorTests(ApiIntegrationTestCase):
             claimed = coordinator.claim_next_job(session, worker_id="worker-none")
             self.assertIsNone(claimed)
 
+    def test_claim_next_job_for_shard_filters_candidates(self) -> None:
+        coordinator = QueueCoordinator()
+        run_ids: list[int] = []
+        for idx in range(4):
+            paper_id = self.create_paper(title=f"Shard {idx}")
+            run = self.create_run_row(
+                paper_id=paper_id,
+                status=RunStatus.QUEUED.value,
+                model_provider="mock",
+                pdf_url=f"https://example.org/shard-{idx}.pdf",
+            )
+            run_ids.append(run.id)
+            self.create_queue_job(
+                run_id=run.id,
+                pdf_url=run.pdf_url,
+                status=QueueJobStatus.QUEUED.value,
+                available_at=utc_now() - timedelta(minutes=1),
+            )
+
+        with Session(self.db_module.engine) as session:
+            claimed = coordinator.claim_next_job_for_shard(
+                session,
+                worker_id="worker-shard-0",
+                shard_count=2,
+                shard_id=0,
+            )
+            self.assertIsNotNone(claimed)
+            self.assertEqual(claimed.run_id % 2, 0)
+            self.assertIn(claimed.run_id, run_ids)
+
+        with Session(self.db_module.engine) as session:
+            claimed = coordinator.claim_next_job_for_shard(
+                session,
+                worker_id="worker-shard-1",
+                shard_count=2,
+                shard_id=1,
+            )
+            self.assertIsNotNone(claimed)
+            self.assertEqual(claimed.run_id % 2, 1)
+            self.assertIn(claimed.run_id, run_ids)
+
+    def test_claim_next_job_for_shard_rejects_invalid_parameters(self) -> None:
+        coordinator = QueueCoordinator()
+        with Session(self.db_module.engine) as session:
+            with self.assertRaises(ValueError):
+                coordinator.claim_next_job_for_shard(
+                    session,
+                    worker_id="worker-invalid-a",
+                    shard_count=0,
+                    shard_id=0,
+                )
+            with self.assertRaises(ValueError):
+                coordinator.claim_next_job_for_shard(
+                    session,
+                    worker_id="worker-invalid-b",
+                    shard_count=2,
+                    shard_id=-1,
+                )
+            with self.assertRaises(ValueError):
+                coordinator.claim_next_job_for_shard(
+                    session,
+                    worker_id="worker-invalid-c",
+                    shard_count=2,
+                    shard_id=2,
+                )
+
     def test_has_active_lock_for_urls_handles_blank_and_pdf_urls(self) -> None:
         coordinator = QueueCoordinator()
         paper_id = self.create_paper(title="Active lock probe")

@@ -1,4 +1,5 @@
 import unittest
+from unittest.mock import patch
 
 from support import ApiIntegrationTestCase
 
@@ -16,6 +17,12 @@ class RequestObservabilityEnabledTests(ApiIntegrationTestCase):
         response = self.client.get("/api/health", headers={"X-Request-Id": expected})
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.headers.get("x-request-id"), expected)
+
+    def test_health_fails_when_database_ping_fails(self) -> None:
+        with patch("app.api.routers.system_router.ping_database", return_value=False):
+            response = self.client.get("/api/health")
+        self.assertEqual(response.status_code, 503)
+        self.assertIsNotNone(response.headers.get("x-request-id"))
 
 
 class RequestObservabilityDisabledTests(ApiIntegrationTestCase):

@@ -42,8 +42,29 @@ from .services.runtime_maintenance import (
 logger = logging.getLogger(__name__)
 
 
+HTML_NO_STORE_HEADERS = {
+    "Cache-Control": "no-store, no-cache, must-revalidate, max-age=0",
+    "Pragma": "no-cache",
+    "Expires": "0",
+}
+
+STATIC_REVALIDATE_HEADERS = {
+    "Cache-Control": "no-cache, must-revalidate",
+}
+
+
 def _static_page_response(static_dir: Path, filename: str) -> FileResponse:
-    return FileResponse(static_dir / filename)
+    return FileResponse(static_dir / filename, headers=HTML_NO_STORE_HEADERS)
+
+
+class CacheControlledStaticFiles(StaticFiles):
+    """Serve static assets with explicit revalidation cache policy."""
+
+    async def get_response(self, path: str, scope):
+        response = await super().get_response(path, scope)
+        for header, value in STATIC_REVALIDATE_HEADERS.items():
+            response.headers[header] = value
+        return response
 
 
 def create_app() -> FastAPI:
@@ -130,7 +151,7 @@ def create_app() -> FastAPI:
 
     static_dir: Path = settings.STATIC_DIR
     if static_dir.exists():
-        app.mount("/static", StaticFiles(directory=str(static_dir), html=False), name="static")
+        app.mount("/static", CacheControlledStaticFiles(directory=str(static_dir), html=False), name="static")
 
         @app.get("/", include_in_schema=False)
         async def index() -> FileResponse:
@@ -156,7 +177,7 @@ def create_app() -> FastAPI:
         async def baseline_overview_page() -> FileResponse:
             overview_path = static_dir / "batch-overview.html"
             if overview_path.exists():
-                return FileResponse(overview_path)
+                return FileResponse(overview_path, headers=HTML_NO_STORE_HEADERS)
             return _static_page_response(static_dir, "baseline.html")
 
         @app.get("/baseline/{batch_id}", include_in_schema=False)

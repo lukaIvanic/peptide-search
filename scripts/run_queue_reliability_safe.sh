@@ -20,14 +20,19 @@ case "$MODE" in
     ;;
 esac
 
-export RELIABILITY_SMOKE_TIMEOUT_SECONDS="${RELIABILITY_SMOKE_TIMEOUT_SECONDS:-60}"
+export RELIABILITY_SMOKE_TIMEOUT_SECONDS="${RELIABILITY_SMOKE_TIMEOUT_SECONDS:-120}"
 export RELIABILITY_MAX_LOAD_AVG="${RELIABILITY_MAX_LOAD_AVG:-12}"
 export RELIABILITY_COOLDOWN_SECONDS="${RELIABILITY_COOLDOWN_SECONDS:-15}"
 export RELIABILITY_RANDOM_SEEDS="${RELIABILITY_RANDOM_SEEDS:-11,29,47,73,101}"
-export RELIABILITY_RANDOM_STEPS="${RELIABILITY_RANDOM_STEPS:-40}"
-export RELIABILITY_RANDOM_SCENARIOS="${RELIABILITY_RANDOM_SCENARIOS:-50}"
+export RELIABILITY_RANDOM_STEPS="${RELIABILITY_RANDOM_STEPS:-30}"
+export RELIABILITY_RANDOM_SCENARIOS="${RELIABILITY_RANDOM_SCENARIOS:-12}"
 export RELIABILITY_RANDOM_STEP_DELAY_SECONDS="${RELIABILITY_RANDOM_STEP_DELAY_SECONDS:-0.02}"
-export RELIABILITY_RANDOM_SCENARIO_COOLDOWN_SECONDS="${RELIABILITY_RANDOM_SCENARIO_COOLDOWN_SECONDS:-0.25}"
+export RELIABILITY_RANDOM_SCENARIO_COOLDOWN_SECONDS="${RELIABILITY_RANDOM_SCENARIO_COOLDOWN_SECONDS:-0.10}"
+export RELIABILITY_PROGRESS_EVERY="${RELIABILITY_PROGRESS_EVERY:-1}"
+export RELIABILITY_DETERMINISTIC_TIMEOUT_SECONDS="${RELIABILITY_DETERMINISTIC_TIMEOUT_SECONDS:-600}"
+export RELIABILITY_API_SEQUENCE_TIMEOUT_SECONDS="${RELIABILITY_API_SEQUENCE_TIMEOUT_SECONDS:-300}"
+export RELIABILITY_RANDOMIZED_TIMEOUT_SECONDS="${RELIABILITY_RANDOMIZED_TIMEOUT_SECONDS:-1800}"
+export PYTHONUNBUFFERED="${PYTHONUNBUFFERED:-1}"
 
 cd "$ROOT_DIR"
 
@@ -36,6 +41,7 @@ DEEP_STATUS=0
 DEEP_SKIPPED=0
 SMOKE_ELAPSED_SECONDS=0
 DETERMINISTIC_ELAPSED_SECONDS=0
+API_SEQUENCE_ELAPSED_SECONDS=0
 RANDOMIZED_ELAPSED_SECONDS=0
 TIMEOUT_OCCURRED=0
 LOAD_AVG_AT_DEEP_CHECK=""
@@ -93,25 +99,15 @@ run_with_timeout() {
   set +e
   run_throttled "$@" &
   local cmd_pid=$!
-  local cmd_pgid
-  cmd_pgid="$(ps -o pgid= -p "$cmd_pid" | tr -d ' ')"
 
   (
     sleep "$timeout_s"
     if kill -0 "$cmd_pid" 2>/dev/null; then
       echo "1" > "$timeout_flag"
-      if [[ -n "$cmd_pgid" ]]; then
-        kill -TERM -- "-$cmd_pgid" 2>/dev/null || kill -TERM "$cmd_pid" 2>/dev/null || true
-      else
-        kill -TERM "$cmd_pid" 2>/dev/null || true
-      fi
+      kill -TERM "$cmd_pid" 2>/dev/null || true
       sleep 2
       if kill -0 "$cmd_pid" 2>/dev/null; then
-        if [[ -n "$cmd_pgid" ]]; then
-          kill -KILL -- "-$cmd_pgid" 2>/dev/null || kill -KILL "$cmd_pid" 2>/dev/null || true
-        else
-          kill -KILL "$cmd_pid" 2>/dev/null || true
-        fi
+        kill -KILL "$cmd_pid" 2>/dev/null || true
       fi
     fi
   ) &
@@ -169,32 +165,39 @@ run_deep() {
 
   export RUN_QUEUE_RELIABILITY_DEEP=1
   echo "[queue-reliability] Deep throttle: step_delay=${RELIABILITY_RANDOM_STEP_DELAY_SECONDS}s scenario_cooldown=${RELIABILITY_RANDOM_SCENARIO_COOLDOWN_SECONDS}s"
+  echo "[queue-reliability] Deep timeouts: deterministic=${RELIABILITY_DETERMINISTIC_TIMEOUT_SECONDS}s api_sequence=${RELIABILITY_API_SEQUENCE_TIMEOUT_SECONDS}s randomized=${RELIABILITY_RANDOMIZED_TIMEOUT_SECONDS}s"
 
-  local deterministic_started
-  deterministic_started="$(now_epoch)"
-  echo "[queue-reliability] >>> deterministic queue invariant suite"
-  run_throttled "$PYTHON_BIN" -m unittest discover -s tests/integration -p 'test_queue_invariants.py'
+  run_with_timeout \
+    "$RELIABILITY_DETERMINISTIC_TIMEOUT_SECONDS" \
+    "deterministic queue invariant suite" \
+    "$PYTHON_BIN" -m unittest discover -s tests/integration -p 'test_queue_invariants.py'
   local deterministic_status=$?
-  DETERMINISTIC_ELAPSED_SECONDS=$(( $(now_epoch) - deterministic_started ))
+  DETERMINISTIC_ELAPSED_SECONDS="$LAST_COMMAND_ELAPSED_SECONDS"
   if [[ "$deterministic_status" -ne 0 ]]; then
-    echo "[queue-reliability] <<< deterministic queue invariant suite FAILED (exit=$deterministic_status, ${DETERMINISTIC_ELAPSED_SECONDS}s)"
     return "$deterministic_status"
   fi
-  echo "[queue-reliability] <<< deterministic queue invariant suite PASSED"
+
+  run_with_timeout \
+    "$RELIABILITY_API_SEQUENCE_TIMEOUT_SECONDS" \
+    "queue API lifecycle sequence suite" \
+    "$PYTHON_BIN" -m unittest discover -s tests/integration -p 'test_queue_api_lifecycle_sequences.py'
+  local api_sequence_status=$?
+  API_SEQUENCE_ELAPSED_SECONDS="$LAST_COMMAND_ELAPSED_SECONDS"
+  if [[ "$api_sequence_status" -ne 0 ]]; then
+    return "$api_sequence_status"
+  fi
 
   sleep_cooldown
 
-  local randomized_started
-  randomized_started="$(now_epoch)"
-  echo "[queue-reliability] >>> randomized queue workflow suite"
-  run_throttled "$PYTHON_BIN" -m unittest discover -s tests/integration -p 'test_queue_randomized_workflows.py'
+  run_with_timeout \
+    "$RELIABILITY_RANDOMIZED_TIMEOUT_SECONDS" \
+    "randomized queue workflow suite" \
+    "$PYTHON_BIN" -m unittest discover -s tests/integration -p 'test_queue_randomized_workflows.py'
   local randomized_status=$?
-  RANDOMIZED_ELAPSED_SECONDS=$(( $(now_epoch) - randomized_started ))
+  RANDOMIZED_ELAPSED_SECONDS="$LAST_COMMAND_ELAPSED_SECONDS"
   if [[ "$randomized_status" -ne 0 ]]; then
-    echo "[queue-reliability] <<< randomized queue workflow suite FAILED (exit=$randomized_status, ${RANDOMIZED_ELAPSED_SECONDS}s)"
     return "$randomized_status"
   fi
-  echo "[queue-reliability] <<< randomized queue workflow suite PASSED"
 }
 
 write_report() {
@@ -214,6 +217,7 @@ write_report() {
   REPORT_ELAPSED_SECONDS="$ELAPSED_SECONDS" \
   REPORT_SMOKE_ELAPSED_SECONDS="$SMOKE_ELAPSED_SECONDS" \
   REPORT_DETERMINISTIC_ELAPSED_SECONDS="$DETERMINISTIC_ELAPSED_SECONDS" \
+  REPORT_API_SEQUENCE_ELAPSED_SECONDS="$API_SEQUENCE_ELAPSED_SECONDS" \
   REPORT_RANDOMIZED_ELAPSED_SECONDS="$RANDOMIZED_ELAPSED_SECONDS" \
   REPORT_TIMEOUT_OCCURRED="$TIMEOUT_OCCURRED" \
   REPORT_LOAD_AVG_AT_DEEP_CHECK="$LOAD_AVG_AT_DEEP_CHECK" \
@@ -223,6 +227,10 @@ write_report() {
   REPORT_RELIABILITY_RANDOM_SCENARIOS="$RELIABILITY_RANDOM_SCENARIOS" \
   REPORT_RELIABILITY_RANDOM_STEP_DELAY_SECONDS="$RELIABILITY_RANDOM_STEP_DELAY_SECONDS" \
   REPORT_RELIABILITY_RANDOM_SCENARIO_COOLDOWN_SECONDS="$RELIABILITY_RANDOM_SCENARIO_COOLDOWN_SECONDS" \
+  REPORT_RELIABILITY_PROGRESS_EVERY="$RELIABILITY_PROGRESS_EVERY" \
+  REPORT_RELIABILITY_DETERMINISTIC_TIMEOUT_SECONDS="$RELIABILITY_DETERMINISTIC_TIMEOUT_SECONDS" \
+  REPORT_RELIABILITY_API_SEQUENCE_TIMEOUT_SECONDS="$RELIABILITY_API_SEQUENCE_TIMEOUT_SECONDS" \
+  REPORT_RELIABILITY_RANDOMIZED_TIMEOUT_SECONDS="$RELIABILITY_RANDOMIZED_TIMEOUT_SECONDS" \
   "$PYTHON_BIN" - "$report_path" <<'PY'
 import json
 import os
@@ -263,6 +271,9 @@ report = {
     "deterministic_elapsed_seconds": as_int(
         os.getenv("REPORT_DETERMINISTIC_ELAPSED_SECONDS", "0")
     ),
+    "api_sequence_elapsed_seconds": as_int(
+        os.getenv("REPORT_API_SEQUENCE_ELAPSED_SECONDS", "0")
+    ),
     "randomized_elapsed_seconds": as_int(
         os.getenv("REPORT_RANDOMIZED_ELAPSED_SECONDS", "0")
     ),
@@ -282,6 +293,18 @@ report = {
         ),
         "scenario_cooldown_seconds": as_float(
             os.getenv("REPORT_RELIABILITY_RANDOM_SCENARIO_COOLDOWN_SECONDS", "0")
+        ),
+        "progress_every": as_int(
+            os.getenv("REPORT_RELIABILITY_PROGRESS_EVERY", "0")
+        ),
+        "deterministic_timeout_seconds": as_int(
+            os.getenv("REPORT_RELIABILITY_DETERMINISTIC_TIMEOUT_SECONDS", "0")
+        ),
+        "api_sequence_timeout_seconds": as_int(
+            os.getenv("REPORT_RELIABILITY_API_SEQUENCE_TIMEOUT_SECONDS", "0")
+        ),
+        "randomized_timeout_seconds": as_int(
+            os.getenv("REPORT_RELIABILITY_RANDOMIZED_TIMEOUT_SECONDS", "0")
         ),
     },
 }

@@ -1,3 +1,5 @@
+import logging
+import os
 import json
 import tempfile
 import unittest
@@ -32,13 +34,33 @@ class ApiIntegrationTestCase(unittest.TestCase):
 
         self.old_engine = db_module.engine
         self.old_settings: dict[str, object] = {}
+        self._old_log_levels: dict[str, int] = {}
+        self._mute_migration_logs = os.getenv("TEST_VERBOSE_MIGRATIONS", "0").strip().lower() not in {
+            "1",
+            "true",
+            "yes",
+            "on",
+        }
+        if self._mute_migration_logs:
+            for logger_name in ("alembic.runtime.migration",):
+                logger = logging.getLogger(logger_name)
+                self._old_log_levels[logger_name] = logger.level
+                logger.setLevel(logging.WARNING)
         effective_overrides = {"QUEUE_CONCURRENCY": 0, "DB_URL": str(self.test_engine.url)}
         effective_overrides.update(self.settings_overrides)
         for key, value in effective_overrides.items():
             self.old_settings[key] = getattr(settings, key)
             setattr(settings, key, value)
         db_module.engine = self.test_engine
-        db_module.run_migrations(db_url=str(self.test_engine.url))
+        if self._mute_migration_logs:
+            prior_disable_level = logging.root.manager.disable
+            logging.disable(logging.INFO)
+            try:
+                db_module.run_migrations(db_url=str(self.test_engine.url))
+            finally:
+                logging.disable(prior_disable_level)
+        else:
+            db_module.run_migrations(db_url=str(self.test_engine.url))
 
         queue_service._queue = None
         queue_service._broadcaster = None
@@ -55,6 +77,8 @@ class ApiIntegrationTestCase(unittest.TestCase):
         self.db_module.engine = self.old_engine
         for key, value in self.old_settings.items():
             setattr(settings, key, value)
+        for logger_name, level in self._old_log_levels.items():
+            logging.getLogger(logger_name).setLevel(level)
         self.temp_dir.cleanup()
 
     def create_paper(
