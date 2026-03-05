@@ -85,16 +85,19 @@ def read_definitions_text(path: Optional[Path] = None) -> str:
 	file_path = path or settings.DEFINITIONS_PATH
 	try:
 		text = file_path.read_text(encoding="utf-8")
-		return text.strip()
-	except Exception:
-		return ""
+	except Exception as exc:
+		raise RuntimeError(
+			f"Failed to read definitions file at '{file_path}'. "
+			"Definitions are required for prompt construction."
+		) from exc
+	return text.strip()
 
 
 def build_system_prompt(override_text: Optional[str] = None) -> str:
 	if override_text:
 		return override_text.strip()
 
-	defs = read_definitions_text() if settings.INCLUDE_DEFINITIONS else ""
+	defs = read_definitions_text()
 	intro = dedent(
 		"""
 		You are an expert scientific literature analyst focused on peptides and lab-synthesized molecules.
@@ -103,9 +106,7 @@ def build_system_prompt(override_text: Optional[str] = None) -> str:
 		"""
 	).strip()
 
-	if defs:
-		return f"{intro}\n\nDomain definitions and conventions:\n{defs}\n"
-	return intro
+	return f"{intro}\n\nDomain definitions and conventions:\n{defs}\n"
 
 
 def build_user_prompt(paper_meta_hint: str, paper_text: str) -> str:
@@ -158,5 +159,3 @@ def build_followup_prompt(prior_json: str, instruction: str, pdf_url: Optional[s
 		{SCHEMA_SPEC}
 		"""
 	).strip()
-
-
