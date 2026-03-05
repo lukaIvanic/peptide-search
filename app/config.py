@@ -47,7 +47,7 @@ class Settings:
 
 	# OpenAI
 	OPENAI_API_KEY: str | None = os.getenv("OPENAI_API_KEY")
-	OPENAI_MODEL: str = os.getenv("OPENAI_MODEL", "gpt-4o")
+	OPENAI_MODEL: str = os.getenv("OPENAI_MODEL", "gpt-5")
 	OPENAI_MODEL_MINI: str = os.getenv("OPENAI_MODEL_MINI", "gpt-5-mini")
 	OPENAI_MODEL_NANO: str = os.getenv("OPENAI_MODEL_NANO", "gpt-5-nano")
 
@@ -57,7 +57,6 @@ class Settings:
 
 	# Definitions file (in-project) to include in the prompt
 	DEFINITIONS_PATH: Path = PROJECT_ROOT / "Peptide LLM" / "definitions_for_llms.md"
-	INCLUDE_DEFINITIONS: bool = os.getenv("INCLUDE_DEFINITIONS", "true").lower() == "true"
 
 	# Static files directory
 	STATIC_DIR: Path = PROJECT_ROOT / "public"

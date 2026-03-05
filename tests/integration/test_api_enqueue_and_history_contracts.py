@@ -30,10 +30,22 @@ class ApiEnqueueAndHistoryContractTests(ApiIntegrationTestCase):
         response = self.client.get("/api/runs/999999")
         self.assert_error_envelope(response, status_code=404, code="not_found")
 
-    def test_validation_error_envelope_for_malformed_enqueue_payload(self) -> None:
-        response = self.client.post("/api/enqueue", json={"provider": "mock"})
-        body = self.assert_error_envelope(response, status_code=422, code="validation_error")
-        self.assertIsInstance(body["error"].get("details"), list)
+    def test_removed_search_and_enqueue_endpoints_return_not_found(self) -> None:
+        search_response = self.client.get("/api/search?q=peptide")
+        self.assertEqual(search_response.status_code, 404)
+        search_body = search_response.json()
+        if "error" in search_body:
+            self.assertEqual(search_body["error"].get("code"), "not_found")
+        else:
+            self.assertIn("detail", search_body)
+
+        enqueue_response = self.client.post("/api/enqueue", json={"provider": "mock"})
+        self.assertEqual(enqueue_response.status_code, 404)
+        enqueue_body = enqueue_response.json()
+        if "error" in enqueue_body:
+            self.assertEqual(enqueue_body["error"].get("code"), "not_found")
+        else:
+            self.assertIn("detail", enqueue_body)
 
     def test_bad_request_error_mapping_for_extract_contract(self) -> None:
         response = self.client.post("/api/extract", json={})
@@ -63,54 +75,6 @@ class ApiEnqueueAndHistoryContractTests(ApiIntegrationTestCase):
             self.assertIsInstance(payload.get("pdf_urls"), list)
             self.assertGreaterEqual(len(payload["pdf_urls"]), 2)
             self.assertEqual(payload["pdf_urls"][0], run.pdf_url)
-
-    def test_enqueue_contract_and_url_dedupe(self) -> None:
-        payload = {
-            "papers": [
-                {
-                    "title": "Contract Test Paper",
-                    "doi": "10.1000/contract-1",
-                    "url": "https://example.org/contract-1",
-                    "pdf_url": "https://example.org/contract-1.pdf",
-                    "source": "pmc",
-                    "year": 2024,
-                    "authors": ["A. Author"],
-                    "force": False,
-                }
-            ],
-            "provider": "mock",
-            "prompt_id": None,
-        }
-
-        first = self.client.post("/api/enqueue", json=payload)
-        self.assertEqual(first.status_code, 200)
-        first_body = first.json()
-
-        self.assertEqual(first_body["total"], 1)
-        self.assertEqual(first_body["enqueued"], 1)
-        self.assertEqual(first_body["skipped"], 0)
-        self.assertEqual(len(first_body["runs"]), 1)
-
-        first_run = first_body["runs"][0]
-        for key in ["run_id", "paper_id", "title", "status", "skipped", "skip_reason"]:
-            self.assertIn(key, first_run)
-        self.assertEqual(first_run["status"], "queued")
-        self.assertFalse(first_run["skipped"])
-
-        second = self.client.post("/api/enqueue", json=payload)
-        self.assertEqual(second.status_code, 200)
-        second_body = second.json()
-
-        self.assertEqual(second_body["total"], 1)
-        self.assertEqual(second_body["enqueued"], 0)
-        self.assertEqual(second_body["skipped"], 1)
-        self.assertEqual(len(second_body["runs"]), 1)
-
-        second_run = second_body["runs"][0]
-        self.assertTrue(second_run["skipped"])
-        self.assertEqual(second_run["skip_reason"], "Already queued")
-        self.assertEqual(second_run["run_id"], first_run["run_id"])
-        self.assertEqual(second_run["paper_id"], first_run["paper_id"])
 
     def test_run_detail_schema_keys_are_stable(self) -> None:
         paper_id = self.create_paper(
@@ -172,6 +136,66 @@ class ApiEnqueueAndHistoryContractTests(ApiIntegrationTestCase):
         self.assertSetEqual(set(payload.keys()), {"id", "status", "message", "source_url"})
         self.assertEqual(payload["id"], run_id)
         self.assertEqual(payload["status"], RunStatus.QUEUED.value)
+
+    def test_delete_run_response_schema_keys_are_stable(self) -> None:
+        paper_id = self.create_paper(
+            title="Delete Run Contract",
+            doi="10.1000/delete-run-contract",
+            url="https://example.org/delete-run-contract",
+        )
+        run_id = self.create_run(
+            paper_id=paper_id,
+            status=RunStatus.FAILED.value,
+            model_provider="mock",
+            pdf_url="https://example.org/delete-run-contract.pdf",
+        )
+
+        response = self.client.delete(f"/api/runs/{run_id}")
+        self.assertEqual(response.status_code, 200)
+        payload = response.json()
+        self.assertSetEqual(
+            set(payload.keys()),
+            {
+                "status",
+                "deleted_runs",
+                "deleted_entities",
+                "deleted_queue_jobs",
+                "deleted_source_locks",
+                "deleted_case_links",
+            },
+        )
+        self.assertEqual(payload["status"], "ok")
+
+    def test_delete_paper_response_schema_keys_are_stable(self) -> None:
+        paper_id = self.create_paper(
+            title="Delete Paper Contract",
+            doi="10.1000/delete-paper-contract",
+            url="https://example.org/delete-paper-contract",
+        )
+        self.create_run(
+            paper_id=paper_id,
+            status=RunStatus.FAILED.value,
+            model_provider="mock",
+            pdf_url="https://example.org/delete-paper-contract.pdf",
+        )
+
+        response = self.client.delete(f"/api/papers/{paper_id}")
+        self.assertEqual(response.status_code, 200)
+        payload = response.json()
+        self.assertSetEqual(
+            set(payload.keys()),
+            {
+                "status",
+                "paper_id",
+                "deleted_runs",
+                "deleted_entities",
+                "deleted_queue_jobs",
+                "deleted_source_locks",
+                "deleted_case_links",
+            },
+        )
+        self.assertEqual(payload["status"], "ok")
+        self.assertEqual(payload["paper_id"], paper_id)
 
     def test_recent_runs_timestamp_contract_uses_utc_z_suffix(self) -> None:
         paper_id = self.create_paper(

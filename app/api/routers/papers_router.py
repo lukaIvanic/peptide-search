@@ -13,11 +13,14 @@ from ...persistence.models import ExtractionEntity, ExtractionRun, Paper, RunSta
 from ...persistence.repository import PromptRepository
 from ...prompts import build_system_prompt
 from ...schemas import (
+    DeletePaperResponse,
     ForceReextractResponse,
     PaperExtractionsResponse,
     PaperWithStatus,
     PapersWithStatusResponse,
 )
+from ...services.baseline_recompute_service import mark_batches_stale_and_trigger
+from ...services.deletion_service import DeletionNotFoundError, delete_paper_with_runs
 from ...services.queue_coordinator import QueueCoordinator
 from ...services.queue_service import get_queue
 from ...services.serializers import iso_z, parse_json_list
@@ -162,6 +165,30 @@ async def get_paper_extractions(
             "authors": authors,
         },
         extractions=extractions,
+    )
+
+
+@router.delete("/api/papers/{paper_id}", response_model=DeletePaperResponse)
+async def delete_paper(
+    paper_id: int,
+    session: Session = Depends(get_session),
+) -> DeletePaperResponse:
+    try:
+        summary = delete_paper_with_runs(session, paper_id, deleted_by="user")
+    except DeletionNotFoundError as exc:
+        raise HTTPException(status_code=404, detail=str(exc)) from exc
+
+    if summary.affected_batch_ids:
+        await mark_batches_stale_and_trigger(batch_ids=sorted(summary.affected_batch_ids))
+
+    return DeletePaperResponse(
+        status="ok",
+        paper_id=paper_id,
+        deleted_runs=summary.deleted_runs,
+        deleted_entities=summary.deleted_entities,
+        deleted_queue_jobs=summary.deleted_queue_jobs,
+        deleted_source_locks=summary.deleted_source_locks,
+        deleted_case_links=summary.deleted_case_links,
     )
 
 

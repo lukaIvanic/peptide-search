@@ -76,6 +76,20 @@ def _unique_non_empty(values: List[Optional[str]]) -> List[str]:
 
 def _descriptors() -> Dict[str, ProviderDescriptor]:
     return {
+        "gemini": ProviderDescriptor(
+            provider_id="gemini",
+            label="Gemini",
+            required_key_env="GEMINI_API_KEY",
+            capabilities=LLMCapabilities(
+                supports_pdf_url=False,
+                supports_pdf_file=True,
+                supports_json_mode=True,
+            ),
+            default_model=settings.GEMINI_MODEL,
+            curated_models=_unique_non_empty([settings.GEMINI_MODEL]),
+            supports_custom_model=True,
+            supports_model_discovery=True,
+        ),
         "openai": ProviderDescriptor(
             provider_id="openai",
             label="OpenAI",
@@ -97,34 +111,7 @@ def _descriptors() -> Dict[str, ProviderDescriptor]:
             supports_custom_model=True,
             supports_model_discovery=False,
         ),
-        "deepseek": ProviderDescriptor(
-            provider_id="deepseek",
-            label="DeepSeek",
-            required_key_env="DEEPSEEK_API_KEY",
-            capabilities=LLMCapabilities(
-                supports_pdf_url=False,
-                supports_pdf_file=False,
-                supports_json_mode=True,
-            ),
-            default_model=settings.DEEPSEEK_MODEL,
-            curated_models=_unique_non_empty([settings.DEEPSEEK_MODEL]),
-            supports_custom_model=True,
-            supports_model_discovery=False,
-        ),
-        "gemini": ProviderDescriptor(
-            provider_id="gemini",
-            label="Gemini",
-            required_key_env="GEMINI_API_KEY",
-            capabilities=LLMCapabilities(
-                supports_pdf_url=False,
-                supports_pdf_file=True,
-                supports_json_mode=True,
-            ),
-            default_model=settings.GEMINI_MODEL,
-            curated_models=_unique_non_empty([settings.GEMINI_MODEL]),
-            supports_custom_model=True,
-            supports_model_discovery=True,
-        ),
+
         "openrouter": ProviderDescriptor(
             provider_id="openrouter",
             label="OpenRouter",
@@ -150,20 +137,6 @@ def _descriptors() -> Dict[str, ProviderDescriptor]:
             ),
             supports_custom_model=True,
             supports_model_discovery=True,
-        ),
-        "mock": ProviderDescriptor(
-            provider_id="mock",
-            label="Mock",
-            required_key_env=None,
-            capabilities=LLMCapabilities(
-                supports_pdf_url=True,
-                supports_pdf_file=True,
-                supports_json_mode=True,
-            ),
-            default_model="mock-model",
-            curated_models=["mock-model"],
-            supports_custom_model=False,
-            supports_model_discovery=False,
         ),
     }
 

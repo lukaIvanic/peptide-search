@@ -150,6 +150,57 @@ class BaselineStore:
                 )
         return datasets
 
+    def upsert_dataset(
+        self,
+        dataset_id: str,
+        label: Optional[str] = None,
+        description: Optional[str] = None,
+        source_file: Optional[str] = "eval_builder",
+    ) -> Dict[str, Any]:
+        normalized_id = _normalize_str(dataset_id)
+        if not normalized_id:
+            raise BaselineValidationError("Dataset id is required")
+        normalized_label = _normalize_str(label)
+        if not normalized_label:
+            raise BaselineValidationError("Dataset label is required")
+
+        row = self.session.get(BaselineDataset, normalized_id)
+        if not row:
+            now = utc_now()
+            row = BaselineDataset(
+                id=normalized_id,
+                label=normalized_label,
+                description=_normalize_str(description),
+                source_file=_normalize_str(source_file),
+                original_count=0,
+                created_at=now,
+                updated_at=now,
+            )
+        else:
+            row.label = normalized_label
+            row.description = _normalize_str(description)
+            if source_file is not None:
+                row.source_file = _normalize_str(source_file)
+            row.updated_at = utc_now()
+        self.session.add(row)
+        self.session.commit()
+        self.session.refresh(row)
+
+        count = int(
+            self.session.exec(
+                select(func.count(BaselineCaseModel.id)).where(BaselineCaseModel.dataset_id == normalized_id)
+            ).one()
+            or 0
+        )
+        return {
+            "id": row.id,
+            "label": row.label,
+            "description": row.description,
+            "source_file": row.source_file,
+            "count": count,
+            "original_count": row.original_count,
+        }
+
     def create_case(self, payload: Dict[str, Any]) -> Dict[str, Any]:
         case_id = _normalize_str(payload.get("id"))
         dataset_id = _normalize_str(payload.get("dataset"))
@@ -263,6 +314,30 @@ class BaselineStore:
         self.session.delete(row)
         self.session.commit()
         return True
+
+    def delete_dataset(self, dataset_id: str) -> Dict[str, Any]:
+        normalized_id = _normalize_str(dataset_id)
+        if not normalized_id:
+            raise BaselineValidationError("Dataset id is required")
+
+        dataset = self.session.get(BaselineDataset, normalized_id)
+        case_ids = [
+            row_id
+            for row_id in self.session.exec(
+                select(BaselineCaseModel.id).where(BaselineCaseModel.dataset_id == normalized_id)
+            ).all()
+        ]
+        deleted_cases = len(case_ids)
+        if case_ids:
+            self.session.exec(delete(BaselineCaseRun).where(BaselineCaseRun.baseline_case_id.in_(case_ids)))
+            self.session.exec(delete(BaselineCaseModel).where(BaselineCaseModel.id.in_(case_ids)))
+        if dataset:
+            self.session.delete(dataset)
+        self.session.commit()
+        return {
+            "deleted_dataset": bool(dataset),
+            "deleted_cases": deleted_cases,
+        }
 
     def delete_paper_group(self, paper_key: str, expected_updated_at: Optional[str] = None) -> int:
         cases = self.list_cases()

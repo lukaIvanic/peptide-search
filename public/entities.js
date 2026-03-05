@@ -5,8 +5,6 @@ import {
 	getQualityRules,
 	updateQualityRules,
 } from './js/api.js';
-import { initTour } from './js/tour.js';
-import { markMilestone, renderChecklist, resetMilestones } from './js/onboarding.js';
 
 const $ = (sel) => document.querySelector(sel);
 
@@ -27,14 +25,6 @@ const state = {
 	compareA: '',
 	compareB: '',
 };
-
-const QA_ONBOARDING_KEY = 'onboarding_entities_v1';
-const QA_STEPS = [
-	{ key: 'opened_entity', label: 'Open an entity detail' },
-	{ key: 'review_mode', label: 'Use review mode' },
-	{ key: 'evidence_gaps', label: 'Check evidence gaps view' },
-	{ key: 'compare_prompts', label: 'Compare prompt versions' },
-];
 
 const INVALID_FLAGS = new Set([
 	'invalid_ph',
@@ -487,9 +477,6 @@ async function openEntityDrawer(entityId) {
 	content.appendChild(renderEntityLinks(data));
 	content.appendChild(renderMissingEvidenceSummary(data));
 	content.appendChild(renderEntityFields(data));
-	markMilestone(QA_ONBOARDING_KEY, 'opened_entity');
-	renderQaChecklist();
-	updateContextHint();
 }
 
 function renderEntitySummary(data) {
@@ -769,20 +756,10 @@ function bindEvents() {
 		state.reviewMode = $('#reviewMode').checked;
 		state.reviewIndex = 0;
 		renderEntities();
-		if (state.reviewMode) {
-			markMilestone(QA_ONBOARDING_KEY, 'review_mode');
-			renderQaChecklist();
-			updateContextHint();
-		}
 	});
 	$('#evidenceMode').addEventListener('change', () => {
 		state.evidenceMode = $('#evidenceMode').checked;
 		renderEntities();
-		if (state.evidenceMode) {
-			markMilestone(QA_ONBOARDING_KEY, 'evidence_gaps');
-			renderQaChecklist();
-			updateContextHint();
-		}
 	});
 	$('#clearMissingFieldFilter').addEventListener('click', () => {
 		state.missingFieldFilter = null;
@@ -793,10 +770,6 @@ function bindEvents() {
 		state.compareA = $('#comparePromptA').value;
 		state.compareB = $('#comparePromptB').value;
 		renderPromptComparison();
-		if (state.compareA && state.compareB) {
-			markMilestone(QA_ONBOARDING_KEY, 'compare_prompts');
-			renderQaChecklist();
-		}
 	});
 	$('#exportEvidenceCsv').addEventListener('click', exportEvidenceCsv);
 	$('#reviewNextBtn').addEventListener('click', openNextReview);
@@ -993,129 +966,6 @@ async function init() {
 	bindEvents();
 	await loadKpis();
 	await loadEntities();
-	initTourGuide();
-	renderQaChecklist();
-	initContextHints();
 }
 
 init();
-
-function renderQaChecklist() {
-	renderChecklist({
-		containerId: '#qaChecklist',
-		progressId: '#qaProgress',
-		items: QA_STEPS,
-		storageKey: QA_ONBOARDING_KEY,
-	});
-	const resetBtn = document.querySelector('#resetQaChecklist');
-	if (resetBtn && !resetBtn.dataset.bound) {
-		resetBtn.dataset.bound = '1';
-		resetBtn.addEventListener('click', () => {
-			resetMilestones(QA_ONBOARDING_KEY);
-			renderQaChecklist();
-		});
-	}
-}
-
-function initContextHints() {
-	const dismiss = document.querySelector('#contextHintDismiss');
-	if (dismiss) dismiss.addEventListener('click', hideHint);
-	updateContextHint();
-}
-
-function showHint(message, key) {
-	if (!message) return;
-	if (hasHintSeen(key)) return;
-	const container = document.querySelector('#contextHint');
-	const text = document.querySelector('#contextHintText');
-	if (!container || !text) return;
-	text.textContent = message;
-	container.classList.remove('hidden');
-	container.dataset.hintKey = key;
-}
-
-function hideHint() {
-	const container = document.querySelector('#contextHint');
-	if (!container) return;
-	const key = container.dataset.hintKey;
-	if (key) markHintSeen(key);
-	container.classList.add('hidden');
-	container.dataset.hintKey = '';
-}
-
-function hasHintSeen(key) {
-	try {
-		return localStorage.getItem(`hint_${key}`) === '1';
-	} catch {
-		return false;
-	}
-}
-
-function markHintSeen(key) {
-	try {
-		localStorage.setItem(`hint_${key}`, '1');
-	} catch {
-		// ignore
-	}
-}
-
-function updateContextHint() {
-	const state = getQaState();
-	if (!state.opened_entity) {
-		showHint('Tip: Click any entity row to inspect evidence per field.', 'entities_open_hint');
-		return;
-	}
-	if (state.opened_entity && !state.review_mode) {
-		showHint('Tip: Toggle Review mode to step through flagged entities.', 'entities_review_hint');
-		return;
-	}
-	if (state.review_mode && !state.evidence_gaps) {
-		showHint('Tip: Use Evidence gaps view to see missing evidence by field.', 'entities_gaps_hint');
-		return;
-	}
-	hideHint();
-}
-
-function getQaState() {
-	try {
-		return JSON.parse(localStorage.getItem(QA_ONBOARDING_KEY) || '{}');
-	} catch {
-		return {};
-	}
-}
-
-function initTourGuide() {
-	const tour = initTour({
-		storageKey: 'tour_entities_v1',
-		autoStart: true,
-		steps: [
-			{
-				selector: '#entitySearch',
-				title: 'Search entities',
-				body: 'Filter sequences, papers, and providers instantly.',
-			},
-			{
-				selector: '#flagMissing',
-				title: 'Evidence flags',
-				body: 'Focus on missing evidence and invalid values.',
-			},
-			{
-				selector: '#evidenceMode',
-				title: 'Evidence gaps',
-				body: 'See which fields most often lack evidence.',
-			},
-			{
-				selector: '#reviewMode',
-				title: 'Review mode',
-				body: 'Step through flagged entities quickly.',
-			},
-			{
-				selector: '#comparePromptsBtn',
-				title: 'Prompt comparison',
-				body: 'Compare KPIs between prompt versions.',
-			},
-		],
-	});
-	const btn = document.querySelector('#startTourBtn');
-	if (btn) btn.addEventListener('click', tour.start);
-}

@@ -141,6 +141,25 @@ class RetryResponse(BaseModel):
     source_url: Optional[str] = None
 
 
+class DeleteRunResponse(BaseModel):
+    status: str
+    deleted_runs: int
+    deleted_entities: int
+    deleted_queue_jobs: int
+    deleted_source_locks: int
+    deleted_case_links: int
+
+
+class DeletePaperResponse(BaseModel):
+    status: str
+    paper_id: int
+    deleted_runs: int
+    deleted_entities: int
+    deleted_queue_jobs: int
+    deleted_source_locks: int
+    deleted_case_links: int
+
+
 class FailureBucketItem(BaseModel):
     key: str
     label: Optional[str] = None

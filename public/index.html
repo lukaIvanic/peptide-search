@@ -18,22 +18,17 @@
 				<div class="logo"></div>
 				<div>
 					<div class="title">Peptide Literature Extractor</div>
-					<div class="subtitle">Search papers, extract structured data, and track progress</div>
+					<div class="subtitle">Upload PDFs, extract structured data, and track progress</div>
 				</div>
 			</div>
 			<nav class="nav">
 				<a href="/" class="nav-link">Dashboard</a>
 				<a href="/entities" class="nav-link">Entity Explorer</a>
 				<a href="/baseline" class="nav-link">Evaluation</a>
-				<a href="/help" class="nav-link">Help</a>
-				<button id="startTourBtn" class="nav-link" type="button">Start tour</button>
 			</nav>
 		</header>
 
 		<div class="sw-side-rail" aria-label="Dashboard panels">
-			<button id="openOnboardingDrawer" class="sw-side-rail__btn" type="button" title="Onboarding checklist">
-				Onboarding
-			</button>
 			<button id="openPromptDrawer" class="sw-side-rail__btn" type="button" title="Prompt management">
 				Prompts
 			</button>
@@ -43,19 +38,11 @@
 		</div>
 
 		<main class="max-w-7xl mx-auto px-6 py-6 sw-rail-safe">
-			<div id="contextHint" class="hidden hint-banner mb-6">
-				<span id="contextHintText"></span>
-				<button id="contextHintDismiss" class="sw-btn sw-btn--sm sw-btn--ghost" type="button">Got it</button>
-			</div>
-			<!-- Search Section -->
+			<!-- Upload Section -->
 			<section class="mb-6">
 				<div class="sw-card p-6">
-					<h2 class="section-title mb-4">Search Scientific Literature</h2>
-					<div class="flex gap-4 items-end">
-						<div class="flex-1">
-							<input id="queryInput" type="text" placeholder="Search by peptide, sequence, keywords, DOI..."
-								class="w-full sw-input" />
-						</div>
+					<h2 class="section-title mb-4">Queue PDF Extractions</h2>
+					<div class="flex flex-wrap gap-3 items-end">
 						<div class="flex items-center gap-2">
 							<label class="sw-kicker text-[10px] text-slate-500">Provider:</label>
 							<select id="providerSelect" class="sw-select">
@@ -70,53 +57,20 @@
 							<label class="sw-kicker text-[10px] text-slate-500">Model:</label>
 							<select id="providerModelSelect" class="sw-select sw-select--sm min-w-[14rem]"></select>
 						</div>
-						<button id="searchBtn" class="sw-btn sw-btn--primary" type="button">
-							Search
-						</button>
+						<div class="flex items-center gap-2">
+							<label class="sw-kicker text-[10px] text-slate-500">Prompt:</label>
+							<select id="promptSelect" class="sw-select sw-select--sm min-w-[14rem]">
+								<option value="">Loading prompts...</option>
+							</select>
+						</div>
 						<button id="uploadPdfBtn" class="sw-btn sw-btn--ghost" type="button">
 							Upload PDF
 						</button>
 						<input id="uploadPdfInput" type="file" accept=".pdf" multiple class="hidden" />
 					</div>
-					<div id="searchExamples" class="mt-2 flex flex-wrap items-center gap-2 text-[10px] text-slate-400">
-						<span class="sw-kicker text-[10px] text-slate-500">Examples</span>
-						<button type="button" class="sw-btn sw-btn--sm sw-btn--ghost" data-search-example="self-assembling peptide hydrogel">self-assembling peptide hydrogel</button>
-						<button type="button" class="sw-btn sw-btn--sm sw-btn--ghost" data-search-example="Ac-FTRK nanofiber">Ac-FTRK nanofiber</button>
-						<button type="button" class="sw-btn sw-btn--sm sw-btn--ghost" data-search-example="10.1021/acsnano.5c00670">10.1021/acsnano.5c00670</button>
-					</div>
-					<p class="text-xs text-slate-500 mt-3">
-						Sources: PubMed Central, arXiv, Europe PMC, Semantic Scholar
-					</p>
 					<div class="mt-2 flex items-center gap-2 text-xs text-slate-500">
 						<span id="searchSpinner" class="hidden h-3 w-3 rounded-full sw-spinner"></span>
 						<span id="searchStatus" class="sw-chip text-[10px] text-slate-500"></span>
-					</div>
-				</div>
-			</section>
-
-			<!-- Search Results + Batch Selection -->
-			<section id="searchResultsSection" class="mb-6 hidden">
-				<div class="sw-card p-6">
-					<div class="flex flex-wrap items-center justify-between gap-3 mb-4">
-						<h3 class="section-title">Search Results</h3>
-						<div class="flex flex-wrap items-center gap-3 text-xs text-slate-500">
-							<span id="searchCount" class="sw-chip sw-kicker text-[10px] text-slate-500"></span>
-							<span id="batchCount" class="sw-chip sw-kicker text-[10px] text-slate-600"></span>
-							<div class="flex items-center gap-2">
-								<label class="sw-kicker text-[10px] text-slate-500">Prompt:</label>
-								<select id="promptSelect" class="sw-select sw-select--sm">
-									<option value="">Loading prompts...</option>
-								</select>
-							</div>
-							<button id="selectAllResults" class="sw-btn sw-btn--sm sw-btn--ghost disabled:opacity-40 disabled:cursor-not-allowed" type="button">Select all (PDF)</button>
-							<button id="clearResultsSelection" class="sw-btn sw-btn--sm sw-btn--ghost disabled:opacity-40 disabled:cursor-not-allowed" type="button">Clear selection</button>
-							<button id="startBatchBtn" class="sw-btn sw-btn--primary sw-btn--sm disabled:opacity-50 disabled:cursor-not-allowed" type="button" disabled>
-								Start Extraction
-							</button>
-						</div>
-					</div>
-					<div id="resultsList" class="list list--synth max-h-96 overflow-y-auto">
-						<!-- Results go here -->
 					</div>
 				</div>
 			</section>
@@ -155,14 +109,6 @@
 									<option value="cancelled">Cancelled</option>
 									<option value="none">No runs yet</option>
 								</select>
-								<select id="papersFilterSource" class="sw-select sw-select--sm">
-									<option value="">All sources</option>
-									<option value="pmc">PMC</option>
-									<option value="europepmc">Europe PMC</option>
-									<option value="arxiv">arXiv</option>
-									<option value="semanticscholar">Semantic Scholar</option>
-									<option value="upload">Upload</option>
-								</select>
 								<select id="papersFilterSort" class="sw-select sw-select--sm">
 									<option value="recent">Newest</option>
 									<option value="oldest">Oldest</option>
@@ -181,7 +127,7 @@
 							<!-- Papers table rows go here -->
 						</div>
 						<div id="papersEmpty" class="sw-empty p-6 text-sm text-slate-500 text-center">
-							No papers yet. Search and extract papers to see them here.
+							No papers yet. Upload PDFs to queue extraction runs.
 						</div>
 					</div>
 				</div>
@@ -235,33 +181,8 @@
 					</div>
 				</div>
 			</div>
-			
+
 			<!-- Side drawers -->
-			<div id="onboardingDrawer" class="sw-side-drawer" aria-hidden="true">
-				<div class="sw-side-drawer__overlay" data-drawer-close="onboarding"></div>
-				<aside class="sw-side-drawer__panel sw-side-drawer__panel--wide sw-side-drawer__panel--floating" role="dialog" aria-label="Onboarding checklist">
-					<div class="sw-side-drawer__header">
-						<h3 class="section-title">Onboarding</h3>
-						<button id="closeOnboardingDrawer" class="sw-side-drawer__close" type="button" aria-label="Close onboarding drawer">
-							<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-								<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-							</svg>
-						</button>
-					</div>
-					<div class="sw-side-drawer__body space-y-4">
-						<div class="sw-card p-6 space-y-3">
-							<div class="flex items-center justify-between">
-								<h3 class="section-title">Onboarding checklist</h3>
-								<div class="flex items-center gap-3 text-xs text-slate-500">
-									<span id="onboardingProgress" class="sw-chip sw-kicker text-[10px] text-slate-500"></span>
-									<button id="resetOnboarding" class="sw-btn sw-btn--sm sw-btn--ghost" type="button">Reset</button>
-								</div>
-							</div>
-							<div id="onboardingList" class="space-y-2"></div>
-						</div>
-					</div>
-				</aside>
-			</div>
 			<div id="promptDrawer" class="sw-side-drawer" aria-hidden="true">
 				<div class="sw-side-drawer__overlay" data-drawer-close="prompt"></div>
 				<aside class="sw-side-drawer__panel" role="dialog" aria-label="Prompt management">

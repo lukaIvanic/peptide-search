@@ -19,32 +19,6 @@ export function el(tag, cls, text) {
     return e;
 }
 
-// Source badge styling
-const SOURCE_BADGES = {
-    pmc: 'sw-badge sw-badge--source',
-    arxiv: 'sw-badge sw-badge--source',
-    europepmc: 'sw-badge sw-badge--source',
-    semanticscholar: 'sw-badge sw-badge--source',
-    upload: 'sw-badge sw-badge--source',
-};
-
-const SOURCE_LABELS_SHORT = {
-    pmc: 'PMC',
-    arxiv: 'ARXIV',
-    europepmc: 'EPMC',
-    semanticscholar: 'SEM SCH',
-    upload: 'UPLOAD',
-};
-
-function getSourceLabel(source, { short = false } = {}) {
-    if (!source) return 'N/A';
-    const key = source.toLowerCase();
-    if (short && SOURCE_LABELS_SHORT[key]) {
-        return SOURCE_LABELS_SHORT[key];
-    }
-    return source.toUpperCase();
-}
-
 /**
  * Render provider badge in header.
  */
@@ -86,132 +60,12 @@ export function renderConnectionBadge(status) {
 }
 
 /**
- * Render search results list with selection checkboxes and badges.
- */
-export function renderSearchResults(items, selectedMap, onToggle, isSearching = false) {
-    const section = $('#searchResultsSection');
-    const list = $('#resultsList');
-    const selectAllBtn = $('#selectAllResults');
-    const clearBtn = $('#clearResultsSelection');
-    
-    list.innerHTML = '';
-    
-    // Always show the section once a search has been initiated, so the user
-    // gets feedback even if there are 0 results or the search is still running.
-    section.classList.remove('hidden');
-
-    if (isSearching) {
-        if (selectAllBtn) selectAllBtn.disabled = true;
-        if (clearBtn) clearBtn.disabled = true;
-        list.appendChild(el('div', 'sw-empty py-6 text-sm text-slate-500 text-center', 'Searching...'));
-        return;
-    }
-
-    if (!items || items.length === 0) {
-        if (selectAllBtn) selectAllBtn.disabled = true;
-        if (clearBtn) clearBtn.disabled = true;
-        list.appendChild(el('div', 'sw-empty py-6 text-sm text-slate-500 text-center', 'No results found. Try a different query.'));
-        return;
-    }
-
-    if (selectAllBtn) selectAllBtn.disabled = false;
-    if (clearBtn) clearBtn.disabled = selectedMap.size === 0;
-
-    for (const it of items) {
-        const key = it.pdf_url || it.url;
-        const isSelected = selectedMap.has(key);
-        
-        const row = el('div', `sw-row list-row py-4 flex items-start gap-3 ${isSelected ? 'sw-row--selected' : ''}`);
-        
-        // Checkbox
-        const checkbox = el('input', 'mt-1 h-4 w-4');
-        checkbox.type = 'checkbox';
-        checkbox.checked = isSelected;
-        checkbox.disabled = !it.pdf_url;
-        checkbox.addEventListener('change', () => onToggle(it));
-        row.appendChild(checkbox);
-        
-        // Content
-        const content = el('div', 'flex-1 min-w-0');
-        
-        // Title + badges row
-        const titleRow = el('div', 'flex items-start gap-2');
-        titleRow.appendChild(el('div', 'list-title flex-1', it.title));
-        
-        // Status badges (queued/processing/failed/seen/processed)
-        const processingStatuses = new Set(['fetching', 'provider', 'validating']);
-        if (it.queue_status && processingStatuses.has(it.queue_status)) {
-            titleRow.appendChild(el('span', 'sw-badge sw-badge--processing whitespace-nowrap', 'Processing'));
-        } else if (it.queue_status === 'failed') {
-            titleRow.appendChild(el('span', 'sw-badge sw-badge--failed whitespace-nowrap', 'Failed'));
-        } else if (it.queue_status === 'queued' || it.queued) {
-            titleRow.appendChild(el('span', 'sw-badge sw-badge--queued whitespace-nowrap', 'Queued'));
-        } else if (it.processed) {
-            titleRow.appendChild(el('span', 'sw-badge sw-badge--done whitespace-nowrap', 'Processed'));
-        } else if (it.seen) {
-            titleRow.appendChild(el('span', 'sw-badge sw-badge--warn whitespace-nowrap', 'Seen'));
-        }
-        content.appendChild(titleRow);
-        
-        // Meta row
-        const sourceBadge = SOURCE_BADGES[it.source] || 'sw-badge sw-badge--source';
-        const meta = el('div', 'text-xs text-slate-500 mt-1 flex items-center gap-2');
-        meta.appendChild(el('span', sourceBadge, it.source?.toUpperCase() || 'N/A'));
-        meta.appendChild(document.createTextNode([it.year, it.doi].filter(Boolean).join(' · ')));
-        content.appendChild(meta);
-        
-        // Authors
-        if (it.authors?.length) {
-            content.appendChild(el('div', 'text-xs text-slate-500 mt-1 truncate', it.authors.join(', ')));
-        }
-        
-        // Links
-        const links = el('div', 'mt-2 flex gap-3');
-        if (it.url) {
-            const a = el('a', 'sw-chip sw-chip--info text-[10px]', 'View');
-            a.href = it.url;
-            a.target = '_blank';
-            links.appendChild(a);
-        }
-        if (it.pdf_url) {
-            const a = el('a', 'sw-chip sw-chip--success text-[10px]', 'PDF');
-            a.href = it.pdf_url;
-            a.target = '_blank';
-            links.appendChild(a);
-        }
-        if (!it.pdf_url) {
-            links.appendChild(el('span', 'sw-badge sw-badge--warn', 'No PDF'));
-        }
-        content.appendChild(links);
-        
-        row.appendChild(content);
-        list.appendChild(row);
-    }
-}
-
-/**
- * Update batch count display.
- */
-export function renderBatchCount(count) {
-    const countEl = $('#batchCount');
-    const btn = $('#startBatchBtn');
-    
-    if (count > 0) {
-        countEl.textContent = `${count} selected`;
-        btn.disabled = false;
-    } else {
-        countEl.textContent = '';
-        btn.disabled = true;
-    }
-}
-
-/**
  * Render the unified papers table.
  */
 export function renderPapersTable(papers, onRowClick, options = {}) {
     const table = $('#papersTable');
     const empty = $('#papersEmpty');
-    const emptyMessage = options.emptyMessage || 'No papers yet. Search and extract papers to see them here.';
+    const emptyMessage = options.emptyMessage || 'No papers yet. Upload PDFs to queue extraction runs.';
     table.innerHTML = '';
     
     if (!papers || papers.length === 0) {
@@ -245,10 +99,6 @@ export function renderPapersTable(papers, onRowClick, options = {}) {
             statusConfig.label,
         );
         row.appendChild(statusBadge);
-        
-        // Source badge
-        const sourceBadge = SOURCE_BADGES[p.source] || 'sw-badge sw-badge--source';
-        row.appendChild(el('span', `${sourceBadge} w-20 text-center flex-shrink-0`, getSourceLabel(p.source, { short: true })));
         
         // Title
         const titleWrap = el('div', 'flex-1 min-w-0');
@@ -299,6 +149,8 @@ let drawerCallbacks = {
     onResolveSource: null,
     onUpload: null,
     onRetryWithSource: null,
+    onDeleteRun: null,
+    onDeletePaper: null,
 };
 
 /**
@@ -326,7 +178,7 @@ export function renderDrawer(paper, runs, options = {}) {
     if (paper.authors?.length) {
         meta.appendChild(el('div', '', paper.authors.slice(0, 3).join(', ') + (paper.authors.length > 3 ? ' et al.' : '')));
     }
-    const metaLine = [paper.source?.toUpperCase(), paper.year, paper.doi].filter(Boolean).join(' · ');
+    const metaLine = [paper.year, paper.doi].filter(Boolean).join(' · ');
     if (metaLine) meta.appendChild(el('div', '', metaLine));
     if (paper.url) {
         const link = el('a', 'sw-chip sw-chip--info text-[10px]', 'View Article');
@@ -335,6 +187,14 @@ export function renderDrawer(paper, runs, options = {}) {
         meta.appendChild(link);
     }
     header.appendChild(meta);
+
+    if (paper.id && drawerCallbacks.onDeletePaper) {
+        const paperActions = el('div', 'mt-3 flex flex-wrap items-center gap-2');
+        const deletePaperBtn = el('button', 'sw-btn sw-btn--sm sw-btn--danger', 'Delete paper');
+        deletePaperBtn.addEventListener('click', () => drawerCallbacks.onDeletePaper(paper.id, paper.title || ''));
+        paperActions.appendChild(deletePaperBtn);
+        header.appendChild(paperActions);
+    }
     
     // Force Re-extract button (show if paper has stored status)
     if (paper.status === 'stored' && paper.id && drawerCallbacks.onForceReextract) {
@@ -560,9 +420,21 @@ export function renderDrawer(paper, runs, options = {}) {
                 runNowBtn.addEventListener('click', () => drawerCallbacks.onRetryWithSource(run.id, resolved.url));
                 actionRow.appendChild(runNowBtn);
             }
+            if (drawerCallbacks.onDeleteRun) {
+                const deleteRunBtn = el('button', 'sw-btn sw-btn--sm sw-btn--danger', 'Delete run');
+                deleteRunBtn.addEventListener('click', () => drawerCallbacks.onDeleteRun(run.id));
+                actionRow.appendChild(deleteRunBtn);
+            }
             if (actionRow.childNodes.length) {
                 runBody.appendChild(actionRow);
             }
+        }
+        if (run.id && run.status !== 'failed' && drawerCallbacks.onDeleteRun) {
+            const actionRow = el('div', 'mt-2 flex flex-wrap items-center gap-2');
+            const deleteRunBtn = el('button', 'sw-btn sw-btn--sm sw-btn--danger', 'Delete run');
+            deleteRunBtn.addEventListener('click', () => drawerCallbacks.onDeleteRun(run.id));
+            actionRow.appendChild(deleteRunBtn);
+            runBody.appendChild(actionRow);
         }
         
         // Extracted entities summary
@@ -789,11 +661,4 @@ export function setDrawerOpen(open) {
         drawer.classList.add('translate-x-full');
         overlay.classList.add('hidden');
     }
-}
-
-/**
- * Set search count display.
- */
-export function setSearchCount(text) {
-    $('#searchCount').textContent = text;
 }

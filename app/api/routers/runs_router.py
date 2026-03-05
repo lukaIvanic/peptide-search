@@ -16,6 +16,7 @@ from ...persistence.repository import BaselineCaseRunRepository
 from ...schemas import (
     BulkRetryRequest,
     BulkRetryResponse,
+    DeleteRunResponse,
     EditRunRequest,
     ExtractionDetailResponse,
     ExtractionListItem,
@@ -32,6 +33,8 @@ from ...schemas import (
     RunRetryWithSourceRequest,
 )
 from ...services.baseline_helpers import link_cases_to_run, select_baseline_result
+from ...services.baseline_recompute_service import mark_batches_stale_and_trigger
+from ...services.deletion_service import DeletionNotFoundError, delete_run_subtree
 from ...services.extraction_service import run_edit, run_extraction_from_files, run_followup, run_followup_stream
 from ...services.failure_reason import FAILURE_BUCKET_LABELS, bucket_failure_reason, normalize_failure_reason
 from ...services.queue_service import get_queue
@@ -316,6 +319,29 @@ async def get_run(run_id: int, session: Session = Depends(get_session)) -> RunPa
 
     paper = session.get(Paper, run.paper_id) if run.paper_id else None
     return RunPayloadResponse(**build_run_payload(run, paper))
+
+
+@router.delete("/api/runs/{run_id}", response_model=DeleteRunResponse)
+async def delete_run(
+    run_id: int,
+    session: Session = Depends(get_session),
+) -> DeleteRunResponse:
+    try:
+        summary = delete_run_subtree(session, run_id, deleted_by="user")
+    except DeletionNotFoundError as exc:
+        raise HTTPException(status_code=404, detail=str(exc)) from exc
+
+    if summary.affected_batch_ids:
+        await mark_batches_stale_and_trigger(batch_ids=sorted(summary.affected_batch_ids))
+
+    return DeleteRunResponse(
+        status="ok",
+        deleted_runs=summary.deleted_runs,
+        deleted_entities=summary.deleted_entities,
+        deleted_queue_jobs=summary.deleted_queue_jobs,
+        deleted_source_locks=summary.deleted_source_locks,
+        deleted_case_links=summary.deleted_case_links,
+    )
 
 
 @router.post("/api/runs/{run_id}/followup", response_model=ExtractResponse)

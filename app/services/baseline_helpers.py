@@ -32,6 +32,11 @@ from .serializers import iso_z
 logger = logging.getLogger(__name__)
 
 
+def _is_supported_source_url(value: Optional[str]) -> bool:
+    text = (value or "").strip().lower()
+    return text.startswith("http://") or text.startswith("https://") or text.startswith("upload://")
+
+
 def baseline_title(case: BaselineCase) -> str:
     sequence = case.sequence or "Unknown sequence"
     return f"Baseline {case.dataset}: {sequence}"
@@ -48,6 +53,7 @@ def baseline_dataset_infos(dataset_filter: Optional[str] = None) -> List[Baselin
                 id=entry.get("id"),
                 label=entry.get("label"),
                 description=entry.get("description"),
+                source_file=entry.get("source_file"),
                 count=entry.get("count", 0),
             )
         )
@@ -167,18 +173,20 @@ async def resolve_baseline_source(
     if local_only:
         return None
 
-    if case.pdf_url and DocumentExtractor.looks_like_pdf_url(case.pdf_url):
+    if case.pdf_url and (
+        DocumentExtractor.looks_like_pdf_url(case.pdf_url) or _is_supported_source_url(case.pdf_url)
+    ):
         return SearchItem(
             title=baseline_title(case),
             doi=case.doi,
-            url=case.paper_url or case.pdf_url,
+            url=case.paper_url if _is_supported_source_url(case.paper_url) else None,
             pdf_url=case.pdf_url,
             source="baseline",
             year=None,
             authors=[],
         )
 
-    if case.paper_url:
+    if case.paper_url and _is_supported_source_url(case.paper_url):
         return SearchItem(
             title=baseline_title(case),
             doi=case.doi,
@@ -210,14 +218,14 @@ def get_case_paper_key(case: BaselineCase) -> str:
         return f"doi:{normalized_doi}"
     if case.pubmed_id:
         return f"pubmed:{case.pubmed_id.strip()}"
-    if case.paper_url:
+    if case.paper_url and _is_supported_source_url(case.paper_url):
         return f"url:{case.paper_url.strip()}"
     return f"case:{case.id}"
 
 
 def get_source_key(case: BaselineCase, resolved_url: Optional[str]) -> Optional[str]:
     source_url = resolved_url or case.pdf_url or case.paper_url
-    if source_url:
+    if source_url and _is_supported_source_url(source_url):
         return f"url:{source_url.strip()}"
     normalized = normalize_case_doi(case.doi)
     if normalized:
@@ -230,7 +238,7 @@ def get_source_key(case: BaselineCase, resolved_url: Optional[str]) -> Optional[
 def get_source_keys(case: BaselineCase, resolved_url: Optional[str]) -> List[str]:
     keys: List[str] = []
     source_url = resolved_url or case.pdf_url or case.paper_url
-    if source_url:
+    if source_url and _is_supported_source_url(source_url):
         keys.append(f"url:{source_url.strip()}")
     normalized = normalize_case_doi(case.doi)
     if normalized:

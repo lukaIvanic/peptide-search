@@ -3,29 +3,16 @@
  */
 import * as api from './js/api.js';
 import { $, el } from './js/renderers.js';
-
-// Model pricing per 1M tokens (approximate, excludes cached-input discounts).
-const MODEL_PRICING = {
-	'gpt-5.2': { input: 1.75, output: 14.00 },
-	'gpt-5-mini': { input: 0.25, output: 2.00 },
-	'gpt-5-nano': { input: 0.05, output: 0.40 },
-	'moonshotai/kimi-k2.5': { input: 0.45, output: 2.25 },
-	'kimi-k2.5': { input: 0.45, output: 2.25 },
-	'gemini-3-pro-preview': { input: 2.00, output: 12.00 },
-	'google/gemini-3-pro-preview': { input: 2.00, output: 12.00 },
-	'gemini-3-flash': { input: 0.50, output: 3.00 },
-	'gemini-3-flash-preview': { input: 0.50, output: 3.00 },
-	'google/gemini-3-flash': { input: 0.50, output: 3.00 },
-	'google/gemini-3-flash-preview': { input: 0.50, output: 3.00 },
-	'gemini-2.5-pro': { input: 1.25, output: 10.00 },
-	'google/gemini-2.5-pro': { input: 1.25, output: 10.00 },
-	'z-ai/glm-4.7': { input: 0.40, output: 1.50 },
-	'glm-4.7': { input: 0.40, output: 1.50 },
-	'gpt-4o': { input: 2.50, output: 10.00 },
-	'gpt-4o-mini': { input: 0.15, output: 0.60 },
-	'gpt-4.1-nano': { input: 0.10, output: 0.40 },
-	'mock-model': { input: 0, output: 0 },
-};
+import {
+	validateGroupDraft,
+	validatePaperDraft,
+	buildGroupPayload,
+	buildPaperPayload,
+	submitCreateGroupMock,
+	submitSavePaperMock,
+	submitDeleteGroupMock,
+	submitDeletePaperMock,
+} from './js/baseline/actions/eval_builder_mock_actions.js';
 
 const STATUS_COLORS = {
 	running: 'border-cyan-400',
@@ -43,14 +30,20 @@ const STATUS_LABELS = {
 
 const RANKABLE_BATCH_STATUSES = new Set(['running', 'completed', 'partial', 'failed']);
 const BASELINE_ACCURACY_TARGET = 368;
+const BASELINE_PAPERS_TARGET = 69;
+const ENABLE_PARETO_POINT_HOVER_TOOLTIP = true;
 const DEFAULT_PROVIDER_METRIC = 'accuracy';
 const PROVIDER_METRIC_STORAGE_KEY = 'peptide.evaluation.chart.metric';
+const PROVIDER_COMPLETE_ONLY_STORAGE_KEY = 'peptide.evaluation.chart.complete_only';
+const DATASET_FILTER_STORAGE_KEY = 'peptide.evaluation.dataset';
 const SVG_NS = 'http://www.w3.org/2000/svg';
 const COMPACT_FORMAT = new Intl.NumberFormat('en-US', {
 	notation: 'compact',
 	maximumFractionDigits: 1,
 });
 const NUMBER_FORMAT = new Intl.NumberFormat('en-US');
+const EVAL_BUILDER_PRIMARY_DATASET_ID = 'self_assembly';
+const EVAL_BUILDER_PRIMARY_PAPER_COUNT = 69;
 
 const PROVIDER_METRICS = {
 	accuracy: {
@@ -73,21 +66,134 @@ const PROVIDER_METRICS = {
 		label: 'Total Time',
 		axisMode: 'number',
 	},
+	pareto_frontier: {
+		id: 'pareto_frontier',
+		label: 'Pareto Frontier',
+		axisMode: 'pareto',
+	},
+	pareto_frontier_accuracy: {
+		id: 'pareto_frontier_accuracy',
+		label: 'Pareto Frontier (Accuracy)',
+		axisMode: 'pareto',
+	},
 };
 
 const state = {
 	batches: [],
 	prompts: [],
 	providers: [],
+	datasetOptions: [],
+	selectedDataset: 'self_assembly',
+	cases: [],
+	datasets: [],
 	activePromptId: null,
 	sseConnection: null,
 	providerChartState: 'loading',
 	providerChartError: '',
 	providerChartHasAnimated: false,
 	providerChartMetric: DEFAULT_PROVIDER_METRIC,
+	providerChartCompleteOnly: false,
+	evalBuilder: {
+		open: false,
+		selectedDatasetId: null,
+		selectedPaperKey: null,
+		mode: 'edit_group',
+		draftGroup: { id: '', label: '', description: '' },
+		draftPaper: {
+			title: '',
+			doi: '',
+			paper_url: '',
+			main_pdf_file: null,
+			supporting_pdf_files: [],
+		},
+		draftGroundTruthEntities: [{ sequence: '', n_terminal: '', c_terminal: '', labels_csv: '', notes: '' }],
+		busy: false,
+		loaded: false,
+	},
 };
 
 let chartResizeTimer = null;
+
+function getDatasetFilterFromStorage() {
+	try {
+		const stored = window.localStorage.getItem(DATASET_FILTER_STORAGE_KEY);
+		return stored ? stored.trim() : '';
+	} catch (_err) {
+		return '';
+	}
+}
+
+function persistDatasetFilter(datasetId) {
+	try {
+		if (datasetId) {
+			window.localStorage.setItem(DATASET_FILTER_STORAGE_KEY, datasetId);
+		} else {
+			window.localStorage.removeItem(DATASET_FILTER_STORAGE_KEY);
+		}
+	} catch (_err) {
+		// Ignore storage errors.
+	}
+}
+
+function getBatchesEndpoint() {
+	const dataset = (state.selectedDataset || '').trim();
+	if (!dataset) return '/api/baseline/batches';
+	return `/api/baseline/batches?dataset=${encodeURIComponent(dataset)}`;
+}
+
+function buildBatchDetailHref(batchId) {
+	const id = encodeURIComponent(batchId);
+	const dataset = (state.selectedDataset || '').trim();
+	if (!dataset) return `/baseline/${id}`;
+	return `/baseline/${id}?dataset=${encodeURIComponent(dataset)}`;
+}
+
+function renderDatasetFilterOptions() {
+	const select = $('#batchDatasetFilter');
+	if (!select) return;
+	select.innerHTML = '';
+	if (!state.datasetOptions.length) {
+		const fallback = document.createElement('option');
+		fallback.value = '';
+		fallback.textContent = 'No groups';
+		select.appendChild(fallback);
+		select.disabled = true;
+		return;
+	}
+	select.disabled = false;
+	state.datasetOptions.forEach((dataset) => {
+		const option = document.createElement('option');
+		option.value = dataset.id;
+		const label = dataset.label || dataset.id;
+		const count = Number(dataset.count || 0);
+		option.textContent = `${label}${count > 0 ? ` (${count})` : ''}`;
+		select.appendChild(option);
+	});
+	select.value = state.selectedDataset;
+}
+
+async function loadDatasetOptions() {
+	try {
+		const datasets = await api.getBaselineDatasets();
+		state.datasetOptions = Array.isArray(datasets) ? datasets : [];
+		const available = new Set(state.datasetOptions.map((item) => item.id));
+		const stored = getDatasetFilterFromStorage();
+		const preferred = stored || (state.selectedDataset || '').trim();
+		if (preferred && available.has(preferred)) {
+			state.selectedDataset = preferred;
+		} else if (stored && available.has(stored)) {
+			state.selectedDataset = stored;
+		} else if (available.has('self_assembly')) {
+			state.selectedDataset = 'self_assembly';
+		} else {
+			state.selectedDataset = state.datasetOptions[0]?.id || '';
+		}
+		persistDatasetFilter(state.selectedDataset);
+		renderDatasetFilterOptions();
+	} catch (err) {
+		console.error('Failed to load dataset options:', err);
+	}
+}
 
 function normalizeProviderKey(provider) {
 	return (provider || 'unknown').toString().trim().toLowerCase();
@@ -95,11 +201,6 @@ function normalizeProviderKey(provider) {
 
 function normalizeModelKey(modelName) {
 	return (modelName || '').toString().trim().toLowerCase();
-}
-
-function getModelPricing(modelName) {
-	const key = normalizeModelKey(modelName);
-	return MODEL_PRICING[key] || null;
 }
 
 function formatProviderName(provider) {
@@ -147,7 +248,7 @@ function formatTokens(count) {
 
 function formatCost(batch) {
 	const total = getBatchEstimatedCostUsd(batch);
-	if (!Number.isFinite(total)) return 'n/a';
+	if (!Number.isFinite(total)) return '?';
 	if (total < 0.01) return '<$0.01';
 	return `$${total.toFixed(2)}`;
 }
@@ -237,8 +338,26 @@ function persistProviderChartMetric(metricId) {
 	}
 }
 
+function getProviderChartCompleteOnlyFromStorage() {
+	try {
+		return window.localStorage.getItem(PROVIDER_COMPLETE_ONLY_STORAGE_KEY) === '1';
+	} catch (_err) {
+		// Ignore storage errors; default toggle state still works.
+	}
+	return false;
+}
+
+function persistProviderChartCompleteOnly(value) {
+	try {
+		window.localStorage.setItem(PROVIDER_COMPLETE_ONLY_STORAGE_KEY, value ? '1' : '0');
+	} catch (_err) {
+		// Ignore storage errors; state keeps working.
+	}
+}
+
 function initProviderMetricControls() {
 	const select = $('#providerMetricSelect');
+	const completeOnlyToggle = $('#providerCompleteOnlyToggle');
 	if (!select) return;
 
 	select.innerHTML = '';
@@ -250,6 +369,10 @@ function initProviderMetricControls() {
 
 	state.providerChartMetric = getProviderChartMetricFromStorage();
 	select.value = state.providerChartMetric;
+	state.providerChartCompleteOnly = getProviderChartCompleteOnlyFromStorage();
+	if (completeOnlyToggle) {
+		completeOnlyToggle.checked = state.providerChartCompleteOnly;
+	}
 
 	select.addEventListener('change', (event) => {
 		const nextMetric = event.target.value;
@@ -258,19 +381,31 @@ function initProviderMetricControls() {
 		persistProviderChartMetric(nextMetric);
 		renderProviderAccuracyChart();
 	});
+	if (completeOnlyToggle) {
+		completeOnlyToggle.addEventListener('change', (event) => {
+			state.providerChartCompleteOnly = !!event.target.checked;
+			persistProviderChartCompleteOnly(state.providerChartCompleteOnly);
+			renderProviderAccuracyChart();
+		});
+	}
 }
 
 function getBatchEstimatedCostUsd(batch) {
 	const directCost = Number(batch.estimated_cost_usd);
 	if (Number.isFinite(directCost) && directCost >= 0) return directCost;
-	const pricing = getModelPricing(batch.model_name);
-	if (!pricing) return null;
-	const inputCost = (Number(batch.total_input_tokens || 0) / 1_000_000) * pricing.input;
-	const outputCost = (Number(batch.total_output_tokens || 0) / 1_000_000) * pricing.output;
-	return Math.max(0, inputCost + outputCost);
+	return null;
 }
 
-function selectFinishedBatches(batches) {
+function isBatchFullyExtracted(batch) {
+	const totalPapers = Math.max(0, Number(batch.total_papers || 0));
+	const completedPapers = Math.max(0, Number(batch.completed || 0));
+	const failedPapers = Math.max(0, Number(batch.failed || 0));
+	const status = (batch.status || '').toString().trim().toLowerCase();
+	if (totalPapers <= 0) return false;
+	return failedPapers === 0 && completedPapers >= totalPapers && (status === 'completed' || status.includes('completed'));
+}
+
+function selectFinishedBatches(batches, { completeOnly = false } = {}) {
 	return batches.filter((batch) => {
 		const status = (batch.status || '').toString().trim().toLowerCase();
 		const model = (batch.model_name || '').toString().trim();
@@ -280,7 +415,9 @@ function selectFinishedBatches(batches) {
 			status.includes('partial') ||
 			status.includes('completed') ||
 			status.includes('failed');
-		return isRankable && (model || provider);
+		if (!isRankable || !(model || provider)) return false;
+		if (completeOnly && !isBatchFullyExtracted(batch)) return false;
+		return true;
 	});
 }
 
@@ -551,6 +688,149 @@ function buildProviderChartModel(rows, metric, containerWidth) {
 	};
 }
 
+function computeParetoFrontierRows(finishedBatches, yMetric = 'papers') {
+	const aggregated = aggregateProviderStats(finishedBatches);
+	const points = [];
+	for (const row of aggregated) {
+		const modelKey = (row.modelKey || '').toString().trim().toLowerCase();
+		const providerLabel = (row.providerLabel || '').toString().trim().toLowerCase();
+		if (modelKey === 'mock-model' || modelKey === 'provider:mock' || providerLabel.startsWith('mock')) {
+			continue;
+		}
+		if (row.costSamples <= 0) continue;
+		const x = Number(row.cost || 0);
+		const y = yMetric === 'accuracy'
+			? (row.accuracyRuns > 0 ? row.matched / (row.accuracyRuns * row.accuracyTarget) : NaN)
+			: (row.papersAllMatchedSamples > 0 ? Number(row.papersAllMatchedBest || 0) : NaN);
+		if (!Number.isFinite(x) || !Number.isFinite(y) || x < 0 || y < 0) continue;
+		points.push({
+			...row,
+			x,
+			y,
+			isFrontier: false,
+		});
+	}
+	points.sort((a, b) => {
+		if (a.x !== b.x) return a.x - b.x;
+		return b.y - a.y;
+	});
+
+	let bestY = -Infinity;
+	for (const point of points) {
+		if (point.y > bestY) {
+			point.isFrontier = true;
+			bestY = point.y;
+		}
+	}
+	return points;
+}
+
+function buildLogAxis(minValue, maxValue) {
+	const min = Math.max(Number(minValue || 0), 1e-9);
+	const max = Math.max(Number(maxValue || 0), min);
+	const minExp = Math.floor(Math.log10(min));
+	const maxExp = Math.ceil(Math.log10(max));
+	const expRange = Math.max(0, maxExp - minExp);
+	const stepExp = Math.max(1, Math.ceil(expRange / 6));
+	const values = [];
+	for (let exp = minExp; exp <= maxExp; exp += stepExp) {
+		values.push(10 ** exp);
+	}
+	const axisMin = 10 ** minExp;
+	const axisMax = 10 ** maxExp;
+	if (!values.includes(axisMax)) values.push(axisMax);
+	return {
+		min: axisMin,
+		max: axisMax,
+		values: Array.from(new Set(values)).sort((a, b) => a - b),
+	};
+}
+
+function buildNumericAxis(maxValue, tickCount = 4) {
+	const safeMax = Math.max(0, Number(maxValue || 0));
+	const step = getNiceStep(safeMax / tickCount || 1);
+	const axisMax = Math.max(step * tickCount, step);
+	const values = [];
+	for (let idx = 0; idx <= tickCount; idx += 1) {
+		values.push(step * idx);
+	}
+	return {
+		max: axisMax,
+		values,
+	};
+}
+
+function buildProviderParetoModel(points, containerWidth, yMetric = 'papers') {
+	const width = Math.max(320, Math.floor(containerWidth || 720));
+	const compact = width < 720;
+	const leftPad = compact ? 52 : 66;
+	const rightPad = compact ? 20 : 28;
+	const topPad = compact ? 24 : 28;
+	const bottomPad = compact ? 54 : 58;
+	const height = compact ? 320 : 360;
+	const plotWidth = Math.max(160, width - leftPad - rightPad);
+	const plotHeight = Math.max(140, height - topPad - bottomPad);
+	const xMax = points.reduce((max, point) => Math.max(max, point.x), 0);
+	const yMax = points.reduce((max, point) => Math.max(max, point.y), 0);
+	const xAxis = buildNumericAxis(xMax, 4);
+	const papersTargetValue = yMetric === 'papers'
+		? Math.max(
+			BASELINE_PAPERS_TARGET,
+			points.reduce((max, point) => Math.max(max, Number(point.papersTargetMax || 0)), 0),
+		)
+		: null;
+	const yAxis = yMetric === 'accuracy'
+		? { max: 1, values: [0, 0.25, 0.5, 0.75, 1] }
+		: buildNumericAxis(Math.max(yMax, Number(papersTargetValue || 0)), 4);
+	const xTicks = xAxis.values.map((value) => ({
+		value,
+		x: leftPad + plotWidth * (xAxis.max ? value / xAxis.max : 0),
+		label: formatCurrencyTick(value),
+	}));
+	const yTicks = yAxis.values.map((value) => ({
+		value,
+		y: topPad + plotHeight - plotHeight * (yAxis.max ? value / yAxis.max : 0),
+		label: yMetric === 'accuracy' ? `${Math.round(value * 100)}%` : formatCompactNumber(value),
+	}));
+	const projectedPoints = points.map((point) => {
+		const xRatio = xAxis.max > 0 ? point.x / xAxis.max : 0;
+		const yRatio = yAxis.max > 0 ? point.y / yAxis.max : 0;
+		const px = leftPad + plotWidth * xRatio;
+		const py = topPad + plotHeight - plotHeight * yRatio;
+		return {
+			...point,
+			px,
+			py,
+			label: compact ? truncateLabel(point.providerLabel, 14) : truncateLabel(point.providerLabel, 24),
+			radius: point.isFrontier ? (compact ? 4.8 : 5.6) : (compact ? 3.8 : 4.4),
+		};
+	});
+	const frontierPoints = projectedPoints
+		.filter((point) => point.isFrontier)
+		.sort((a, b) => a.x - b.x);
+	const targetLineY = yMetric === 'papers' && yAxis.max > 0
+		? topPad + plotHeight - plotHeight * (Number(papersTargetValue || 0) / yAxis.max)
+		: null;
+	return {
+		width,
+		height,
+		compact,
+		leftPad,
+		topPad,
+		plotWidth,
+		plotHeight,
+		xAxis,
+		yAxis,
+		xTicks,
+		yTicks,
+		points: projectedPoints,
+		frontierPoints,
+		yMetric,
+		papersTargetValue,
+		targetLineY,
+	};
+}
+
 function createSvgNode(tagName, attrs = {}) {
 	const node = document.createElementNS(SVG_NS, tagName);
 	for (const [key, value] of Object.entries(attrs)) {
@@ -710,6 +990,222 @@ function renderProviderAccuracySvg(container, model, metric, options = {}) {
 	}
 }
 
+function renderProviderParetoSvg(container, model) {
+	let tooltip = null;
+	const showTooltip = (point, anchorRect) => {
+		if (!tooltip) return;
+		tooltip.innerHTML = '';
+		tooltip.appendChild(el('div', 'provider-pareto-tooltip__title', point.providerLabel));
+		tooltip.appendChild(el('div', 'provider-pareto-tooltip__line', `Cost: ${formatCurrency(point.x)}`));
+		tooltip.appendChild(
+			el(
+				'div',
+				'provider-pareto-tooltip__line',
+				model.yMetric === 'accuracy'
+					? `Accuracy: ${(point.y * 100).toFixed(1)}%`
+					: `Papers Fully Matched: ${formatCount(point.y)}`,
+			),
+		);
+		tooltip.appendChild(el('div', 'provider-pareto-tooltip__line', `Runs: ${formatCount(point.batches)}`));
+		tooltip.classList.remove('hidden');
+		const bounds = container.getBoundingClientRect();
+		const baseLeft = anchorRect.left - bounds.left + (anchorRect.width / 2);
+		const left = Math.min(
+			Math.max(8, baseLeft + 10),
+			Math.max(8, bounds.width - tooltip.offsetWidth - 8),
+		);
+		let top = anchorRect.top - bounds.top - tooltip.offsetHeight - 10;
+		if (top < 8) {
+			top = Math.min(bounds.height - tooltip.offsetHeight - 8, anchorRect.bottom - bounds.top + 10);
+		}
+		tooltip.style.left = `${left}px`;
+		tooltip.style.top = `${Math.max(8, top)}px`;
+	};
+	const hideTooltip = () => {
+		if (tooltip) tooltip.classList.add('hidden');
+	};
+
+	if (ENABLE_PARETO_POINT_HOVER_TOOLTIP) {
+		container.style.position = 'relative';
+		tooltip = el('div', 'provider-pareto-tooltip hidden', '');
+	}
+
+	const svg = createSvgNode('svg', {
+		class: 'provider-accuracy-svg',
+		viewBox: `0 0 ${model.width} ${model.height}`,
+		role: 'img',
+		'aria-label': model.yMetric === 'accuracy'
+			? 'Pareto frontier chart for cost versus accuracy'
+			: 'Pareto frontier chart for cost versus papers fully matched',
+	});
+	svg.style.width = '100%';
+	svg.style.height = 'auto';
+
+	for (const tick of model.xTicks) {
+		svg.appendChild(
+			createSvgNode('line', {
+				class: 'provider-accuracy-grid',
+				x1: tick.x,
+				y1: model.topPad,
+				x2: tick.x,
+				y2: model.topPad + model.plotHeight,
+			}),
+		);
+		svg.appendChild(
+			createSvgNode('line', {
+				class: 'provider-accuracy-tick',
+				x1: tick.x,
+				y1: model.topPad + model.plotHeight,
+				x2: tick.x,
+				y2: model.topPad + model.plotHeight + 6,
+			}),
+		);
+		const tickLabel = createSvgNode('text', {
+			class: 'provider-accuracy-tick-label',
+			x: tick.x,
+			y: model.topPad + model.plotHeight + 20,
+			'text-anchor': 'middle',
+		});
+		tickLabel.textContent = tick.label;
+		svg.appendChild(tickLabel);
+	}
+
+	for (const tick of model.yTicks) {
+		svg.appendChild(
+			createSvgNode('line', {
+				class: 'provider-accuracy-grid',
+				x1: model.leftPad,
+				y1: tick.y,
+				x2: model.leftPad + model.plotWidth,
+				y2: tick.y,
+			}),
+		);
+		svg.appendChild(
+			createSvgNode('line', {
+				class: 'provider-accuracy-tick',
+				x1: model.leftPad - 6,
+				y1: tick.y,
+				x2: model.leftPad,
+				y2: tick.y,
+			}),
+		);
+		const tickLabel = createSvgNode('text', {
+			class: 'provider-accuracy-tick-label',
+			x: model.leftPad - 10,
+			y: tick.y + 3,
+			'text-anchor': 'end',
+		});
+		tickLabel.textContent = tick.label;
+		svg.appendChild(tickLabel);
+	}
+
+	svg.appendChild(
+		createSvgNode('line', {
+			class: 'provider-accuracy-axis',
+			x1: model.leftPad,
+			y1: model.topPad + model.plotHeight,
+			x2: model.leftPad + model.plotWidth,
+			y2: model.topPad + model.plotHeight,
+		}),
+	);
+	svg.appendChild(
+		createSvgNode('line', {
+			class: 'provider-accuracy-axis',
+			x1: model.leftPad,
+			y1: model.topPad,
+			x2: model.leftPad,
+			y2: model.topPad + model.plotHeight,
+		}),
+	);
+
+	if (model.yMetric === 'papers' && Number.isFinite(model.targetLineY)) {
+		svg.appendChild(
+			createSvgNode('line', {
+				class: 'provider-pareto-target-line',
+				x1: model.leftPad,
+				y1: model.targetLineY,
+				x2: model.leftPad + model.plotWidth,
+				y2: model.targetLineY,
+			}),
+		);
+		const targetLabel = createSvgNode('text', {
+			class: 'provider-pareto-target-label',
+			x: model.leftPad + model.plotWidth - 2,
+			y: model.targetLineY - 6,
+			'text-anchor': 'end',
+		});
+		targetLabel.textContent = 'Max score';
+		svg.appendChild(targetLabel);
+	}
+
+	if (model.frontierPoints.length > 1) {
+		const pathSegments = model.frontierPoints.map((point, index) =>
+			`${index === 0 ? 'M' : 'L'} ${point.px.toFixed(2)} ${point.py.toFixed(2)}`,
+		);
+		svg.appendChild(
+			createSvgNode('path', {
+				class: 'provider-pareto-frontier',
+				d: pathSegments.join(' '),
+			}),
+		);
+	}
+
+	for (const point of model.points) {
+		const dot = createSvgNode('circle', {
+			class: point.isFrontier ? 'provider-pareto-point is-frontier' : 'provider-pareto-point',
+			cx: point.px,
+			cy: point.py,
+			r: point.radius,
+		});
+		const title = createSvgNode('title');
+		title.textContent = model.yMetric === 'accuracy'
+			? `${point.providerLabel}: ${formatCurrency(point.x)} cost, ${(point.y * 100).toFixed(1)}% accuracy`
+			: `${point.providerLabel}: ${formatCurrency(point.x)} cost, ${formatCount(point.y)} papers`;
+		dot.appendChild(title);
+		if (ENABLE_PARETO_POINT_HOVER_TOOLTIP) {
+			dot.setAttribute('tabindex', '0');
+			dot.addEventListener('mouseenter', () => showTooltip(point, dot.getBoundingClientRect()));
+			dot.addEventListener('mouseleave', hideTooltip);
+			dot.addEventListener('focus', () => showTooltip(point, dot.getBoundingClientRect()));
+			dot.addEventListener('blur', hideTooltip);
+		}
+		svg.appendChild(dot);
+
+		const text = createSvgNode('text', {
+			class: point.isFrontier ? 'provider-pareto-label is-frontier' : 'provider-pareto-label',
+			x: point.px + 7,
+			y: point.py - 7,
+		});
+		text.textContent = point.label;
+		svg.appendChild(text);
+	}
+
+	const xAxisLabel = createSvgNode('text', {
+		class: 'provider-accuracy-meta',
+		x: model.leftPad + model.plotWidth / 2,
+		y: model.height - 10,
+		'text-anchor': 'middle',
+	});
+	xAxisLabel.textContent = 'Cost (USD)';
+	svg.appendChild(xAxisLabel);
+
+	const yAxisLabel = createSvgNode('text', {
+		class: 'provider-accuracy-meta',
+		x: 16,
+		y: model.topPad + model.plotHeight / 2,
+		'text-anchor': 'middle',
+		transform: `rotate(-90 16 ${model.topPad + model.plotHeight / 2})`,
+	});
+	yAxisLabel.textContent = model.yMetric === 'accuracy' ? 'Accuracy' : 'Papers Fully Matched';
+	svg.appendChild(yAxisLabel);
+
+	container.appendChild(svg);
+	if (tooltip) {
+		container.appendChild(tooltip);
+		svg.addEventListener('mouseleave', hideTooltip);
+	}
+}
+
 function renderProviderAccuracyChart() {
 	const container = $('#providerAccuracyChart');
 	const plotMount = $('#providerAccuracyPlot');
@@ -724,7 +1220,36 @@ function renderProviderAccuracyChart() {
 		return;
 	}
 
-	const finishedBatches = selectFinishedBatches(state.batches);
+	const finishedBatches = selectFinishedBatches(state.batches, {
+		completeOnly: state.providerChartCompleteOnly,
+	});
+	if (metric.id === 'pareto_frontier' || metric.id === 'pareto_frontier_accuracy') {
+		const yMetric = metric.id === 'pareto_frontier_accuracy' ? 'accuracy' : 'papers';
+		const points = computeParetoFrontierRows(finishedBatches, yMetric);
+		if (!points.length) {
+			plotMount.appendChild(
+				el(
+					'div',
+					'sw-empty text-xs text-slate-500',
+						state.batches.length
+							? (yMetric === 'accuracy'
+								? (state.providerChartCompleteOnly
+									? 'No fully extracted runs have enough cost and accuracy data yet.'
+									: 'Pareto frontier needs runs with both cost and accuracy data.')
+								: (state.providerChartCompleteOnly
+									? 'No fully extracted runs have enough cost and papers-fully-matched data yet.'
+									: 'Pareto frontier needs runs with both cost and papers-fully-matched data.'))
+							: 'No runs available yet. Start a run to populate analytics.',
+				),
+			);
+			return;
+		}
+		const model = buildProviderParetoModel(points, plotMount.clientWidth || container.clientWidth || 720, yMetric);
+		renderProviderParetoSvg(plotMount, model);
+		state.providerChartHasAnimated = true;
+		return;
+	}
+
 	const { rows } = computeProviderMetricRows(finishedBatches, metric);
 	const papersAllMatchedMissing =
 		metric.id === 'papers_all_matched' &&
@@ -736,11 +1261,13 @@ function renderProviderAccuracyChart() {
 			el(
 				'div',
 				'sw-empty text-xs text-slate-500',
-					papersAllMatchedMissing
-						? 'Metric unavailable from the current API payload.'
-						: state.batches.length
-							? 'No models have enough data for this metric yet.'
-							: 'No runs available yet. Start a run to populate analytics.',
+						papersAllMatchedMissing
+							? 'Metric unavailable from the current API payload.'
+							: state.batches.length
+								? (state.providerChartCompleteOnly
+									? 'No fully extracted runs match this filter yet.'
+									: 'No models have enough data for this metric yet.')
+								: 'No runs available yet. Start a run to populate analytics.',
 				),
 			);
 			return;
@@ -829,7 +1356,7 @@ function patchBatchCardElement(card, batch) {
 	if (titleLink) {
 		titleLink.textContent = batch.label || batch.batch_id;
 		titleLink.title = batch.batch_id;
-		titleLink.href = `/baseline/${encodeURIComponent(batch.batch_id)}`;
+		titleLink.href = buildBatchDetailHref(batch.batch_id);
 	}
 
 	const statusBadge = card.querySelector('[data-role="status-badge"]');
@@ -892,7 +1419,7 @@ function renderBatchCard(batch) {
 	const titleLink = el('a', 'font-semibold text-sm truncate flex-1 mr-2 hover:text-cyan-500 cursor-pointer', batch.label || batch.batch_id);
 	titleLink.dataset.role = 'title-link';
 	titleLink.title = batch.batch_id;
-	titleLink.href = `/baseline/${encodeURIComponent(batch.batch_id)}`;
+	titleLink.href = buildBatchDetailHref(batch.batch_id);
 
 	const statusBadge = el('span', `sw-chip text-[10px] ${getCardStatusChipClass(batch.status)}`, statusLabel);
 	statusBadge.dataset.role = 'status-badge';
@@ -1032,7 +1559,7 @@ async function loadBatches() {
 			state.providerChartError = '';
 			renderProviderAccuracyChart();
 		}
-		const response = await api.get('/api/baseline/batches');
+		const response = await api.get(getBatchesEndpoint());
 		state.batches = response.batches || [];
 		state.providerChartState = 'ready';
 		state.providerChartError = '';
@@ -1078,6 +1605,517 @@ function renderPromptOptions() {
 function updateStatus(message) {
 	const statusEl = $('#statusMessage');
 	if (statusEl) statusEl.textContent = message || '';
+}
+
+function createEmptyGroundTruthEntity() {
+	return { sequence: '', n_terminal: '', c_terminal: '', labels_csv: '', notes: '' };
+}
+
+function groupCasesByPaper(cases) {
+	const grouped = new Map();
+	for (const caseItem of cases || []) {
+		const key = (caseItem.paper_key || caseItem.id || '').toString();
+		if (!grouped.has(key)) {
+			const metadataTitle = caseItem?.metadata?.title;
+			grouped.set(key, { key, title: metadataTitle || caseItem.title || key, cases: [] });
+		}
+		grouped.get(key).cases.push(caseItem);
+	}
+	return Array.from(grouped.values()).sort((a, b) => a.title.localeCompare(b.title));
+}
+
+function getEvalBuilderPaperGroups() {
+	const datasetId = state.evalBuilder.selectedDatasetId;
+	if (!datasetId) return [];
+	return groupCasesByPaper(state.cases.filter((item) => item.dataset === datasetId));
+}
+
+function getEvalBuilderDatasetStats() {
+	const paperKeysByDataset = new Map();
+	for (const caseItem of state.cases || []) {
+		const datasetId = (caseItem.dataset || '').toString().trim();
+		if (!datasetId) continue;
+		if (!paperKeysByDataset.has(datasetId)) {
+			paperKeysByDataset.set(datasetId, new Set());
+		}
+		const key = (caseItem.paper_key || caseItem.id || '').toString().trim();
+		if (key) {
+			paperKeysByDataset.get(datasetId).add(key);
+		}
+	}
+
+	return (state.datasets || []).map((dataset) => ({
+		...dataset,
+		paperCount: (paperKeysByDataset.get(dataset.id) || new Set()).size,
+	}));
+}
+
+function getEvalBuilderVisibleDatasets() {
+	const withStats = getEvalBuilderDatasetStats();
+	if (!withStats.length) return [];
+	const primary = withStats.find((dataset) => dataset.id === EVAL_BUILDER_PRIMARY_DATASET_ID)
+		|| withStats.find((dataset) => dataset.paperCount === EVAL_BUILDER_PRIMARY_PAPER_COUNT)
+		|| null;
+	const custom = withStats.filter((dataset) => dataset.source_file === 'eval_builder');
+	if (primary) {
+		return [primary, ...custom.filter((dataset) => dataset.id !== primary.id)];
+	}
+	if (custom.length) return custom;
+	return [withStats[0]];
+}
+
+function getSelectedPaperGroup() {
+	if (!state.evalBuilder.selectedPaperKey) return null;
+	return getEvalBuilderPaperGroups().find((group) => group.key === state.evalBuilder.selectedPaperKey) || null;
+}
+
+function setEvalBuilderOpen(isOpen) {
+	const modal = $('#evalBuilderModal');
+	if (!modal) return;
+	state.evalBuilder.open = Boolean(isOpen);
+	modal.classList.toggle('hidden', !isOpen);
+}
+
+function setEvalBuilderStatus(message) {
+	const node = $('#evalBuilderStatus');
+	if (node) node.textContent = message || '';
+}
+
+function setEvalBuilderError(message) {
+	const node = $('#evalBuilderError');
+	if (!node) return;
+	if (message) {
+		node.textContent = message;
+		node.classList.remove('hidden');
+		return;
+	}
+	node.textContent = '';
+	node.classList.add('hidden');
+}
+
+function setEvalBuilderBusy(isBusy) {
+	state.evalBuilder.busy = Boolean(isBusy);
+	[
+		'#evalBuilderNewGroupBtn',
+		'#evalBuilderNewPaperBtn',
+		'#evalBuilderDeleteGroupBtn',
+		'#evalBuilderDeletePaperBtn',
+		'#evalBuilderCreateGroupBtn',
+		'#evalBuilderSavePaperBtn',
+	].forEach((selector) => {
+		const node = $(selector);
+		if (node) node.disabled = state.evalBuilder.busy;
+	});
+}
+
+function prefillEvalBuilderGroupDraft(dataset) {
+	state.evalBuilder.draftGroup = {
+		id: dataset?.id || '',
+		label: dataset?.label || dataset?.id || '',
+		description: dataset?.description || '',
+	};
+}
+
+function prefillEvalBuilderPaperDraft(paperGroup) {
+	const firstCase = paperGroup?.cases?.[0] || null;
+	state.evalBuilder.draftPaper = {
+		title: firstCase?.title || '',
+		doi: firstCase?.doi || '',
+		paper_url: firstCase?.paper_url || '',
+		main_pdf_file: null,
+		supporting_pdf_files: [],
+	};
+	const mappedEntities = (paperGroup?.cases || []).map((caseItem) => ({
+		sequence: caseItem.sequence || '',
+		n_terminal: caseItem.n_terminal || '',
+		c_terminal: caseItem.c_terminal || '',
+		labels_csv: Array.isArray(caseItem.labels) ? caseItem.labels.join(', ') : '',
+		notes: caseItem.notes || '',
+	}));
+	state.evalBuilder.draftGroundTruthEntities = mappedEntities.length ? mappedEntities : [createEmptyGroundTruthEntity()];
+}
+
+function resetEvalBuilderPaperDraft() {
+	state.evalBuilder.draftPaper = {
+		title: '',
+		doi: '',
+		paper_url: '',
+		main_pdf_file: null,
+		supporting_pdf_files: [],
+	};
+	state.evalBuilder.draftGroundTruthEntities = [createEmptyGroundTruthEntity()];
+}
+
+function renderEvalBuilderForm() {
+	const modeNode = $('#evalBuilderMode');
+	if (modeNode) modeNode.textContent = `Mode: ${state.evalBuilder.mode}`;
+
+	const groupId = $('#evalBuilderGroupId');
+	const groupLabel = $('#evalBuilderGroupLabel');
+	const groupDescription = $('#evalBuilderGroupDescription');
+	if (groupId) groupId.value = state.evalBuilder.draftGroup.id || '';
+	if (groupLabel) groupLabel.value = state.evalBuilder.draftGroup.label || '';
+	if (groupDescription) groupDescription.value = state.evalBuilder.draftGroup.description || '';
+
+	const paperTitle = $('#evalBuilderPaperTitle');
+	const paperDoi = $('#evalBuilderPaperDoi');
+	const paperUrl = $('#evalBuilderPaperUrl');
+	if (paperTitle) paperTitle.value = state.evalBuilder.draftPaper.title || '';
+	if (paperDoi) paperDoi.value = state.evalBuilder.draftPaper.doi || '';
+	if (paperUrl) paperUrl.value = state.evalBuilder.draftPaper.paper_url || '';
+
+	const mainPdf = $('#evalBuilderMainPdf');
+	const supporting = $('#evalBuilderSupportingPdfs');
+	if (mainPdf) mainPdf.value = '';
+	if (supporting) supporting.value = '';
+
+	const container = $('#evalBuilderGroundTruthList');
+	if (!container) return;
+	container.innerHTML = '';
+	const entities = state.evalBuilder.draftGroundTruthEntities || [];
+	entities.forEach((entity, index) => {
+		const row = el('div', 'sw-card p-2 space-y-2');
+		row.appendChild(el('div', 'sw-kicker text-[10px] text-slate-500', `Entity ${index + 1}`));
+		const fields = [
+			{ key: 'sequence', label: 'Sequence', required: true },
+			{ key: 'n_terminal', label: 'N-terminal' },
+			{ key: 'c_terminal', label: 'C-terminal' },
+			{ key: 'labels_csv', label: 'Labels (comma-separated)' },
+			{ key: 'notes', label: 'Notes' },
+		];
+		fields.forEach((field) => {
+			const wrapper = el('div', 'space-y-1');
+			const labelNode = el('label', 'sw-kicker text-[10px] text-slate-500 block', field.label + (field.required ? ' *' : ''));
+			const input = field.key === 'notes' ? document.createElement('textarea') : document.createElement('input');
+			input.className = 'sw-input sw-input--sm';
+			input.value = entity[field.key] || '';
+			input.dataset.action = 'gt-input';
+			input.dataset.index = String(index);
+			input.dataset.field = field.key;
+			wrapper.appendChild(labelNode);
+			wrapper.appendChild(input);
+			row.appendChild(wrapper);
+		});
+		const removeBtn = el('button', 'sw-btn sw-btn--sm sw-btn--ghost text-red-600', 'Remove');
+		removeBtn.type = 'button';
+		removeBtn.dataset.action = 'remove-gt-entity';
+		removeBtn.dataset.index = String(index);
+		row.appendChild(removeBtn);
+		container.appendChild(row);
+	});
+}
+
+function renderEvalBuilderGroupsList() {
+	const container = $('#evalBuilderGroupsList');
+	if (!container) return;
+	container.innerHTML = '';
+	const visibleDatasets = getEvalBuilderVisibleDatasets();
+	if (!visibleDatasets.length) {
+		container.appendChild(el('div', 'text-xs text-slate-500', 'No datasets available.'));
+		return;
+	}
+	visibleDatasets.forEach((dataset) => {
+		const selected = dataset.id === state.evalBuilder.selectedDatasetId;
+		const row = el('button', `w-full text-left sw-card p-2 ${selected ? 'ring-2 ring-cyan-400' : ''}`);
+		row.type = 'button';
+		row.dataset.action = 'select-group';
+		row.dataset.datasetId = dataset.id;
+		row.appendChild(el('div', 'text-xs font-semibold text-slate-800 break-words', dataset.label || dataset.id));
+		row.appendChild(el('div', 'text-[11px] text-slate-500 break-words', dataset.id));
+		row.appendChild(el('div', 'text-[11px] text-slate-500', `${dataset.paperCount || 0} papers`));
+		container.appendChild(row);
+	});
+}
+
+function renderEvalBuilderPapersList() {
+	const container = $('#evalBuilderPapersList');
+	if (!container) return;
+	container.innerHTML = '';
+	const groups = getEvalBuilderPaperGroups();
+	if (!groups.length) {
+		container.appendChild(el('div', 'text-xs text-slate-500', 'No papers in selected group.'));
+		return;
+	}
+	groups.forEach((paperGroup) => {
+		const selected = paperGroup.key === state.evalBuilder.selectedPaperKey;
+		const row = el('button', `w-full text-left sw-card p-2 ${selected ? 'ring-2 ring-cyan-400' : ''}`);
+		row.type = 'button';
+		row.dataset.action = 'select-paper';
+		row.dataset.paperKey = paperGroup.key;
+		row.appendChild(el('div', 'text-xs font-semibold text-slate-800 break-words', paperGroup.title || paperGroup.key));
+		row.appendChild(el('div', 'text-[11px] text-slate-500 break-words', paperGroup.key));
+		row.appendChild(el('div', 'text-[11px] text-slate-500', `${paperGroup.cases.length} entities`));
+		container.appendChild(row);
+	});
+}
+
+function renderEvalBuilder() {
+	if (!state.evalBuilder.open) return;
+	renderEvalBuilderGroupsList();
+	renderEvalBuilderPapersList();
+	renderEvalBuilderForm();
+}
+
+let evalBuilderLoadPromise = null;
+
+async function loadEvalBuilderData(force = false) {
+	if (state.evalBuilder.loaded && !force) return;
+	if (evalBuilderLoadPromise && !force) return evalBuilderLoadPromise;
+	evalBuilderLoadPromise = (async () => {
+	const payload = await api.get('/api/baseline/cases?include_latest=false');
+	state.cases = payload.cases || [];
+	state.datasets = payload.datasets || [];
+	state.evalBuilder.loaded = true;
+	const visibleDatasets = getEvalBuilderVisibleDatasets();
+	const visibleIds = new Set(visibleDatasets.map((dataset) => dataset.id));
+	if (!state.evalBuilder.selectedDatasetId || !visibleIds.has(state.evalBuilder.selectedDatasetId)) {
+		state.evalBuilder.selectedDatasetId = visibleDatasets[0]?.id || null;
+	}
+	})();
+	try {
+		await evalBuilderLoadPromise;
+	} finally {
+		evalBuilderLoadPromise = null;
+	}
+}
+
+function openEvalBuilderModal() {
+	setEvalBuilderError('');
+	setEvalBuilderOpen(true);
+	setEvalBuilderStatus(state.evalBuilder.loaded ? 'Evaluation group builder ready.' : 'Loading evaluation datasets...');
+	renderEvalBuilder();
+	void loadEvalBuilderData(false)
+		.then(() => {
+			if (state.evalBuilder.selectedDatasetId) {
+				const selectedDataset = getEvalBuilderVisibleDatasets().find((item) => item.id === state.evalBuilder.selectedDatasetId)
+					|| state.datasets.find((item) => item.id === state.evalBuilder.selectedDatasetId);
+				if (state.evalBuilder.mode !== 'create_group') {
+					state.evalBuilder.mode = 'edit_group';
+					prefillEvalBuilderGroupDraft(selectedDataset);
+				}
+			}
+			renderEvalBuilder();
+			setEvalBuilderStatus('Evaluation group builder ready.');
+		})
+		.catch((err) => {
+			console.error('Failed to load evaluation builder data:', err);
+			setEvalBuilderError(err?.message || 'Failed to load evaluation builder data.');
+		});
+}
+
+function closeEvalBuilderModal() {
+	setEvalBuilderOpen(false);
+	setEvalBuilderError('');
+	setEvalBuilderStatus('');
+}
+
+function selectEvalBuilderGroup(datasetId) {
+	state.evalBuilder.selectedDatasetId = datasetId || null;
+	state.evalBuilder.selectedPaperKey = null;
+	state.evalBuilder.mode = 'edit_group';
+	const selectedDataset = getEvalBuilderVisibleDatasets().find((item) => item.id === state.evalBuilder.selectedDatasetId)
+		|| state.datasets.find((item) => item.id === state.evalBuilder.selectedDatasetId);
+	prefillEvalBuilderGroupDraft(selectedDataset);
+	resetEvalBuilderPaperDraft();
+	renderEvalBuilder();
+	setEvalBuilderStatus('Editing existing group draft.');
+}
+
+function selectEvalBuilderPaper(paperKey) {
+	state.evalBuilder.selectedPaperKey = paperKey || null;
+	state.evalBuilder.mode = 'edit_paper';
+	const paperGroup = getSelectedPaperGroup();
+	prefillEvalBuilderPaperDraft(paperGroup);
+	renderEvalBuilder();
+}
+
+function startEvalBuilderCreateGroupMode() {
+	state.evalBuilder.mode = 'create_group';
+	state.evalBuilder.selectedPaperKey = null;
+	state.evalBuilder.draftGroup = {
+		id: '',
+		label: '',
+		description: '',
+	};
+	renderEvalBuilder();
+	setEvalBuilderError('');
+	setEvalBuilderStatus('Create-group mode active.');
+}
+
+function startEvalBuilderCreatePaperMode() {
+	state.evalBuilder.mode = 'create_paper';
+	state.evalBuilder.selectedPaperKey = null;
+	resetEvalBuilderPaperDraft();
+	renderEvalBuilder();
+}
+
+function syncEvalBuilderDraftFromInputs() {
+	const groupId = $('#evalBuilderGroupId');
+	const groupLabel = $('#evalBuilderGroupLabel');
+	const groupDescription = $('#evalBuilderGroupDescription');
+	const paperTitle = $('#evalBuilderPaperTitle');
+	const paperDoi = $('#evalBuilderPaperDoi');
+	const paperUrl = $('#evalBuilderPaperUrl');
+	state.evalBuilder.draftGroup = {
+		id: groupId?.value?.trim() || '',
+		label: groupLabel?.value?.trim() || '',
+		description: groupDescription?.value?.trim() || '',
+	};
+	state.evalBuilder.draftPaper = {
+		...state.evalBuilder.draftPaper,
+		title: paperTitle?.value?.trim() || '',
+		doi: paperDoi?.value?.trim() || '',
+		paper_url: paperUrl?.value?.trim() || '',
+	};
+}
+
+async function handleEvalBuilderCreateGroup() {
+	syncEvalBuilderDraftFromInputs();
+	const validation = validateGroupDraft(state.evalBuilder.draftGroup);
+	if (!validation.ok) {
+		setEvalBuilderError(validation.errors.join(' '));
+		return;
+	}
+	const payload = buildGroupPayload(state.evalBuilder.draftGroup);
+	setEvalBuilderBusy(true);
+	setEvalBuilderError('');
+	try {
+		const response = await submitCreateGroupMock(payload);
+		await loadEvalBuilderData(true);
+		await loadDatasetOptions();
+		state.evalBuilder.selectedDatasetId = response?.id || payload.dataset_id;
+		if (state.evalBuilder.selectedDatasetId) {
+			state.selectedDataset = state.evalBuilder.selectedDatasetId;
+			persistDatasetFilter(state.selectedDataset);
+			renderDatasetFilterOptions();
+			await loadBatches();
+		}
+		state.evalBuilder.mode = 'edit_group';
+		prefillEvalBuilderGroupDraft(
+			state.datasets.find((item) => item.id === state.evalBuilder.selectedDatasetId),
+		);
+		renderEvalBuilder();
+		setEvalBuilderStatus('Group saved.');
+	} catch (err) {
+		setEvalBuilderError(err?.message || 'Create group failed.');
+	} finally {
+		setEvalBuilderBusy(false);
+	}
+}
+
+function buildPaperDraftForValidation() {
+	syncEvalBuilderDraftFromInputs();
+	return {
+		mode: state.evalBuilder.mode,
+		selected_dataset_id: state.evalBuilder.selectedDatasetId,
+		selected_paper_key: state.evalBuilder.selectedPaperKey,
+		title: state.evalBuilder.draftPaper.title,
+		doi: state.evalBuilder.draftPaper.doi,
+		paper_url: state.evalBuilder.draftPaper.paper_url,
+		main_pdf_file: state.evalBuilder.draftPaper.main_pdf_file,
+		supporting_pdf_files: state.evalBuilder.draftPaper.supporting_pdf_files,
+		ground_truth_entities: state.evalBuilder.draftGroundTruthEntities,
+	};
+}
+
+async function handleEvalBuilderSavePaper() {
+	const draft = buildPaperDraftForValidation();
+	const validation = validatePaperDraft(draft);
+	if (!validation.ok) {
+		setEvalBuilderError(validation.errors.join(' '));
+		return;
+	}
+	const payload = buildPaperPayload(draft);
+	setEvalBuilderBusy(true);
+	setEvalBuilderError('');
+	try {
+		const response = await submitSavePaperMock(payload);
+		await loadEvalBuilderData(true);
+		await loadDatasetOptions();
+		if (response?.dataset_id) {
+			state.evalBuilder.selectedDatasetId = response.dataset_id;
+			if (state.selectedDataset !== response.dataset_id) {
+				state.selectedDataset = response.dataset_id;
+				persistDatasetFilter(state.selectedDataset);
+				renderDatasetFilterOptions();
+				await loadBatches();
+			}
+		}
+		if (response?.paper_key) {
+			state.evalBuilder.selectedPaperKey = response.paper_key;
+		}
+		state.evalBuilder.mode = 'edit_paper';
+		renderEvalBuilder();
+		setEvalBuilderStatus(`Paper saved (${response?.saved_cases || 0} entities).`);
+	} catch (err) {
+		setEvalBuilderError(err?.message || 'Save paper failed.');
+	} finally {
+		setEvalBuilderBusy(false);
+	}
+}
+
+async function handleEvalBuilderDeleteGroup() {
+	const datasetId = state.evalBuilder.selectedDatasetId;
+	if (!datasetId) {
+		setEvalBuilderError('Select a group first.');
+		return;
+	}
+	const confirmed = window.confirm(`Delete group "${datasetId}"?`);
+	if (!confirmed) return;
+	setEvalBuilderBusy(true);
+	setEvalBuilderError('');
+	try {
+		const response = await submitDeleteGroupMock({ dataset_id: datasetId });
+		await loadEvalBuilderData(true);
+		await loadDatasetOptions();
+		const visible = getEvalBuilderVisibleDatasets();
+		state.evalBuilder.selectedDatasetId = visible[0]?.id || null;
+		if (state.selectedDataset === datasetId) {
+			state.selectedDataset = state.datasetOptions[0]?.id || '';
+			persistDatasetFilter(state.selectedDataset);
+			renderDatasetFilterOptions();
+			await loadBatches();
+		}
+		state.evalBuilder.selectedPaperKey = null;
+		state.evalBuilder.mode = 'edit_group';
+		renderEvalBuilder();
+		setEvalBuilderStatus(`Group deleted (${response?.deleted_cases || 0} cases removed).`);
+	} catch (err) {
+		setEvalBuilderError(err?.message || 'Delete group failed.');
+	} finally {
+		setEvalBuilderBusy(false);
+	}
+}
+
+async function handleEvalBuilderDeletePaper() {
+	const paperGroup = getSelectedPaperGroup();
+	if (!paperGroup) {
+		setEvalBuilderError('Select a paper first.');
+		return;
+	}
+	const confirmed = window.confirm(`Delete paper "${paperGroup.title || paperGroup.key}"?`);
+	if (!confirmed) return;
+	setEvalBuilderBusy(true);
+	setEvalBuilderError('');
+	try {
+		const response = await submitDeletePaperMock({
+			dataset_id: state.evalBuilder.selectedDatasetId,
+			paper_key: paperGroup.key,
+			title: paperGroup.title,
+			entity_count: paperGroup.cases.length,
+		});
+		await loadEvalBuilderData(true);
+		await loadDatasetOptions();
+		state.evalBuilder.selectedPaperKey = null;
+		state.evalBuilder.mode = 'edit_group';
+		resetEvalBuilderPaperDraft();
+		renderEvalBuilder();
+		setEvalBuilderStatus(`Paper deleted (${response?.deleted_cases || 0} entities removed).`);
+	} catch (err) {
+		setEvalBuilderError(err?.message || 'Delete paper failed.');
+	} finally {
+		setEvalBuilderBusy(false);
+	}
 }
 
 function openNewBatchModal() {
@@ -1193,7 +2231,7 @@ async function createBatch(name, model, promptId, modelId) {
 		updateStatus('Creating evaluation run...');
 
 		const response = await api.post('/api/baseline/batch-enqueue', {
-			dataset: 'self_assembly',
+			dataset: state.selectedDataset || 'self_assembly',
 			label: name || null,
 			provider: model,
 			model: modelId || null,
@@ -1393,7 +2431,7 @@ async function processPendingBatchUpdates() {
 	sseUpdateTimer = null;
 
 	try {
-		const response = await api.get('/api/baseline/batches');
+		const response = await api.get(getBatchesEndpoint());
 		const fetchedBatches = response.batches || [];
 		state.providerChartState = 'ready';
 		state.providerChartError = '';
@@ -1441,13 +2479,17 @@ async function processPendingBatchUpdates() {
 	}
 }
 
+async function initializeOverviewData() {
+	await loadDatasetOptions();
+	await Promise.all([loadProviders(), loadPrompts()]);
+	await loadBatches();
+}
+
 function init() {
 	// Load data
 	initProviderMetricControls();
 	renderProviderAccuracyChart();
-	loadProviders();
-	loadBatches();
-	loadPrompts();
+	void initializeOverviewData();
 
 	// Connect SSE for live updates
 	connectSSE();
@@ -1457,6 +2499,82 @@ function init() {
 	$('#emptyNewBatchBtn')?.addEventListener('click', openNewBatchModal);
 	$('#cancelBatchBtn')?.addEventListener('click', closeNewBatchModal);
 	$('#modalBackdrop')?.addEventListener('click', closeNewBatchModal);
+	$('#batchDatasetFilter')?.addEventListener('change', async (event) => {
+		const next = (event.target?.value || '').trim();
+		if (!next || next === state.selectedDataset) return;
+		state.selectedDataset = next;
+		persistDatasetFilter(next);
+		await loadBatches();
+	});
+	$('#openEvalBuilder')?.addEventListener('click', () => {
+		openEvalBuilderModal();
+	});
+	$('#evalBuilderClose')?.addEventListener('click', closeEvalBuilderModal);
+	$('#evalBuilderBackdrop')?.addEventListener('click', closeEvalBuilderModal);
+	$('#evalBuilderNewGroupBtn')?.addEventListener('click', startEvalBuilderCreateGroupMode);
+	$('#evalBuilderNewPaperBtn')?.addEventListener('click', startEvalBuilderCreatePaperMode);
+	$('#evalBuilderCreateGroupBtn')?.addEventListener('click', async () => {
+		await handleEvalBuilderCreateGroup();
+	});
+	$('#evalBuilderSavePaperBtn')?.addEventListener('click', async () => {
+		await handleEvalBuilderSavePaper();
+	});
+	$('#evalBuilderDeleteGroupBtn')?.addEventListener('click', async () => {
+		await handleEvalBuilderDeleteGroup();
+	});
+	$('#evalBuilderDeletePaperBtn')?.addEventListener('click', async () => {
+		await handleEvalBuilderDeletePaper();
+	});
+	['#evalBuilderGroupId', '#evalBuilderGroupLabel', '#evalBuilderGroupDescription', '#evalBuilderPaperTitle', '#evalBuilderPaperDoi', '#evalBuilderPaperUrl'].forEach((selector) => {
+		const node = $(selector);
+		if (node) node.addEventListener('input', syncEvalBuilderDraftFromInputs);
+	});
+	$('#evalBuilderMainPdf')?.addEventListener('change', () => {
+		const node = $('#evalBuilderMainPdf');
+		const file = node?.files && node.files[0] ? node.files[0] : null;
+		state.evalBuilder.draftPaper.main_pdf_file = file;
+	});
+	$('#evalBuilderSupportingPdfs')?.addEventListener('change', () => {
+		const node = $('#evalBuilderSupportingPdfs');
+		const files = node?.files ? Array.from(node.files) : [];
+		state.evalBuilder.draftPaper.supporting_pdf_files = files;
+	});
+	$('#evalBuilderAddEntityBtn')?.addEventListener('click', () => {
+		state.evalBuilder.draftGroundTruthEntities.push(createEmptyGroundTruthEntity());
+		renderEvalBuilderForm();
+	});
+	$('#evalBuilderGroupsList')?.addEventListener('click', (event) => {
+		const target = event.target?.closest?.('[data-action="select-group"]');
+		if (!target) return;
+		selectEvalBuilderGroup(target.dataset.datasetId || null);
+	});
+	$('#evalBuilderPapersList')?.addEventListener('click', (event) => {
+		const target = event.target?.closest?.('[data-action="select-paper"]');
+		if (!target) return;
+		selectEvalBuilderPaper(target.dataset.paperKey || null);
+	});
+	$('#evalBuilderGroundTruthList')?.addEventListener('click', (event) => {
+		const target = event.target?.closest?.('[data-action="remove-gt-entity"]');
+		if (!target) return;
+		const index = Number(target.dataset.index);
+		if (!Number.isInteger(index) || index < 0) return;
+		if (state.evalBuilder.draftGroundTruthEntities.length <= 1) {
+			setEvalBuilderError('At least one ground truth entity is required.');
+			return;
+		}
+		state.evalBuilder.draftGroundTruthEntities.splice(index, 1);
+		renderEvalBuilderForm();
+	});
+	$('#evalBuilderGroundTruthList')?.addEventListener('input', (event) => {
+		const target = event.target;
+		if (!target || target.dataset.action !== 'gt-input') return;
+		const index = Number(target.dataset.index);
+		const field = target.dataset.field;
+		if (!Number.isInteger(index) || index < 0 || !field) return;
+		const entity = state.evalBuilder.draftGroundTruthEntities[index];
+		if (!entity) return;
+		entity[field] = target.value;
+	});
 	$('#batchModel')?.addEventListener('change', () => renderBatchModelOptions({ preserveSelection: false }));
 	renderBatchModelOptions({ preserveSelection: true });
 	$('#resetBaselineDefaultsBtn')?.addEventListener('click', async () => {
@@ -1476,6 +2594,7 @@ function init() {
 	// Keyboard escape to close modal
 	document.addEventListener('keydown', (e) => {
 		if (e.key === 'Escape') {
+			closeEvalBuilderModal();
 			closeNewBatchModal();
 		}
 	});

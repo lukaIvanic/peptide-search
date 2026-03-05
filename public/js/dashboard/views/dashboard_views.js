@@ -2,13 +2,10 @@ export {
   $,
   renderProviderBadge,
   renderConnectionBadge,
-  renderSearchResults,
-  renderBatchCount,
   renderPapersTable,
   renderQueueStats,
   renderDrawer,
   setDrawerOpen,
-  setSearchCount,
   setDrawerCallbacks,
 } from '../../renderers.js';
 

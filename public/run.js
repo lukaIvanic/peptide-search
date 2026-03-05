@@ -1,4 +1,4 @@
-import { getRun, getRunHistory, retryRun, resolveRunSource, retryRunWithSource, uploadRunPdf } from './js/api.js';
+import { getRun, getRunHistory, retryRun, resolveRunSource, retryRunWithSource, uploadRunPdf, deleteRun as deleteRunApi } from './js/api.js';
 import { formatFailureReason, getStatusLabel } from './js/shared/formatting.js';
 
 const $ = (sel) => document.querySelector(sel);
@@ -56,7 +56,11 @@ function renderRun(run) {
 
 function setEditLink(runId) {
 	const link = $('#editRunLink');
-	if (!link || !runId) return;
+	if (!link) return;
+	if (!runId) {
+		link.href = '#';
+		return;
+	}
 	link.href = `/runs/${runId}/edit`;
 }
 
@@ -469,10 +473,96 @@ let currentRunId = null;
 let currentRawJson = null;
 let followupHasToken = false;
 let resolvedSource = null;
+let runMissing = false;
+
+function setRunInteractionEnabled(enabled) {
+	const followupInstruction = $('#followupInstruction');
+	const followupBtn = $('#followupBtn');
+	const compareBtn = $('#compareBtn');
+	const compareA = $('#compareA');
+	const compareB = $('#compareB');
+	const editLink = $('#editRunLink');
+	const deleteBtn = $('#deleteRunBtn');
+
+	if (followupInstruction) followupInstruction.disabled = !enabled;
+	if (followupBtn) followupBtn.disabled = !enabled;
+	if (compareBtn) compareBtn.disabled = !enabled;
+	if (compareA) compareA.disabled = !enabled;
+	if (compareB) compareB.disabled = !enabled;
+	if (deleteBtn) deleteBtn.disabled = !enabled;
+	if (editLink) {
+		editLink.classList.toggle('pointer-events-none', !enabled);
+		editLink.classList.toggle('opacity-50', !enabled);
+		editLink.setAttribute('aria-disabled', String(!enabled));
+	}
+}
+
+function renderMissingRunState(runId, message) {
+	const msg = message || `Run ${runId} was not found or was deleted.`;
+
+	const paperMeta = $('#paperMeta');
+	if (paperMeta) {
+		paperMeta.innerHTML = '';
+		paperMeta.appendChild(el('div', 'sw-empty text-xs text-slate-500 p-3', msg));
+	}
+
+	const runMeta = $('#runMeta');
+	if (runMeta) {
+		runMeta.innerHTML = '';
+		runMeta.appendChild(el('div', 'sw-empty text-xs text-slate-500 p-3', 'No run metadata is available.'));
+	}
+
+	const emptyPanels = [
+		['#runFixPanel', 'Run actions unavailable.'],
+		['#entitiesContainer', 'No entities available.'],
+		['#promptsContainer', 'No prompts available.'],
+		['#diffContainer', 'No diff available.'],
+		['#historyList', 'No versions available.'],
+	];
+	for (const [selector, text] of emptyPanels) {
+		const target = $(selector);
+		if (!target) continue;
+		target.innerHTML = '';
+		target.appendChild(el('div', 'sw-empty text-xs text-slate-500 p-3', text));
+	}
+
+	const raw = $('#rawJson');
+	if (raw) raw.textContent = '{}';
+	const tokens = $('#followupTokens');
+	if (tokens) {
+		tokens.textContent = '';
+		tokens.classList.add('hidden');
+	}
+	const status = $('#followupStatus');
+	if (status) {
+		status.textContent = msg;
+	}
+	const compareOrder = $('#compareOrderLabel');
+	if (compareOrder) {
+		compareOrder.textContent = '';
+	}
+	setEditLink(null);
+	setRunInteractionEnabled(false);
+}
 
 async function loadRun(runId, options = {}) {
 	const { resetDiff: shouldResetDiff = true } = options;
-	const data = await getRun(runId);
+	let data = null;
+	try {
+		data = await getRun(runId);
+	} catch (err) {
+		const message = err?.message || 'Run not found.';
+		runMissing = true;
+		currentRunId = runId;
+		currentRawJson = null;
+		resolvedSource = null;
+		renderMissingRunState(runId, message);
+		if (shouldResetDiff) {
+			resetDiff();
+		}
+		return;
+	}
+	runMissing = false;
 	renderPaper(data.paper);
 	renderRun(data.run);
 	renderRunFixPanel(data.run);
@@ -489,6 +579,7 @@ async function loadRun(runId, options = {}) {
 	}
 	currentRunId = nextRunId;
 	setEditLink(currentRunId);
+	setRunInteractionEnabled(true);
 	await loadHistory(runId);
 }
 
@@ -758,7 +849,22 @@ async function init() {
 	}
 	await loadRun(runId, { resetDiff: true });
 
-	$('#followupBtn').addEventListener('click', () => handleFollowup(runId));
+	$('#followupBtn').addEventListener('click', () => {
+		if (!currentRunId || runMissing) return;
+		handleFollowup(currentRunId);
+	});
+	$('#deleteRunBtn')?.addEventListener('click', async () => {
+		if (!currentRunId || runMissing) return;
+		if (!confirm('Delete this run and all its follow-up descendants? This cannot be undone.')) {
+			return;
+		}
+		try {
+			await deleteRunApi(currentRunId);
+			await loadRun(currentRunId, { resetDiff: true });
+		} catch (err) {
+			alert(err.message || 'Failed to delete run');
+		}
+	});
 	$('#compareBtn').addEventListener('click', handleCompare);
 }
 

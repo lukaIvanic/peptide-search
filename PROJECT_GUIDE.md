@@ -99,7 +99,7 @@ Batch metrics:
 1. Match rate is extraction quality against expected baseline entities.
 2. Batch time is wall-clock elapsed time from batch start to terminal completion, including retries.
 3. Cost is token-price based only when model pricing is known.
-4. If pricing is unknown, cost is shown as `n/a` (no fallback guess).
+4. If pricing is unknown, cost is shown as `?` (no fallback guess).
 
 Chart aggregation:
 
