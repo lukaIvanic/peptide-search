@@ -1,4 +1,14 @@
 import * as api from './actions/baseline_actions.js';
+import {
+	buildGroupPayload,
+	buildPaperPayload,
+	submitCreateGroupMock,
+	submitDeleteGroupMock,
+	submitDeletePaperMock,
+	submitSavePaperMock,
+	validateGroupDraft,
+	validatePaperDraft,
+} from './actions/eval_builder_mock_actions.js';
 import { $, el, fmt } from './views/baseline_views.js';
 import {
 	MANUAL_PDF_DETAILS,
@@ -46,10 +56,60 @@ const state = {
 		caseId: null,
 		expectedUpdatedAt: null,
 	},
+	evalBuilder: {
+		open: false,
+		selectedDatasetId: null,
+		selectedPaperKey: null,
+		mode: 'create_group',
+		draftGroup: {
+			id: '',
+			label: '',
+			description: '',
+		},
+		draftPaper: {
+			title: '',
+			doi: '',
+			paper_url: '',
+			main_pdf_file: null,
+			supporting_pdf_files: [],
+		},
+		draftGroundTruthEntities: [],
+		busy: false,
+	},
 };
 
 let sseConnection = null;
 let analysisToken = 0;
+const DATASET_FILTER_STORAGE_KEY = 'peptide.evaluation.dataset';
+
+function getDatasetFromUrl() {
+	try {
+		const params = new URLSearchParams(window.location.search || '');
+		return (params.get('dataset') || '').trim();
+	} catch (_err) {
+		return '';
+	}
+}
+
+function getStoredDatasetFilter() {
+	try {
+		return (window.localStorage.getItem(DATASET_FILTER_STORAGE_KEY) || '').trim();
+	} catch (_err) {
+		return '';
+	}
+}
+
+function persistDatasetFilter(datasetId) {
+	try {
+		if ((datasetId || '').trim()) {
+			window.localStorage.setItem(DATASET_FILTER_STORAGE_KEY, datasetId);
+		} else {
+			window.localStorage.removeItem(DATASET_FILTER_STORAGE_KEY);
+		}
+	} catch (_err) {
+		// Ignore storage errors.
+	}
+}
 
 function updateStatus(message) {
 	const status = $('#baselineStatus');
@@ -200,6 +260,414 @@ function parseMetadataJson(value) {
 		throw new Error('Metadata must be a JSON object.');
 	}
 	return parsed;
+}
+
+function createEmptyGroundTruthEntity() {
+	return {
+		sequence: '',
+		n_terminal: '',
+		c_terminal: '',
+		labels_csv: '',
+		notes: '',
+	};
+}
+
+function setEvalBuilderStatus(message) {
+	const node = $('#evalBuilderStatus');
+	if (!node) return;
+	node.textContent = message || '';
+}
+
+function setEvalBuilderError(message) {
+	const node = $('#evalBuilderError');
+	if (!node) return;
+	if (!message) {
+		node.textContent = '';
+		node.classList.add('hidden');
+		return;
+	}
+	node.textContent = message;
+	node.classList.remove('hidden');
+}
+
+function setEvalBuilderBusy(isBusy) {
+	state.evalBuilder.busy = Boolean(isBusy);
+	[
+		'#evalBuilderNewGroupBtn',
+		'#evalBuilderNewPaperBtn',
+		'#evalBuilderDeleteGroupBtn',
+		'#evalBuilderDeletePaperBtn',
+		'#evalBuilderCreateGroupBtn',
+		'#evalBuilderSavePaperBtn',
+	].forEach((selector) => {
+		const btn = $(selector);
+		if (btn) btn.disabled = isBusy;
+	});
+}
+
+function setEvalBuilderOpen(isOpen) {
+	const modal = $('#evalBuilderModal');
+	if (!modal) return;
+	state.evalBuilder.open = Boolean(isOpen);
+	if (isOpen) {
+		modal.classList.remove('hidden');
+	} else {
+		modal.classList.add('hidden');
+	}
+}
+
+function getEvalBuilderPaperGroups() {
+	const datasetId = state.evalBuilder.selectedDatasetId;
+	if (!datasetId) return [];
+	const datasetCases = state.cases.filter((item) => item.dataset === datasetId);
+	return groupCasesByPaper(datasetCases);
+}
+
+function getSelectedEvalBuilderPaperGroup() {
+	if (!state.evalBuilder.selectedPaperKey) return null;
+	return getEvalBuilderPaperGroups().find((group) => group.key === state.evalBuilder.selectedPaperKey) || null;
+}
+
+function prefillEvalBuilderGroupDraft(dataset) {
+	state.evalBuilder.draftGroup = {
+		id: dataset?.id || '',
+		label: dataset?.label || dataset?.id || '',
+		description: dataset?.description || '',
+	};
+}
+
+function prefillEvalBuilderPaperDraft(paperGroup) {
+	const firstCase = paperGroup?.cases?.[0] || null;
+	const meta = firstCase?.metadata || {};
+	const titleFromMeta = typeof meta.paper_title === 'string' ? meta.paper_title : '';
+	state.evalBuilder.draftPaper = {
+		title: titleFromMeta || (paperGroup?.doi ? `Paper ${paperGroup.doi}` : ''),
+		doi: paperGroup?.doi || '',
+		paper_url: paperGroup?.paper_url || '',
+		main_pdf_file: null,
+		supporting_pdf_files: [],
+	};
+	const mappedEntities = (paperGroup?.cases || []).map((caseItem) => ({
+		sequence: caseItem?.sequence || '',
+		n_terminal: caseItem?.n_terminal || '',
+		c_terminal: caseItem?.c_terminal || '',
+		labels_csv: Array.isArray(caseItem?.labels) ? caseItem.labels.join(', ') : '',
+		notes: typeof caseItem?.metadata?.notes === 'string' ? caseItem.metadata.notes : '',
+	}));
+	state.evalBuilder.draftGroundTruthEntities = mappedEntities.length ? mappedEntities : [createEmptyGroundTruthEntity()];
+}
+
+function resetEvalBuilderPaperDraft() {
+	state.evalBuilder.draftPaper = {
+		title: '',
+		doi: '',
+		paper_url: '',
+		main_pdf_file: null,
+		supporting_pdf_files: [],
+	};
+	state.evalBuilder.draftGroundTruthEntities = [createEmptyGroundTruthEntity()];
+}
+
+function syncEvalBuilderFormFromState() {
+	const modeNode = $('#evalBuilderMode');
+	if (modeNode) {
+		modeNode.textContent = `Mode: ${state.evalBuilder.mode}`;
+	}
+	const groupId = $('#evalBuilderGroupId');
+	const groupLabel = $('#evalBuilderGroupLabel');
+	const groupDescription = $('#evalBuilderGroupDescription');
+	if (groupId) groupId.value = state.evalBuilder.draftGroup.id || '';
+	if (groupLabel) groupLabel.value = state.evalBuilder.draftGroup.label || '';
+	if (groupDescription) groupDescription.value = state.evalBuilder.draftGroup.description || '';
+
+	const paperTitle = $('#evalBuilderPaperTitle');
+	const paperDoi = $('#evalBuilderPaperDoi');
+	const paperUrl = $('#evalBuilderPaperUrl');
+	if (paperTitle) paperTitle.value = state.evalBuilder.draftPaper.title || '';
+	if (paperDoi) paperDoi.value = state.evalBuilder.draftPaper.doi || '';
+	if (paperUrl) paperUrl.value = state.evalBuilder.draftPaper.paper_url || '';
+
+	const mainPdf = $('#evalBuilderMainPdf');
+	const supporting = $('#evalBuilderSupportingPdfs');
+	if (mainPdf) mainPdf.value = '';
+	if (supporting) supporting.value = '';
+}
+
+function renderEvalBuilderGroundTruthRows() {
+	const container = $('#evalBuilderGroundTruthList');
+	if (!container) return;
+	container.innerHTML = '';
+	const entities = state.evalBuilder.draftGroundTruthEntities || [];
+	if (!entities.length) {
+		container.appendChild(el('div', 'sw-empty text-xs text-slate-500', 'No entities added.'));
+		return;
+	}
+
+	entities.forEach((entity, index) => {
+		const card = el('div', 'eval-builder-gt-row space-y-2');
+		const header = el('div', 'flex items-center justify-between gap-2');
+		header.appendChild(el('div', 'text-xs font-semibold text-slate-700', `Entity ${index + 1}`));
+		const removeBtn = el('button', 'sw-btn sw-btn--sm sw-btn--ghost text-red-600', 'Remove');
+		removeBtn.type = 'button';
+		removeBtn.dataset.action = 'remove-gt-entity';
+		removeBtn.dataset.index = String(index);
+		header.appendChild(removeBtn);
+		card.appendChild(header);
+
+		const grid = el('div', 'grid grid-cols-1 md:grid-cols-2 gap-2');
+		const fields = [
+			{ key: 'sequence', label: 'Sequence *' },
+			{ key: 'n_terminal', label: 'N-terminal' },
+			{ key: 'c_terminal', label: 'C-terminal' },
+			{ key: 'labels_csv', label: 'Labels (comma-separated)' },
+			{ key: 'notes', label: 'Notes' },
+		];
+		fields.forEach((field) => {
+			const wrap = el('label', 'flex flex-col gap-1');
+			wrap.appendChild(el('span', 'text-[11px] text-slate-500', field.label));
+			const input = field.key === 'notes'
+				? el('textarea', 'sw-input sw-input--sm min-h-[60px]')
+				: el('input', 'sw-input sw-input--sm');
+			input.dataset.action = 'gt-input';
+			input.dataset.index = String(index);
+			input.dataset.field = field.key;
+			input.value = entity[field.key] || '';
+			wrap.appendChild(input);
+			grid.appendChild(wrap);
+		});
+		card.appendChild(grid);
+		container.appendChild(card);
+	});
+}
+
+function renderEvalBuilderGroupsList() {
+	const container = $('#evalBuilderGroupsList');
+	if (!container) return;
+	container.innerHTML = '';
+	if (!state.datasets.length) {
+		container.appendChild(el('div', 'sw-empty text-xs text-slate-500', 'No groups available.'));
+		return;
+	}
+
+	state.datasets.forEach((dataset) => {
+		const selected = dataset.id === state.evalBuilder.selectedDatasetId;
+		const row = el('button', `eval-builder-row text-left w-full ${selected ? 'is-selected' : ''}`);
+		row.type = 'button';
+		row.dataset.action = 'select-group';
+		row.dataset.datasetId = dataset.id;
+		row.appendChild(el('div', 'text-xs font-semibold text-slate-800 break-words', dataset.label || dataset.id));
+		row.appendChild(el('div', 'text-[11px] text-slate-500 break-words', dataset.id));
+		row.appendChild(el('div', 'text-[11px] text-slate-500', `${dataset.count || 0} cases`));
+		container.appendChild(row);
+	});
+}
+
+function renderEvalBuilderPapersList() {
+	const container = $('#evalBuilderPapersList');
+	if (!container) return;
+	container.innerHTML = '';
+	const papers = getEvalBuilderPaperGroups();
+	if (!papers.length) {
+		container.appendChild(el('div', 'sw-empty text-xs text-slate-500', 'No papers in selected group.'));
+		return;
+	}
+
+	papers.forEach((paperGroup) => {
+		const selected = paperGroup.key === state.evalBuilder.selectedPaperKey;
+		const row = el('button', `eval-builder-row text-left w-full ${selected ? 'is-selected' : ''}`);
+		row.type = 'button';
+		row.dataset.action = 'select-paper';
+		row.dataset.paperKey = paperGroup.key;
+		row.appendChild(el('div', 'text-xs font-semibold text-slate-800 break-words', getPaperDisplayLabel(paperGroup)));
+		row.appendChild(el('div', 'text-[11px] text-slate-500 break-words', paperGroup.key));
+		row.appendChild(el('div', 'text-[11px] text-slate-500', `${paperGroup.cases.length} entities`));
+		container.appendChild(row);
+	});
+}
+
+function renderEvalBuilder() {
+	if (!state.evalBuilder.open) return;
+	renderEvalBuilderGroupsList();
+	renderEvalBuilderPapersList();
+	syncEvalBuilderFormFromState();
+	renderEvalBuilderGroundTruthRows();
+}
+
+function openEvalBuilderModal() {
+	if (!state.evalBuilder.selectedDatasetId) {
+		state.evalBuilder.selectedDatasetId = state.datasets[0]?.id || state.filterDataset || null;
+	}
+	if (state.evalBuilder.selectedDatasetId) {
+		const selectedDataset = state.datasets.find((item) => item.id === state.evalBuilder.selectedDatasetId);
+		prefillEvalBuilderGroupDraft(selectedDataset || null);
+	}
+	if (!state.evalBuilder.draftGroundTruthEntities.length) {
+		state.evalBuilder.draftGroundTruthEntities = [createEmptyGroundTruthEntity()];
+	}
+	setEvalBuilderError('');
+	setEvalBuilderStatus('Manage groups and papers in mock mode. Actions are logged only.');
+	setEvalBuilderOpen(true);
+	renderEvalBuilder();
+}
+
+function closeEvalBuilderModal() {
+	setEvalBuilderOpen(false);
+	setEvalBuilderError('');
+}
+
+function selectEvalBuilderGroup(datasetId) {
+	state.evalBuilder.selectedDatasetId = datasetId || null;
+	state.evalBuilder.selectedPaperKey = null;
+	state.evalBuilder.mode = 'edit_group';
+	const selectedDataset = state.datasets.find((item) => item.id === state.evalBuilder.selectedDatasetId);
+	prefillEvalBuilderGroupDraft(selectedDataset || null);
+	resetEvalBuilderPaperDraft();
+	setEvalBuilderError('');
+	renderEvalBuilder();
+}
+
+function selectEvalBuilderPaper(paperKey) {
+	state.evalBuilder.selectedPaperKey = paperKey || null;
+	state.evalBuilder.mode = 'edit_paper';
+	const paperGroup = getSelectedEvalBuilderPaperGroup();
+	prefillEvalBuilderPaperDraft(paperGroup || null);
+	setEvalBuilderError('');
+	renderEvalBuilder();
+}
+
+function startEvalBuilderCreateGroup() {
+	state.evalBuilder.mode = 'create_group';
+	state.evalBuilder.selectedPaperKey = null;
+	state.evalBuilder.draftGroup = {
+		id: '',
+		label: '',
+		description: '',
+	};
+	setEvalBuilderError('');
+	renderEvalBuilder();
+}
+
+function startEvalBuilderCreatePaper() {
+	state.evalBuilder.mode = 'create_paper';
+	state.evalBuilder.selectedPaperKey = null;
+	resetEvalBuilderPaperDraft();
+	setEvalBuilderError('');
+	renderEvalBuilder();
+}
+
+function syncEvalBuilderDraftFromForm() {
+	const groupId = $('#evalBuilderGroupId');
+	const groupLabel = $('#evalBuilderGroupLabel');
+	const groupDescription = $('#evalBuilderGroupDescription');
+	const paperTitle = $('#evalBuilderPaperTitle');
+	const paperDoi = $('#evalBuilderPaperDoi');
+	const paperUrl = $('#evalBuilderPaperUrl');
+	state.evalBuilder.draftGroup = {
+		id: groupId?.value?.trim() || '',
+		label: groupLabel?.value?.trim() || '',
+		description: groupDescription?.value?.trim() || '',
+	};
+	state.evalBuilder.draftPaper = {
+		...state.evalBuilder.draftPaper,
+		title: paperTitle?.value?.trim() || '',
+		doi: paperDoi?.value?.trim() || '',
+		paper_url: paperUrl?.value?.trim() || '',
+	};
+}
+
+async function handleEvalBuilderCreateGroup() {
+	syncEvalBuilderDraftFromForm();
+	setEvalBuilderError('');
+	const validation = validateGroupDraft(state.evalBuilder.draftGroup);
+	if (!validation.ok) {
+		setEvalBuilderError(validation.errors.join(' '));
+		return;
+	}
+	const payload = buildGroupPayload(state.evalBuilder.draftGroup);
+	try {
+		setEvalBuilderBusy(true);
+		await submitCreateGroupMock(payload);
+		setEvalBuilderStatus('Mock action executed; backend not implemented.');
+	} catch (err) {
+		setEvalBuilderError(getErrorMessage(err, 'Failed to run mock create group action.'));
+	} finally {
+		setEvalBuilderBusy(false);
+	}
+}
+
+async function handleEvalBuilderSavePaper() {
+	syncEvalBuilderDraftFromForm();
+	setEvalBuilderError('');
+	const draft = {
+		mode: state.evalBuilder.mode,
+		selected_dataset_id: state.evalBuilder.selectedDatasetId,
+		selected_paper_key: state.evalBuilder.selectedPaperKey,
+		title: state.evalBuilder.draftPaper.title,
+		doi: state.evalBuilder.draftPaper.doi,
+		paper_url: state.evalBuilder.draftPaper.paper_url,
+		main_pdf_file: state.evalBuilder.draftPaper.main_pdf_file,
+		supporting_pdf_files: state.evalBuilder.draftPaper.supporting_pdf_files,
+		ground_truth_entities: state.evalBuilder.draftGroundTruthEntities,
+	};
+	const validation = validatePaperDraft(draft);
+	if (!validation.ok) {
+		setEvalBuilderError(validation.errors.join(' '));
+		return;
+	}
+	const payload = buildPaperPayload(draft);
+	try {
+		setEvalBuilderBusy(true);
+		await submitSavePaperMock(payload);
+		setEvalBuilderStatus('Mock action executed; backend not implemented.');
+	} catch (err) {
+		setEvalBuilderError(getErrorMessage(err, 'Failed to run mock save paper action.'));
+	} finally {
+		setEvalBuilderBusy(false);
+	}
+}
+
+async function handleEvalBuilderDeleteGroup() {
+	const datasetId = state.evalBuilder.selectedDatasetId;
+	if (!datasetId) {
+		setEvalBuilderError('Select a group first.');
+		return;
+	}
+	const confirmed = window.confirm(`Delete group "${datasetId}"? (Mock action only)`);
+	if (!confirmed) return;
+	setEvalBuilderError('');
+	try {
+		setEvalBuilderBusy(true);
+		await submitDeleteGroupMock({ dataset_id: datasetId });
+		setEvalBuilderStatus('Mock action executed; backend not implemented.');
+	} catch (err) {
+		setEvalBuilderError(getErrorMessage(err, 'Failed to run mock delete group action.'));
+	} finally {
+		setEvalBuilderBusy(false);
+	}
+}
+
+async function handleEvalBuilderDeletePaper() {
+	const paperGroup = getSelectedEvalBuilderPaperGroup();
+	if (!paperGroup) {
+		setEvalBuilderError('Select a paper first.');
+		return;
+	}
+	const confirmed = window.confirm(`Delete paper "${getPaperDisplayLabel(paperGroup)}"? (Mock action only)`);
+	if (!confirmed) return;
+	setEvalBuilderError('');
+	try {
+		setEvalBuilderBusy(true);
+		await submitDeletePaperMock({
+			dataset_id: state.evalBuilder.selectedDatasetId,
+			paper_key: paperGroup.key,
+			entity_count: paperGroup.cases.length,
+		});
+		setEvalBuilderStatus('Mock action executed; backend not implemented.');
+	} catch (err) {
+		setEvalBuilderError(getErrorMessage(err, 'Failed to run mock delete paper action.'));
+	} finally {
+		setEvalBuilderBusy(false);
+	}
 }
 
 function getModalPayloadFromForm() {
@@ -2336,10 +2804,17 @@ async function loadCases() {
 				}
 			}
 		});
-		pruneManualPdfReasons(state.cases);
-		renderDatasetOptions();
-		renderCaseList();
-		if (state.selectedPaperKey) {
+			pruneManualPdfReasons(state.cases);
+			renderDatasetOptions();
+			renderCaseList();
+			if (state.evalBuilder.open) {
+				if (state.evalBuilder.selectedDatasetId && !state.datasets.some((item) => item.id === state.evalBuilder.selectedDatasetId)) {
+					state.evalBuilder.selectedDatasetId = state.datasets[0]?.id || null;
+					state.evalBuilder.selectedPaperKey = null;
+				}
+				renderEvalBuilder();
+			}
+			if (state.selectedPaperKey) {
 			// Check if the selected paper still exists
 			const paperGroups = groupCasesByPaper(state.cases);
 			const stillExists = paperGroups.some((g) => g.key === state.selectedPaperKey);
@@ -2468,7 +2943,7 @@ function updateBatchSummary() {
 		if (batch.estimated_cost_usd !== null && batch.estimated_cost_usd !== undefined) {
 			costEl.textContent = batch.estimated_cost_usd < 0.01 ? '<$0.01' : `$${batch.estimated_cost_usd.toFixed(2)}`;
 		} else {
-			costEl.textContent = 'N/A';
+			costEl.textContent = '?';
 		}
 	}
 }
@@ -2538,11 +3013,140 @@ function connectSSE() {
 }
 
 function initEventHandlers() {
+	const openEvalBuilderBtn = $('#openEvalBuilder');
+	if (openEvalBuilderBtn) {
+		openEvalBuilderBtn.addEventListener('click', () => {
+			openEvalBuilderModal();
+		});
+	}
+	const evalBuilderClose = $('#evalBuilderClose');
+	if (evalBuilderClose) {
+		evalBuilderClose.addEventListener('click', () => {
+			closeEvalBuilderModal();
+		});
+	}
+	const evalBuilderBackdrop = $('#evalBuilderBackdrop');
+	if (evalBuilderBackdrop) {
+		evalBuilderBackdrop.addEventListener('click', () => {
+			closeEvalBuilderModal();
+		});
+	}
+	const evalBuilderGroupsList = $('#evalBuilderGroupsList');
+	if (evalBuilderGroupsList) {
+		evalBuilderGroupsList.addEventListener('click', (event) => {
+			const target = event.target instanceof Element ? event.target.closest('[data-action="select-group"]') : null;
+			if (!target) return;
+			selectEvalBuilderGroup(target.dataset.datasetId || null);
+		});
+	}
+	const evalBuilderPapersList = $('#evalBuilderPapersList');
+	if (evalBuilderPapersList) {
+		evalBuilderPapersList.addEventListener('click', (event) => {
+			const target = event.target instanceof Element ? event.target.closest('[data-action="select-paper"]') : null;
+			if (!target) return;
+			selectEvalBuilderPaper(target.dataset.paperKey || null);
+		});
+	}
+	const evalBuilderNewGroupBtn = $('#evalBuilderNewGroupBtn');
+	if (evalBuilderNewGroupBtn) {
+		evalBuilderNewGroupBtn.addEventListener('click', () => {
+			startEvalBuilderCreateGroup();
+		});
+	}
+	const evalBuilderNewPaperBtn = $('#evalBuilderNewPaperBtn');
+	if (evalBuilderNewPaperBtn) {
+		evalBuilderNewPaperBtn.addEventListener('click', () => {
+			startEvalBuilderCreatePaper();
+		});
+	}
+	const evalBuilderDeleteGroupBtn = $('#evalBuilderDeleteGroupBtn');
+	if (evalBuilderDeleteGroupBtn) {
+		evalBuilderDeleteGroupBtn.addEventListener('click', async () => {
+			await handleEvalBuilderDeleteGroup();
+		});
+	}
+	const evalBuilderDeletePaperBtn = $('#evalBuilderDeletePaperBtn');
+	if (evalBuilderDeletePaperBtn) {
+		evalBuilderDeletePaperBtn.addEventListener('click', async () => {
+			await handleEvalBuilderDeletePaper();
+		});
+	}
+	const evalBuilderCreateGroupBtn = $('#evalBuilderCreateGroupBtn');
+	if (evalBuilderCreateGroupBtn) {
+		evalBuilderCreateGroupBtn.addEventListener('click', async () => {
+			await handleEvalBuilderCreateGroup();
+		});
+	}
+	const evalBuilderSavePaperBtn = $('#evalBuilderSavePaperBtn');
+	if (evalBuilderSavePaperBtn) {
+		evalBuilderSavePaperBtn.addEventListener('click', async () => {
+			await handleEvalBuilderSavePaper();
+		});
+	}
+	['#evalBuilderGroupId', '#evalBuilderGroupLabel', '#evalBuilderGroupDescription', '#evalBuilderPaperTitle', '#evalBuilderPaperDoi', '#evalBuilderPaperUrl'].forEach((selector) => {
+		const input = $(selector);
+		if (!input) return;
+		input.addEventListener('input', () => {
+			syncEvalBuilderDraftFromForm();
+		});
+	});
+	const evalBuilderMainPdf = $('#evalBuilderMainPdf');
+	if (evalBuilderMainPdf) {
+		evalBuilderMainPdf.addEventListener('change', () => {
+			const file = evalBuilderMainPdf.files && evalBuilderMainPdf.files[0] ? evalBuilderMainPdf.files[0] : null;
+			state.evalBuilder.draftPaper.main_pdf_file = file;
+			setEvalBuilderStatus(file ? `Main PDF selected: ${file.name}` : 'Main PDF cleared.');
+		});
+	}
+	const evalBuilderSupportingPdfs = $('#evalBuilderSupportingPdfs');
+	if (evalBuilderSupportingPdfs) {
+		evalBuilderSupportingPdfs.addEventListener('change', () => {
+			const files = evalBuilderSupportingPdfs.files ? Array.from(evalBuilderSupportingPdfs.files) : [];
+			state.evalBuilder.draftPaper.supporting_pdf_files = files;
+			setEvalBuilderStatus(files.length ? `${files.length} supporting PDF(s) selected.` : 'Supporting PDFs cleared.');
+		});
+	}
+	const evalBuilderAddEntityBtn = $('#evalBuilderAddEntityBtn');
+	if (evalBuilderAddEntityBtn) {
+		evalBuilderAddEntityBtn.addEventListener('click', () => {
+			state.evalBuilder.draftGroundTruthEntities.push(createEmptyGroundTruthEntity());
+			renderEvalBuilderGroundTruthRows();
+		});
+	}
+	const evalBuilderGroundTruthList = $('#evalBuilderGroundTruthList');
+	if (evalBuilderGroundTruthList) {
+		evalBuilderGroundTruthList.addEventListener('click', (event) => {
+			const target = event.target instanceof Element ? event.target.closest('[data-action="remove-gt-entity"]') : null;
+			if (!target) return;
+			const index = Number(target.dataset.index);
+			if (!Number.isInteger(index)) return;
+			if (state.evalBuilder.draftGroundTruthEntities.length <= 1) {
+				setEvalBuilderError('At least one ground-truth entity is required.');
+				return;
+			}
+			state.evalBuilder.draftGroundTruthEntities.splice(index, 1);
+			setEvalBuilderError('');
+			renderEvalBuilderGroundTruthRows();
+		});
+		evalBuilderGroundTruthList.addEventListener('input', (event) => {
+			const target = event.target instanceof Element ? event.target : null;
+			if (!target || !(target instanceof HTMLInputElement || target instanceof HTMLTextAreaElement)) return;
+			if (target.dataset.action !== 'gt-input') return;
+			const index = Number(target.dataset.index);
+			const field = target.dataset.field;
+			if (!Number.isInteger(index) || !field) return;
+			const entity = state.evalBuilder.draftGroundTruthEntities[index];
+			if (!entity) return;
+			entity[field] = target.value;
+		});
+	}
+
 	const datasetFilter = $('#datasetFilter');
 	if (datasetFilter) {
 		datasetFilter.addEventListener('change', async (event) => {
 			state.filterDataset = event.target.value;
-			await loadCases();
+			persistDatasetFilter(state.filterDataset);
+			await Promise.all([loadCases(), loadBatches()]);
 		});
 	}
 
@@ -2597,6 +3201,11 @@ function initEventHandlers() {
 
 	document.addEventListener('keydown', (event) => {
 		if (event.key !== 'Escape') return;
+		const evalBuilderModal = $('#evalBuilderModal');
+		if (evalBuilderModal && !evalBuilderModal.classList.contains('hidden')) {
+			closeEvalBuilderModal();
+			return;
+		}
 		const modal = $('#baselineCaseModal');
 		if (modal && !modal.classList.contains('hidden')) {
 			closeBaselineCaseModal();
@@ -2605,6 +3214,15 @@ function initEventHandlers() {
 }
 
 export async function initBaseline() {
+	const urlDataset = getDatasetFromUrl();
+	const storedDataset = getStoredDatasetFilter();
+	if (urlDataset) {
+		state.filterDataset = urlDataset;
+	} else if (storedDataset) {
+		state.filterDataset = storedDataset;
+	}
+	persistDatasetFilter(state.filterDataset);
+
 	// Check if we're in single-batch mode (URL has batch_id)
 	const urlBatchId = getBatchIdFromUrl();
 	if (urlBatchId) {

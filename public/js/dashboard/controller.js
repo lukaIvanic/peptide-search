@@ -2,21 +2,11 @@
  * Main application entry point.
  */
 
-import * as searchActions from './actions/search_actions.js';
 import * as runActions from './actions/run_actions.js';
 import * as promptActions from './actions/prompt_actions.js';
 import * as systemActions from './actions/system_actions.js';
-import { initTour } from '../tour.js';
-import { markMilestone, renderChecklist, resetMilestones } from '../onboarding.js';
 import {
     appStore,
-    setSearchResults,
-    setSearching,
-    togglePaperSelection,
-    clearBatchSelection,
-    setSelectedPapers,
-    getSelectedPapers,
-    isPaperSelected,
     setSelectedProvider,
     getSelectedProvider,
     setSelectedModel,
@@ -28,7 +18,6 @@ import {
     getSelectedPrompt,
     setPapers,
     updatePaperStatus,
-    addPaperToList,
     openDrawer,
     closeDrawer,
     setDrawerContent,
@@ -37,13 +26,10 @@ import {
     $,
     renderProviderBadge,
     renderConnectionBadge,
-    renderSearchResults,
-    renderBatchCount,
     renderPapersTable,
     renderQueueStats,
     renderDrawer,
     setDrawerOpen,
-    setSearchCount,
     setDrawerCallbacks,
     applyPaperFilters,
     escapeCsv,
@@ -57,7 +43,6 @@ import {
 } from './views/dashboard_views.js';
 
 const api = {
-    ...searchActions,
     ...runActions,
     ...promptActions,
     ...systemActions,
@@ -66,18 +51,7 @@ const api = {
 let sseConnection = null;
 let failureModalState = null;
 let failureModalItems = [];
-const DASHBOARD_ONBOARDING_KEY = 'onboarding_dashboard_v1';
-const DASHBOARD_STEPS = [
-    { key: 'searched', label: 'Run a search' },
-    { key: 'enqueued', label: 'Start batch extraction' },
-    { key: 'opened_paper', label: 'Open a paper drawer' },
-];
 const SIDE_DRAWERS = {
-    onboarding: {
-        drawer: '#onboardingDrawer',
-        openBtn: '#openOnboardingDrawer',
-        closeBtn: '#closeOnboardingDrawer',
-    },
     prompt: {
         drawer: '#promptDrawer',
         openBtn: '#openPromptDrawer',
@@ -257,13 +231,12 @@ export async function initDashboard() {
         onResolveSource: handleResolveRunSource,
         onUpload: handleUploadRunFile,
         onRetryWithSource: handleRetryRunWithResolved,
+        onDeleteRun: handleDeleteRun,
+        onDeletePaper: handleDeletePaper,
     });
     
     // Setup event handlers
     initEventHandlers();
-    initTourGuide();
-    renderOnboarding();
-    initContextHints();
     try {
         await loadPrompts();
     } catch (err) {
@@ -282,129 +255,6 @@ export async function initDashboard() {
     await loadFailureSummary();
     hydratePaperFilters();
     renderFilteredPapers();
-}
-
-function initContextHints() {
-    const dismiss = document.querySelector('#contextHintDismiss');
-    if (dismiss) {
-        dismiss.addEventListener('click', () => hideHint());
-    }
-    updateContextHint();
-}
-
-function showHint(message, key) {
-    if (!message) return;
-    if (hasHintSeen(key)) return;
-    const container = document.querySelector('#contextHint');
-    const text = document.querySelector('#contextHintText');
-    if (!container || !text) return;
-    text.textContent = message;
-    container.classList.remove('hidden');
-    container.dataset.hintKey = key;
-}
-
-function hideHint() {
-    const container = document.querySelector('#contextHint');
-    if (!container) return;
-    const key = container.dataset.hintKey;
-    if (key) markHintSeen(key);
-    container.classList.add('hidden');
-    container.dataset.hintKey = '';
-}
-
-function hasHintSeen(key) {
-    try {
-        return localStorage.getItem(`hint_${key}`) === '1';
-    } catch {
-        return false;
-    }
-}
-
-function markHintSeen(key) {
-    try {
-        localStorage.setItem(`hint_${key}`, '1');
-    } catch {
-        // ignore
-    }
-}
-
-function updateContextHint() {
-    const state = getOnboardingState();
-    if (!state.searched) {
-        showHint('Tip: Start with a broad search keyword to populate papers.', 'search_hint');
-        return;
-    }
-    if (state.searched && !state.enqueued) {
-        showHint('Tip: Select multiple results and click Start Extraction to queue runs.', 'enqueue_hint');
-        return;
-    }
-    if (state.enqueued && !state.opened_paper) {
-        showHint('Tip: Click a paper row to open the drawer and inspect runs.', 'open_drawer_hint');
-        return;
-    }
-    hideHint();
-}
-
-function getOnboardingState() {
-    try {
-        return JSON.parse(localStorage.getItem(DASHBOARD_ONBOARDING_KEY) || '{}');
-    } catch {
-        return {};
-    }
-}
-
-function initTourGuide() {
-    const tour = initTour({
-        storageKey: 'tour_dashboard_v1',
-        autoStart: true,
-        steps: [
-            {
-                selector: '#queryInput',
-                title: 'Search',
-                body: 'Start with broad peptide keywords and refine from results.',
-            },
-            {
-                selector: '#providerSelect',
-                title: 'Provider',
-                body: 'Switch providers to compare extraction behavior.',
-            },
-            {
-                selector: '#searchBtn',
-                title: 'Run search',
-                body: 'Fetch open-access results from multiple sources.',
-            },
-            {
-                selector: '#startBatchBtn',
-                title: 'Batch extraction',
-                body: 'Select multiple papers and extract in bulk.',
-            },
-            {
-                selector: '#papersTable',
-                title: 'Papers & status',
-                body: 'Open the drawer to inspect runs and entities.',
-            },
-        ],
-    });
-    const btn = document.querySelector('#startTourBtn');
-    if (btn) btn.addEventListener('click', tour.start);
-}
-
-function renderOnboarding() {
-    renderChecklist({
-        containerId: '#onboardingList',
-        progressId: '#onboardingProgress',
-        items: DASHBOARD_STEPS,
-        storageKey: DASHBOARD_ONBOARDING_KEY,
-    });
-    const resetBtn = document.querySelector('#resetOnboarding');
-    if (resetBtn && !resetBtn.dataset.bound) {
-        resetBtn.dataset.bound = '1';
-        resetBtn.addEventListener('click', () => {
-            resetMilestones(DASHBOARD_ONBOARDING_KEY);
-            renderOnboarding();
-            updateContextHint();
-        });
-    }
 }
 
 function setSideDrawerOpen(key, isOpen) {
@@ -660,11 +510,6 @@ async function loadPrompts({ keepSelection = false } = {}) {
 }
 
 function initEventHandlers() {
-    // Search
-    $('#searchBtn').addEventListener('click', handleSearch);
-    $('#queryInput').addEventListener('keydown', (e) => {
-        if (e.key === 'Enter') handleSearch();
-    });
     const uploadPdfBtn = document.querySelector('#uploadPdfBtn');
     const uploadPdfInput = document.querySelector('#uploadPdfInput');
     if (uploadPdfBtn && uploadPdfInput) {
@@ -716,13 +561,6 @@ function initEventHandlers() {
             renderFilteredPapers();
         });
     }
-    const papersFilterSource = document.querySelector('#papersFilterSource');
-    if (papersFilterSource) {
-        papersFilterSource.addEventListener('change', (e) => {
-            paperFilters.source = e.target.value || '';
-            renderFilteredPapers();
-        });
-    }
     const papersFilterSort = document.querySelector('#papersFilterSort');
     if (papersFilterSort) {
         papersFilterSort.addEventListener('change', (e) => {
@@ -735,7 +573,6 @@ function initEventHandlers() {
         papersFilterClear.addEventListener('click', () => {
             paperFilters.query = '';
             paperFilters.status = '';
-            paperFilters.source = '';
             paperFilters.sort = 'recent';
             syncPaperFilterInputs();
             renderFilteredPapers();
@@ -746,7 +583,6 @@ function initEventHandlers() {
         papersFilterNoticeClear.addEventListener('click', () => {
             paperFilters.query = '';
             paperFilters.status = '';
-            paperFilters.source = '';
             paperFilters.sort = 'recent';
             syncPaperFilterInputs();
             renderFilteredPapers();
@@ -755,14 +591,6 @@ function initEventHandlers() {
     const papersFilterExport = document.querySelector('#papersFilterExport');
     if (papersFilterExport) {
         papersFilterExport.addEventListener('click', handleExportPapersCsv);
-    }
-    const selectAllResults = document.querySelector('#selectAllResults');
-    if (selectAllResults) {
-        selectAllResults.addEventListener('click', handleSelectAllResults);
-    }
-    const clearResultsSelection = document.querySelector('#clearResultsSelection');
-    if (clearResultsSelection) {
-        clearResultsSelection.addEventListener('click', handleClearResultsSelection);
     }
     const failureModalClose = document.querySelector('#failureModalClose');
     const failureModalOverlay = document.querySelector('#failureModalOverlay');
@@ -803,18 +631,6 @@ function initEventHandlers() {
     const promptCreateBtn = document.querySelector('#promptCreateBtn');
     if (promptCreateBtn) {
         promptCreateBtn.addEventListener('click', handleCreatePrompt);
-    }
-    const searchExamples = document.querySelector('#searchExamples');
-    if (searchExamples) {
-        searchExamples.addEventListener('click', (e) => {
-            const target = e.target.closest('button[data-search-example]');
-            if (!target) return;
-            const input = document.querySelector('#queryInput');
-            if (!input) return;
-            input.value = target.dataset.searchExample || '';
-            input.focus();
-            input.select();
-        });
     }
     Object.keys(SIDE_DRAWERS).forEach((key) => {
         const config = SIDE_DRAWERS[key];
@@ -871,9 +687,6 @@ function initEventHandlers() {
         setSelectedModel((modelSelect.value || '').trim());
     }
     
-    // Start batch extraction
-    $('#startBatchBtn').addEventListener('click', handleStartBatch);
-    
     // Drawer
     $('#closeDrawerBtn').addEventListener('click', () => closeDrawer());
     $('#drawerOverlay').addEventListener('click', () => closeDrawer());
@@ -881,16 +694,6 @@ function initEventHandlers() {
 
 function initStateSubscriptions() {
     appStore.subscribe((state, prev) => {
-        // Search results changed
-        if (
-            state.searchResults !== prev.searchResults ||
-            state.selectedPapers !== prev.selectedPapers ||
-            state.isSearching !== prev.isSearching
-        ) {
-            renderSearchResults(state.searchResults, state.selectedPapers, handleTogglePaper, state.isSearching);
-            renderBatchCount(state.selectedPapers.size);
-        }
-        
         // Papers table changed
         if (state.papers !== prev.papers) {
             renderFilteredPapers(state.papers);
@@ -929,7 +732,6 @@ function connectSSE() {
             if (message.event === 'run_status') {
                 const { run_id, paper_id, status, failure_reason } = message.data;
                 updatePaperStatus(paper_id, run_id, status, failure_reason);
-                syncSearchResultsWithPapers(appStore.get('papers'));
                 
                 // Update drawer if open for this paper
                 if (appStore.get('drawerPaperId') === paper_id) {
@@ -958,46 +760,6 @@ function setSearchStatus(message, loading = false) {
     }
 }
 
-function handleSelectAllResults() {
-    const results = appStore.get('searchResults') || [];
-    const selected = new Map();
-    results.forEach((item) => {
-        const key = item.pdf_url || item.url;
-        if (item.pdf_url && key) {
-            selected.set(key, item);
-        }
-    });
-    setSelectedPapers(selected);
-}
-
-function handleClearResultsSelection() {
-    clearBatchSelection();
-}
-
-function syncSearchResultsWithPapers(papers) {
-    const results = appStore.get('searchResults');
-    if (!Array.isArray(results) || results.length === 0) return;
-    const byDoi = new Map();
-    const byUrl = new Map();
-    (papers || []).forEach((paper) => {
-        if (paper.doi) byDoi.set(paper.doi, paper);
-        if (paper.url) byUrl.set(paper.url, paper);
-    });
-
-    const updated = results.map((item) => {
-        const paper = (item.doi && byDoi.get(item.doi)) || (item.url && byUrl.get(item.url)) || null;
-        if (!paper) return item;
-        const queueStatus = paper.status || null;
-        return {
-            ...item,
-            seen: true,
-            processed: queueStatus === 'stored' ? true : item.processed,
-            queue_status: queueStatus,
-        };
-    });
-    setSearchResults(updated);
-}
-
 function applyPaperPreset(status) {
     paperFilters.status = status;
     paperFilters.sort = 'recent';
@@ -1009,7 +771,7 @@ function renderFilteredPapers(papers = appStore.get('papers')) {
     const filtered = applyPaperFilters(papers);
     const emptyMessage = filtersActive()
         ? 'No papers match these filters. Click Clear filters to show all papers.'
-        : 'No papers yet. Search and extract papers to see them here.';
+        : 'No papers yet. Upload PDFs to queue extraction runs.';
     renderPapersTable(filtered, handlePaperClick, {
         emptyMessage,
         resolvedSources: appStore.get('resolvedRunSources') || {},
@@ -1046,15 +808,6 @@ function handleKeyboardShortcuts(e) {
     }
     const key = e.key.toLowerCase();
     const hasModifiers = e.ctrlKey || e.metaKey || e.altKey;
-    if (key === '/' && !hasModifiers) {
-        const input = document.querySelector('#queryInput');
-        if (input) {
-            e.preventDefault();
-            input.focus();
-            input.select();
-        }
-        return;
-    }
     if (key === 'f' && !hasModifiers && !e.shiftKey) {
         const input = document.querySelector('#papersFilterInput');
         if (input) {
@@ -1081,7 +834,6 @@ function handleKeyboardShortcuts(e) {
     if (key === 'c') {
         paperFilters.query = '';
         paperFilters.status = '';
-        paperFilters.source = '';
         paperFilters.sort = 'recent';
         syncPaperFilterInputs();
         renderFilteredPapers();
@@ -1110,7 +862,6 @@ function handleExportPapersCsv() {
     const headers = [
         'title',
         'doi',
-        'source',
         'year',
         'status',
         'run_count',
@@ -1123,7 +874,6 @@ function handleExportPapersCsv() {
     const rows = filtered.map((paper) => [
         paper.title,
         paper.doi,
-        paper.source,
         paper.year,
         paper.status,
         paper.run_count,
@@ -1148,90 +898,6 @@ function handleExportPapersCsv() {
     link.click();
     link.remove();
     URL.revokeObjectURL(url);
-}
-
-async function handleSearch() {
-    const query = $('#queryInput').value.trim();
-    if (!query) return;
-    
-    setSearchCount('Searching...');
-    setSearching(true);
-    clearBatchSelection();
-    setSearchStatus('Searching sources...', true);
-    
-    try {
-        const data = await api.search(query);
-        setSearchResults(data.results);
-        markMilestone(DASHBOARD_ONBOARDING_KEY, 'searched');
-        renderOnboarding();
-        updateContextHint();
-        setSearchCount(`${data.results.length} results`);
-        setSearchStatus(data.results.length ? `Found ${data.results.length} results.` : 'No results found.');
-    } catch (e) {
-        setSearchResults([]);
-        setSearchCount('Search failed');
-        setSearchStatus('Search failed.');
-        alert(e.message || 'Search failed');
-    } finally {
-        setSearchStatus(document.querySelector('#searchStatus')?.textContent || '', false);
-    }
-}
-
-function handleTogglePaper(paper) {
-    togglePaperSelection(paper);
-}
-
-async function handleStartBatch() {
-    const papers = getSelectedPapers();
-    if (papers.length === 0) return;
-    
-    const provider = getSelectedProvider();
-    const model = (getSelectedModel() || '').trim() || null;
-    const promptId = getSelectedPrompt();
-    const resolvedPromptId = promptId ? promptId : null;
-    
-    // Prepare papers for enqueue
-    const enqueueItems = papers.map(p => ({
-        title: p.title,
-        doi: p.doi,
-        url: p.url,
-        pdf_url: p.pdf_url,
-        source: p.source,
-        year: p.year,
-        authors: p.authors || [],
-        force: false, // Don't force re-extract by default
-    }));
-    
-    try {
-        const result = await api.enqueue(enqueueItems, provider, resolvedPromptId, model);
-        console.log('Enqueue result:', result);
-        
-        const selectedKeys = new Set(papers.map(p => p.pdf_url || p.url));
-        const updatedResults = (appStore.get('searchResults') || []).map((item) => {
-            const key = item.pdf_url || item.url;
-            if (selectedKeys.has(key)) {
-                return { ...item, queued: true, seen: true, queue_status: 'queued' };
-            }
-            return item;
-        });
-        setSearchResults(updatedResults);
-
-        // Clear selection
-        clearBatchSelection();
-        
-        // Refresh papers table to show new items
-        await refreshPapers();
-        markMilestone(DASHBOARD_ONBOARDING_KEY, 'enqueued');
-        renderOnboarding();
-        updateContextHint();
-        
-        // Show feedback
-        if (result.skipped > 0) {
-            alert(`Enqueued ${result.enqueued} papers (${result.skipped} already processed)`);
-        }
-    } catch (e) {
-        alert(e.message || 'Failed to start extraction');
-    }
 }
 
 async function handleCreatePrompt() {
@@ -1309,9 +975,6 @@ async function handleActivatePrompt(promptId) {
 async function handlePaperClick(paperId) {
     openDrawer(paperId);
     await loadPaperDetails(paperId);
-    markMilestone(DASHBOARD_ONBOARDING_KEY, 'opened_paper');
-    renderOnboarding();
-    updateContextHint();
 }
 
 async function loadPaperDetails(paperId) {
@@ -1321,6 +984,53 @@ async function loadPaperDetails(paperId) {
     } catch (e) {
         console.error('Failed to load paper details:', e);
         setDrawerContent({ title: 'Error loading paper' }, []);
+    }
+}
+
+async function handleDeleteRun(runId) {
+    if (!runId) return;
+    if (!confirm('Delete this run and all its follow-up descendants? This cannot be undone.')) {
+        return;
+    }
+    try {
+        await api.deleteRun(runId);
+        const current = { ...(appStore.get('resolvedRunSources') || {}) };
+        delete current[runId];
+        appStore.set({ resolvedRunSources: current });
+
+        const paperId = appStore.get('drawerPaperId');
+        if (paperId) {
+            await loadPaperDetails(paperId);
+        }
+        await refreshPapers();
+        await loadFailureSummary();
+    } catch (e) {
+        console.error('Failed to delete run:', e);
+        alert(e.message || 'Failed to delete run');
+    }
+}
+
+async function handleDeletePaper(paperId, paperTitle) {
+    if (!paperId) return;
+    const name = paperTitle || `paper ${paperId}`;
+    if (!confirm(`Delete "${name}" and all associated runs? This cannot be undone.`)) {
+        return;
+    }
+    try {
+        await api.deletePaper(paperId);
+        const current = { ...(appStore.get('resolvedRunSources') || {}) };
+        for (const run of appStore.get('drawerRuns') || []) {
+            if (run?.id) {
+                delete current[run.id];
+            }
+        }
+        appStore.set({ resolvedRunSources: current });
+        closeDrawer();
+        await refreshPapers();
+        await loadFailureSummary();
+    } catch (e) {
+        console.error('Failed to delete paper:', e);
+        alert(e.message || 'Failed to delete paper');
     }
 }
 
@@ -1586,9 +1296,6 @@ function renderFailureSummary(summary) {
     container.appendChild(renderFailureGroup('By provider', summary.providers, {
         onSelect: (item) => openFailureModal({ provider: item.key }, `Provider: ${item.label || item.key}`),
     }));
-    container.appendChild(renderFailureGroup('By source', summary.sources, {
-        onSelect: (item) => openFailureModal({ source: item.key }, `Source: ${item.label || item.key}`),
-    }));
     container.appendChild(renderFailureGroup('Top reasons', (summary.reasons || []).slice(0, 6), {
         fullWidth: true,
         onSelect: (item) => openFailureModal({ reason: item.key }, `Reason: ${item.label || item.key}`),
@@ -1647,7 +1354,7 @@ function renderFailureModalList(items, days) {
         const info = document.createElement('div');
         info.className = 'text-xs text-slate-600';
         const title = run.paper_title || `Paper ${run.paper_id || ''}`;
-        const metaLine = [run.paper_doi, run.paper_source, run.paper_year, run.model_provider].filter(Boolean).join(' · ');
+        const metaLine = [run.paper_doi, run.paper_year, run.model_provider].filter(Boolean).join(' · ');
         const reason = run.normalized_reason || run.failure_reason || 'Unknown failure';
         info.innerHTML = `
             <div class="list-title">${title}</div>
@@ -1734,7 +1441,6 @@ function handleExportFailureCsv() {
     const headers = [
         'title',
         'doi',
-        'source',
         'year',
         'bucket',
         'normalized_reason',
@@ -1748,7 +1454,6 @@ function handleExportFailureCsv() {
     const rows = failureModalItems.map((run) => [
         run.paper_title,
         run.paper_doi,
-        run.paper_source,
         run.paper_year,
         run.bucket,
         run.normalized_reason,
@@ -1789,7 +1494,7 @@ async function loadFailureModalRuns() {
             ...failureModalState.filters,
             days,
             limit: 50,
-            maxRuns: 1000,
+            maxRuns: 300,
         });
         renderFailureModalList(data.items || [], days);
     } catch (err) {
@@ -1811,7 +1516,7 @@ async function loadFailureSummary() {
         compact.textContent = 'Loading failure summary...';
     }
     try {
-        const summary = await api.getFailureSummary(days, 1000);
+        const summary = await api.getFailureSummary(days, 300);
         renderFailureSummary(summary);
         if (failureModalState) {
             await loadFailureModalRuns();
@@ -1848,7 +1553,6 @@ async function refreshPapers() {
     try {
         const data = await api.getPapers();
         setPapers(data.papers, data.queue_stats);
-        syncSearchResultsWithPapers(data.papers || []);
     } catch (e) {
         console.error('Failed to load papers:', e);
     }

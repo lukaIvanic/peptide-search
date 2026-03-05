@@ -58,12 +58,20 @@ def _extract_sequences(raw_json: Optional[str]) -> set[str]:
     return values
 
 
-async def mark_batches_stale_and_trigger(*, dataset: Optional[str] = None) -> None:
+async def mark_batches_stale_and_trigger(
+    *,
+    dataset: Optional[str] = None,
+    batch_ids: Optional[List[str]] = None,
+) -> None:
     with session_scope() as session:
         stmt = select(BatchRun)
         if dataset:
             stmt = stmt.where(BatchRun.dataset == dataset)
+        if batch_ids:
+            stmt = stmt.where(BatchRun.batch_id.in_(batch_ids))
         batches = session.exec(stmt).all()
+        if not batches:
+            return
         for batch in batches:
             batch.metrics_stale = True
             session.add(batch)

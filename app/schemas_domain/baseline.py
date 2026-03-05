@@ -9,6 +9,7 @@ class BaselineDatasetInfo(BaseModel):
     id: str
     label: Optional[str] = None
     description: Optional[str] = None
+    source_file: Optional[str] = None
     count: int = 0
 
 
@@ -137,6 +138,20 @@ class BaselineCaseUpdateRequest(BaseModel):
 
 class BaselineCaseDeleteRequest(BaseModel):
     expected_updated_at: str
+
+
+class BaselineDatasetUpsertRequest(BaseModel):
+    dataset_id: str
+    label: str
+    description: Optional[str] = None
+
+
+class BaselinePaperSaveResponse(BaseModel):
+    status: str
+    dataset_id: str
+    paper_key: str
+    saved_cases: int
+    deleted_cases: int = 0
 
 
 class BaselineDeleteResponse(BaseModel):

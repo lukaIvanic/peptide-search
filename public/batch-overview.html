@@ -24,7 +24,6 @@
 				<a href="/" class="nav-link">Dashboard</a>
 				<a href="/entities" class="nav-link">Entity Explorer</a>
 				<a href="/baseline" class="nav-link active">Evaluation</a>
-				<a href="/help" class="nav-link">Help</a>
 			</nav>
 		</header>
 
@@ -38,6 +37,10 @@
 					</div>
 					<div class="flex items-center gap-3">
 						<span id="statusMessage" class="text-[11px] text-slate-500"></span>
+						<select id="batchDatasetFilter" class="sw-select sw-select--sm min-w-[180px]" aria-label="Evaluation group"></select>
+						<button id="openEvalBuilder" class="sw-btn sw-btn--ghost sw-btn--sm" type="button">
+							Evaluation Groups
+						</button>
 						<button id="newBatchBtn" class="sw-btn sw-btn--primary sw-btn--sm" type="button">
 							New Run
 						</button>
@@ -67,14 +70,18 @@
 					<div class="provider-accuracy-head__title">
 						<h3 class="section-title">Model Ranking</h3>
 					</div>
-					<div id="providerMetricControls" class="provider-accuracy-controls">
-						<select
-							id="providerMetricSelect"
-							class="provider-accuracy-menu"
-							aria-label="Select model ranking metric"
-						></select>
+						<div id="providerMetricControls" class="provider-accuracy-controls">
+							<select
+								id="providerMetricSelect"
+								class="provider-accuracy-menu"
+								aria-label="Select model ranking metric"
+							></select>
+							<label class="provider-accuracy-toggle" for="providerCompleteOnlyToggle">
+								<input id="providerCompleteOnlyToggle" type="checkbox" />
+								<span>Full runs only</span>
+							</label>
+						</div>
 					</div>
-				</div>
 				<div id="providerAccuracyChart" class="provider-accuracy-chart mt-3">
 					<div id="providerAccuracyPlot" class="provider-accuracy-chart__plot">
 						<div class="sw-empty text-xs text-slate-500">Loading model analytics...</div>
@@ -139,6 +146,107 @@
 			</div>
 		</div>
 
-		<script type="module" src="/static/batch-overview.js?v=2026-02-10-10"></script>
+		<!-- Evaluation Builder Modal -->
+		<div id="evalBuilderModal" class="fixed inset-0 z-50 hidden eval-builder-modal">
+			<div id="evalBuilderBackdrop" class="fixed inset-0 bg-black/50 backdrop-blur-sm"></div>
+			<div class="fixed inset-0 overflow-y-auto p-4">
+				<div class="sw-card w-full max-w-6xl p-0 flex flex-col mx-auto my-4">
+					<div class="px-4 py-3 border-b border-slate-200 flex items-center justify-between gap-3">
+						<div>
+							<div class="section-title">Evaluation Builder</div>
+							<div class="text-xs text-slate-500">Create evaluation groups and papers with ground-truth entities.</div>
+						</div>
+						<div class="flex items-center gap-2">
+							<button id="evalBuilderNewGroupBtn" class="sw-btn sw-btn--sm sw-btn--ghost" type="button">New Group</button>
+							<button id="evalBuilderNewPaperBtn" class="sw-btn sw-btn--sm sw-btn--ghost" type="button">New Paper</button>
+							<button id="evalBuilderClose" class="sw-btn sw-btn--sm sw-btn--ghost" type="button">Close</button>
+						</div>
+					</div>
+					<div class="px-4 py-2 border-b border-slate-100 bg-slate-50">
+						<div id="evalBuilderStatus" class="text-xs text-indigo-700"></div>
+						<div id="evalBuilderError" class="text-xs text-red-600 hidden"></div>
+					</div>
+					<div class="grid grid-cols-12 gap-0">
+						<section class="col-span-12 lg:col-span-3 border-r border-slate-200 flex flex-col">
+							<header class="px-3 py-2 border-b border-slate-100 bg-slate-50">
+								<div class="sw-kicker text-[10px] text-slate-500">Groups (Datasets)</div>
+							</header>
+							<div id="evalBuilderGroupsList" class="p-3 space-y-2"></div>
+							<div class="p-3 border-t border-slate-100">
+								<button id="evalBuilderDeleteGroupBtn" class="sw-btn sw-btn--sm sw-btn--ghost text-red-600 w-full" type="button">Delete Selected Group</button>
+							</div>
+						</section>
+						<section class="col-span-12 lg:col-span-3 border-r border-slate-200 flex flex-col">
+							<header class="px-3 py-2 border-b border-slate-100 bg-slate-50">
+								<div class="sw-kicker text-[10px] text-slate-500">Papers in Group</div>
+							</header>
+							<div id="evalBuilderPapersList" class="p-3 space-y-2 max-h-[50vh] overflow-y-auto"></div>
+							<div class="p-3 border-t border-slate-100">
+								<button id="evalBuilderDeletePaperBtn" class="sw-btn sw-btn--sm sw-btn--ghost text-red-600 w-full" type="button">Delete Selected Paper</button>
+							</div>
+						</section>
+						<section class="col-span-12 lg:col-span-6 flex flex-col">
+							<header class="px-3 py-2 border-b border-slate-100 bg-slate-50">
+								<div id="evalBuilderMode" class="text-xs text-slate-500">Mode: create_group</div>
+							</header>
+							<div class="p-3 space-y-4">
+								<div class="sw-card p-3 space-y-3">
+									<div class="section-title text-sm">Group Form</div>
+									<div class="space-y-2">
+										<label class="sw-kicker text-[10px] text-slate-500 block">Group ID</label>
+										<input id="evalBuilderGroupId" class="sw-input sw-input--sm" />
+									</div>
+									<div class="space-y-2">
+										<label class="sw-kicker text-[10px] text-slate-500 block">Label</label>
+										<input id="evalBuilderGroupLabel" class="sw-input sw-input--sm" />
+									</div>
+									<div class="space-y-2">
+										<label class="sw-kicker text-[10px] text-slate-500 block">Description</label>
+										<textarea id="evalBuilderGroupDescription" class="sw-input sw-input--sm min-h-[70px]"></textarea>
+									</div>
+									<button id="evalBuilderCreateGroupBtn" class="sw-btn sw-btn--sm sw-btn--primary" type="button">Save Group</button>
+								</div>
+
+								<div class="sw-card p-3 space-y-3">
+									<div class="section-title text-sm">Paper + Ground Truth Form</div>
+									<div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+										<div class="space-y-2">
+											<label class="sw-kicker text-[10px] text-slate-500 block">Title</label>
+											<input id="evalBuilderPaperTitle" class="sw-input sw-input--sm" />
+										</div>
+										<div class="space-y-2">
+											<label class="sw-kicker text-[10px] text-slate-500 block">DOI</label>
+											<input id="evalBuilderPaperDoi" class="sw-input sw-input--sm" />
+										</div>
+										<div class="space-y-2 md:col-span-2">
+											<label class="sw-kicker text-[10px] text-slate-500 block">Paper URL</label>
+											<input id="evalBuilderPaperUrl" class="sw-input sw-input--sm" />
+										</div>
+										<div class="space-y-2">
+											<label class="sw-kicker text-[10px] text-slate-500 block">Main PDF</label>
+											<input id="evalBuilderMainPdf" type="file" accept=".pdf" class="sw-input sw-input--sm" />
+										</div>
+										<div class="space-y-2">
+											<label class="sw-kicker text-[10px] text-slate-500 block">Supporting PDFs</label>
+											<input id="evalBuilderSupportingPdfs" type="file" accept=".pdf" multiple class="sw-input sw-input--sm" />
+										</div>
+									</div>
+									<div class="space-y-2">
+										<div class="flex items-center justify-between">
+											<div class="sw-kicker text-[10px] text-slate-500">Ground Truth Entities</div>
+											<button id="evalBuilderAddEntityBtn" class="sw-btn sw-btn--sm sw-btn--ghost" type="button">Add Entity</button>
+										</div>
+										<div id="evalBuilderGroundTruthList" class="space-y-2"></div>
+										<button id="evalBuilderSavePaperBtn" class="sw-btn sw-btn--sm sw-btn--primary" type="button">Save Paper</button>
+									</div>
+								</div>
+							</div>
+						</section>
+					</div>
+				</div>
+			</div>
+		</div>
+
+		<script type="module" src="/static/batch-overview.js?v=2026-03-05-01"></script>
 	</body>
 </html>

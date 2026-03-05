@@ -1,4 +1,4 @@
-const PAPER_FILTERS_STORAGE_KEY = 'dashboard_paper_filters_v3';
+const PAPER_FILTERS_STORAGE_KEY = 'dashboard_paper_filters_v4';
 const PAPER_FILTERS_ALLOWED_STATUS = new Set([
     '',
     'processing',
@@ -7,14 +7,6 @@ const PAPER_FILTERS_ALLOWED_STATUS = new Set([
     'stored',
     'cancelled',
     'none',
-]);
-const PAPER_FILTERS_ALLOWED_SOURCE = new Set([
-    '',
-    'pmc',
-    'europepmc',
-    'arxiv',
-    'semanticscholar',
-    'upload',
 ]);
 const PAPER_FILTERS_ALLOWED_SORT = new Set([
     'recent',
@@ -25,14 +17,12 @@ const PAPER_FILTERS_ALLOWED_SORT = new Set([
 export const paperFilters = {
     query: '',
     status: '',
-    source: '',
     sort: 'recent',
 };
 
 export function applyPaperFilters(papers, filters = paperFilters) {
     const query = filters.query.trim().toLowerCase();
     const statusFilter = filters.status;
-    const sourceFilter = filters.source;
     const sortFilter = filters.sort || 'recent';
 
     let filtered = Array.isArray(papers) ? papers : [];
@@ -53,10 +43,6 @@ export function applyPaperFilters(papers, filters = paperFilters) {
             filtered = filtered.filter((paper) => paper.status === statusFilter);
         }
     }
-    if (sourceFilter) {
-        filtered = filtered.filter((paper) => paper.source === sourceFilter);
-    }
-
     const sorted = [...filtered];
     if (sortFilter === 'oldest') {
         sorted.sort((a, b) => {
@@ -80,11 +66,9 @@ export function applyPaperFilters(papers, filters = paperFilters) {
 export function syncPaperFilterInputs(filters = paperFilters) {
     const papersFilterInput = document.querySelector('#papersFilterInput');
     const papersFilterStatus = document.querySelector('#papersFilterStatus');
-    const papersFilterSource = document.querySelector('#papersFilterSource');
     const papersFilterSort = document.querySelector('#papersFilterSort');
     if (papersFilterInput) papersFilterInput.value = filters.query;
     if (papersFilterStatus) papersFilterStatus.value = filters.status;
-    if (papersFilterSource) papersFilterSource.value = filters.source;
     if (papersFilterSort) papersFilterSort.value = filters.sort || 'recent';
 }
 
@@ -106,10 +90,6 @@ export function sanitizePaperFilters(filters = paperFilters) {
         filters.status = '';
         changed = true;
     }
-    if (!PAPER_FILTERS_ALLOWED_SOURCE.has(filters.source)) {
-        filters.source = '';
-        changed = true;
-    }
     if (!PAPER_FILTERS_ALLOWED_SORT.has(filters.sort)) {
         filters.sort = 'recent';
         changed = true;
@@ -128,7 +108,6 @@ export function hydratePaperFilters(filters = paperFilters) {
         if (stored && typeof stored === 'object') {
             filters.query = stored.query || '';
             filters.status = stored.status || '';
-            filters.source = stored.source || '';
             filters.sort = stored.sort || 'recent';
         }
     } catch {
@@ -144,7 +123,6 @@ export function filtersActive(filters = paperFilters) {
     return Boolean(
         filters.query.trim()
         || filters.status
-        || filters.source
     );
 }
 

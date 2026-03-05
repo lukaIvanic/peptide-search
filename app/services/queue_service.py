@@ -708,6 +708,17 @@ def get_queue() -> ExtractionQueue:
     if _queue is None:
         _broadcaster = get_broadcaster()
         concurrency = int(getattr(settings, "QUEUE_CONCURRENCY", 128))
+        # SQLite does not handle very high concurrent worker polling well.
+        # Cap default worker fan-out to keep API reads responsive in local/dev.
+        if str(getattr(settings, "DB_URL", "")).startswith("sqlite"):
+            sqlite_cap = int(getattr(settings, "QUEUE_SQLITE_MAX_CONCURRENCY", 16))
+            if concurrency > sqlite_cap:
+                logger.warning(
+                    "Capping queue concurrency for SQLite: requested=%s capped=%s",
+                    concurrency,
+                    sqlite_cap,
+                )
+                concurrency = sqlite_cap
         _queue = ExtractionQueue(concurrency=concurrency, broadcaster=_broadcaster)
     return _queue
 

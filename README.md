@@ -1,6 +1,6 @@
 ## Peptide Literature Extractor (Prototype)
 
-Interactive prototype to search open-access scientific literature (PubMed Central, Europe PMC, arXiv, Semantic Scholar), fetch PDFs/HTML, call an LLM to extract structured peptide/molecule data, and store results in a local SQLite database. A lightweight Tailwind UI presents search, extraction, and stored results.
+Interactive prototype to upload/fetch papers, call an LLM to extract structured peptide/molecule data, and store results in a local SQLite database. A lightweight Tailwind UI presents queueing, extraction, and stored results.
 
 ### Project goal (high level)
 This repository is the **automatic literature → structured data extraction** component of a broader effort to capture **peptide** knowledge (especially **self-assembling / hydrogel-forming peptides**) in a form that researchers and downstream modeling workflows can use.
@@ -9,7 +9,7 @@ For the complete technical and operational reference, see `PROJECT_GUIDE.md`.
 For queue/baseline production-hardening goals and status, see `docs/RELIABILITY_BLUEPRINT.md`.
 
 ### Features
-- Search via PubMed Central (PMC), Europe PMC, arXiv, and Semantic Scholar (open-access sources).
+- Open-access source resolution via PubMed Central (PMC), Europe PMC, arXiv, and Semantic Scholar.
 - Paste a PDF/article URL for on-the-fly text extraction (PDF parsed with `pypdf`; HTML parsed with `BeautifulSoup`).
 - Modular LLM providers:
   - Mock provider (no API key) for demos.
@@ -77,17 +77,15 @@ CORS_ORIGINS=http://localhost:5173,http://localhost:3000
 ```
 
 ### Usage
-- Use the search bar to query open-access sources (e.g., "self-assembling peptide hydrogel").
-- Click "Open" to view an article, or click "Extract" to run the extraction pipeline (for URLs that are directly accessible).
-- Alternatively, paste a PDF or article URL in the right input and press "Extract".
-- The "Latest Extraction" panel shows the structured JSON; "Stored Papers" lists papers with extraction counts.
+- Use the Dashboard upload action to queue one or more PDF extractions.
+- Open papers and runs to inspect prompts, outputs, and status transitions.
+- Use table filters and CSV export to review QA slices of the dataset.
 
-### UI Tour
-- **Dashboard (`/`)**: search, queue extractions, and open paper/run details.
+### UI Pages
+- **Dashboard (`/`)**: upload PDFs, monitor queue/run status, and open paper/run details.
 - **Entity Explorer (`/entities`)**: filter across all extracted entities, view evidence gaps, and compare prompt versions.
 - **Run Details (`/runs/{id}`)**: inspect prompts, raw JSON, follow-ups, and version history.
 - **Run Editor (`/runs/{id}/edit`)**: edit fields and evidence (append-only versions).
-- **Help (`/help`)**: quickstart tips and troubleshooting.
 
 ### Switching Providers
 - Mock (default): no external calls; returns a realistic demo JSON payload.
@@ -183,5 +181,5 @@ For deployment details (persistent disk + DB bootstrap), see `PROJECT_GUIDE.md`.
 ### Roadmap (optional)
 - Improve PDF text extraction (layout parsing, figure/table handling).
 - Add additional providers (e.g., Anthropic, Claude) via the same interface.
-- Add filters and advanced search on the UI (e.g., pH, morphology, labels).
+- Add richer dashboard filters (e.g., pH, morphology, labels).
 - Add batch extraction from the web UI with progress tracking.

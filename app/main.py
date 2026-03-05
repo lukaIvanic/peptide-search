@@ -26,7 +26,6 @@ from .api.routers import (
     papers_router,
     providers_router,
     runs_router,
-    search_router,
     system_router,
 )
 from .config import settings
@@ -169,10 +168,6 @@ def create_app() -> FastAPI:
         async def entities_page() -> FileResponse:
             return _static_page_response(static_dir, "entities.html")
 
-        @app.get("/help", include_in_schema=False)
-        async def help_page() -> FileResponse:
-            return _static_page_response(static_dir, "help.html")
-
         @app.get("/baseline", include_in_schema=False)
         async def baseline_overview_page() -> FileResponse:
             overview_path = static_dir / "batch-overview.html"
@@ -194,7 +189,6 @@ def create_app() -> FastAPI:
 
     app.include_router(system_router)
     app.include_router(providers_router)
-    app.include_router(search_router)
     app.include_router(extraction_router)
     app.include_router(papers_router)
     app.include_router(runs_router)

@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import json
 import re
+from uuid import uuid4
 from typing import Dict, List, Optional
 
 from fastapi import APIRouter, Depends, File, Form, HTTPException, Query, UploadFile
@@ -23,6 +24,7 @@ from ...db import get_session
 from ...integrations.llm import ProviderSelectionError, resolve_provider_selection
 from ...persistence.models import (
     BaselineCaseRun,
+    BaselineDataset,
     BatchRun,
     BatchStatus,
     ActiveSourceLock,
@@ -40,10 +42,13 @@ from ...schemas import (
     BaselineCaseDeleteRequest,
     BaselineCaseSummary,
     BaselineCasesResponse,
+    BaselineDatasetInfo,
+    BaselineDatasetUpsertRequest,
     BaselineEnqueueRequest,
     BaselineEnqueueResponse,
     BaselineEnqueuedRun,
     BaselineDeleteResponse,
+    BaselinePaperSaveResponse,
     BaselineRecomputeStatusResponse,
     BaselineResetResponse,
     BaselineRetryRequest,
@@ -270,16 +275,56 @@ def _resolve_provider_selection_or_400(provider: Optional[str], model: Optional[
         ) from exc
 
 
+def _slug_text(value: Optional[str], *, fallback: str = "paper") -> str:
+    text = re.sub(r"[^a-z0-9]+", "-", (value or "").strip().lower()).strip("-")
+    return text or fallback
+
+
+def _parse_eval_builder_entities(raw: str) -> List[Dict[str, object]]:
+    try:
+        payload = json.loads(raw)
+    except json.JSONDecodeError as exc:
+        raise HTTPException(status_code=400, detail="entities_json must be valid JSON") from exc
+    if not isinstance(payload, list):
+        raise HTTPException(status_code=400, detail="entities_json must be a JSON array")
+    normalized: List[Dict[str, object]] = []
+    for index, item in enumerate(payload):
+        if not isinstance(item, dict):
+            raise HTTPException(status_code=400, detail=f"Entity #{index + 1} must be an object")
+        sequence = str(item.get("sequence") or "").strip()
+        if not sequence:
+            raise HTTPException(status_code=400, detail=f"Entity #{index + 1} sequence is required")
+        labels_value = item.get("labels") or []
+        if not isinstance(labels_value, list):
+            raise HTTPException(status_code=400, detail=f"Entity #{index + 1} labels must be a list")
+        labels = [str(label).strip() for label in labels_value if str(label).strip()]
+        normalized.append(
+            {
+                "sequence": sequence,
+                "n_terminal": str(item.get("n_terminal") or "").strip() or None,
+                "c_terminal": str(item.get("c_terminal") or "").strip() or None,
+                "labels": labels,
+                "notes": str(item.get("notes") or "").strip() or None,
+            }
+        )
+    if not normalized:
+        raise HTTPException(status_code=400, detail="At least one entity is required")
+    return normalized
+
+
 @router.get("/api/baseline/cases", response_model=BaselineCasesResponse)
 async def list_baseline_cases(
     dataset: Optional[str] = Query(None),
     batch_id: Optional[str] = Query(None),
+    include_latest: bool = Query(default=True),
     session: Session = Depends(get_session),
 ) -> BaselineCasesResponse:
     cases_raw = list_cases(dataset)
     datasets = baseline_dataset_infos(dataset)
-    case_ids = [case.get("id") for case in cases_raw if case.get("id")]
-    latest_by_case = get_latest_baseline_runs(session, case_ids, batch_id=batch_id)
+    latest_by_case: Dict[str, object] = {}
+    if include_latest:
+        case_ids = [case.get("id") for case in cases_raw if case.get("id")]
+        latest_by_case = get_latest_baseline_runs(session, case_ids, batch_id=batch_id)
 
     cases: List[BaselineCaseSummary] = []
     for case_data in cases_raw:
@@ -301,6 +346,13 @@ async def list_baseline_cases(
         datasets=datasets,
         total_cases=len(cases_raw),
     )
+
+
+@router.get("/api/baseline/datasets", response_model=List[BaselineDatasetInfo])
+async def list_baseline_datasets(
+    dataset: Optional[str] = Query(None),
+) -> List[BaselineDatasetInfo]:
+    return baseline_dataset_infos(dataset)
 
 
 @router.get("/api/baseline/cases/{case_id}", response_model=BaselineCaseSummary)
@@ -409,6 +461,190 @@ async def delete_baseline_paper_group(
         raise HTTPException(status_code=404, detail="Baseline paper not found")
     await mark_batches_stale_and_trigger()
     return BaselineDeleteResponse(status="ok", deleted_cases=deleted)
+
+
+@router.post("/api/baseline/datasets", response_model=BaselineDatasetInfo)
+async def upsert_baseline_dataset(
+    req: BaselineDatasetUpsertRequest,
+    session: Session = Depends(get_session),
+) -> BaselineDatasetInfo:
+    _ensure_baseline_editing_enabled()
+    store = BaselineStore(session)
+    try:
+        dataset = store.upsert_dataset(
+            dataset_id=req.dataset_id,
+            label=req.label,
+            description=req.description,
+            source_file="eval_builder",
+        )
+    except BaselineValidationError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+    return BaselineDatasetInfo(**dataset)
+
+
+@router.delete("/api/baseline/datasets/{dataset_id}", response_model=BaselineDeleteResponse)
+async def delete_baseline_dataset(
+    dataset_id: str,
+    session: Session = Depends(get_session),
+) -> BaselineDeleteResponse:
+    _ensure_baseline_editing_enabled()
+    store = BaselineStore(session)
+    try:
+        deleted = store.delete_dataset(dataset_id)
+    except BaselineValidationError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+    if not deleted.get("deleted_dataset") and int(deleted.get("deleted_cases", 0)) == 0:
+        raise HTTPException(status_code=404, detail="Baseline dataset not found")
+    await mark_batches_stale_and_trigger(dataset=dataset_id)
+    return BaselineDeleteResponse(status="ok", deleted_cases=int(deleted.get("deleted_cases", 0)))
+
+
+@router.post("/api/baseline/papers/save", response_model=BaselinePaperSaveResponse)
+async def save_baseline_paper_group(
+    mode: str = Form("create_paper"),
+    dataset_id: str = Form(...),
+    selected_paper_key: Optional[str] = Form(None),
+    title: str = Form(""),
+    doi: Optional[str] = Form(None),
+    paper_url: Optional[str] = Form(None),
+    entities_json: str = Form("[]"),
+    main_pdf: Optional[UploadFile] = File(None),
+    supporting_pdfs: Optional[List[UploadFile]] = File(None),
+    session: Session = Depends(get_session),
+) -> BaselinePaperSaveResponse:
+    _ensure_baseline_editing_enabled()
+    dataset_id = (dataset_id or "").strip()
+    if not dataset_id:
+        raise HTTPException(status_code=400, detail="dataset_id is required")
+
+    entities = _parse_eval_builder_entities(entities_json)
+    store = BaselineStore(session)
+
+    existing_dataset = session.get(BaselineDataset, dataset_id)
+    if not existing_dataset:
+        store.upsert_dataset(
+            dataset_id=dataset_id,
+            label=dataset_id,
+            description=None,
+            source_file="eval_builder",
+        )
+
+    selected_key = (selected_paper_key or "").strip() or None
+    existing_paper_cases: List[Dict[str, object]] = []
+    if selected_key:
+        existing_paper_cases = [
+            case for case in store.list_cases(dataset_id) if str(case.get("paper_key") or "") == selected_key
+        ]
+        if mode == "edit_paper" and not existing_paper_cases:
+            raise HTTPException(status_code=404, detail="Baseline paper not found")
+
+    if main_pdf and main_pdf.filename:
+        if not main_pdf.filename.lower().endswith(".pdf"):
+            raise HTTPException(status_code=400, detail="Main PDF must be a .pdf file")
+        main_pdf_bytes = await main_pdf.read()
+        if len(main_pdf_bytes) == 0:
+            raise HTTPException(status_code=400, detail="Main PDF is empty")
+        if len(main_pdf_bytes) > 20 * 1024 * 1024:
+            raise HTTPException(status_code=400, detail="Main PDF too large (max 20MB)")
+        main_pdf_url = store_upload(main_pdf_bytes, main_pdf.filename)
+    else:
+        main_pdf_url = str((existing_paper_cases[0] or {}).get("pdf_url") or "") if existing_paper_cases else None
+        main_pdf_url = main_pdf_url or None
+
+    supporting_urls: List[str] = []
+    supporting_names: List[str] = []
+    if supporting_pdfs:
+        for upload in supporting_pdfs:
+            if not upload or not upload.filename:
+                continue
+            if not upload.filename.lower().endswith(".pdf"):
+                raise HTTPException(status_code=400, detail="Supporting PDFs must be .pdf files")
+            pdf_bytes = await upload.read()
+            if len(pdf_bytes) == 0:
+                raise HTTPException(status_code=400, detail=f"Supporting PDF '{upload.filename}' is empty")
+            if len(pdf_bytes) > 20 * 1024 * 1024:
+                raise HTTPException(
+                    status_code=400,
+                    detail=f"Supporting PDF '{upload.filename}' too large (max 20MB)",
+                )
+            supporting_urls.append(store_upload(pdf_bytes, upload.filename))
+            supporting_names.append(upload.filename)
+    elif existing_paper_cases:
+        first_meta = existing_paper_cases[0].get("metadata") or {}
+        if isinstance(first_meta, dict):
+            previous_urls = first_meta.get("supporting_pdf_urls") or []
+            previous_names = first_meta.get("supporting_pdf_names") or []
+            if isinstance(previous_urls, list):
+                supporting_urls = [str(item) for item in previous_urls if str(item).strip()]
+            if isinstance(previous_names, list):
+                supporting_names = [str(item) for item in previous_names if str(item).strip()]
+
+    title_text = (title or "").strip()
+    if not title_text and existing_paper_cases:
+        first_meta = existing_paper_cases[0].get("metadata") or {}
+        if isinstance(first_meta, dict):
+            title_text = str(first_meta.get("title") or "").strip()
+    if not title_text:
+        raise HTTPException(status_code=400, detail="title is required")
+
+    doi_text = (doi or "").strip() or None
+    paper_url_text = (paper_url or "").strip() or None
+    if paper_url_text and not paper_url_text.lower().startswith(("http://", "https://")):
+        paper_url_text = None
+    if not doi_text and not paper_url_text and existing_paper_cases:
+        first_case = existing_paper_cases[0]
+        doi_text = str(first_case.get("doi") or "").strip() or None
+        paper_url_text = str(first_case.get("paper_url") or "").strip() or None
+        if paper_url_text and not paper_url_text.lower().startswith(("http://", "https://")):
+            paper_url_text = None
+    if not doi_text and not paper_url_text and not main_pdf_url:
+        raise HTTPException(
+            status_code=400,
+            detail="Provide DOI, paper URL, or upload a main PDF",
+        )
+
+    deleted_cases = 0
+    if mode == "edit_paper" and selected_key:
+        deleted_cases = store.delete_paper_group(selected_key)
+
+    saved_cases: List[Dict[str, object]] = []
+    for index, entity in enumerate(entities, start=1):
+        entity_notes = str(entity.get("notes") or "").strip() or None
+        case_payload = {
+            "id": f"eval-{dataset_id}-{_slug_text(title_text, fallback='paper')}-{index:03d}-{uuid4().hex[:8]}",
+            "dataset": dataset_id,
+            "sequence": entity["sequence"],
+            "n_terminal": entity.get("n_terminal"),
+            "c_terminal": entity.get("c_terminal"),
+            "labels": entity.get("labels") or [],
+            "doi": doi_text,
+            "paper_url": paper_url_text,
+            "pdf_url": main_pdf_url,
+            "source_unverified": False,
+            "metadata": {
+                "title": title_text,
+                "notes": entity_notes,
+                "supporting_pdf_urls": supporting_urls,
+                "supporting_pdf_names": supporting_names,
+                "main_pdf_filename": main_pdf.filename if main_pdf and main_pdf.filename else None,
+            },
+        }
+        try:
+            saved_cases.append(store.create_case(case_payload))
+        except BaselineValidationError as exc:
+            raise HTTPException(status_code=400, detail=str(exc)) from exc
+        except BaselineConflictError as exc:
+            raise HTTPException(status_code=409, detail=str(exc)) from exc
+
+    paper_key = str(saved_cases[0].get("paper_key") or "")
+    await mark_batches_stale_and_trigger(dataset=dataset_id)
+    return BaselinePaperSaveResponse(
+        status="ok",
+        dataset_id=dataset_id,
+        paper_key=paper_key,
+        saved_cases=len(saved_cases),
+        deleted_cases=deleted_cases,
+    )
 
 
 @router.post("/api/baseline/reset-defaults", response_model=BaselineResetResponse)

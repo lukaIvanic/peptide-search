@@ -171,26 +171,6 @@ export async function clearExtractionData() {
 }
 
 /**
- * Search for papers across all sources.
- * Returns results with seen/processed flags.
- */
-export async function search(query, rows = 10) {
-    return request(`/api/search?q=${encodeURIComponent(query)}&rows=${rows}`);
-}
-
-/**
- * Enqueue papers for batch extraction.
- * @param {object[]} papers - Papers to enqueue (with pdf_url, title, etc.)
- * @param {string} provider - Provider name (openai, mock)
- */
-export async function enqueue(papers, provider = 'openai', promptId = null, model = null) {
-    return request('/api/enqueue', {
-        method: 'POST',
-        body: JSON.stringify({ papers, provider, model, prompt_id: promptId }),
-    });
-}
-
-/**
  * Get list of papers with their latest run status.
  */
 export async function getPapers() {
@@ -216,6 +196,20 @@ export async function getRuns(paperId) {
  */
 export async function getRun(runId) {
     return request(`/api/runs/${runId}`);
+}
+
+/**
+ * Delete a run and its descendant run subtree.
+ */
+export async function deleteRun(runId) {
+    return del(`/api/runs/${runId}`);
+}
+
+/**
+ * Delete a paper and all associated runs.
+ */
+export async function deletePaper(paperId) {
+    return del(`/api/papers/${paperId}`);
 }
 
 /**
@@ -287,7 +281,7 @@ export async function getRecentRuns(status, limit = 10) {
  * @param {number} [days]
  * @param {number} [maxRuns]
  */
-export async function getFailureSummary(days = 30, maxRuns = 1000) {
+export async function getFailureSummary(days = 30, maxRuns = 300) {
     const params = new URLSearchParams();
     if (days) params.set('days', String(days));
     if (maxRuns) params.set('max_runs', String(maxRuns));
@@ -322,6 +316,16 @@ export async function getBaselineCases(dataset, batchId = null) {
 }
 
 /**
+ * List baseline datasets (evaluation groups).
+ */
+export async function getBaselineDatasets(dataset = null) {
+    const params = new URLSearchParams();
+    if (dataset) params.set('dataset', dataset);
+    const query = params.toString();
+    return request(query ? `/api/baseline/datasets?${query}` : '/api/baseline/datasets');
+}
+
+/**
  * Get a baseline case by ID.
  */
 export async function getBaselineCase(caseId) {
@@ -335,6 +339,35 @@ export async function createBaselineCase(payload) {
     return request('/api/baseline/cases', {
         method: 'POST',
         body: JSON.stringify(payload),
+    });
+}
+
+/**
+ * Create or update a baseline dataset (evaluation group).
+ */
+export async function upsertBaselineDataset(payload) {
+    return request('/api/baseline/datasets', {
+        method: 'POST',
+        body: JSON.stringify(payload),
+    });
+}
+
+/**
+ * Delete an evaluation group/dataset and its cases.
+ */
+export async function deleteBaselineDataset(datasetId) {
+    return request(`/api/baseline/datasets/${encodeURIComponent(datasetId)}`, {
+        method: 'DELETE',
+    });
+}
+
+/**
+ * Save an evaluation paper group (create/edit) with optional PDF uploads.
+ */
+export async function saveBaselinePaperGroup(formData) {
+    return requestForm('/api/baseline/papers/save', formData, {
+        method: 'POST',
+        timeoutMs: 120000,
     });
 }
 

@@ -38,23 +38,18 @@ class ApiProvidersAndModelsTests(ApiIntegrationTestCase):
         self.assertIn("warnings", payload)
         self.assertIsInstance(payload["warnings"], list)
 
-    def test_enqueue_accepts_openai_alias_and_persists_canonical_provider_plus_model(self) -> None:
+    def test_extract_file_accepts_openai_alias_and_persists_canonical_provider_plus_model(self) -> None:
         response = self.client.post(
-            "/api/enqueue",
-            json={
-                "papers": [
-                    {
-                        "title": "Provider alias",
-                        "doi": "10.1000/provider-alias",
-                        "url": "https://example.org/provider-alias",
-                        "pdf_url": "https://example.org/provider-alias.pdf",
-                    }
-                ],
+            "/api/extract-file",
+            files=[
+                ("files", ("provider-alias.pdf", b"%PDF-1.4 provider", "application/pdf")),
+            ],
+            data={
                 "provider": "openai-mini",
             },
         )
         self.assertEqual(response.status_code, 200)
-        run_id = response.json()["runs"][0]["run_id"]
+        run_id = response.json()["run_id"]
 
         with Session(self.db_module.engine) as session:
             run = session.get(ExtractionRun, run_id)
@@ -70,14 +65,11 @@ class ApiProvidersAndModelsTests(ApiIntegrationTestCase):
 
     def test_unknown_provider_returns_deterministic_bad_request_with_hint(self) -> None:
         response = self.client.post(
-            "/api/enqueue",
-            json={
-                "papers": [
-                    {
-                        "title": "Unknown provider",
-                        "pdf_url": "https://example.org/unknown-provider.pdf",
-                    }
-                ],
+            "/api/extract-file",
+            files=[
+                ("files", ("unknown-provider.pdf", b"%PDF-1.4 provider", "application/pdf")),
+            ],
+            data={
                 "provider": "unknown-provider",
             },
         )
